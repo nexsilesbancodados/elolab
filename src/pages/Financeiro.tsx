@@ -59,6 +59,7 @@ const STATUS_COLORS: Record<StatusPagamento, string> = {
   pago: 'bg-green-100 text-green-800',
   cancelado: 'bg-red-100 text-red-800',
   estornado: 'bg-gray-100 text-gray-800',
+  atrasado: 'bg-orange-100 text-orange-800',
 };
 
 const STATUS_LABELS: Record<StatusPagamento, string> = {
@@ -66,6 +67,7 @@ const STATUS_LABELS: Record<StatusPagamento, string> = {
   pago: 'Pago',
   cancelado: 'Cancelado',
   estornado: 'Estornado',
+  atrasado: 'Atrasado',
 };
 
 const CATEGORIAS_RECEITA = ['Consulta', 'Exame', 'Procedimento', 'Retorno', 'Outros'];

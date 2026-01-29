@@ -1,372 +1,256 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import {
   LayoutDashboard,
   Users,
   Calendar,
   ClipboardList,
-  Monitor,
   FileText,
   DollarSign,
+  Package,
   Settings,
-  LogOut,
-  Stethoscope,
-  UserCog,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
-  Pill,
-  FileCheck,
-  Building2,
-  Package,
-  Bell,
-  MessageSquare,
+  Stethoscope,
+  Activity,
   Receipt,
   CreditCard,
+  Wallet,
+  BarChart3,
   Shield,
+  Building2,
+  UserCheck,
+  FlaskConical,
+  Heart,
+  DoorOpen,
+  Clock,
+  Tv,
+  FileCheck,
+  HandCoins,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
-interface NavItem {
+interface MenuItem {
   label: string;
-  href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: string[];
+  href: string;
   badge?: number;
-  external?: boolean;
+  roles?: string[];
 }
 
-interface NavGroup {
+interface MenuGroup {
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  items: NavItem[];
+  items: MenuItem[];
 }
 
-const navGroups: NavGroup[] = [
+const menuGroups: MenuGroup[] = [
   {
     label: 'Principal',
     items: [
-      {
-        label: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-        roles: ['admin', 'medico', 'recepcao', 'enfermagem', 'financeiro'],
-      },
-      {
-        label: 'Agenda',
-        href: '/agenda',
-        icon: Calendar,
-        roles: ['admin', 'medico', 'recepcao'],
-      },
-      {
-        label: 'Pacientes',
-        href: '/pacientes',
-        icon: Users,
-        roles: ['admin', 'medico', 'recepcao', 'enfermagem'],
-      },
-      {
-        label: 'Fila de Atendimento',
-        href: '/fila',
-        icon: ClipboardList,
-        roles: ['admin', 'medico', 'recepcao', 'enfermagem'],
-      },
+      { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+      { label: 'Agenda', icon: Calendar, href: '/agenda' },
+      { label: 'Pacientes', icon: Users, href: '/pacientes' },
+      { label: 'Fila de Atendimento', icon: ClipboardList, href: '/fila' },
     ],
   },
   {
     label: 'Clínica',
     items: [
-      {
-        label: 'Prontuários',
-        href: '/prontuarios',
-        icon: FileText,
-        roles: ['admin', 'medico', 'enfermagem'],
-      },
-      {
-        label: 'Prescrições',
-        href: '/prescricoes',
-        icon: Pill,
-        roles: ['admin', 'medico'],
-      },
-      {
-        label: 'Atestados',
-        href: '/atestados',
-        icon: FileCheck,
-        roles: ['admin', 'medico'],
-      },
-      {
-        label: 'Painel TV',
-        href: '/painel-tv',
-        icon: Monitor,
-        roles: ['admin', 'recepcao'],
-        external: true,
-      },
-    ],
-  },
-  {
-    label: 'Financeiro',
-    items: [
-      {
-        label: 'Visão Geral',
-        href: '/financeiro',
-        icon: DollarSign,
-        roles: ['admin', 'financeiro'],
-      },
-      {
-        label: 'Contas a Receber',
-        href: '/contas-receber',
-        icon: Receipt,
-        roles: ['admin', 'financeiro'],
-      },
-      {
-        label: 'Contas a Pagar',
-        href: '/contas-pagar',
-        icon: CreditCard,
-        roles: ['admin', 'financeiro'],
-      },
-      {
-        label: 'Relatórios',
-        href: '/relatorios',
-        icon: BarChart3,
-        roles: ['admin', 'financeiro', 'medico'],
-      },
+      { label: 'Médicos', icon: Stethoscope, href: '/medicos' },
+      { label: 'Funcionários', icon: UserCheck, href: '/funcionarios' },
+      { label: 'Exames', icon: FlaskConical, href: '/exames' },
+      { label: 'Triagem', icon: Heart, href: '/triagem' },
+      { label: 'Prontuários', icon: FileText, href: '/prontuarios' },
+      { label: 'Prescrições', icon: Receipt, href: '/prescricoes' },
+      { label: 'Atestados', icon: FileCheck, href: '/atestados' },
+      { label: 'Salas', icon: DoorOpen, href: '/salas' },
+      { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
     ],
   },
   {
     label: 'Operacional',
     items: [
-      {
-        label: 'Estoque',
-        href: '/estoque',
-        icon: Package,
-        roles: ['admin', 'enfermagem'],
-      },
-      {
-        label: 'Convênios',
-        href: '/convenios',
-        icon: Building2,
-        roles: ['admin', 'financeiro', 'recepcao'],
-      },
+      { label: 'Estoque', icon: Package, href: '/estoque' },
+      { label: 'Convênios', icon: Building2, href: '/convenios' },
+      { label: 'Painel TV', icon: Tv, href: '/painel-tv' },
+    ],
+  },
+  {
+    label: 'Financeiro',
+    items: [
+      { label: 'Visão Geral', icon: DollarSign, href: '/financeiro' },
+      { label: 'Contas a Receber', icon: HandCoins, href: '/contas-receber' },
+      { label: 'Contas a Pagar', icon: CreditCard, href: '/contas-pagar' },
+      { label: 'Fluxo de Caixa', icon: Wallet, href: '/fluxo-caixa' },
+      { label: 'Relatórios', icon: BarChart3, href: '/relatorios' },
     ],
   },
   {
     label: 'Administração',
     items: [
-      {
-        label: 'Usuários',
-        href: '/usuarios',
-        icon: UserCog,
-        roles: ['admin'],
-      },
-      {
-        label: 'Segurança',
-        href: '/seguranca',
-        icon: Shield,
-        roles: ['admin'],
-      },
-      {
-        label: 'Configurações',
-        href: '/configuracoes',
-        icon: Settings,
-        roles: ['admin'],
-      },
+      { label: 'Usuários', icon: Users, href: '/usuarios' },
+      { label: 'Segurança', icon: Shield, href: '/seguranca' },
+      { label: 'Configurações', icon: Settings, href: '/configuracoes' },
     ],
   },
 ];
 
 export function Sidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout, hasPermission } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar_collapsed') === 'true';
-    }
-    return false;
+  const { hasPermission } = useAuth();
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('elolab_sidebar_collapsed');
+    return saved === 'true';
   });
+  const [openGroups, setOpenGroups] = useState<string[]>(['Principal', 'Clínica']);
 
   useEffect(() => {
-    localStorage.setItem('sidebar_collapsed', String(isCollapsed));
-  }, [isCollapsed]);
+    localStorage.setItem('elolab_sidebar_collapsed', String(collapsed));
+  }, [collapsed]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev =>
+      prev.includes(label) ? prev.filter(g => g !== label) : [...prev, label]
+    );
   };
 
-  const filteredGroups = navGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => hasPermission(item.roles as any[])),
-    }))
-    .filter((group) => group.items.length > 0);
+  const isActive = (href: string) => {
+    if (href === '/painel-tv') return false;
+    return location.pathname === href;
+  };
 
-  const NavItemComponent = ({ item }: { item: NavItem }) => {
-    const Icon = item.icon;
-    const isActive = location.pathname === item.href;
+  const NavItem = ({ item }: { item: MenuItem }) => {
+    const active = isActive(item.href);
+    const isExternal = item.href === '/painel-tv';
 
     const content = (
-      <div
+      <Link
+        to={item.href}
+        target={isExternal ? '_blank' : undefined}
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-          isActive
-            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
-            : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+          active
+            ? 'bg-primary text-primary-foreground shadow-md'
+            : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          collapsed && 'justify-center px-2'
         )}
       >
-        <Icon className={cn('h-5 w-5 shrink-0', isActive && 'text-sidebar-primary-foreground')} />
-        {!isCollapsed && (
+        <item.icon className={cn('h-5 w-5 shrink-0', active && 'text-primary-foreground')} />
+        {!collapsed && (
           <>
             <span className="flex-1 truncate">{item.label}</span>
             {item.badge && item.badge > 0 && (
-              <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+              <Badge variant="secondary" className="h-5 min-w-[20px] px-1.5 text-xs">
                 {item.badge}
               </Badge>
             )}
           </>
         )}
-      </div>
+      </Link>
     );
 
-    if (isCollapsed) {
+    if (collapsed) {
       return (
         <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            {item.external ? (
-              <a href={item.href} target="_blank" rel="noopener noreferrer">
-                {content}
-              </a>
-            ) : (
-              <Link to={item.href}>{content}</Link>
-            )}
-          </TooltipTrigger>
-          <TooltipContent side="right" className="flex items-center gap-2">
-            {item.label}
-            {item.badge && item.badge > 0 && (
-              <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
-                {item.badge}
-              </Badge>
-            )}
-          </TooltipContent>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent side="right">{item.label}</TooltipContent>
         </Tooltip>
       );
     }
 
-    return item.external ? (
-      <a href={item.href} target="_blank" rel="noopener noreferrer">
-        {content}
-      </a>
-    ) : (
-      <Link to={item.href}>{content}</Link>
-    );
+    return content;
   };
 
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border sidebar-transition',
-        isCollapsed ? 'w-[72px]' : 'w-64'
+        'flex h-screen flex-col border-r bg-sidebar transition-all duration-300',
+        collapsed ? 'w-16' : 'w-64'
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-lg">
-            <Stethoscope className="h-5 w-5 text-white" />
-          </div>
-          {!isCollapsed && (
-            <div className="animate-fade-in">
-              <h1 className="font-display text-lg font-bold text-sidebar-foreground">EloLab</h1>
-              <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider">
-                Gestão Clínica
-              </p>
+      <div className={cn('flex h-16 items-center border-b border-sidebar-border px-4', collapsed && 'justify-center')}>
+        {!collapsed ? (
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Activity className="h-5 w-5 text-primary-foreground" />
             </div>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+            <div>
+              <h1 className="text-lg font-bold text-sidebar-foreground">EloLab</h1>
+              <p className="text-xs text-sidebar-foreground/60">Clínica</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Activity className="h-5 w-5 text-primary-foreground" />
+          </div>
+        )}
       </div>
 
-      {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-6">
-          {filteredGroups.map((group, index) => (
+        <nav className="space-y-2">
+          {menuGroups.map((group, groupIndex) => (
             <div key={group.label}>
-              {!isCollapsed && (
-                <h4 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                  {group.label}
-                </h4>
-              )}
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <NavItemComponent key={item.href} item={item} />
-                ))}
-              </div>
-              {index < filteredGroups.length - 1 && !isCollapsed && (
-                <Separator className="mt-4 bg-sidebar-border" />
+              {groupIndex > 0 && <Separator className="my-4 bg-sidebar-border" />}
+              
+              {collapsed ? (
+                <div className="space-y-1">
+                  {group.items.map(item => (
+                    <NavItem key={item.href} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <Collapsible
+                  open={openGroups.includes(group.label)}
+                  onOpenChange={() => toggleGroup(group.label)}
+                >
+                  <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 hover:text-sidebar-foreground/80">
+                    {group.label}
+                    <ChevronRight
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        openGroups.includes(group.label) && 'rotate-90'
+                      )}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-1 pt-1">
+                    {group.items.map(item => (
+                      <NavItem key={item.href} item={item} />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </div>
           ))}
         </nav>
       </ScrollArea>
 
-      {/* User section */}
       <div className="border-t border-sidebar-border p-3">
-        {!isCollapsed ? (
-          <div className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-3 p-2 rounded-lg bg-sidebar-accent/50">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary text-white font-semibold shadow">
-                {user?.nome.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.nome}</p>
-                <p className="text-xs text-sidebar-foreground/60 capitalize">{user?.role}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sidebar-foreground/80 hover:text-destructive hover:bg-destructive/10"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        ) : (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-full h-10 text-sidebar-foreground/80 hover:text-destructive hover:bg-destructive/10"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Sair</TooltipContent>
-          </Tooltip>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            'w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+            collapsed && 'px-2'
+          )}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="mr-2 h-4 w-4" />Recolher</>}
+        </Button>
       </div>
     </aside>
   );
