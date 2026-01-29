@@ -36,7 +36,10 @@ import Salas from "@/pages/Salas";
 import ListaEspera from "@/pages/ListaEspera";
 import FluxoCaixa from "@/pages/FluxoCaixa";
 import Telemedicina from "@/pages/Telemedicina";
+import Templates from "@/pages/Templates";
 import NotFound from "@/pages/NotFound";
+import { NotificationBanner } from "@/components/NotificationBanner";
+import { InstallPWA } from "@/components/InstallPWA";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +56,7 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
+              <NotificationBanner />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
@@ -80,6 +84,7 @@ function App() {
                   <Route path="/salas" element={<Salas />} />
                   <Route path="/lista-espera" element={<ListaEspera />} />
                   <Route path="/telemedicina" element={<Telemedicina />} />
+                  <Route path="/templates" element={<Templates />} />
                   <Route path="/financeiro" element={<Financeiro />} />
                   <Route path="/contas-receber" element={<ContasReceber />} />
                   <Route path="/contas-pagar" element={<ContasPagar />} />
@@ -98,6 +103,7 @@ function App() {
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <InstallPWA />
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
