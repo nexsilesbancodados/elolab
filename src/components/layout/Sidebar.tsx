@@ -13,16 +13,17 @@ import {
   LogOut,
   Stethoscope,
   UserCog,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: string[];
+  external?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
     href: '/painel-tv',
     icon: Monitor,
     roles: ['admin', 'recepcao'],
+    external: true,
   },
   {
     label: 'Prontuários',
@@ -67,6 +69,12 @@ const navItems: NavItem[] = [
     href: '/financeiro',
     icon: DollarSign,
     roles: ['admin', 'financeiro'],
+  },
+  {
+    label: 'Relatórios',
+    href: '/relatorios',
+    icon: BarChart3,
+    roles: ['admin', 'financeiro', 'medico'],
   },
   {
     label: 'Usuários',
@@ -110,7 +118,21 @@ export function Sidebar() {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
 
-            return (
+            return item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {item.label}
+              </a>
+            ) : (
               <Link
                 key={item.href}
                 to={item.href}

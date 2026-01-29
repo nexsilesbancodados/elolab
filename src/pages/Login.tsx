@@ -139,9 +139,10 @@ export default function Login() {
               <p className="text-sm font-medium text-center mb-2">Credenciais de demonstração:</p>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <p><strong>Admin:</strong> admin@elolab.com / admin123</p>
-                <p><strong>Médico:</strong> medico@elolab.com / medico123</p>
-                <p><strong>Recepção:</strong> recepcao@elolab.com / recepcao123</p>
-                <p><strong>Financeiro:</strong> financeiro@elolab.com / financeiro123</p>
+                <p><strong>Médico:</strong> carlos@elolab.com / medico123</p>
+                <p><strong>Recepção:</strong> maria@elolab.com / recepcao123</p>
+                <p><strong>Financeiro:</strong> pedro@elolab.com / financeiro123</p>
+                <p><strong>Enfermagem:</strong> julia@elolab.com / enfermagem123</p>
               </div>
             </div>
           </CardContent>

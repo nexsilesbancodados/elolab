@@ -1,7 +1,21 @@
-// Seed data for development
-import { User, Paciente, Agendamento, FilaAtendimento, Lancamento } from '@/types';
+// Seed data for development - Complete and unified
+import { User, Paciente, Agendamento, FilaAtendimento, Lancamento, Prontuario } from '@/types';
 import { getAll, setItem } from './localStorage';
 import { generateId } from './localStorage';
+
+const PASSWORDS: Record<string, string> = {
+  'admin@elolab.com': 'admin123',
+  'carlos@elolab.com': 'medico123',
+  'ana@elolab.com': 'medico123',
+  'roberto@elolab.com': 'medico123',
+  'maria@elolab.com': 'recepcao123',
+  'julia@elolab.com': 'enfermagem123',
+  'pedro@elolab.com': 'financeiro123',
+  'medico@elolab.com': 'medico123',
+  'recepcao@elolab.com': 'recepcao123',
+  'financeiro@elolab.com': 'financeiro123',
+  'enfermagem@elolab.com': 'enfermagem123',
+};
 
 export function seedDemoData() {
   // Only seed if no data exists
@@ -11,7 +25,7 @@ export function seedDemoData() {
   const today = now.toISOString().split('T')[0];
 
   // Users (médicos e funcionários)
-  const users: User[] = [
+  const users: (User & { senha: string })[] = [
     {
       id: 'admin-1',
       nome: 'Administrador',
@@ -19,6 +33,7 @@ export function seedDemoData() {
       role: 'admin',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'admin123',
     },
     {
       id: 'med-1',
@@ -29,6 +44,7 @@ export function seedDemoData() {
       especialidade: 'Clínico Geral',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'medico123',
     },
     {
       id: 'med-2',
@@ -39,6 +55,7 @@ export function seedDemoData() {
       especialidade: 'Cardiologia',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'medico123',
     },
     {
       id: 'med-3',
@@ -49,6 +66,7 @@ export function seedDemoData() {
       especialidade: 'Pediatria',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'medico123',
     },
     {
       id: 'rec-1',
@@ -57,6 +75,7 @@ export function seedDemoData() {
       role: 'recepcao',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'recepcao123',
     },
     {
       id: 'enf-1',
@@ -65,6 +84,7 @@ export function seedDemoData() {
       role: 'enfermagem',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'enfermagem123',
     },
     {
       id: 'fin-1',
@@ -73,11 +93,12 @@ export function seedDemoData() {
       role: 'financeiro',
       ativo: true,
       criadoEm: now.toISOString(),
+      senha: 'financeiro123',
     },
   ];
   setItem('users', users);
 
-  // Pacientes
+  // Pacientes - 15 pacientes para demonstração
   const pacientes: Paciente[] = [
     {
       id: 'pac-1',
@@ -179,11 +200,119 @@ export function seedDemoData() {
       observacoes: 'Hipertenso, em tratamento',
       criadoEm: now.toISOString(),
     },
+    {
+      id: 'pac-6',
+      nome: 'Fernanda Lima Santos',
+      cpf: '789.123.456-00',
+      dataNascimento: '1988-05-20',
+      telefone: '(11) 99999-6666',
+      email: 'fernanda.lima@email.com',
+      endereco: {
+        cep: '01311-000',
+        logradouro: 'Alameda Santos',
+        numero: '1500',
+        bairro: 'Jardim Paulista',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      convenio: {
+        nome: 'Amil',
+        numeroCarteira: '456789123',
+        validade: '2025-08-15',
+      },
+      alergias: [],
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pac-7',
+      nome: 'Pedro Henrique Martins',
+      cpf: '147.258.369-00',
+      dataNascimento: '1975-12-03',
+      telefone: '(11) 99999-7777',
+      endereco: {
+        cep: '04101-000',
+        logradouro: 'Rua Vergueiro',
+        numero: '3000',
+        bairro: 'Vila Mariana',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      alergias: ['AAS'],
+      observacoes: 'Paciente cardiopata',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pac-8',
+      nome: 'Luciana Rodrigues',
+      cpf: '258.369.147-00',
+      dataNascimento: '1992-08-17',
+      telefone: '(11) 99999-8888',
+      email: 'luciana.r@email.com',
+      endereco: {
+        cep: '01452-000',
+        logradouro: 'Av. Brigadeiro Faria Lima',
+        numero: '2500',
+        bairro: 'Pinheiros',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      alergias: [],
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pac-9',
+      nome: 'Ricardo Gomes Pereira',
+      cpf: '369.147.258-00',
+      dataNascimento: '1968-04-25',
+      telefone: '(11) 99999-9999',
+      endereco: {
+        cep: '01310-100',
+        logradouro: 'Av. Paulista',
+        numero: '500',
+        bairro: 'Bela Vista',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      convenio: {
+        nome: 'SulAmérica',
+        numeroCarteira: '741852963',
+        validade: '2025-03-20',
+      },
+      alergias: ['Contraste iodado'],
+      observacoes: 'Paciente renal crônico',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pac-10',
+      nome: 'Juliana Oliveira Castro',
+      cpf: '741.852.963-00',
+      dataNascimento: '1998-01-10',
+      telefone: '(11) 98888-0000',
+      email: 'juliana.castro@email.com',
+      endereco: {
+        cep: '04543-000',
+        logradouro: 'Rua Gomes de Carvalho',
+        numero: '1200',
+        bairro: 'Vila Olímpia',
+        cidade: 'São Paulo',
+        estado: 'SP',
+      },
+      alergias: [],
+      criadoEm: now.toISOString(),
+    },
   ];
   setItem('pacientes', pacientes);
 
-  // Agendamentos para hoje
+  // Gerar datas para agendamentos (últimos 30 dias + próximos 7 dias)
+  const generateDate = (daysFromToday: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromToday);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Agendamentos - múltiplos dias
   const agendamentos: Agendamento[] = [
+    // Hoje
     {
       id: 'ag-1',
       pacienteId: 'pac-1',
@@ -239,6 +368,118 @@ export function seedDemoData() {
       status: 'agendado',
       criadoEm: now.toISOString(),
     },
+    {
+      id: 'ag-6',
+      pacienteId: 'pac-6',
+      medicoId: 'med-2',
+      data: today,
+      horaInicio: '10:30',
+      horaFim: '11:00',
+      tipo: 'consulta',
+      status: 'confirmado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-7',
+      pacienteId: 'pac-7',
+      medicoId: 'med-1',
+      data: today,
+      horaInicio: '11:00',
+      horaFim: '11:30',
+      tipo: 'consulta',
+      status: 'agendado',
+      criadoEm: now.toISOString(),
+    },
+    // Amanhã
+    {
+      id: 'ag-8',
+      pacienteId: 'pac-8',
+      medicoId: 'med-1',
+      data: generateDate(1),
+      horaInicio: '08:00',
+      horaFim: '08:30',
+      tipo: 'consulta',
+      status: 'agendado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-9',
+      pacienteId: 'pac-9',
+      medicoId: 'med-2',
+      data: generateDate(1),
+      horaInicio: '09:00',
+      horaFim: '09:30',
+      tipo: 'retorno',
+      status: 'confirmado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-10',
+      pacienteId: 'pac-10',
+      medicoId: 'med-3',
+      data: generateDate(1),
+      horaInicio: '10:00',
+      horaFim: '10:30',
+      tipo: 'consulta',
+      status: 'agendado',
+      criadoEm: now.toISOString(),
+    },
+    // Passado - para histórico
+    {
+      id: 'ag-11',
+      pacienteId: 'pac-1',
+      medicoId: 'med-1',
+      data: generateDate(-7),
+      horaInicio: '09:00',
+      horaFim: '09:30',
+      tipo: 'consulta',
+      status: 'finalizado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-12',
+      pacienteId: 'pac-2',
+      medicoId: 'med-2',
+      data: generateDate(-7),
+      horaInicio: '10:00',
+      horaFim: '10:30',
+      tipo: 'consulta',
+      status: 'finalizado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-13',
+      pacienteId: 'pac-3',
+      medicoId: 'med-1',
+      data: generateDate(-14),
+      horaInicio: '08:00',
+      horaFim: '08:30',
+      tipo: 'consulta',
+      status: 'finalizado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-14',
+      pacienteId: 'pac-4',
+      medicoId: 'med-2',
+      data: generateDate(-14),
+      horaInicio: '11:00',
+      horaFim: '11:30',
+      tipo: 'exame',
+      status: 'finalizado',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'ag-15',
+      pacienteId: 'pac-5',
+      medicoId: 'med-3',
+      data: generateDate(-21),
+      horaInicio: '14:00',
+      horaFim: '14:30',
+      tipo: 'consulta',
+      status: 'finalizado',
+      criadoEm: now.toISOString(),
+    },
   ];
   setItem('agendamentos', agendamentos);
 
@@ -269,8 +510,9 @@ export function seedDemoData() {
   ];
   setItem('fila', fila);
 
-  // Lançamentos financeiros
+  // Lançamentos financeiros - últimos 30 dias
   const lancamentos: Lancamento[] = [
+    // Hoje
     {
       id: 'lanc-1',
       tipo: 'receita',
@@ -296,19 +538,197 @@ export function seedDemoData() {
       formaPagamento: 'convenio',
       criadoEm: now.toISOString(),
     },
+    // Semana passada
     {
       id: 'lanc-3',
-      tipo: 'despesa',
-      categoria: 'Material',
-      descricao: 'Material de escritório',
-      valor: 150,
-      data: today,
+      tipo: 'receita',
+      categoria: 'Consulta',
+      descricao: 'Consulta particular',
+      valor: 250,
+      data: generateDate(-7),
       status: 'pago',
       formaPagamento: 'cartao_credito',
       criadoEm: now.toISOString(),
     },
+    {
+      id: 'lanc-4',
+      tipo: 'receita',
+      categoria: 'Exame',
+      descricao: 'Eletrocardiograma',
+      valor: 350,
+      data: generateDate(-7),
+      status: 'pago',
+      formaPagamento: 'pix',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-5',
+      tipo: 'despesa',
+      categoria: 'Material',
+      descricao: 'Material de escritório',
+      valor: 150,
+      data: generateDate(-5),
+      status: 'pago',
+      formaPagamento: 'cartao_credito',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-6',
+      tipo: 'receita',
+      categoria: 'Consulta',
+      descricao: 'Consultas convênio',
+      valor: 720,
+      data: generateDate(-10),
+      status: 'pago',
+      formaPagamento: 'convenio',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-7',
+      tipo: 'receita',
+      categoria: 'Procedimento',
+      descricao: 'Pequena cirurgia',
+      valor: 1500,
+      data: generateDate(-12),
+      status: 'pago',
+      formaPagamento: 'cartao_credito',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-8',
+      tipo: 'despesa',
+      categoria: 'Salários',
+      descricao: 'Folha de pagamento',
+      valor: 8500,
+      data: generateDate(-15),
+      status: 'pago',
+      formaPagamento: 'pix',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-9',
+      tipo: 'despesa',
+      categoria: 'Aluguel',
+      descricao: 'Aluguel do consultório',
+      valor: 3500,
+      data: generateDate(-20),
+      status: 'pago',
+      formaPagamento: 'pix',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-10',
+      tipo: 'receita',
+      categoria: 'Consulta',
+      descricao: 'Consultas particulares',
+      valor: 1250,
+      data: generateDate(-22),
+      status: 'pago',
+      formaPagamento: 'dinheiro',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-11',
+      tipo: 'receita',
+      categoria: 'Consulta',
+      descricao: 'Consultas convênio Unimed',
+      valor: 900,
+      data: generateDate(-25),
+      status: 'pago',
+      formaPagamento: 'convenio',
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'lanc-12',
+      tipo: 'despesa',
+      categoria: 'Equipamentos',
+      descricao: 'Manutenção equipamentos',
+      valor: 450,
+      data: generateDate(-28),
+      status: 'pago',
+      formaPagamento: 'pix',
+      criadoEm: now.toISOString(),
+    },
   ];
   setItem('lancamentos', lancamentos);
+
+  // Prontuários
+  const prontuarios: Prontuario[] = [
+    {
+      id: 'pront-1',
+      pacienteId: 'pac-1',
+      medicoId: 'med-1',
+      agendamentoId: 'ag-11',
+      data: generateDate(-7),
+      queixaPrincipal: 'Dor de cabeça frequente há 2 semanas',
+      historiaDoencaAtual: 'Paciente refere cefaleia holocraniana, de moderada intensidade, com início há aproximadamente 2 semanas. Nega náuseas, vômitos ou alterações visuais.',
+      examesFisicos: 'PA: 130/85 mmHg, FC: 78 bpm. Exame neurológico sem alterações.',
+      hipoteseDiagnostica: 'Cefaleia tensional',
+      conduta: 'Orientação sobre higiene do sono, redução de estresse. Retorno em 15 dias.',
+      prescricoes: [
+        {
+          id: 'presc-1',
+          medicamento: 'Paracetamol',
+          dosagem: '750mg',
+          posologia: '1 comprimido de 6/6h se dor',
+          duracao: '5 dias',
+        },
+      ],
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pront-2',
+      pacienteId: 'pac-3',
+      medicoId: 'med-1',
+      agendamentoId: 'ag-13',
+      data: generateDate(-14),
+      queixaPrincipal: 'Controle de diabetes',
+      historiaDoencaAtual: 'Paciente diabético tipo 2, em uso regular de metformina. Refere bom controle glicêmico nas últimas semanas.',
+      examesFisicos: 'PA: 125/80 mmHg, FC: 72 bpm. Peso: 78kg. IMC: 27.3',
+      hipoteseDiagnostica: 'Diabetes mellitus tipo 2 controlada',
+      conduta: 'Manter medicação atual. Solicitar exames de rotina. Retorno em 3 meses.',
+      prescricoes: [
+        {
+          id: 'presc-2',
+          medicamento: 'Metformina',
+          dosagem: '850mg',
+          posologia: '1 comprimido 2x ao dia',
+          duracao: 'Uso contínuo',
+        },
+      ],
+      criadoEm: now.toISOString(),
+    },
+    {
+      id: 'pront-3',
+      pacienteId: 'pac-5',
+      medicoId: 'med-2',
+      agendamentoId: 'ag-15',
+      data: generateDate(-21),
+      queixaPrincipal: 'Acompanhamento cardiológico',
+      historiaDoencaAtual: 'Paciente hipertenso em acompanhamento regular. Nega sintomas cardiovasculares.',
+      examesFisicos: 'PA: 135/85 mmHg, FC: 68 bpm. Ausculta cardíaca normal.',
+      hipoteseDiagnostica: 'Hipertensão arterial sistêmica controlada',
+      conduta: 'Manter medicação. Orientação sobre dieta hipossódica. Retorno em 2 meses.',
+      prescricoes: [
+        {
+          id: 'presc-3',
+          medicamento: 'Losartana',
+          dosagem: '50mg',
+          posologia: '1 comprimido pela manhã',
+          duracao: 'Uso contínuo',
+        },
+        {
+          id: 'presc-4',
+          medicamento: 'Hidroclorotiazida',
+          dosagem: '25mg',
+          posologia: '1 comprimido pela manhã',
+          duracao: 'Uso contínuo',
+        },
+      ],
+      criadoEm: now.toISOString(),
+    },
+  ];
+  setItem('prontuarios', prontuarios);
 
   console.log('Demo data seeded successfully');
 }

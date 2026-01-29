@@ -12,68 +12,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const MOCK_USERS: (User & { senha: string })[] = [
-  {
-    id: '1',
-    nome: 'Dr. Carlos Silva',
-    email: 'admin@elolab.com',
-    role: 'admin',
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-    senha: 'admin123',
-  },
-  {
-    id: '2',
-    nome: 'Dra. Ana Souza',
-    email: 'medico@elolab.com',
-    role: 'medico',
-    crm: '12345-SP',
-    especialidade: 'Clínica Geral',
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-    senha: 'medico123',
-  },
-  {
-    id: '3',
-    nome: 'Maria Oliveira',
-    email: 'recepcao@elolab.com',
-    role: 'recepcao',
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-    senha: 'recepcao123',
-  },
-  {
-    id: '4',
-    nome: 'João Santos',
-    email: 'financeiro@elolab.com',
-    role: 'financeiro',
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-    senha: 'financeiro123',
-  },
-  {
-    id: '5',
-    nome: 'Enfermeira Paula',
-    email: 'enfermagem@elolab.com',
-    role: 'enfermagem',
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-    senha: 'enfermagem123',
-  },
-];
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize mock users if not exists
-    const existingUsers = getAll<User & { senha: string }>('users');
-    if (existingUsers.length === 0) {
-      setItem('users', MOCK_USERS);
-    }
-
     // Check for existing session
     const savedUser = getItem<User>('currentUser');
     if (savedUser) {
@@ -83,11 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, senha: string): Promise<boolean> => {
-    const users = getAll<User & { senha: string }>('users');
-    const foundUser = users.find(u => u.email === email && u.senha === senha && u.ativo);
+    // Get users from localStorage (seeded by seedData)
+    const users = getAll<User & { senha?: string }>('users');
+    
+    // Find user with matching email and password
+    const foundUser = users.find(u => {
+      // Check password stored in user object
+      if ('senha' in u && u.senha === senha && u.email === email && u.ativo) {
+        return true;
+      }
+      return false;
+    });
 
     if (foundUser) {
-      const { senha: _, ...userWithoutPassword } = foundUser;
+      // Remove password from user object before storing in session
+      const { senha: _, ...userWithoutPassword } = foundUser as User & { senha?: string };
       setUser(userWithoutPassword);
       setItem('currentUser', userWithoutPassword);
       return true;
