@@ -17,9 +17,14 @@ import {
   ArrowRight,
   Activity,
   Stethoscope,
+  Package,
+  FileText,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, isToday, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   AreaChart,
@@ -34,6 +39,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Legend,
 } from 'recharts';
 
 interface StatCardProps {
@@ -92,7 +100,14 @@ const STATUS_COLORS: Record<string, string> = {
   finalizado: 'bg-gray-100 text-gray-600',
 };
 
-const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+
+interface EstoqueItem {
+  id: string;
+  nome: string;
+  quantidade: number;
+  estoqueMinimo: number;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -101,6 +116,7 @@ export default function Dashboard() {
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
   const [medicos, setMedicos] = useState<User[]>([]);
   const [fila, setFila] = useState<FilaAtendimento[]>([]);
+  const [estoque, setEstoque] = useState<EstoqueItem[]>([]);
 
   useEffect(() => {
     setPacientes(getAll<Paciente>('pacientes'));
@@ -108,6 +124,7 @@ export default function Dashboard() {
     setLancamentos(getAll<Lancamento>('lancamentos'));
     setMedicos(getAll<User>('users').filter(u => u.role === 'medico'));
     setFila(getAll<FilaAtendimento>('fila'));
+    setEstoque(getAll<EstoqueItem>('estoque'));
   }, []);
 
   const hoje = format(new Date(), 'yyyy-MM-dd');
@@ -142,20 +159,43 @@ export default function Dashboard() {
       ? Math.round(((receitasMesAtual - receitasMesAnterior) / receitasMesAnterior) * 100)
       : 0;
 
+    // Taxa de comparecimento
+    const finalizados = agendamentos.filter(a => a.status === 'finalizado').length;
+    const faltaram = agendamentos.filter(a => a.status === 'faltou').length;
+    const taxaComparecimento = finalizados + faltaram > 0 
+      ? Math.round((finalizados / (finalizados + faltaram)) * 100) 
+      : 100;
+
+    // Estoque baixo
+    const estoqueBaixo = estoque.filter(e => e.quantidade <= e.estoqueMinimo).length;
+
     return {
       pacientesTotal: pacientes.length,
       consultasHoje: consultasHoje.length,
       faturamentoMes: receitasMesAtual,
       aguardando,
       trendReceita,
+      taxaComparecimento,
+      estoqueBaixo,
     };
-  }, [pacientes, agendamentos, lancamentos, fila, hoje]);
+  }, [pacientes, agendamentos, lancamentos, fila, estoque, hoje]);
 
   const consultasHoje = useMemo(() => {
     return agendamentos
       .filter(a => a.data === hoje)
       .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
       .slice(0, 6);
+  }, [agendamentos, hoje]);
+
+  // Status summary for today
+  const statusSummary = useMemo(() => {
+    const todayAppointments = agendamentos.filter(a => a.data === hoje);
+    return {
+      confirmados: todayAppointments.filter(a => a.status === 'confirmado').length,
+      aguardando: todayAppointments.filter(a => a.status === 'aguardando').length,
+      finalizados: todayAppointments.filter(a => a.status === 'finalizado').length,
+      cancelados: todayAppointments.filter(a => a.status === 'cancelado').length,
+    };
   }, [agendamentos, hoje]);
 
   // Dados para gráfico de faturamento (últimos 7 dias)
@@ -206,6 +246,30 @@ export default function Dashboard() {
       .sort((a, b) => b.atendimentos - a.atendimentos)
       .slice(0, 5);
   }, [agendamentos, medicos]);
+
+  // Weekly comparison data
+  const dadosSemana = useMemo(() => {
+    const thisWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const thisWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+    const lastWeekStart = startOfWeek(subMonths(new Date(), 0), { weekStartsOn: 1 });
+    
+    const thisWeek = agendamentos.filter(a => {
+      const date = parseISO(a.data);
+      return date >= thisWeekStart && date <= thisWeekEnd;
+    }).length;
+    
+    const prevWeekStart = new Date(thisWeekStart);
+    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+    const prevWeekEnd = new Date(thisWeekEnd);
+    prevWeekEnd.setDate(prevWeekEnd.getDate() - 7);
+    
+    const lastWeek = agendamentos.filter(a => {
+      const date = parseISO(a.data);
+      return date >= prevWeekStart && date <= prevWeekEnd;
+    }).length;
+    
+    return { thisWeek, lastWeek };
+  }, [agendamentos]);
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
   const getMedicoNome = (id: string) => medicos.find(m => m.id === id)?.nome || 'Médico';
@@ -283,6 +347,46 @@ export default function Dashboard() {
           icon={Clock}
           color="warning"
         />
+      </div>
+
+      {/* Quick Status Row */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <CheckCircle className="h-8 w-8 text-primary" />
+            <div>
+              <p className="text-2xl font-bold">{statusSummary.confirmados}</p>
+              <p className="text-sm text-muted-foreground">Confirmados Hoje</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-chart-3/10 border-chart-3/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Clock className="h-8 w-8 text-chart-3" />
+            <div>
+              <p className="text-2xl font-bold">{statusSummary.aguardando}</p>
+              <p className="text-sm text-muted-foreground">Aguardando</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-chart-2/10 border-chart-2/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Activity className="h-8 w-8 text-chart-2" />
+            <div>
+              <p className="text-2xl font-bold">{stats.taxaComparecimento}%</p>
+              <p className="text-sm text-muted-foreground">Taxa Comparecimento</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className={stats.estoqueBaixo > 0 ? "bg-destructive/10 border-destructive/20" : "bg-muted/50"}>
+          <CardContent className="p-4 flex items-center gap-3">
+            <Package className={`h-8 w-8 ${stats.estoqueBaixo > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="text-2xl font-bold">{stats.estoqueBaixo}</p>
+              <p className="text-sm text-muted-foreground">Estoque Baixo</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts Row */}

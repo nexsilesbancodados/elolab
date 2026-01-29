@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Building, Clock, Bell, Palette, Database } from 'lucide-react';
+import { Save, Building, Clock, Bell, Database, Download, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,17 +16,8 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getItem, setItem } from '@/lib/localStorage';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { BackupRestore } from '@/components/BackupRestore';
+import { AuditLog } from '@/components/AuditLog';
 
 interface ConfiguracaoClinica {
   nomeClinica: string;
@@ -91,16 +82,6 @@ export default function Configuracoes() {
     });
   };
 
-  const handleLimparDados = () => {
-    const keys = Object.keys(localStorage).filter(key => key.startsWith('elolab_clinic_'));
-    keys.forEach(key => localStorage.removeItem(key));
-    toast({
-      title: 'Dados limpos',
-      description: 'Todos os dados foram removidos. A página será recarregada.',
-    });
-    setTimeout(() => window.location.reload(), 1500);
-  };
-
   const diasSemana = [
     { value: 'seg', label: 'Segunda' },
     { value: 'ter', label: 'Terça' },
@@ -128,7 +109,7 @@ export default function Configuracoes() {
       </div>
 
       <Tabs defaultValue="clinica" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="clinica" className="gap-2">
             <Building className="h-4 w-4" />
             Clínica
@@ -140,6 +121,14 @@ export default function Configuracoes() {
           <TabsTrigger value="notificacoes" className="gap-2">
             <Bell className="h-4 w-4" />
             Notificações
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="gap-2">
+            <Download className="h-4 w-4" />
+            Backup
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="gap-2">
+            <History className="h-4 w-4" />
+            Histórico
           </TabsTrigger>
           <TabsTrigger value="sistema" className="gap-2">
             <Database className="h-4 w-4" />
@@ -369,11 +358,19 @@ export default function Configuracoes() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="backup">
+          <BackupRestore />
+        </TabsContent>
+
+        <TabsContent value="historico">
+          <AuditLog />
+        </TabsContent>
+
         <TabsContent value="sistema">
           <Card>
             <CardHeader>
               <CardTitle>Configurações do Sistema</CardTitle>
-              <CardDescription>Opções avançadas de sistema</CardDescription>
+              <CardDescription>Informações do sistema</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-4 border rounded-lg bg-muted/50">
@@ -389,36 +386,12 @@ export default function Configuracoes() {
                 </p>
               </div>
 
-              <div className="border-t pt-6">
-                <h4 className="font-medium text-destructive mb-2">Zona de Perigo</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Ações irreversíveis. Tenha certeza antes de prosseguir.
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">Versão do Sistema</h4>
+                <p className="text-sm text-muted-foreground">EloLab Clinic v1.0.0</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  React + TypeScript + Tailwind CSS
                 </p>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Limpar Todos os Dados</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação irá remover TODOS os dados armazenados no sistema, incluindo
-                        pacientes, agendamentos, prontuários, lançamentos financeiros e usuários.
-                        Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleLimparDados}
-                        className="bg-destructive text-destructive-foreground"
-                      >
-                        Sim, limpar tudo
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </div>
             </CardContent>
           </Card>

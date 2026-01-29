@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Search, Menu, Moon, Sun, LogOut, User, Settings, HelpCircle, Plus, Command } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +33,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getAll } from '@/lib/localStorage';
 import { Paciente, User as UserType } from '@/types';
 import { cn } from '@/lib/utils';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -90,6 +91,9 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [notifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
 
   useEffect(() => {
     setPacientes(getAll<Paciente>('pacientes'));
@@ -181,6 +185,9 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Keyboard Shortcuts Help */}
+          <KeyboardShortcutsHelp />
 
           {/* Theme Toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
