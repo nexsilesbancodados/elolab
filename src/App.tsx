@@ -35,6 +35,7 @@ import Triagem from "@/pages/Triagem";
 import Salas from "@/pages/Salas";
 import ListaEspera from "@/pages/ListaEspera";
 import FluxoCaixa from "@/pages/FluxoCaixa";
+import Telemedicina from "@/pages/Telemedicina";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ function App() {
                   <Route path="/triagem" element={<Triagem />} />
                   <Route path="/salas" element={<Salas />} />
                   <Route path="/lista-espera" element={<ListaEspera />} />
+                  <Route path="/telemedicina" element={<Telemedicina />} />
                   <Route path="/financeiro" element={<Financeiro />} />
                   <Route path="/contas-receber" element={<ContasReceber />} />
                   <Route path="/contas-pagar" element={<ContasPagar />} />

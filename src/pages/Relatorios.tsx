@@ -11,6 +11,7 @@ import {
   TrendingDown,
   Stethoscope,
   Printer,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,6 +35,8 @@ import { Badge } from '@/components/ui/badge';
 import { Agendamento, Paciente, Lancamento, User } from '@/types';
 import { getAll } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
+import { exportarFinanceiro, exportToExcel } from '@/lib/excelExporter';
+import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF, downloadPDF } from '@/lib/pdfGenerator';
 import {
   AreaChart,
   Area,
@@ -223,25 +226,58 @@ export default function Relatorios() {
     }).format(value);
   };
 
-  const handleExportCSV = () => {
-    // Implementação simples de export CSV
-    const headers = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor', 'Status'];
-    const rows = lancamentosFiltrados.map(l => [
-      format(parseISO(l.data), 'dd/MM/yyyy'),
-      l.tipo,
-      l.categoria,
-      l.descricao,
-      l.valor.toString(),
-      l.status,
-    ]);
+  const handleExportExcel = () => {
+    exportarFinanceiro(lancamentosFiltrados.map(l => ({
+      data: l.data,
+      tipo: l.tipo,
+      categoria: l.categoria,
+      descricao: l.descricao,
+      valor: l.valor,
+      status: l.status,
+      formaPagamento: l.formaPagamento,
+    })));
+  };
 
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `relatorio-financeiro-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
+  const handleExportPDF = () => {
+    const periodoLabel = {
+      mes_atual: 'Mês Atual',
+      mes_anterior: 'Mês Anterior',
+      ultimos_3_meses: 'Últimos 3 Meses',
+      ultimos_6_meses: 'Últimos 6 Meses',
+    }[periodo] || periodo;
+
+    const doc = gerarRelatorioFinanceiro({
+      periodo: periodoLabel,
+      receitas: estatisticas.receitas,
+      despesas: estatisticas.despesas,
+      lucro: estatisticas.lucro,
+      lancamentos: lancamentosFiltrados.map(l => ({
+        data: format(parseISO(l.data), 'dd/MM/yyyy'),
+        tipo: l.tipo,
+        categoria: l.categoria,
+        descricao: l.descricao,
+        valor: l.valor,
+        status: l.status,
+      })),
+    });
+    openPDF(doc);
+  };
+
+  const handleExportAtendimentosPDF = () => {
+    const periodoLabel = {
+      mes_atual: 'Mês Atual',
+      mes_anterior: 'Mês Anterior',
+      ultimos_3_meses: 'Últimos 3 Meses',
+      ultimos_6_meses: 'Últimos 6 Meses',
+    }[periodo] || periodo;
+
+    const doc = gerarRelatorioAtendimentos({
+      periodo: periodoLabel,
+      totalAtendimentos: estatisticas.totalAtendimentos,
+      porMedico: dadosPorMedico,
+      porTipo: dadosPorTipo.map(t => ({ tipo: t.name, quantidade: t.value })),
+    });
+    openPDF(doc);
   };
 
   return (
@@ -251,7 +287,7 @@ export default function Relatorios() {
           <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
           <p className="text-muted-foreground">Análise de desempenho e indicadores</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={periodo} onValueChange={setPeriodo}>
             <SelectTrigger className="w-44">
               <SelectValue />
@@ -263,9 +299,13 @@ export default function Relatorios() {
               <SelectItem value="ultimos_6_meses">Últimos 6 Meses</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExportCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
+          <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileText className="h-4 w-4" />
+            PDF
           </Button>
         </div>
       </div>

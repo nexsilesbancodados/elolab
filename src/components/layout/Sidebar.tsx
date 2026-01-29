@@ -29,6 +29,7 @@ import {
   Tv,
   FileCheck,
   HandCoins,
+  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +81,7 @@ const menuGroups: MenuGroup[] = [
       { label: 'Atestados', icon: FileCheck, href: '/atestados' },
       { label: 'Salas', icon: DoorOpen, href: '/salas' },
       { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
+      { label: 'Telemedicina', icon: Video, href: '/telemedicina' },
     ],
   },
   {
