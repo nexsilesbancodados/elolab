@@ -18,6 +18,7 @@ import Fila from "@/pages/Fila";
 import PainelTV from "@/pages/PainelTV";
 import Prontuarios from "@/pages/Prontuarios";
 import Financeiro from "@/pages/Financeiro";
+import Relatorios from "@/pages/Relatorios";
 import Usuarios from "@/pages/Usuarios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
@@ -55,6 +56,7 @@ const App = () => {
                 <Route path="/fila" element={<Fila />} />
                 <Route path="/prontuarios" element={<Prontuarios />} />
                 <Route path="/financeiro" element={<Financeiro />} />
+                <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="/usuarios" element={<Usuarios />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
               </Route>
