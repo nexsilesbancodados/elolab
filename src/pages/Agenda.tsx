@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Clock, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -21,6 +21,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Agendamento, Paciente, User as UserType, StatusAgendamento } from '@/types';
 import { getAll, generateId } from '@/lib/localStorage';
@@ -52,6 +54,18 @@ const STATUS_LABELS: Record<StatusAgendamento, string> = {
   faltou: 'Faltou',
 };
 
+const RECURRENCE_OPTIONS = {
+  none: 'Não repetir',
+  weekly: 'Semanal',
+  biweekly: 'Quinzenal',
+  monthly: 'Mensal',
+};
+
+interface RecurrenceConfig {
+  type: 'none' | 'weekly' | 'biweekly' | 'monthly';
+  occurrences: number;
+}
+
 export default function Agenda() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedMedico, setSelectedMedico] = useState<string>('todos');
@@ -61,6 +75,7 @@ export default function Agenda() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ data: string; hora: string } | null>(null);
   const [formData, setFormData] = useState<Partial<Agendamento>>({});
+  const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,10 +110,9 @@ export default function Agenda() {
   const handleSlotClick = (data: Date, hora: string) => {
     const existing = getAgendamentoForSlot(data, hora);
     if (existing) {
-      // Edit existing
       setFormData(existing);
+      setRecurrence({ type: 'none', occurrences: 4 });
     } else {
-      // New appointment
       setSelectedSlot({ data: format(data, 'yyyy-MM-dd'), hora });
       setFormData({
         data: format(data, 'yyyy-MM-dd'),
@@ -107,8 +121,34 @@ export default function Agenda() {
         tipo: 'consulta',
         status: 'agendado',
       });
+      setRecurrence({ type: 'none', occurrences: 4 });
     }
     setIsFormOpen(true);
+  };
+
+  const generateRecurringDates = (startDate: string, config: RecurrenceConfig): string[] => {
+    if (config.type === 'none') return [startDate];
+
+    const dates: string[] = [];
+    let currentDate = parseISO(startDate);
+
+    for (let i = 0; i < config.occurrences; i++) {
+      dates.push(format(currentDate, 'yyyy-MM-dd'));
+      
+      switch (config.type) {
+        case 'weekly':
+          currentDate = addWeeks(currentDate, 1);
+          break;
+        case 'biweekly':
+          currentDate = addWeeks(currentDate, 2);
+          break;
+        case 'monthly':
+          currentDate = addMonths(currentDate, 1);
+          break;
+      }
+    }
+
+    return dates;
   };
 
   const handleSave = () => {
@@ -124,27 +164,39 @@ export default function Agenda() {
     const allAgendamentos = getAll<Agendamento>('agendamentos');
 
     if (formData.id) {
-      // Update
+      // Update existing
       const index = allAgendamentos.findIndex((a) => a.id === formData.id);
       if (index !== -1) {
         allAgendamentos[index] = { ...allAgendamentos[index], ...formData } as Agendamento;
       }
     } else {
-      // Create
-      const newAgendamento: Agendamento = {
-        ...formData,
-        id: generateId(),
-        criadoEm: new Date().toISOString(),
-      } as Agendamento;
-      allAgendamentos.push(newAgendamento);
+      // Create new (possibly recurring)
+      const dates = generateRecurringDates(formData.data!, recurrence);
+      const recurrenceGroupId = recurrence.type !== 'none' ? generateId() : undefined;
+
+      dates.forEach((date) => {
+        const newAgendamento: Agendamento = {
+          ...formData,
+          id: generateId(),
+          data: date,
+          recurrenceGroupId,
+          criadoEm: new Date().toISOString(),
+        } as Agendamento;
+        allAgendamentos.push(newAgendamento);
+      });
     }
 
     localStorage.setItem('elolab_clinic_agendamentos', JSON.stringify(allAgendamentos));
     loadData();
     setIsFormOpen(false);
+    setRecurrence({ type: 'none', occurrences: 4 });
+    
+    const count = recurrence.type !== 'none' && !formData.id ? recurrence.occurrences : 1;
     toast({
-      title: formData.id ? 'Agendamento atualizado' : 'Agendamento criado',
-      description: 'A agenda foi atualizada com sucesso.',
+      title: formData.id ? 'Agendamento atualizado' : `${count} agendamento(s) criado(s)`,
+      description: recurrence.type !== 'none' && !formData.id 
+        ? `Consultas agendadas: ${RECURRENCE_OPTIONS[recurrence.type].toLowerCase()}`
+        : 'A agenda foi atualizada com sucesso.',
     });
   };
 
@@ -249,10 +301,13 @@ export default function Agenda() {
                           {agendamento && (
                             <div
                               className={cn(
-                                'rounded p-1.5 text-xs border',
+                                'rounded p-1.5 text-xs border relative',
                                 STATUS_COLORS[agendamento.status]
                               )}
                             >
+                              {(agendamento as any).recurrenceGroupId && (
+                                <Repeat className="absolute top-1 right-1 h-3 w-3 opacity-50" />
+                              )}
                               <p className="font-medium truncate">
                                 {getPacienteNome(agendamento.pacienteId)}
                               </p>
@@ -283,7 +338,7 @@ export default function Agenda() {
 
       {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {formData.id ? 'Editar Agendamento' : 'Novo Agendamento'}
@@ -360,6 +415,7 @@ export default function Agenda() {
                     <SelectItem value="retorno">Retorno</SelectItem>
                     <SelectItem value="exame">Exame</SelectItem>
                     <SelectItem value="procedimento">Procedimento</SelectItem>
+                    <SelectItem value="telemedicina">Telemedicina</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -382,6 +438,51 @@ export default function Agenda() {
                 </Select>
               </div>
             </div>
+
+            {/* Recurrence - only show for new appointments */}
+            {!formData.id && (
+              <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Repeat className="h-4 w-4 text-muted-foreground" />
+                  <Label className="font-medium">Consulta Recorrente</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Frequência</Label>
+                    <Select
+                      value={recurrence.type}
+                      onValueChange={(v) => setRecurrence({ ...recurrence, type: v as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(RECURRENCE_OPTIONS).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {recurrence.type !== 'none' && (
+                    <div className="space-y-2">
+                      <Label className="text-xs">Quantidade</Label>
+                      <Input
+                        type="number"
+                        min={2}
+                        max={52}
+                        value={recurrence.occurrences}
+                        onChange={(e) => setRecurrence({ ...recurrence, occurrences: parseInt(e.target.value) || 4 })}
+                      />
+                    </div>
+                  )}
+                </div>
+                {recurrence.type !== 'none' && (
+                  <p className="text-xs text-muted-foreground">
+                    Serão criados {recurrence.occurrences} agendamentos ({RECURRENCE_OPTIONS[recurrence.type].toLowerCase()})
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Observações</Label>

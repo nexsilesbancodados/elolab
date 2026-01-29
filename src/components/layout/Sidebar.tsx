@@ -30,6 +30,7 @@ import {
   FileCheck,
   HandCoins,
   Video,
+  Files,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -87,6 +88,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Operacional',
     items: [
+      { label: 'Templates', icon: Files, href: '/templates' },
       { label: 'Estoque', icon: Package, href: '/estoque' },
       { label: 'Convênios', icon: Building2, href: '/convenios' },
       { label: 'Painel TV', icon: Tv, href: '/painel-tv' },
