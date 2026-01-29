@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,8 +25,10 @@ export function MainLayout() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar onMenuClick={() => setMobileMenuOpen(true)} />
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <Outlet />
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto p-4 md:p-6 max-w-7xl animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
