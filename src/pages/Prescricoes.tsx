@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Printer, Pill, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Printer, Pill, AlertTriangle, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Paciente, User } from '@/types';
 import { getAll, generateId } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
+import { gerarReceita, openPDF, downloadPDF } from '@/lib/pdfGenerator';
 
 interface Prescricao {
   id: string;
@@ -160,6 +161,29 @@ export default function Prescricoes() {
     setIsViewOpen(true);
   };
 
+  const handlePrint = (prescricao: Prescricao) => {
+    const paciente = pacientes.find(p => p.id === prescricao.pacienteId);
+    const medico = medicos.find(m => m.id === prescricao.medicoId);
+    
+    if (!paciente || !medico) {
+      toast({
+        title: 'Erro',
+        description: 'Dados do paciente ou médico não encontrados.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const doc = gerarReceita(
+      { nome: paciente.nome, cpf: paciente.cpf, dataNascimento: paciente.dataNascimento },
+      { nome: medico.nome, crm: medico.crm, especialidade: medico.especialidade },
+      prescricao.medicamentos,
+      prescricao.orientacoes,
+      prescricao.tipo
+    );
+    openPDF(doc);
+  };
+
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Desconhecido';
   const getMedicoNome = (id: string) => medicos.find(m => m.id === id)?.nome || 'Desconhecido';
 
@@ -250,7 +274,7 @@ export default function Prescricoes() {
                           <Button variant="ghost" size="icon" onClick={() => handleView(prescricao)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" onClick={() => handlePrint(prescricao)}>
                             <Printer className="h-4 w-4" />
                           </Button>
                         </div>

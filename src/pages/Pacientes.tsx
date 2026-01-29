@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Phone, Mail } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, FileSpreadsheet, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente } from '@/types';
 import { getAll, create, update, remove, generateId } from '@/lib/localStorage';
+import { exportarPacientes } from '@/lib/excelExporter';
+import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
 
 export default function Pacientes() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -43,6 +45,7 @@ export default function Pacientes() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
   const [formData, setFormData] = useState<Partial<Paciente>>({});
+  const [isEtiquetaOpen, setIsEtiquetaOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -160,6 +163,14 @@ export default function Pacientes() {
     return idade;
   };
 
+  const handleExportExcel = () => {
+    exportarPacientes(filteredPacientes);
+    toast({
+      title: 'Exportação concluída',
+      description: `${filteredPacientes.length} paciente(s) exportado(s) para Excel.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -167,10 +178,20 @@ export default function Pacientes() {
           <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
           <p className="text-muted-foreground">Gerencie o cadastro de pacientes</p>
         </div>
-        <Button onClick={handleNew} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Paciente
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={() => setIsEtiquetaOpen(true)} className="gap-2">
+            <Tag className="h-4 w-4" />
+            Etiquetas
+          </Button>
+          <Button onClick={handleNew} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo Paciente
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -561,6 +582,13 @@ export default function Pacientes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Etiqueta Modal */}
+      <EtiquetaPaciente
+        pacientes={filteredPacientes}
+        open={isEtiquetaOpen}
+        onOpenChange={setIsEtiquetaOpen}
+      />
     </div>
   );
 }
