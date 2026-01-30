@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { getAll, generateId, remove } from '@/lib/localStorage';
+import { getAll, generateId, remove, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -74,7 +74,7 @@ export default function Convenios() {
         { id: '3', nome: 'SulAmérica', codigo: 'SULA', cnpj: '00.000.000/0003-00', telefone: '(11) 3002-0000', email: 'contato@sulamerica.com.br', endereco: 'São Paulo, SP', valorConsulta: 170, prazoFaturamento: 30, ativo: true, observacoes: '', criadoEm: new Date().toISOString() },
         { id: '4', nome: 'Amil', codigo: 'AMIL', cnpj: '00.000.000/0004-00', telefone: '(11) 3003-0000', email: 'contato@amil.com.br', endereco: 'São Paulo, SP', valorConsulta: 160, prazoFaturamento: 30, ativo: false, observacoes: 'Contrato encerrado', criadoEm: new Date().toISOString() },
       ];
-      localStorage.setItem('elolab_clinic_convenios', JSON.stringify(demoConvenios));
+      setCollection('convenios', demoConvenios);
       setConvenios(demoConvenios);
     } else {
       setConvenios(data);
@@ -133,7 +133,7 @@ export default function Convenios() {
       } as Convenio);
     }
 
-    localStorage.setItem('elolab_clinic_convenios', JSON.stringify(allConvenios));
+    setCollection('convenios', allConvenios);
     loadData();
     setIsFormOpen(false);
     toast({ title: 'Sucesso', description: 'Convênio salvo com sucesso.' });

@@ -1,5 +1,5 @@
 // Audit Trail System for tracking changes
-import { getItem, setItem, generateId } from './localStorage';
+import { getItem, setItem, generateId } from './storageCore';
 
 export interface AuditEntry {
   id: string;
