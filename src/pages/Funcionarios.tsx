@@ -31,7 +31,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
@@ -128,7 +128,7 @@ export default function Funcionarios() {
       allUsers.push(novoFunc);
     }
 
-    localStorage.setItem('elolab_clinic_users', JSON.stringify(allUsers));
+    setCollection('users', allUsers);
     loadFuncionarios();
     setIsDialogOpen(false);
     toast({
@@ -141,7 +141,7 @@ export default function Funcionarios() {
     if (confirm('Tem certeza que deseja excluir este funcionário?')) {
       const allUsers = getAll<User>('users');
       const filtered = allUsers.filter(u => u.id !== id);
-      localStorage.setItem('elolab_clinic_users', JSON.stringify(filtered));
+      setCollection('users', filtered as any);
       loadFuncionarios();
       toast({
         title: 'Funcionário excluído',

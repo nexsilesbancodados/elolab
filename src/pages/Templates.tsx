@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getAll, create, update, remove, generateId } from '@/lib/localStorage';
+import { getAll, remove, generateId, setCollection } from '@/lib/localStorage';
 import { PrescriptionTemplate, CertificateTemplate } from '@/types/templates';
 
 const PRESCRIPTION_TYPES = {
@@ -89,7 +89,7 @@ export default function Templates() {
       } as PrescriptionTemplate);
     }
 
-    localStorage.setItem('elolab_clinic_prescription_templates', JSON.stringify(templates));
+    setCollection('prescription_templates', templates);
     loadData();
     setIsPrescriptionFormOpen(false);
     setPrescriptionForm({});
@@ -117,7 +117,7 @@ export default function Templates() {
       } as CertificateTemplate);
     }
 
-    localStorage.setItem('elolab_clinic_certificate_templates', JSON.stringify(templates));
+    setCollection('certificate_templates', templates);
     loadData();
     setIsCertificateFormOpen(false);
     setCertificateForm({});
@@ -143,7 +143,7 @@ export default function Templates() {
       criadoEm: new Date().toISOString(),
     };
     templates.push(newTemplate);
-    localStorage.setItem(`elolab_clinic_${collection}`, JSON.stringify(templates));
+    setCollection(collection, templates);
     loadData();
     toast({ title: 'Sucesso', description: 'Template duplicado' });
   };

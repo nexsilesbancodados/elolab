@@ -29,7 +29,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 
 interface Produto {
@@ -86,7 +86,7 @@ export default function Estoque() {
         { id: '4', nome: 'Álcool 70%', categoria: 'Limpeza', unidade: 'Litro', estoqueAtual: 8, estoqueMinimo: 10, estoqueMaximo: 30, precoCusto: 12, precoVenda: 20, localizacao: 'Prateleira C1', criadoEm: new Date().toISOString() },
         { id: '5', nome: 'Seringa 10ml', categoria: 'Materiais Hospitalares', unidade: 'Unidade', estoqueAtual: 200, estoqueMinimo: 100, estoqueMaximo: 500, precoCusto: 0.5, precoVenda: 1.5, localizacao: 'Prateleira B2', criadoEm: new Date().toISOString() },
       ];
-      localStorage.setItem('elolab_clinic_estoque', JSON.stringify(demoProdutos));
+      setCollection('estoque', demoProdutos);
       setProdutos(demoProdutos);
     } else {
       setProdutos(data);
@@ -151,7 +151,7 @@ export default function Estoque() {
       } as Produto);
     }
 
-    localStorage.setItem('elolab_clinic_estoque', JSON.stringify(allProdutos));
+    setCollection('estoque', allProdutos);
     loadData();
     setIsFormOpen(false);
     toast({ title: 'Sucesso', description: 'Produto salvo com sucesso.' });
@@ -187,7 +187,7 @@ export default function Estoque() {
         }
         allProdutos[index].estoqueAtual -= movimentacaoData.quantidade;
       }
-      localStorage.setItem('elolab_clinic_estoque', JSON.stringify(allProdutos));
+      setCollection('estoque', allProdutos);
       loadData();
       setIsMovimentacaoOpen(false);
       toast({ 

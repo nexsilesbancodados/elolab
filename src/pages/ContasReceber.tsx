@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 
 interface ContaReceber {
@@ -77,7 +77,7 @@ export default function ContasReceber() {
     });
     
     if (JSON.stringify(data) !== JSON.stringify(updatedData)) {
-      localStorage.setItem('elolab_clinic_contas_receber', JSON.stringify(updatedData));
+      setCollection('contas_receber', updatedData);
     }
     
     setContas(updatedData);
@@ -128,7 +128,7 @@ export default function ContasReceber() {
       } as ContaReceber);
     }
 
-    localStorage.setItem('elolab_clinic_contas_receber', JSON.stringify(allContas));
+    setCollection('contas_receber', allContas);
     loadData();
     setIsFormOpen(false);
     toast({ title: 'Sucesso', description: 'Conta salva com sucesso.' });
@@ -157,7 +157,7 @@ export default function ContasReceber() {
         dataPagamento: formData.dataPagamento,
         formaPagamento: formData.formaPagamento,
       };
-      localStorage.setItem('elolab_clinic_contas_receber', JSON.stringify(allContas));
+      setCollection('contas_receber', allContas);
       loadData();
       setIsPagamentoOpen(false);
       toast({ title: 'Sucesso', description: 'Pagamento registrado com sucesso.' });

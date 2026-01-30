@@ -41,7 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Lancamento, StatusPagamento } from '@/types';
-import { getAll, generateId, remove } from '@/lib/localStorage';
+import { getAll, generateId, remove, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -209,7 +209,7 @@ export default function Financeiro() {
       allLancamentos.push(newLancamento);
     }
 
-    localStorage.setItem('elolab_clinic_lancamentos', JSON.stringify(allLancamentos));
+    setCollection('lancamentos', allLancamentos);
     loadData();
     setIsFormOpen(false);
     toast({
