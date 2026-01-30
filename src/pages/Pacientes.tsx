@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente } from '@/types';
-import { getAll, create, update, remove, generateId } from '@/lib/localStorage';
+import { getAll, create, update, remove } from '@/lib/localStorage';
 import { exportarPacientes } from '@/lib/excelExporter';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
 
@@ -125,9 +125,8 @@ export default function Pacientes() {
         description: 'Os dados foram salvos com sucesso.',
       });
     } else {
-      const newPaciente: Paciente = {
-        ...formData,
-        id: generateId(),
+      create<Paciente>('pacientes', {
+        ...(formData as Omit<Paciente, 'id'>),
         criadoEm: new Date().toISOString(),
         alergias: formData.alergias || [],
         endereco: formData.endereco || {
@@ -138,10 +137,7 @@ export default function Pacientes() {
           cidade: '',
           estado: '',
         },
-      } as Paciente;
-      const pacientesAtuais = getAll<Paciente>('pacientes');
-      pacientesAtuais.push(newPaciente);
-      localStorage.setItem('elolab_clinic_pacientes', JSON.stringify(pacientesAtuais));
+      });
       toast({
         title: 'Paciente cadastrado',
         description: 'O paciente foi adicionado com sucesso.',

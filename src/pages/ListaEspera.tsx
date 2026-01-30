@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ItemListaEspera, Paciente, User } from '@/types';
-import { getAll, generateId, setItem } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { format, differenceInDays } from 'date-fns';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -143,7 +143,7 @@ export default function ListaEspera() {
 
     const allLista = getAll<ItemListaEspera>('listaEspera');
     allLista.push(novoItem);
-    setItem('listaEspera', allLista);
+    setCollection('listaEspera', allLista);
 
     loadData();
     setIsDialogOpen(false);
@@ -158,7 +158,7 @@ export default function ListaEspera() {
     const index = allLista.findIndex(item => item.id === id);
     if (index !== -1) {
       allLista[index].status = newStatus;
-      setItem('listaEspera', allLista);
+      setCollection('listaEspera', allLista);
       loadData();
       toast({
         title: 'Status atualizado',
@@ -171,7 +171,7 @@ export default function ListaEspera() {
     if (confirm('Tem certeza que deseja remover este item da lista?')) {
       const allLista = getAll<ItemListaEspera>('listaEspera');
       const filtered = allLista.filter(item => item.id !== id);
-      setItem('listaEspera', filtered);
+      setCollection('listaEspera', filtered);
       loadData();
       toast({
         title: 'Removido',

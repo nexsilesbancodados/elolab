@@ -24,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 
 export default function Medicos() {
   const [medicos, setMedicos] = useState<(User & { senha?: string })[]>([]);
@@ -112,7 +112,7 @@ export default function Medicos() {
       allUsers.push(novoMedico);
     }
 
-    localStorage.setItem('elolab_clinic_users', JSON.stringify(allUsers));
+    setCollection('users', allUsers);
     loadMedicos();
     setIsDialogOpen(false);
     toast({
@@ -125,7 +125,7 @@ export default function Medicos() {
     if (confirm('Tem certeza que deseja excluir este médico?')) {
       const allUsers = getAll<User>('users');
       const filtered = allUsers.filter(u => u.id !== id);
-      localStorage.setItem('elolab_clinic_users', JSON.stringify(filtered));
+      setCollection('users', filtered as any);
       loadMedicos();
       toast({
         title: 'Médico excluído',

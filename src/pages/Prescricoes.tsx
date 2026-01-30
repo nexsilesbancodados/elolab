@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente, User } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import { gerarReceita, openPDF, downloadPDF } from '@/lib/pdfGenerator';
 
@@ -147,7 +147,7 @@ export default function Prescricoes() {
     } as Prescricao;
 
     allPrescricoes.push(newPrescricao);
-    localStorage.setItem('elolab_clinic_prescricoes', JSON.stringify(allPrescricoes));
+    setCollection('prescricoes', allPrescricoes);
     loadData();
     setIsFormOpen(false);
     toast({

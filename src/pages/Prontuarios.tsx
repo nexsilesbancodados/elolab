@@ -32,7 +32,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Prontuario, Prescricao, Paciente, User, Agendamento } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Prontuarios() {
@@ -154,7 +154,7 @@ export default function Prontuarios() {
       allProntuarios.push(prontuarioCompleto);
     }
 
-    localStorage.setItem('elolab_clinic_prontuarios', JSON.stringify(allProntuarios));
+    setCollection('prontuarios', allProntuarios);
     loadData();
     setIsProntuarioOpen(false);
     toast({
