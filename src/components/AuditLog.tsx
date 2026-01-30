@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { History, Filter, Trash2, RefreshCw } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { History, Filter, Trash2, RefreshCw, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -32,6 +32,8 @@ import {
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { exportAuditEntriesAsCsv, exportAuditEntriesAsJson } from '@/lib/auditExport';
 
 const ACTION_COLORS = {
   create: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -43,6 +45,10 @@ export function AuditLog() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [filterCollection, setFilterCollection] = useState<string>('all');
   const [filterAction, setFilterAction] = useState<string>('all');
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
+  const [filterSearch, setFilterSearch] = useState<string>('');
+  const [filterUser, setFilterUser] = useState<string>('');
   const [showClearDialog, setShowClearDialog] = useState(false);
   const { toast } = useToast();
 
@@ -50,13 +56,23 @@ export function AuditLog() {
     const filters: any = {};
     if (filterCollection !== 'all') filters.collection = filterCollection;
     if (filterAction !== 'all') filters.action = filterAction;
+
+    // Date filters: interpret as local day boundaries
+    if (filterStartDate) {
+      const start = new Date(`${filterStartDate}T00:00:00`);
+      filters.startDate = start.toISOString();
+    }
+    if (filterEndDate) {
+      const end = new Date(`${filterEndDate}T23:59:59.999`);
+      filters.endDate = end.toISOString();
+    }
     
     setEntries(getAuditLog(filters));
   };
 
   useEffect(() => {
     loadEntries();
-  }, [filterCollection, filterAction]);
+  }, [filterCollection, filterAction, filterStartDate, filterEndDate]);
 
   const handleClear = () => {
     clearAuditLog();
@@ -68,7 +84,40 @@ export function AuditLog() {
     });
   };
 
-  const collections = [...new Set(entries.map(e => e.collection))];
+  const filteredEntries = useMemo(() => {
+    const q = filterSearch.trim().toLowerCase();
+    const u = filterUser.trim().toLowerCase();
+
+    return entries.filter((e) => {
+      if (u) {
+        const userHay = `${e.userName ?? ''} ${e.userId ?? ''}`.toLowerCase();
+        if (!userHay.includes(u)) return false;
+      }
+
+      if (q) {
+        const changesHay = (e.changes || [])
+          .map((c) => `${c.field} ${String(c.oldValue ?? '')} ${String(c.newValue ?? '')}`)
+          .join(' ')
+          .toLowerCase();
+        const hay = `${e.recordName ?? ''} ${e.recordId ?? ''} ${e.collection} ${e.action} ${changesHay}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [entries, filterSearch, filterUser]);
+
+  const handleExportJson = () => {
+    if (filteredEntries.length === 0) return;
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    exportAuditEntriesAsJson(filteredEntries, `historico-alteracoes-${dateStr}.json`);
+  };
+
+  const handleExportCsv = () => {
+    if (filteredEntries.length === 0) return;
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    exportAuditEntriesAsCsv(filteredEntries, `historico-alteracoes-${dateStr}.csv`);
+  };
 
   return (
     <Card>
@@ -87,6 +136,18 @@ export function AuditLog() {
             <Button variant="outline" size="sm" onClick={loadEntries}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            {filteredEntries.length > 0 && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleExportJson} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  CSV
+                </Button>
+              </>
+            )}
             {entries.length > 0 && (
               <Button variant="outline" size="sm" onClick={() => setShowClearDialog(true)}>
                 <Trash2 className="h-4 w-4" />
@@ -97,7 +158,7 @@ export function AuditLog() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="flex gap-4">
+        <div className="grid gap-4 md:grid-cols-4">
           <div className="flex-1">
             <Select value={filterCollection} onValueChange={setFilterCollection}>
               <SelectTrigger>
@@ -125,10 +186,37 @@ export function AuditLog() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">De</div>
+            <Input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Até</div>
+            <Input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Buscar</div>
+            <Input
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+              placeholder="Paciente, registro, campo alterado…"
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Usuário</div>
+            <Input
+              value={filterUser}
+              onChange={(e) => setFilterUser(e.target.value)}
+              placeholder="Nome ou ID do usuário"
+            />
+          </div>
         </div>
 
         {/* Entries */}
-        {entries.length === 0 ? (
+        {filteredEntries.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <History className="mx-auto h-12 w-12 mb-4 opacity-50" />
             <p>Nenhuma alteração registrada</p>
@@ -137,7 +225,7 @@ export function AuditLog() {
         ) : (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {entries.map((entry) => (
+              {filteredEntries.map((entry) => (
                 <div key={entry.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -152,6 +240,11 @@ export function AuditLog() {
                       <p className="text-sm font-medium">
                         {entry.recordName || entry.recordId}
                       </p>
+                      {(entry.userName || entry.userId) && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {(entry.userName || 'Usuário')}{entry.userId ? ` (${entry.userId})` : ''}
+                        </p>
+                      )}
                       {entry.changes && entry.changes.length > 0 && (
                         <div className="mt-2 text-xs text-muted-foreground space-y-1">
                           {entry.changes.slice(0, 3).map((change, idx) => (
