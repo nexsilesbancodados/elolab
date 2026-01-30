@@ -32,7 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente, User } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import { gerarAtestado, openPDF, downloadPDF } from '@/lib/pdfGenerator';
 
@@ -117,7 +117,7 @@ export default function Atestados() {
     } as Atestado;
 
     allAtestados.push(newAtestado);
-    localStorage.setItem('elolab_clinic_atestados', JSON.stringify(allAtestados));
+    setCollection('atestados', allAtestados);
     loadData();
     setIsFormOpen(false);
     toast({

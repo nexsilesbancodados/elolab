@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FilaAtendimento, Agendamento, Paciente, User } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -118,14 +118,14 @@ export default function Fila() {
     };
 
     allFila.push(novoItem);
-    localStorage.setItem('elolab_clinic_fila', JSON.stringify(allFila));
+    setCollection('fila', allFila);
 
     // Update agendamento status
     const allAgendamentos = getAll<Agendamento>('agendamentos');
     const agIndex = allAgendamentos.findIndex((a) => a.id === selectedAgendamento);
     if (agIndex !== -1) {
       allAgendamentos[agIndex].status = 'aguardando';
-      localStorage.setItem('elolab_clinic_agendamentos', JSON.stringify(allAgendamentos));
+      setCollection('agendamentos', allAgendamentos);
     }
 
     loadData();
@@ -152,7 +152,7 @@ export default function Fila() {
     if (index !== -1) {
       allFila[index].status = 'em_atendimento';
       allFila[index].sala = sala;
-      localStorage.setItem('elolab_clinic_fila', JSON.stringify(allFila));
+      setCollection('fila', allFila);
     }
 
     // Update agendamento
@@ -160,7 +160,7 @@ export default function Fila() {
     const agIndex = allAgendamentos.findIndex((a) => a.id === item.agendamentoId);
     if (agIndex !== -1) {
       allAgendamentos[agIndex].status = 'em_atendimento';
-      localStorage.setItem('elolab_clinic_agendamentos', JSON.stringify(allAgendamentos));
+      setCollection('agendamentos', allAgendamentos);
     }
 
     loadData();
@@ -178,7 +178,7 @@ export default function Fila() {
     const agIndex = allAgendamentos.findIndex((a) => a.id === item.agendamentoId);
     if (agIndex !== -1) {
       allAgendamentos[agIndex].status = 'finalizado';
-      localStorage.setItem('elolab_clinic_agendamentos', JSON.stringify(allAgendamentos));
+      setCollection('agendamentos', allAgendamentos);
     }
 
     loadData();
@@ -193,7 +193,7 @@ export default function Fila() {
     const index = allFila.findIndex((f) => f.id === id);
     if (index !== -1) {
       allFila[index].status = status;
-      localStorage.setItem('elolab_clinic_fila', JSON.stringify(allFila));
+      setCollection('fila', allFila);
     }
     loadData();
   };

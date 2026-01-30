@@ -56,6 +56,10 @@
     --ring: 210 100% 40%;
     
     --radius: 0.5rem;
+
+    /* Depth */
+    --shadow-elevated: 0 12px 30px -14px hsl(var(--foreground) / 0.18);
+    --shadow-soft: 0 8px 22px -14px hsl(var(--foreground) / 0.14);
     
     /* Sidebar */
     --sidebar-background: 210 35% 18%;
@@ -121,6 +125,9 @@
     --sidebar-accent-foreground: 210 15% 95%;
     --sidebar-border: 210 25% 18%;
     --sidebar-ring: 210 100% 55%;
+
+    --shadow-elevated: 0 14px 34px -18px hsl(var(--foreground) / 0.35);
+    --shadow-soft: 0 10px 26px -18px hsl(var(--foreground) / 0.28);
   }
 }
 
@@ -141,7 +148,8 @@
 
 @layer components {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg;
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+    box-shadow: var(--shadow-soft);
   }
   
   .gradient-primary {

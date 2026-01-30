@@ -40,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '@/types';
-import { getAll, generateId, remove } from '@/lib/localStorage';
+import { getAll, generateId, remove, getItem, setItem, setCollection } from '@/lib/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -171,12 +171,12 @@ export default function Usuarios() {
       allUsers.push(newUser);
 
       // Store password separately (in a real app, this would be hashed)
-      const passwords = JSON.parse(localStorage.getItem('elolab_clinic_passwords') || '{}');
+      const passwords = (getItem<Record<string, string>>('passwords') || {});
       passwords[newUser.email] = formData.senha;
-      localStorage.setItem('elolab_clinic_passwords', JSON.stringify(passwords));
+      setItem('passwords', passwords);
     }
 
-    localStorage.setItem('elolab_clinic_users', JSON.stringify(allUsers));
+    setCollection('users', allUsers);
     loadData();
     setIsFormOpen(false);
     toast({
@@ -199,7 +199,7 @@ export default function Usuarios() {
     const index = allUsers.findIndex((u) => u.id === user.id);
     if (index !== -1) {
       allUsers[index].ativo = !allUsers[index].ativo;
-      localStorage.setItem('elolab_clinic_users', JSON.stringify(allUsers));
+      setCollection('users', allUsers);
       loadData();
       toast({
         title: allUsers[index].ativo ? 'Usuário ativado' : 'Usuário desativado',
