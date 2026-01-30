@@ -70,5 +70,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Evita múltiplas instâncias de React (causa comum de "Component is not a function")
+    dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
 }));
