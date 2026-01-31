@@ -28,10 +28,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getAll } from '@/lib/localStorage';
-import { Paciente, User as UserType } from '@/types';
+import { usePacientes } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -85,19 +84,15 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 ];
 
 export function Navbar({ onMenuClick }: NavbarProps) {
-  const { user, logout } = useAuth();
+  const { profile, signOut } = useSupabaseAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const { data: pacientes = [] } = usePacientes();
   const [notifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   
   // Initialize keyboard shortcuts
   useKeyboardShortcuts();
-
-  useEffect(() => {
-    setPacientes(getAll<Paciente>('pacientes'));
-  }, []);
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -111,9 +106,9 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -251,20 +246,20 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               <Button variant="ghost" className="flex items-center gap-2 px-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {user?.nome ? getInitials(user.nome) : 'U'}
+                    {profile?.nome ? getInitials(profile.nome) : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">{user?.nome?.split(' ')[0]}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                  <p className="text-sm font-medium">{profile?.nome?.split(' ')[0]}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Sem função'}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div>
-                  <p className="font-medium">{user?.nome}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="font-medium">{profile?.nome}</p>
+                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

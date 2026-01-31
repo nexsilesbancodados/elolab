@@ -41,7 +41,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '@/types';
 import { getAll, generateId, remove, getItem, setItem, setCollection } from '@/lib/localStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -67,7 +67,7 @@ export default function Usuarios() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<Partial<User & { senha: string }>>({});
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
+  const { profile: currentUser } = useSupabaseAuth();
 
   useEffect(() => {
     loadData();
