@@ -1,0 +1,317 @@
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Loader2, CheckCircle, XCircle, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import clinicBackground from '@/assets/clinic-background.jpg';
+
+interface InvitationData {
+  id: string;
+  email: string;
+  roles: string[];
+  funcionario_id: string;
+  funcionario?: {
+    nome: string;
+    cargo: string | null;
+  };
+}
+
+export default function AceitarConvite() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    if (!token) {
+      setError('Token de convite inválido');
+      setLoading(false);
+      return;
+    }
+
+    validateToken();
+  }, [token]);
+
+  const validateToken = async () => {
+    try {
+      // Fetch invitation with funcionario data
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('employee_invitations')
+        .select(`
+          id,
+          email,
+          roles,
+          funcionario_id,
+          status,
+          expires_at
+        `)
+        .eq('token', token)
+        .maybeSingle();
+
+      if (inviteError) throw inviteError;
+
+      if (!inviteData) {
+        setError('Convite não encontrado ou já foi utilizado');
+        setLoading(false);
+        return;
+      }
+
+      if (inviteData.status !== 'pending') {
+        setError('Este convite já foi utilizado');
+        setLoading(false);
+        return;
+      }
+
+      if (new Date(inviteData.expires_at) < new Date()) {
+        setError('Este convite expirou');
+        setLoading(false);
+        return;
+      }
+
+      // Get funcionario name
+      const { data: funcData } = await supabase
+        .from('funcionarios')
+        .select('nome, cargo')
+        .eq('id', inviteData.funcionario_id)
+        .maybeSingle();
+
+      setInvitation({
+        ...inviteData,
+        funcionario: funcData || undefined,
+      });
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Error validating token:', err);
+      setError('Erro ao validar convite');
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (!invitation) return;
+
+    setSubmitting(true);
+
+    try {
+      // 1. Create user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: invitation.email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            nome: invitation.funcionario?.nome || invitation.email,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (!authData.user) {
+        throw new Error('Erro ao criar conta');
+      }
+
+      // 2. Update invitation status
+      await supabase
+        .from('employee_invitations')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('id', invitation.id);
+
+      // 3. Link funcionario to user
+      await supabase
+        .from('funcionarios')
+        .update({ user_id: authData.user.id })
+        .eq('id', invitation.funcionario_id);
+
+      // 4. Add user roles
+      if (invitation.roles.length > 0) {
+        const rolesToInsert = invitation.roles.map(role => ({
+          user_id: authData.user!.id,
+          role: role as 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro',
+        }));
+
+        await supabase.from('user_roles').insert(rolesToInsert);
+      }
+
+      toast.success('Conta criada com sucesso! Verifique seu e-mail para confirmar.');
+      navigate('/auth');
+    } catch (err: any) {
+      console.error('Error creating account:', err);
+      toast.error(err.message || 'Erro ao criar conta');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const roleLabels: Record<string, string> = {
+    admin: 'Administrador',
+    medico: 'Médico',
+    recepcao: 'Recepção',
+    enfermagem: 'Enfermagem',
+    financeiro: 'Financeiro',
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${clinicBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+        <Card className="relative z-10 w-full max-w-md bg-card/95 backdrop-blur-sm">
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{
+          backgroundImage: `url(${clinicBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+        <Card className="relative z-10 w-full max-w-md bg-card/95 backdrop-blur-sm">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <XCircle className="h-16 w-16 text-destructive mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Convite Inválido</h2>
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <Button onClick={() => navigate('/auth')}>Ir para Login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${clinicBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+      <Card className="relative z-10 w-full max-w-md bg-card/95 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle>Bem-vindo(a) à Equipe!</CardTitle>
+          <CardDescription>
+            {invitation?.funcionario?.nome && (
+              <span className="block text-foreground font-medium mt-1">
+                {invitation.funcionario.nome}
+              </span>
+            )}
+            Crie sua senha para acessar o sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={invitation?.email || ''}
+                  disabled
+                  className="pl-10 bg-muted"
+                />
+              </div>
+            </div>
+
+            {invitation?.roles && invitation.roles.length > 0 && (
+              <div className="space-y-2">
+                <Label>Suas permissões</Label>
+                <div className="flex flex-wrap gap-2">
+                  {invitation.roles.map(role => (
+                    <span
+                      key={role}
+                      className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                    >
+                      {roleLabels[role] || role}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Digite a senha novamente"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                'Criar Conta e Acessar'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

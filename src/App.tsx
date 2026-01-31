@@ -11,6 +11,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 
 // Pages
 import Auth from "@/pages/Auth";
+import AceitarConvite from "@/pages/AceitarConvite";
 import Dashboard from "@/pages/Dashboard";
 import Pacientes from "@/pages/Pacientes";
 import Agenda from "@/pages/Agenda";
@@ -63,6 +64,7 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/login" element={<Navigate to="/auth" replace />} />
+                <Route path="/aceitar-convite" element={<AceitarConvite />} />
                 <Route path="/painel-tv" element={<PainelTV />} />
                 
                 {/* Protected Routes */}
