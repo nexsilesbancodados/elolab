@@ -4,14 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SupabaseProtectedRoute } from "@/components/SupabaseProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { seedDemoData } from "@/lib/seedData";
 
 // Pages
-import Login from "@/pages/Login";
+import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Pacientes from "@/pages/Pacientes";
 import Agenda from "@/pages/Agenda";
@@ -41,13 +40,16 @@ import NotFound from "@/pages/NotFound";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function App() {
-  useEffect(() => {
-    seedDemoData();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -55,19 +57,20 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AuthProvider>
+            <SupabaseAuthProvider>
               <NotificationBanner />
               <Routes>
                 {/* Public Routes */}
-                <Route path="/login" element={<Login />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/login" element={<Navigate to="/auth" replace />} />
                 <Route path="/painel-tv" element={<PainelTV />} />
                 
                 {/* Protected Routes */}
                 <Route
                   element={
-                    <ProtectedRoute>
+                    <SupabaseProtectedRoute>
                       <MainLayout />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 >
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -98,13 +101,13 @@ function App() {
                 </Route>
                 
                 {/* Redirects */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/" element={<Navigate to="/auth" replace />} />
                 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <InstallPWA />
-            </AuthProvider>
+            </SupabaseAuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

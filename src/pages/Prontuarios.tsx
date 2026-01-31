@@ -33,7 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Prontuario, Prescricao, Paciente, User, Agendamento } from '@/types';
 import { getAll, generateId, setCollection } from '@/lib/localStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export default function Prontuarios() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -46,7 +46,7 @@ export default function Prontuarios() {
   const [currentProntuario, setCurrentProntuario] = useState<Partial<Prontuario>>({});
   const [prescricoes, setPrescricoes] = useState<Prescricao[]>([]);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { profile: user } = useSupabaseAuth();
 
   useEffect(() => {
     loadData();

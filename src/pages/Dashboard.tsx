@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { getAll } from '@/lib/localStorage';
 import { Agendamento, Paciente, Lancamento, User, FilaAtendimento } from '@/types';
 import {
@@ -110,7 +110,7 @@ interface EstoqueItem {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { profile: user } = useSupabaseAuth();
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);

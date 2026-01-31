@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   LayoutDashboard,
   Users,
@@ -116,7 +116,7 @@ const menuGroups: MenuGroup[] = [
 
 export function Sidebar() {
   const location = useLocation();
-  const { hasPermission } = useAuth();
+  const { hasAnyRole } = useSupabaseAuth();
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('elolab_sidebar_collapsed');
     return saved === 'true';
