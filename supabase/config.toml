@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.process-notification-queue]
 verify_jwt = false
+
+[functions.monthly-report-generator]
+verify_jwt = false
+
+[functions.birthday-greetings]
+verify_jwt = false
+
+[functions.ai-medical-assistant]
+verify_jwt = false
