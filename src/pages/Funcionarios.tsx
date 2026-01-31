@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Users, Mail, Phone, Loader2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Users, Mail, Phone, Loader2, Send, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +38,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface FuncionarioWithRoles {
   id: string;
@@ -49,6 +54,7 @@ interface FuncionarioWithRoles {
   ativo: boolean | null;
   user_id: string | null;
   roles: AppRole[];
+  hasInvitation?: boolean;
 }
 
 const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: string }[] = [
@@ -239,6 +245,54 @@ export default function Funcionarios() {
     },
   });
 
+  // Mutation para enviar convite por e-mail
+  const inviteMutation = useMutation({
+    mutationFn: async (func: FuncionarioWithRoles) => {
+      if (!func.email) {
+        throw new Error('Funcionário não possui e-mail cadastrado');
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Você precisa estar autenticado');
+      }
+
+      const response = await supabase.functions.invoke('send-employee-invitation', {
+        body: {
+          funcionarioId: func.id,
+          email: func.email,
+          nome: func.nome,
+          roles: func.roles,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao enviar convite');
+      }
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Erro ao enviar convite');
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['funcionarios-with-roles'] });
+      toast.success('Convite enviado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao enviar convite: ' + error.message);
+    },
+  });
+
+  const handleSendInvitation = (func: FuncionarioWithRoles) => {
+    if (!func.email) {
+      toast.error('Cadastre um e-mail para este funcionário primeiro');
+      return;
+    }
+    inviteMutation.mutate(func);
+  };
+
   const filteredFuncionarios = funcionarios.filter(f =>
     f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -424,6 +478,37 @@ export default function Funcionarios() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {/* Botão de Enviar Convite - só aparece se não tem user_id e tem email */}
+                          {!func.user_id && func.email && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  onClick={() => handleSendInvitation(func)}
+                                  disabled={inviteMutation.isPending}
+                                >
+                                  {inviteMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Send className="h-4 w-4 text-primary" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Enviar convite por e-mail</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {/* Badge de conta vinculada */}
+                          {func.user_id && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center w-8 h-8">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Conta vinculada</TooltipContent>
+                            </Tooltip>
+                          )}
                           <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(func)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
