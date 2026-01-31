@@ -180,6 +180,78 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          created_at: string | null
+          detalhes: Json | null
+          duracao_ms: number | null
+          erro_mensagem: string | null
+          executado_por: string | null
+          id: string
+          nome: string
+          registros_erro: number | null
+          registros_processados: number | null
+          registros_sucesso: number | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          detalhes?: Json | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          executado_por?: string | null
+          id?: string
+          nome: string
+          registros_erro?: number | null
+          registros_processados?: number | null
+          registros_sucesso?: number | null
+          status: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          detalhes?: Json | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          executado_por?: string | null
+          id?: string
+          nome?: string
+          registros_erro?: number | null
+          registros_processados?: number | null
+          registros_sucesso?: number | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      automation_settings: {
+        Row: {
+          ativo: boolean | null
+          chave: string
+          descricao: string | null
+          id: string
+          updated_at: string | null
+          valor: Json
+        }
+        Insert: {
+          ativo?: boolean | null
+          chave: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string | null
+          valor: Json
+        }
+        Update: {
+          ativo?: boolean | null
+          chave?: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string | null
+          valor?: Json
+        }
+        Relationships: []
+      }
       convenios: {
         Row: {
           ativo: boolean | null
@@ -684,6 +756,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_queue: {
+        Row: {
+          agendado_para: string | null
+          assunto: string | null
+          conteudo: string
+          created_at: string | null
+          dados_extras: Json | null
+          destinatario_email: string | null
+          destinatario_id: string | null
+          destinatario_nome: string | null
+          destinatario_telefone: string | null
+          enviado_em: string | null
+          erro_mensagem: string | null
+          id: string
+          max_tentativas: number | null
+          status: string
+          template_id: string | null
+          tentativas: number | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          agendado_para?: string | null
+          assunto?: string | null
+          conteudo: string
+          created_at?: string | null
+          dados_extras?: Json | null
+          destinatario_email?: string | null
+          destinatario_id?: string | null
+          destinatario_nome?: string | null
+          destinatario_telefone?: string | null
+          enviado_em?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          max_tentativas?: number | null
+          status?: string
+          template_id?: string | null
+          tentativas?: number | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          agendado_para?: string | null
+          assunto?: string | null
+          conteudo?: string
+          created_at?: string | null
+          dados_extras?: Json | null
+          destinatario_email?: string | null
+          destinatario_id?: string | null
+          destinatario_nome?: string | null
+          destinatario_telefone?: string | null
+          enviado_em?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          max_tentativas?: number | null
+          status?: string
+          template_id?: string | null
+          tentativas?: number | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_templates: {
+        Row: {
+          assunto: string | null
+          ativo: boolean | null
+          categoria: string
+          conteudo: string
+          created_at: string | null
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string | null
+          variaveis: string[] | null
+        }
+        Insert: {
+          assunto?: string | null
+          ativo?: boolean | null
+          categoria: string
+          conteudo: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          tipo: string
+          updated_at?: string | null
+          variaveis?: string[] | null
+        }
+        Update: {
+          assunto?: string | null
+          ativo?: boolean | null
+          categoria?: string
+          conteudo?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string | null
+          variaveis?: string[] | null
+        }
+        Relationships: []
       }
       pacientes: {
         Row: {

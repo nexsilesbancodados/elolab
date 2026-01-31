@@ -1,5 +1,104 @@
-
 # Plano de Automações para o EloLab
+
+## Status de Implementação
+
+| Automação | Status | Detalhes |
+|-----------|--------|----------|
+| **Fase 1** | ✅ Concluída | |
+| Lembretes de consulta (24h/2h) | ✅ Implementado | Edge Function `send-appointment-reminder` |
+| Faturamento automático | ✅ Implementado | Trigger `auto_billing_on_appointment_complete` |
+| Alertas de estoque | ✅ Implementado | Edge Function `stock-alert` + Trigger `check_critical_stock` |
+| Processamento de fila | ✅ Implementado | Edge Function `process-notification-queue` |
+| **Fase 2** | ⏳ Pendente | |
+| Fluxo de chegada | ⏳ Pendente | |
+| Notificação de exames | ⏳ Pendente | |
+| Relatórios mensais | ⏳ Pendente | |
+| **Fase 3** | ⏳ Pendente | |
+| WhatsApp Business | ⏳ Pendente | Requer Twilio/Z-API |
+| Aniversariantes | ⏳ Pendente | Template já criado |
+| Backup automático | ⏳ Pendente | |
+| **Fase 4** | ⏳ Pendente | |
+| Assistente IA prontuários | ⏳ Pendente | Requer LOVABLE_API_KEY (já configurada) |
+
+---
+
+## Infraestrutura Implementada
+
+### Tabelas Criadas
+- `notification_templates` - Templates de mensagens (5 templates pré-configurados)
+- `notification_queue` - Fila de notificações pendentes
+- `automation_logs` - Log de execução das automações
+- `automation_settings` - Configurações das automações
+
+### Edge Functions Ativas
+1. `send-appointment-reminder` - Envia lembretes 24h e 2h antes das consultas
+2. `stock-alert` - Verifica e notifica itens com estoque crítico
+3. `process-notification-queue` - Processa fila de notificações pendentes
+
+### Triggers de Banco de Dados
+1. `trigger_auto_billing` - Cria lançamento financeiro ao finalizar consulta
+2. `trigger_check_critical_stock` - Adiciona alerta à fila quando estoque fica crítico
+
+---
+
+## Como Agendar Execução Automática (Cron)
+
+Para que as automações rodem automaticamente, execute este SQL no Supabase:
+
+```sql
+-- Habilitar extensões necessárias
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Lembretes de consulta: rodar a cada hora
+SELECT cron.schedule(
+  'appointment-reminders-hourly',
+  '0 * * * *', -- A cada hora
+  $$
+  SELECT net.http_post(
+    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/send-appointment-reminder',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+
+-- Alertas de estoque: rodar diariamente às 8h
+SELECT cron.schedule(
+  'stock-alerts-daily',
+  '0 8 * * *', -- Todo dia às 8h
+  $$
+  SELECT net.http_post(
+    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/stock-alert',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+
+-- Processar fila de notificações: rodar a cada 5 minutos
+SELECT cron.schedule(
+  'process-notifications',
+  '*/5 * * * *', -- A cada 5 minutos
+  $$
+  SELECT net.http_post(
+    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/process-notification-queue',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+```
+
+---
+
+## Próximos Passos
+
+1. **Fase 2**: Implementar fluxo de chegada, notificação de exames e relatórios mensais
+2. **Fase 3**: Configurar integração WhatsApp com Twilio/Z-API
+3. **Fase 4**: Implementar assistente IA para prontuários
+
+---
 
 ## Visão Geral
 
@@ -95,52 +194,40 @@ Após análise completa do sistema, identifiquei **12 automações de alto impac
 
 ```text
 supabase/functions/
-├── send-appointment-reminder/     # Lembretes de consulta
-├── send-whatsapp-notification/    # Integração WhatsApp (Twilio/Z-API)
-├── auto-billing/                  # Faturamento automático
-├── stock-alert/                   # Alertas de estoque
-├── exam-result-notification/      # Notificação de exames
-├── monthly-report-generator/      # Relatórios mensais
-├── ai-medical-assistant/          # Assistente IA para prontuários
-└── birthday-greetings/            # Mensagens de aniversário
+├── send-appointment-reminder/     ✅ Implementado
+├── stock-alert/                   ✅ Implementado
+├── process-notification-queue/    ✅ Implementado
+├── send-whatsapp-notification/    ⏳ Pendente (Twilio/Z-API)
+├── exam-result-notification/      ⏳ Pendente
+├── monthly-report-generator/      ⏳ Pendente
+├── ai-medical-assistant/          ⏳ Pendente
+└── birthday-greetings/            ⏳ Pendente
 ```
 
 ### Database: Novas Tabelas
 
 ```text
-- notification_queue          # Fila de notificações pendentes
-- notification_templates      # Templates de mensagens
-- automation_logs            # Log de execução das automações
-- scheduled_jobs             # Agendamentos de tarefas
+✅ notification_queue          # Fila de notificações pendentes
+✅ notification_templates      # Templates de mensagens
+✅ automation_logs            # Log de execução das automações
+✅ automation_settings        # Configurações de automação
 ```
 
 ### Integrações Externas Sugeridas
 
-| Serviço | Uso | Já Configurado? |
-|---------|-----|-----------------|
-| Resend | E-mails transacionais | Sim |
-| Twilio/Z-API | WhatsApp Business | Não |
-| Lovable AI | Assistente médico IA | Disponível |
+| Serviço | Uso | Status |
+|---------|-----|--------|
+| Resend | E-mails transacionais | ✅ Configurado |
+| Twilio/Z-API | WhatsApp Business | ⏳ Não configurado |
+| Lovable AI | Assistente médico IA | ✅ Disponível |
 
 ---
 
 ## Priorização Recomendada
 
-| Fase | Automações | Impacto | Esforço |
-|------|------------|---------|---------|
-| **Fase 1** | Lembretes de consulta, Faturamento automático, Alertas de estoque | Alto | Médio |
-| **Fase 2** | Fluxo de chegada, Notificação de exames, Relatórios mensais | Alto | Médio |
-| **Fase 3** | WhatsApp Business, Aniversariantes, Backup automático | Médio | Baixo |
-| **Fase 4** | Assistente IA para prontuários | Alto | Alto |
-
----
-
-## Próximos Passos
-
-Escolha por onde quer começar:
-
-1. **Começar pela Fase 1** - Implementar lembretes, faturamento e alertas de estoque
-2. **Focar em WhatsApp** - Configurar integração com Twilio/Z-API para notificações
-3. **Assistente IA primeiro** - Implementar sugestões inteligentes nos prontuários
-4. **Implementar tudo gradualmente** - Seguir a ordem de priorização acima
-
+| Fase | Automações | Status |
+|------|------------|--------|
+| **Fase 1** | Lembretes de consulta, Faturamento automático, Alertas de estoque | ✅ Concluída |
+| **Fase 2** | Fluxo de chegada, Notificação de exames, Relatórios mensais | ⏳ Pendente |
+| **Fase 3** | WhatsApp Business, Aniversariantes, Backup automático | ⏳ Pendente |
+| **Fase 4** | Assistente IA para prontuários | ⏳ Pendente |
