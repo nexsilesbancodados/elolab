@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Stethoscope, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import clinicBackground from '@/assets/clinic-background.jpg';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -112,15 +113,35 @@ export default function Auth() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-success/10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${clinicBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-success/10 p-4">
-      <div className="w-full max-w-md animate-fade-in">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${clinicBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Overlay escuro para melhor legibilidade */}
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+      
+      <div className="w-full max-w-md animate-fade-in relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg mb-4">
@@ -131,7 +152,7 @@ export default function Auth() {
         </div>
 
         {/* Auth Card */}
-        <Card className="shadow-xl">
+        <Card className="shadow-xl bg-card/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-2">
             <CardTitle>Bem-vindo</CardTitle>
             <CardDescription>
