@@ -107,8 +107,6 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Administração',
     items: [
-      { label: 'Usuários', icon: Users, href: '/usuarios' },
-      { label: 'Segurança', icon: Shield, href: '/seguranca' },
       { label: 'Configurações', icon: Settings, href: '/configuracoes' },
     ],
   },
