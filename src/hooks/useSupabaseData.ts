@@ -187,6 +187,7 @@ export function usePacientes() {
     validade_carteira: string | null;
     alergias: string[] | null;
     observacoes: string | null;
+    foto_url: string | null;
     created_at: string;
     updated_at: string;
   }>('pacientes', {

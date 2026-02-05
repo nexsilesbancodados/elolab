@@ -1,0 +1,354 @@
+import { useState } from 'react';
+import { 
+  Bot, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  AlertTriangle, 
+  RefreshCw,
+  Settings,
+  Play,
+  Pause
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { useSupabaseQuery, useSupabaseUpdate } from '@/hooks/useSupabaseData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AutomationLog {
+  id: string;
+  tipo: string;
+  nome: string;
+  status: string;
+  registros_processados: number | null;
+  registros_sucesso: number | null;
+  registros_erro: number | null;
+  erro_mensagem: string | null;
+  duracao_ms: number | null;
+  created_at: string;
+  detalhes: Record<string, unknown> | null;
+}
+
+interface AutomationSetting {
+  id: string;
+  chave: string;
+  valor: Record<string, unknown>;
+  descricao: string | null;
+  ativo: boolean | null;
+  updated_at: string;
+}
+
+const AUTOMATIONS = [
+  {
+    key: 'lembrete_consulta_24h',
+    name: 'Lembrete de Consulta (24h)',
+    description: 'Envia lembretes 24 horas antes da consulta',
+    icon: Clock,
+    color: 'text-blue-500',
+    endpoint: 'send-appointment-reminder',
+  },
+  {
+    key: 'lembrete_consulta_2h',
+    name: 'Lembrete de Consulta (2h)',
+    description: 'Envia lembretes 2 horas antes da consulta',
+    icon: Clock,
+    color: 'text-blue-500',
+    endpoint: 'send-appointment-reminder',
+  },
+  {
+    key: 'alerta_estoque_critico',
+    name: 'Alerta de Estoque Crítico',
+    description: 'Notifica quando itens estão abaixo do mínimo',
+    icon: AlertTriangle,
+    color: 'text-yellow-500',
+    endpoint: 'stock-alert',
+  },
+  {
+    key: 'faturamento_automatico',
+    name: 'Faturamento Automático',
+    description: 'Cria lançamentos ao finalizar consultas',
+    icon: CheckCircle2,
+    color: 'text-green-500',
+    endpoint: null, // Trigger-based
+  },
+  {
+    key: 'aniversariantes',
+    name: 'Mensagens de Aniversário',
+    description: 'Envia felicitações para pacientes',
+    icon: Bot,
+    color: 'text-pink-500',
+    endpoint: 'birthday-greetings',
+  },
+];
+
+export default function Automacoes() {
+  const [isRunning, setIsRunning] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+
+  const { data: logs = [], isLoading: loadingLogs, refetch: refetchLogs } = useSupabaseQuery<AutomationLog>('automation_logs', {
+    orderBy: { column: 'created_at', ascending: false }
+  });
+
+  const { data: settings = [], isLoading: loadingSettings, refetch: refetchSettings } = useSupabaseQuery<AutomationSetting>('automation_settings', {
+    orderBy: { column: 'chave', ascending: true }
+  });
+
+  const getSettingByKey = (key: string): AutomationSetting | undefined => {
+    return settings.find(s => s.chave === key);
+  };
+
+  const toggleAutomation = async (key: string, currentState: boolean) => {
+    const setting = getSettingByKey(key);
+    if (!setting) return;
+
+    try {
+      const { error } = await supabase
+        .from('automation_settings')
+        .update({ ativo: !currentState })
+        .eq('chave', key);
+
+      if (error) throw error;
+
+      toast({
+        title: !currentState ? 'Automação ativada' : 'Automação desativada',
+        description: `A automação "${AUTOMATIONS.find(a => a.key === key)?.name}" foi ${!currentState ? 'ativada' : 'desativada'}.`,
+      });
+      refetchSettings();
+    } catch (error) {
+      console.error('Error toggling automation:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao alterar status da automação.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const runAutomation = async (key: string, endpoint: string | null) => {
+    if (!endpoint) {
+      toast({
+        title: 'Automação baseada em trigger',
+        description: 'Esta automação é executada automaticamente pelo banco de dados.',
+      });
+      return;
+    }
+
+    setIsRunning(prev => ({ ...prev, [key]: true }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke(endpoint);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Automação executada',
+        description: `A automação foi executada com sucesso.`,
+      });
+      refetchLogs();
+    } catch (error) {
+      console.error('Error running automation:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao executar automação.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRunning(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'sucesso':
+        return <Badge className="bg-green-100 text-green-800">Sucesso</Badge>;
+      case 'erro':
+        return <Badge className="bg-red-100 text-red-800">Erro</Badge>;
+      case 'parcial':
+        return <Badge className="bg-yellow-100 text-yellow-800">Parcial</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getTypeBadge = (tipo: string) => {
+    const colors: Record<string, string> = {
+      lembrete: 'bg-blue-100 text-blue-800',
+      estoque: 'bg-yellow-100 text-yellow-800',
+      faturamento: 'bg-green-100 text-green-800',
+      exame: 'bg-purple-100 text-purple-800',
+      aniversario: 'bg-pink-100 text-pink-800',
+    };
+    return <Badge className={colors[tipo] || 'bg-gray-100 text-gray-800'}>{tipo}</Badge>;
+  };
+
+  if (loadingLogs || loadingSettings) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Skeleton key={i} className="h-40" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Automações</h1>
+          <p className="text-muted-foreground">Gerencie as automações do sistema</p>
+        </div>
+        <Button variant="outline" onClick={() => { refetchLogs(); refetchSettings(); }}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Atualizar
+        </Button>
+      </div>
+
+      <Tabs defaultValue="automacoes" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="automacoes">Automações</TabsTrigger>
+          <TabsTrigger value="logs">Logs de Execução</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="automacoes">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {AUTOMATIONS.map((automation) => {
+              const setting = getSettingByKey(automation.key);
+              const isActive = setting?.ativo ?? false;
+              const Icon = automation.icon;
+
+              return (
+                <Card key={automation.key} className={!isActive ? 'opacity-60' : ''}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg bg-muted ${automation.color}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{automation.name}</CardTitle>
+                          <CardDescription className="text-xs mt-1">
+                            {automation.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={isActive}
+                          onCheckedChange={() => toggleAutomation(automation.key, isActive)}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {isActive ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      {automation.endpoint && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!isActive || isRunning[automation.key]}
+                          onClick={() => runAutomation(automation.key, automation.endpoint)}
+                        >
+                          {isRunning[automation.key] ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    {setting?.updated_at && (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Atualizado: {format(new Date(setting.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader>
+              <CardTitle>Histórico de Execuções</CardTitle>
+              <CardDescription>Últimas execuções das automações</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data/Hora</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Processados</TableHead>
+                      <TableHead className="hidden lg:table-cell">Duração</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>Nenhum log de execução encontrado</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      logs.slice(0, 50).map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">
+                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell>{getTypeBadge(log.tipo)}</TableCell>
+                          <TableCell className="font-medium">{log.nome}</TableCell>
+                          <TableCell>{getStatusBadge(log.status)}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {log.registros_processados !== null && (
+                              <span className="text-sm">
+                                {log.registros_sucesso}/{log.registros_processados}
+                                {log.registros_erro ? (
+                                  <span className="text-destructive ml-1">({log.registros_erro} erros)</span>
+                                ) : null}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                            {log.duracao_ms ? `${log.duracao_ms}ms` : '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
