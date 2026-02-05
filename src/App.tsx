@@ -37,6 +37,7 @@ import ListaEspera from "@/pages/ListaEspera";
 import FluxoCaixa from "@/pages/FluxoCaixa";
 import Telemedicina from "@/pages/Telemedicina";
 import Templates from "@/pages/Templates";
+import Encaminhamentos from "@/pages/Encaminhamentos";
 import NotFound from "@/pages/NotFound";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
@@ -90,6 +91,7 @@ function App() {
                   <Route path="/lista-espera" element={<ListaEspera />} />
                   <Route path="/telemedicina" element={<Telemedicina />} />
                   <Route path="/templates" element={<Templates />} />
+                  <Route path="/encaminhamentos" element={<Encaminhamentos />} />
                   <Route path="/financeiro" element={<Financeiro />} />
                   <Route path="/contas-receber" element={<ContasReceber />} />
                   <Route path="/contas-pagar" element={<ContasPagar />} />

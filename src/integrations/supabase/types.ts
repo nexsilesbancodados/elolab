@@ -81,6 +81,73 @@ export type Database = {
           },
         ]
       }
+      anexos_prontuario: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome_arquivo: string
+          paciente_id: string
+          prontuario_id: string
+          tamanho_bytes: number | null
+          tipo_arquivo: string
+          updated_at: string | null
+          uploaded_by: string | null
+          url_arquivo: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome_arquivo: string
+          paciente_id: string
+          prontuario_id: string
+          tamanho_bytes?: number | null
+          tipo_arquivo: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          url_arquivo: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome_arquivo?: string
+          paciente_id?: string
+          prontuario_id?: string
+          tamanho_bytes?: number | null
+          tipo_arquivo?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          url_arquivo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anexos_prontuario_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_prontuario_prontuario_id_fkey"
+            columns: ["prontuario_id"]
+            isOneToOne: false
+            referencedRelation: "prontuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_prontuario_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atestados: {
         Row: {
           cid: string | null
@@ -252,6 +319,92 @@ export type Database = {
         }
         Relationships: []
       }
+      cid10: {
+        Row: {
+          categoria: string | null
+          codigo: string
+          created_at: string | null
+          descricao: string
+          id: string
+          sexo_aplicavel: string | null
+          subcategoria: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          codigo: string
+          created_at?: string | null
+          descricao: string
+          id?: string
+          sexo_aplicavel?: string | null
+          subcategoria?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          codigo?: string
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          sexo_aplicavel?: string | null
+          subcategoria?: string | null
+        }
+        Relationships: []
+      }
+      consentimentos_lgpd: {
+        Row: {
+          aceito: boolean
+          created_at: string | null
+          data_aceite: string | null
+          data_revogacao: string | null
+          documento_assinado_url: string | null
+          id: string
+          ip_aceite: string | null
+          motivo_revogacao: string | null
+          paciente_id: string
+          revogado: boolean | null
+          tipo_consentimento: string
+          updated_at: string | null
+          versao_termo: string
+        }
+        Insert: {
+          aceito?: boolean
+          created_at?: string | null
+          data_aceite?: string | null
+          data_revogacao?: string | null
+          documento_assinado_url?: string | null
+          id?: string
+          ip_aceite?: string | null
+          motivo_revogacao?: string | null
+          paciente_id: string
+          revogado?: boolean | null
+          tipo_consentimento?: string
+          updated_at?: string | null
+          versao_termo?: string
+        }
+        Update: {
+          aceito?: boolean
+          created_at?: string | null
+          data_aceite?: string | null
+          data_revogacao?: string | null
+          documento_assinado_url?: string | null
+          id?: string
+          ip_aceite?: string | null
+          motivo_revogacao?: string | null
+          paciente_id?: string
+          revogado?: boolean | null
+          tipo_consentimento?: string
+          updated_at?: string | null
+          versao_termo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consentimentos_lgpd_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       convenios: {
         Row: {
           ativo: boolean | null
@@ -343,6 +496,107 @@ export type Database = {
             columns: ["funcionario_id"]
             isOneToOne: false
             referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      encaminhamentos: {
+        Row: {
+          cid_principal: string | null
+          contra_referencia: string | null
+          created_at: string | null
+          data_atendimento: string | null
+          data_contra_referencia: string | null
+          data_encaminhamento: string | null
+          especialidade_destino: string
+          exames_realizados: string | null
+          hipotese_diagnostica: string | null
+          id: string
+          informacoes_adicionais: string | null
+          medico_destino_id: string | null
+          medico_origem_id: string
+          motivo: string
+          paciente_id: string
+          prontuario_id: string | null
+          status: string | null
+          tipo: string | null
+          tratamento_atual: string | null
+          updated_at: string | null
+          urgencia: string | null
+        }
+        Insert: {
+          cid_principal?: string | null
+          contra_referencia?: string | null
+          created_at?: string | null
+          data_atendimento?: string | null
+          data_contra_referencia?: string | null
+          data_encaminhamento?: string | null
+          especialidade_destino: string
+          exames_realizados?: string | null
+          hipotese_diagnostica?: string | null
+          id?: string
+          informacoes_adicionais?: string | null
+          medico_destino_id?: string | null
+          medico_origem_id: string
+          motivo: string
+          paciente_id: string
+          prontuario_id?: string | null
+          status?: string | null
+          tipo?: string | null
+          tratamento_atual?: string | null
+          updated_at?: string | null
+          urgencia?: string | null
+        }
+        Update: {
+          cid_principal?: string | null
+          contra_referencia?: string | null
+          created_at?: string | null
+          data_atendimento?: string | null
+          data_contra_referencia?: string | null
+          data_encaminhamento?: string | null
+          especialidade_destino?: string
+          exames_realizados?: string | null
+          hipotese_diagnostica?: string | null
+          id?: string
+          informacoes_adicionais?: string | null
+          medico_destino_id?: string | null
+          medico_origem_id?: string
+          motivo?: string
+          paciente_id?: string
+          prontuario_id?: string | null
+          status?: string | null
+          tipo?: string | null
+          tratamento_atual?: string | null
+          updated_at?: string | null
+          urgencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encaminhamentos_medico_destino_id_fkey"
+            columns: ["medico_destino_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encaminhamentos_medico_origem_id_fkey"
+            columns: ["medico_origem_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encaminhamentos_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encaminhamentos_prontuario_id_fkey"
+            columns: ["prontuario_id"]
+            isOneToOne: false
+            referencedRelation: "prontuarios"
             referencedColumns: ["id"]
           },
         ]
