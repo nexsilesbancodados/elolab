@@ -38,6 +38,7 @@ import FluxoCaixa from "@/pages/FluxoCaixa";
 import Telemedicina from "@/pages/Telemedicina";
 import Templates from "@/pages/Templates";
 import Encaminhamentos from "@/pages/Encaminhamentos";
+import Automacoes from "@/pages/Automacoes";
 import NotFound from "@/pages/NotFound";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
@@ -102,6 +103,7 @@ function App() {
                   <Route path="/usuarios" element={<Usuarios />} />
                   <Route path="/seguranca" element={<Configuracoes />} />
                   <Route path="/configuracoes" element={<Configuracoes />} />
+                  <Route path="/automacoes" element={<Automacoes />} />
                 </Route>
                 
                 {/* Redirects */}
