@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Printer, Pill, AlertTriangle, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import { Paciente, User } from '@/types';
 import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { cn } from '@/lib/utils';
 import { gerarReceita, openPDF, downloadPDF } from '@/lib/pdfGenerator';
+import { DrugInteractionChecker, AllergyAlert } from '@/components/clinical';
 
 interface Prescricao {
   id: string;
@@ -72,6 +73,7 @@ export default function Prescricoes() {
   const [selectedPrescricao, setSelectedPrescricao] = useState<Prescricao | null>(null);
   const [formData, setFormData] = useState<Partial<Prescricao>>({});
   const [medicamentos, setMedicamentos] = useState<MedicamentoPrescrito[]>([]);
+  const [interactionDismissed, setInteractionDismissed] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,6 +91,16 @@ export default function Prescricoes() {
     return paciente?.nome.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  // Get selected patient and their allergies
+  const selectedPaciente = useMemo(() => {
+    return pacientes.find(p => p.id === formData.pacienteId);
+  }, [pacientes, formData.pacienteId]);
+
+  // Get list of medication names for interaction checking
+  const medicamentoNomes = useMemo(() => {
+    return medicamentos.map(m => m.nome).filter(Boolean);
+  }, [medicamentos]);
+
   const handleNew = () => {
     setSelectedPrescricao(null);
     setFormData({
@@ -98,6 +110,7 @@ export default function Prescricoes() {
       status: 'ativa',
     });
     setMedicamentos([]);
+    setInteractionDismissed(false);
     setIsFormOpen(true);
   };
 
@@ -121,10 +134,15 @@ export default function Prescricoes() {
     const updated = [...medicamentos];
     updated[index] = { ...updated[index], [field]: value };
     setMedicamentos(updated);
+    // Reset interaction dismissed when medications change
+    if (field === 'nome') {
+      setInteractionDismissed(false);
+    }
   };
 
   const handleRemoveMedicamento = (index: number) => {
     setMedicamentos(medicamentos.filter((_, i) => i !== index));
+    setInteractionDismissed(false);
   };
 
   const handleSave = () => {
@@ -295,19 +313,43 @@ export default function Prescricoes() {
             <DialogTitle>Nova Prescrição</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
+            {/* Allergy Alert for selected patient */}
+            {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
+              <AllergyAlert alergias={selectedPaciente.alergias} />
+            )}
+
+            {/* Drug Interaction Checker */}
+            {selectedPaciente && medicamentoNomes.length > 0 && !interactionDismissed && (
+              <DrugInteractionChecker
+                medicamentos={medicamentoNomes}
+                alergias={selectedPaciente.alergias || []}
+                onDismiss={() => setInteractionDismissed(true)}
+              />
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Paciente *</Label>
                 <Select
                   value={formData.pacienteId}
-                  onValueChange={(v) => setFormData({ ...formData, pacienteId: v })}
+                  onValueChange={(v) => {
+                    setFormData({ ...formData, pacienteId: v });
+                    setInteractionDismissed(false);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o paciente" />
                   </SelectTrigger>
                   <SelectContent>
                     {pacientes.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{p.nome}</span>
+                          {p.alergias && p.alergias.length > 0 && (
+                            <AlertTriangle className="h-3 w-3 text-destructive" />
+                          )}
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -446,9 +488,18 @@ export default function Prescricoes() {
                           <Input
                             value={med.quantidade}
                             onChange={(e) => handleUpdateMedicamento(index, 'quantidade', e.target.value)}
-                            placeholder="Ex: 20 comp"
+                            placeholder="Ex: 21 comprimidos"
                           />
                         </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Observações</Label>
+                        <Textarea
+                          value={med.observacoes}
+                          onChange={(e) => handleUpdateMedicamento(index, 'observacoes', e.target.value)}
+                          placeholder="Instruções especiais..."
+                          rows={2}
+                        />
                       </div>
                     </div>
                   ))}
@@ -456,13 +507,15 @@ export default function Prescricoes() {
               )}
             </div>
 
-            <div className="space-y-2">
+            {/* Orientações */}
+            <div className="border-t pt-4">
               <Label>Orientações Gerais</Label>
               <Textarea
                 value={formData.orientacoes || ''}
                 onChange={(e) => setFormData({ ...formData, orientacoes: e.target.value })}
                 placeholder="Orientações adicionais para o paciente..."
                 rows={3}
+                className="mt-2"
               />
             </div>
           </div>
@@ -471,7 +524,8 @@ export default function Prescricoes() {
               Cancelar
             </Button>
             <Button onClick={handleSave}>
-              Salvar Prescrição
+              <Pill className="h-4 w-4 mr-2" />
+              Criar Prescrição
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -479,42 +533,70 @@ export default function Prescricoes() {
 
       {/* View Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes da Prescrição</DialogTitle>
           </DialogHeader>
           {selectedPrescricao && (
-            <div className="space-y-4">
+            <div className="space-y-4 py-4">
+              {/* Patient Allergies */}
+              {(() => {
+                const paciente = pacientes.find(p => p.id === selectedPrescricao.pacienteId);
+                return paciente?.alergias && paciente.alergias.length > 0 && (
+                  <AllergyAlert alergias={paciente.alergias} />
+                );
+              })()}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Paciente</p>
+                  <Label className="text-muted-foreground">Paciente</Label>
                   <p className="font-medium">{getPacienteNome(selectedPrescricao.pacienteId)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Médico</p>
+                  <Label className="text-muted-foreground">Médico</Label>
                   <p className="font-medium">{getMedicoNome(selectedPrescricao.medicoId)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-medium">{format(new Date(selectedPrescricao.data), 'dd/MM/yyyy')}</p>
+                  <Label className="text-muted-foreground">Data</Label>
+                  <p>{format(new Date(selectedPrescricao.data), 'dd/MM/yyyy')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Validade</p>
-                  <p className="font-medium">{format(new Date(selectedPrescricao.validade), 'dd/MM/yyyy')}</p>
+                  <Label className="text-muted-foreground">Validade</Label>
+                  <p>{format(new Date(selectedPrescricao.validade), 'dd/MM/yyyy')}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Tipo</Label>
+                  <Badge className={cn(getTipoBadge(selectedPrescricao.tipo))}>
+                    {selectedPrescricao.tipo.replace('_', ' ')}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <Badge className={cn(
+                    selectedPrescricao.status === 'ativa' && 'bg-green-100 text-green-800',
+                    selectedPrescricao.status === 'vencida' && 'bg-red-100 text-red-800',
+                    selectedPrescricao.status === 'suspensa' && 'bg-gray-100 text-gray-800'
+                  )}>
+                    {selectedPrescricao.status}
+                  </Badge>
                 </div>
               </div>
 
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Medicamentos</h4>
-                <div className="space-y-2">
+                <Label className="text-muted-foreground mb-2 block">Medicamentos</Label>
+                <div className="space-y-3">
                   {selectedPrescricao.medicamentos.map((med, index) => (
-                    <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                      <p className="font-medium">{med.nome} {med.dosagem}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {med.via} - {med.frequencia} - {med.duracao}
-                      </p>
-                      {med.quantidade && (
-                        <p className="text-sm">Quantidade: {med.quantidade}</p>
+                    <div key={med.id} className="p-3 bg-muted/50 rounded-lg">
+                      <p className="font-medium">{index + 1}. {med.nome}</p>
+                      <div className="text-sm text-muted-foreground mt-1 grid grid-cols-2 gap-2">
+                        {med.dosagem && <span>Dosagem: {med.dosagem}</span>}
+                        {med.via && <span>Via: {med.via}</span>}
+                        {med.frequencia && <span>Frequência: {med.frequencia}</span>}
+                        {med.duracao && <span>Duração: {med.duracao}</span>}
+                        {med.quantidade && <span>Quantidade: {med.quantidade}</span>}
+                      </div>
+                      {med.observacoes && (
+                        <p className="text-sm mt-2 italic">{med.observacoes}</p>
                       )}
                     </div>
                   ))}
@@ -523,8 +605,8 @@ export default function Prescricoes() {
 
               {selectedPrescricao.orientacoes && (
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Orientações</h4>
-                  <p className="text-sm text-muted-foreground">{selectedPrescricao.orientacoes}</p>
+                  <Label className="text-muted-foreground">Orientações</Label>
+                  <p className="mt-1 whitespace-pre-wrap">{selectedPrescricao.orientacoes}</p>
                 </div>
               )}
             </div>
@@ -533,10 +615,12 @@ export default function Prescricoes() {
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               Fechar
             </Button>
-            <Button>
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir
-            </Button>
+            {selectedPrescricao && (
+              <Button onClick={() => handlePrint(selectedPrescricao)}>
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

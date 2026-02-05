@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, FileText, Plus, Save, Printer } from 'lucide-react';
+import { Search, FileText, Plus, Save, Printer, CalendarCheck, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,19 +21,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Prontuario, Prescricao, Paciente, User, Agendamento } from '@/types';
 import { getAll, generateId, setCollection } from '@/lib/localStorage';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { 
+  AllergyAlert, 
+  Cid10Search, 
+  ClinicalProtocols, 
+  ReturnScheduler,
+  DischargeReport 
+} from '@/components/clinical';
 
 export default function Prontuarios() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -45,6 +44,8 @@ export default function Prontuarios() {
   const [isProntuarioOpen, setIsProntuarioOpen] = useState(false);
   const [currentProntuario, setCurrentProntuario] = useState<Partial<Prontuario>>({});
   const [prescricoes, setPrescricoes] = useState<Prescricao[]>([]);
+  const [showProtocols, setShowProtocols] = useState(false);
+  const [showDischargeReport, setShowDischargeReport] = useState(false);
   const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
@@ -163,7 +164,35 @@ export default function Prontuarios() {
     });
   };
 
+  const handleApplyProtocol = (protocol: any) => {
+    // Apply protocol medications as prescriptions
+    if (protocol.medicamentos_sugeridos && protocol.medicamentos_sugeridos.length > 0) {
+      const novasPrescricoes = protocol.medicamentos_sugeridos.map((med: any) => ({
+        id: generateId(),
+        medicamento: med.nome,
+        dosagem: '',
+        posologia: med.posologia,
+        duracao: '',
+      }));
+      setPrescricoes([...prescricoes, ...novasPrescricoes]);
+    }
+
+    // Add protocol info to conduta
+    let condutaText = currentProntuario.conduta || '';
+    if (protocol.orientacoes) {
+      condutaText += `\n\n[Protocolo: ${protocol.nome}]\n${protocol.orientacoes}`;
+    }
+    setCurrentProntuario({ ...currentProntuario, conduta: condutaText.trim() });
+    
+    setShowProtocols(false);
+    toast({
+      title: 'Protocolo aplicado',
+      description: `O protocolo "${protocol.nome}" foi aplicado ao prontuário.`,
+    });
+  };
+
   const getMedicoNome = (id: string) => medicos.find((m) => m.id === id)?.nome || 'Desconhecido';
+  const getCurrentMedico = () => medicos.find((m) => m.id === user?.id);
 
   const calcularIdade = (dataNascimento: string) => {
     const hoje = new Date();
@@ -174,6 +203,34 @@ export default function Prontuarios() {
       idade--;
     }
     return idade;
+  };
+
+  const getDischargeReportData = () => {
+    const medico = getCurrentMedico();
+    return {
+      paciente: {
+        nome: selectedPaciente?.nome || '',
+        dataNascimento: selectedPaciente?.dataNascimento,
+        cpf: selectedPaciente?.cpf,
+      },
+      medico: {
+        nome: medico?.nome || user?.nome || 'Médico',
+        crm: medico?.crm,
+        especialidade: medico?.especialidade,
+      },
+      consulta: {
+        data: currentProntuario.data || format(new Date(), 'yyyy-MM-dd'),
+        queixaPrincipal: currentProntuario.queixaPrincipal,
+        hipoteseDiagnostica: currentProntuario.hipoteseDiagnostica,
+        conduta: currentProntuario.conduta,
+      },
+      prescricoes: prescricoes.filter(p => p.medicamento).map(p => ({
+        medicamento: p.medicamento,
+        dosagem: p.dosagem,
+        posologia: p.posologia,
+        duracao: p.duracao,
+      })),
+    };
   };
 
   return (
@@ -212,6 +269,9 @@ export default function Prontuarios() {
                   <p className="text-sm text-muted-foreground">
                     {calcularIdade(paciente.dataNascimento)} anos • {paciente.cpf}
                   </p>
+                  {paciente.alergias && paciente.alergias.length > 0 && (
+                    <AllergyAlert alergias={paciente.alergias} compact className="mt-2" />
+                  )}
                 </div>
               ))}
             </div>
@@ -227,20 +287,15 @@ export default function Prontuarios() {
                   {selectedPaciente ? selectedPaciente.nome : 'Selecione um paciente'}
                 </CardTitle>
                 {selectedPaciente && (
-                  <p className="text-sm text-muted-foreground">
-                    {calcularIdade(selectedPaciente.dataNascimento)} anos •{' '}
-                    {selectedPaciente.convenio?.nome || 'Particular'}
-                    {selectedPaciente.alergias.length > 0 && (
-                      <span className="ml-2">
-                        • Alergias:{' '}
-                        {selectedPaciente.alergias.map((a, i) => (
-                          <Badge key={i} variant="destructive" className="ml-1 text-xs">
-                            {a}
-                          </Badge>
-                        ))}
-                      </span>
+                  <div className="space-y-2 mt-1">
+                    <p className="text-sm text-muted-foreground">
+                      {calcularIdade(selectedPaciente.dataNascimento)} anos •{' '}
+                      {selectedPaciente.convenio?.nome || 'Particular'}
+                    </p>
+                    {selectedPaciente.alergias && selectedPaciente.alergias.length > 0 && (
+                      <AllergyAlert alergias={selectedPaciente.alergias} className="mt-2" />
                     )}
-                  </p>
+                  </div>
                 )}
               </div>
               {selectedPaciente && (
@@ -295,175 +350,242 @@ export default function Prontuarios() {
 
       {/* Prontuário Dialog */}
       <Dialog open={isProntuarioOpen} onOpenChange={setIsProntuarioOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {currentProntuario.id ? 'Visualizar Prontuário' : 'Novo Atendimento'}
+            <DialogTitle className="flex items-center justify-between">
+              <span>{currentProntuario.id ? 'Visualizar Prontuário' : 'Novo Atendimento'}</span>
+              <div className="flex gap-2">
+                {selectedPaciente && user?.id && (
+                  <ReturnScheduler
+                    pacienteId={selectedPaciente.id}
+                    prontuarioId={currentProntuario.id}
+                    medicoId={user.id}
+                    compact
+                  />
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowDischargeReport(true)}
+                >
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Relatório de Alta
+                </Button>
+              </div>
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="anamnese" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="anamnese">Anamnese</TabsTrigger>
-              <TabsTrigger value="exames">Exame Físico</TabsTrigger>
-              <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
-            </TabsList>
+          {/* Allergy Alert at top of dialog */}
+          {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
+            <AllergyAlert alergias={selectedPaciente.alergias} className="mb-4" />
+          )}
 
-            <TabsContent value="anamnese" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Queixa Principal *</Label>
-                <Textarea
-                  value={currentProntuario.queixaPrincipal || ''}
-                  onChange={(e) =>
-                    setCurrentProntuario({ ...currentProntuario, queixaPrincipal: e.target.value })
-                  }
-                  rows={3}
-                  placeholder="Descreva a queixa principal do paciente"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>História da Doença Atual</Label>
-                <Textarea
-                  value={currentProntuario.historiaDoencaAtual || ''}
-                  onChange={(e) =>
-                    setCurrentProntuario({
-                      ...currentProntuario,
-                      historiaDoencaAtual: e.target.value,
-                    })
-                  }
-                  rows={4}
-                  placeholder="Descreva a evolução dos sintomas..."
-                />
-              </div>
-            </TabsContent>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Main content */}
+            <div className="lg:col-span-2">
+              <Tabs defaultValue="anamnese" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="anamnese">Anamnese</TabsTrigger>
+                  <TabsTrigger value="exames">Exame Físico</TabsTrigger>
+                  <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="exames" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Exame Físico</Label>
-                <Textarea
-                  value={currentProntuario.examesFisicos || ''}
-                  onChange={(e) =>
-                    setCurrentProntuario({ ...currentProntuario, examesFisicos: e.target.value })
-                  }
-                  rows={4}
-                  placeholder="Achados do exame físico..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Hipótese Diagnóstica</Label>
-                <Textarea
-                  value={currentProntuario.hipoteseDiagnostica || ''}
-                  onChange={(e) =>
-                    setCurrentProntuario({
-                      ...currentProntuario,
-                      hipoteseDiagnostica: e.target.value,
-                    })
-                  }
-                  rows={2}
-                  placeholder="CID ou descrição..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Conduta</Label>
-                <Textarea
-                  value={currentProntuario.conduta || ''}
-                  onChange={(e) =>
-                    setCurrentProntuario({ ...currentProntuario, conduta: e.target.value })
-                  }
-                  rows={3}
-                  placeholder="Plano terapêutico, orientações..."
-                />
-              </div>
-            </TabsContent>
+                <TabsContent value="anamnese" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Queixa Principal *</Label>
+                    <Textarea
+                      value={currentProntuario.queixaPrincipal || ''}
+                      onChange={(e) =>
+                        setCurrentProntuario({ ...currentProntuario, queixaPrincipal: e.target.value })
+                      }
+                      rows={3}
+                      placeholder="Descreva a queixa principal do paciente"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>História da Doença Atual</Label>
+                    <Textarea
+                      value={currentProntuario.historiaDoencaAtual || ''}
+                      onChange={(e) =>
+                        setCurrentProntuario({
+                          ...currentProntuario,
+                          historiaDoencaAtual: e.target.value,
+                        })
+                      }
+                      rows={4}
+                      placeholder="Descreva a evolução dos sintomas..."
+                    />
+                  </div>
+                </TabsContent>
 
-            <TabsContent value="prescricao" className="space-y-4 pt-4">
-              <div className="flex justify-between items-center">
-                <Label>Prescrições</Label>
-                <Button variant="outline" size="sm" onClick={handleAddPrescricao}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Medicamento
-                </Button>
-              </div>
+                <TabsContent value="exames" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Exame Físico</Label>
+                    <Textarea
+                      value={currentProntuario.examesFisicos || ''}
+                      onChange={(e) =>
+                        setCurrentProntuario({ ...currentProntuario, examesFisicos: e.target.value })
+                      }
+                      rows={4}
+                      placeholder="Achados do exame físico..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Hipótese Diagnóstica (CID-10)</Label>
+                    <Cid10Search
+                      value={currentProntuario.hipoteseDiagnostica || ''}
+                      onChange={(value) =>
+                        setCurrentProntuario({
+                          ...currentProntuario,
+                          hipoteseDiagnostica: value,
+                        })
+                      }
+                      placeholder="Buscar CID-10..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Conduta</Label>
+                    <Textarea
+                      value={currentProntuario.conduta || ''}
+                      onChange={(e) =>
+                        setCurrentProntuario({ ...currentProntuario, conduta: e.target.value })
+                      }
+                      rows={3}
+                      placeholder="Plano terapêutico, orientações..."
+                    />
+                  </div>
+                </TabsContent>
 
-              {prescricoes.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhuma prescrição adicionada
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {prescricoes.map((prescricao, index) => (
-                    <div key={prescricao.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Medicamento {index + 1}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemovePrescricao(index)}
-                          className="text-destructive"
-                        >
-                          Remover
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Medicamento</Label>
-                          <Input
-                            value={prescricao.medicamento}
-                            onChange={(e) =>
-                              handleUpdatePrescricao(index, 'medicamento', e.target.value)
-                            }
-                            placeholder="Nome do medicamento"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Dosagem</Label>
-                          <Input
-                            value={prescricao.dosagem}
-                            onChange={(e) =>
-                              handleUpdatePrescricao(index, 'dosagem', e.target.value)
-                            }
-                            placeholder="Ex: 500mg"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Posologia</Label>
-                          <Input
-                            value={prescricao.posologia}
-                            onChange={(e) =>
-                              handleUpdatePrescricao(index, 'posologia', e.target.value)
-                            }
-                            placeholder="Ex: 1 comprimido de 8/8h"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Duração</Label>
-                          <Input
-                            value={prescricao.duracao}
-                            onChange={(e) =>
-                              handleUpdatePrescricao(index, 'duracao', e.target.value)
-                            }
-                            placeholder="Ex: 7 dias"
-                          />
-                        </div>
-                      </div>
+                <TabsContent value="prescricao" className="space-y-4 pt-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Prescrições</Label>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)}>
+                        Usar Protocolo
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleAddPrescricao}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Medicamento
+                      </Button>
                     </div>
-                  ))}
+                  </div>
+
+                  {prescricoes.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhuma prescrição adicionada
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {prescricoes.map((prescricao, index) => (
+                        <div key={prescricao.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Medicamento {index + 1}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemovePrescricao(index)}
+                              className="text-destructive"
+                            >
+                              Remover
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Medicamento</Label>
+                              <Input
+                                value={prescricao.medicamento}
+                                onChange={(e) =>
+                                  handleUpdatePrescricao(index, 'medicamento', e.target.value)
+                                }
+                                placeholder="Nome do medicamento"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Dosagem</Label>
+                              <Input
+                                value={prescricao.dosagem}
+                                onChange={(e) =>
+                                  handleUpdatePrescricao(index, 'dosagem', e.target.value)
+                                }
+                                placeholder="Ex: 500mg"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Posologia</Label>
+                              <Input
+                                value={prescricao.posologia}
+                                onChange={(e) =>
+                                  handleUpdatePrescricao(index, 'posologia', e.target.value)
+                                }
+                                placeholder="Ex: 1 comprimido de 8/8h"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Duração</Label>
+                              <Input
+                                value={prescricao.duracao}
+                                onChange={(e) =>
+                                  handleUpdatePrescricao(index, 'duracao', e.target.value)
+                                }
+                                placeholder="Ex: 7 dias"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Protocols Sidebar */}
+            {showProtocols && (
+              <div className="lg:col-span-1">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-medium">Protocolos Clínicos</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowProtocols(false)}>
+                    ×
+                  </Button>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                <ClinicalProtocols 
+                  onSelectProtocol={handleApplyProtocol}
+                  className="h-[500px] overflow-hidden"
+                />
+              </div>
+            )}
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Salvar
+            <Button onClick={handleSave} className="gap-2">
+              <Save className="h-4 w-4" />
+              Salvar Prontuário
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Protocols Dialog (for non-sidebar view) */}
+      <Dialog open={showProtocols && !isProntuarioOpen} onOpenChange={setShowProtocols}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Protocolos Clínicos</DialogTitle>
+          </DialogHeader>
+          <ClinicalProtocols onSelectProtocol={handleApplyProtocol} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Discharge Report Dialog */}
+      {showDischargeReport && (
+        <DischargeReport
+          isOpen={showDischargeReport}
+          onClose={() => setShowDischargeReport(false)}
+          data={getDischargeReportData()}
+        />
+      )}
     </div>
   );
 }
