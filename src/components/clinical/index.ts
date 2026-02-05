@@ -7,3 +7,6 @@ export { PatientTimeline } from './PatientTimeline';
 export { PatientPhoto } from './PatientPhoto';
 export { ClinicalProtocols } from './ClinicalProtocols';
 export { ReturnScheduler } from './ReturnScheduler';
+export { VitalSignsChart } from './VitalSignsChart';
+export { DrugInteractionChecker } from './DrugInteractionChecker';
+export { DischargeReport } from './DischargeReport';
