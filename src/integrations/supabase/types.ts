@@ -1134,6 +1134,7 @@ export type Database = {
           data_nascimento: string | null
           email: string | null
           estado: string | null
+          foto_url: string | null
           id: string
           logradouro: string | null
           nome: string
@@ -1157,6 +1158,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           estado?: string | null
+          foto_url?: string | null
           id?: string
           logradouro?: string | null
           nome: string
@@ -1180,6 +1182,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           estado?: string | null
+          foto_url?: string | null
           id?: string
           logradouro?: string | null
           nome?: string
@@ -1370,6 +1373,137 @@ export type Database = {
             columns: ["paciente_id"]
             isOneToOne: false
             referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocolos_clinicos: {
+        Row: {
+          ativo: boolean | null
+          cid_relacionados: string[] | null
+          condicao: string
+          created_at: string | null
+          criado_por: string | null
+          descricao: string | null
+          especialidade: string | null
+          exames_sugeridos: string[] | null
+          id: string
+          medicamentos_sugeridos: Json | null
+          nome: string
+          orientacoes: string | null
+          passos: Json
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cid_relacionados?: string[] | null
+          condicao: string
+          created_at?: string | null
+          criado_por?: string | null
+          descricao?: string | null
+          especialidade?: string | null
+          exames_sugeridos?: string[] | null
+          id?: string
+          medicamentos_sugeridos?: Json | null
+          nome: string
+          orientacoes?: string | null
+          passos?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cid_relacionados?: string[] | null
+          condicao?: string
+          created_at?: string | null
+          criado_por?: string | null
+          descricao?: string | null
+          especialidade?: string | null
+          exames_sugeridos?: string[] | null
+          id?: string
+          medicamentos_sugeridos?: Json | null
+          nome?: string
+          orientacoes?: string | null
+          passos?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      retornos: {
+        Row: {
+          agendamento_id: string | null
+          created_at: string | null
+          data_consulta_origem: string
+          data_retorno_prevista: string
+          id: string
+          lembrete_enviado: boolean | null
+          medico_id: string
+          motivo: string | null
+          observacoes: string | null
+          paciente_id: string
+          prontuario_id: string | null
+          status: string | null
+          tipo_retorno: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          created_at?: string | null
+          data_consulta_origem?: string
+          data_retorno_prevista: string
+          id?: string
+          lembrete_enviado?: boolean | null
+          medico_id: string
+          motivo?: string | null
+          observacoes?: string | null
+          paciente_id: string
+          prontuario_id?: string | null
+          status?: string | null
+          tipo_retorno?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          created_at?: string | null
+          data_consulta_origem?: string
+          data_retorno_prevista?: string
+          id?: string
+          lembrete_enviado?: boolean | null
+          medico_id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          paciente_id?: string
+          prontuario_id?: string | null
+          status?: string | null
+          tipo_retorno?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retornos_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retornos_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retornos_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retornos_prontuario_id_fkey"
+            columns: ["prontuario_id"]
+            isOneToOne: false
+            referencedRelation: "prontuarios"
             referencedColumns: ["id"]
           },
         ]
