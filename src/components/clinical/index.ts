@@ -3,3 +3,7 @@ export { Cid10Search } from './Cid10Search';
 export { ConsentimentoLGPD } from './ConsentimentoLGPD';
 export { AnexosProntuario } from './AnexosProntuario';
 export { EncaminhamentoMedico } from './EncaminhamentoMedico';
+export { PatientTimeline } from './PatientTimeline';
+export { PatientPhoto } from './PatientPhoto';
+export { ClinicalProtocols } from './ClinicalProtocols';
+export { ReturnScheduler } from './ReturnScheduler';
