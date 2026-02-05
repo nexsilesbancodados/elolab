@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, FileSpreadsheet, Tag } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, FileSpreadsheet, Tag, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,11 +31,18 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Paciente } from '@/types';
 import { getAll, create, update, remove } from '@/lib/localStorage';
 import { exportarPacientes } from '@/lib/excelExporter';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
+import { 
+  PatientPhoto, 
+  PatientTimeline, 
+  VitalSignsChart,
+  AllergyAlert 
+} from '@/components/clinical';
 
 export default function Pacientes() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -46,6 +53,7 @@ export default function Pacientes() {
   const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
   const [formData, setFormData] = useState<Partial<Paciente>>({});
   const [isEtiquetaOpen, setIsEtiquetaOpen] = useState(false);
+  const [viewTab, setViewTab] = useState('dados');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -88,6 +96,7 @@ export default function Pacientes() {
 
   const handleView = (paciente: Paciente) => {
     setSelectedPaciente(paciente);
+    setViewTab('dados');
     setIsViewOpen(true);
   };
 
@@ -210,7 +219,7 @@ export default function Pacientes() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
+                  <TableHead>Paciente</TableHead>
                   <TableHead className="hidden md:table-cell">CPF</TableHead>
                   <TableHead className="hidden sm:table-cell">Telefone</TableHead>
                   <TableHead className="hidden lg:table-cell">Convênio</TableHead>
@@ -228,11 +237,20 @@ export default function Pacientes() {
                   filteredPacientes.map((paciente) => (
                     <TableRow key={paciente.id}>
                       <TableCell>
-                        <div>
-                          <p className="font-medium">{paciente.nome}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {calcularIdade(paciente.dataNascimento)} anos
-                          </p>
+                        <div className="flex items-center gap-3">
+                          <PatientPhoto
+                            pacienteId={paciente.id}
+                            pacienteNome={paciente.nome}
+                            currentPhotoUrl={null}
+                            size="sm"
+                            editable={false}
+                          />
+                          <div>
+                            <p className="font-medium">{paciente.nome}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {calcularIdade(paciente.dataNascimento)} anos
+                            </p>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{paciente.cpf}</TableCell>
@@ -279,6 +297,19 @@ export default function Pacientes() {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Photo upload for editing */}
+            {selectedPaciente && (
+              <div className="flex justify-center mb-4">
+                <PatientPhoto
+                  pacienteId={selectedPaciente.id}
+                  pacienteNome={selectedPaciente.nome}
+                  currentPhotoUrl={null}
+                  size="xl"
+                  editable={true}
+                />
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo *</Label>
@@ -478,96 +509,123 @@ export default function Pacientes() {
         </DialogContent>
       </Dialog>
 
-      {/* View Dialog */}
+      {/* View Dialog - Enhanced with Timeline and Charts */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Paciente</DialogTitle>
+            <DialogTitle className="flex items-center gap-4">
+              {selectedPaciente && (
+                <>
+                  <PatientPhoto
+                    pacienteId={selectedPaciente.id}
+                    pacienteNome={selectedPaciente.nome}
+                    currentPhotoUrl={null}
+                    size="lg"
+                    editable={true}
+                  />
+                  <div>
+                    <p className="text-xl">{selectedPaciente.nome}</p>
+                    <p className="text-sm text-muted-foreground font-normal">
+                      {calcularIdade(selectedPaciente.dataNascimento)} anos • {selectedPaciente.cpf}
+                    </p>
+                  </div>
+                </>
+              )}
+            </DialogTitle>
           </DialogHeader>
+          
           {selectedPaciente && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold">{selectedPaciente.nome}</h3>
-                <p className="text-muted-foreground">
-                  {calcularIdade(selectedPaciente.dataNascimento)} anos
-                </p>
-              </div>
+            <div className="space-y-4 py-4">
+              {/* Allergy Alert */}
+              {selectedPaciente.alergias && selectedPaciente.alergias.length > 0 && (
+                <AllergyAlert alergias={selectedPaciente.alergias} />
+              )}
 
-              <div className="grid gap-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {selectedPaciente.telefone}
-                </div>
-                {selectedPaciente.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    {selectedPaciente.email}
+              <Tabs value={viewTab} onValueChange={setViewTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="dados">Dados Cadastrais</TabsTrigger>
+                  <TabsTrigger value="timeline">Histórico</TabsTrigger>
+                  <TabsTrigger value="vitais">Sinais Vitais</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="dados" className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Telefone</Label>
+                      <p className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        {selectedPaciente.telefone}
+                      </p>
+                    </div>
+                    {selectedPaciente.email && (
+                      <div>
+                        <Label className="text-muted-foreground">Email</Label>
+                        <p className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          {selectedPaciente.email}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-muted-foreground">Data de Nascimento</Label>
+                      <p>{new Date(selectedPaciente.dataNascimento).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Convênio</Label>
+                      <p>
+                        {selectedPaciente.convenio ? (
+                          <Badge variant="secondary">{selectedPaciente.convenio.nome}</Badge>
+                        ) : (
+                          <Badge variant="outline">Particular</Badge>
+                        )}
+                      </p>
+                    </div>
+                    {selectedPaciente.endereco && (
+                      <div className="md:col-span-2">
+                        <Label className="text-muted-foreground">Endereço</Label>
+                        <p>
+                          {selectedPaciente.endereco.logradouro}, {selectedPaciente.endereco.numero} -{' '}
+                          {selectedPaciente.endereco.bairro}, {selectedPaciente.endereco.cidade}
+                        </p>
+                      </div>
+                    )}
+                    {selectedPaciente.observacoes && (
+                      <div className="md:col-span-2">
+                        <Label className="text-muted-foreground">Observações</Label>
+                        <p className="whitespace-pre-wrap">{selectedPaciente.observacoes}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </TabsContent>
 
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-1">CPF</p>
-                <p className="text-sm text-muted-foreground">{selectedPaciente.cpf}</p>
-              </div>
+                <TabsContent value="timeline" className="pt-4">
+                  <PatientTimeline pacienteId={selectedPaciente.id} />
+                </TabsContent>
 
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-1">Endereço</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedPaciente.endereco.logradouro}, {selectedPaciente.endereco.numero}
-                  {selectedPaciente.endereco.complemento &&
-                    ` - ${selectedPaciente.endereco.complemento}`}
-                  <br />
-                  {selectedPaciente.endereco.bairro} - {selectedPaciente.endereco.cidade}/
-                  {selectedPaciente.endereco.estado}
-                  <br />
-                  CEP: {selectedPaciente.endereco.cep}
-                </p>
-              </div>
-
-              {selectedPaciente.convenio && (
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium mb-1">Convênio</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPaciente.convenio.nome} - {selectedPaciente.convenio.numeroCarteira}
-                    <br />
-                    Validade: {new Date(selectedPaciente.convenio.validade).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              )}
-
-              {selectedPaciente.alergias.length > 0 && (
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium mb-2">Alergias</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPaciente.alergias.map((alergia, i) => (
-                      <Badge key={i} variant="destructive">
-                        {alergia}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedPaciente.observacoes && (
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium mb-1">Observações</p>
-                  <p className="text-sm text-muted-foreground">{selectedPaciente.observacoes}</p>
-                </div>
-              )}
+                <TabsContent value="vitais" className="pt-4">
+                  <VitalSignsChart pacienteId={selectedPaciente.id} />
+                </TabsContent>
+              </Tabs>
             </div>
           )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleEdit(selectedPaciente!)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+            <Button onClick={() => setIsViewOpen(false)}>Fechar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o paciente "{selectedPaciente?.nome}"? Esta ação não
-              pode ser desfeita.
+              Tem certeza que deseja excluir o paciente "{selectedPaciente?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -579,11 +637,11 @@ export default function Pacientes() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Etiqueta Modal */}
-      <EtiquetaPaciente
-        pacientes={filteredPacientes}
-        open={isEtiquetaOpen}
-        onOpenChange={setIsEtiquetaOpen}
+      {/* Etiqueta Dialog */}
+      <EtiquetaPaciente 
+        pacientes={pacientes} 
+        open={isEtiquetaOpen} 
+        onOpenChange={setIsEtiquetaOpen} 
       />
     </div>
   );
