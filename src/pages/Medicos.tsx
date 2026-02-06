@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Pencil, Trash2, Stethoscope, Phone, Mail } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Search, Pencil, Trash2, Stethoscope, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,125 +18,163 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
-import { User } from '@/types';
-import { getAll, generateId, setCollection } from '@/lib/localStorage';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { toast } from 'sonner';
+import { useMedicos } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+
+interface FormData {
+  crm: string;
+  especialidade: string;
+  telefone: string;
+  ativo: boolean;
+}
+
+const initialFormData: FormData = {
+  crm: '',
+  especialidade: '',
+  telefone: '',
+  ativo: true,
+};
 
 export default function Medicos() {
-  const [medicos, setMedicos] = useState<(User & { senha?: string })[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMedico, setEditingMedico] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    crm: '',
-    especialidade: '',
-    telefone: '',
-    ativo: true,
-  });
-  const { toast } = useToast();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    loadMedicos();
-  }, []);
+  const queryClient = useQueryClient();
+  const { data: medicos = [], isLoading } = useMedicos();
 
-  const loadMedicos = () => {
-    const users = getAll<User & { senha?: string }>('users');
-    setMedicos(users.filter(u => u.role === 'medico'));
-  };
-
-  const filteredMedicos = medicos.filter(m =>
-    m.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.crm?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMedicos = useMemo(() => 
+    medicos.filter(m =>
+      m.crm.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [medicos, searchTerm]
   );
 
-  const handleOpenDialog = (medico?: User) => {
+  const handleOpenDialog = (medico?: typeof medicos[0]) => {
     if (medico) {
-      setEditingMedico(medico);
+      setEditingId(medico.id);
       setFormData({
-        nome: medico.nome,
-        email: medico.email,
-        crm: medico.crm || '',
+        crm: medico.crm,
         especialidade: medico.especialidade || '',
         telefone: medico.telefone || '',
         ativo: medico.ativo,
       });
     } else {
-      setEditingMedico(null);
-      setFormData({
-        nome: '',
-        email: '',
-        crm: '',
-        especialidade: '',
-        telefone: '',
-        ativo: true,
-      });
+      setEditingId(null);
+      setFormData(initialFormData);
     }
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.nome || !formData.email || !formData.crm) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos obrigatórios.',
-        variant: 'destructive',
-      });
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.crm) {
+      toast.error('CRM é obrigatório.');
       return;
     }
 
-    const allUsers = getAll<User & { senha?: string }>('users');
+    setIsSubmitting(true);
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('medicos')
+          .update({
+            crm: formData.crm,
+            especialidade: formData.especialidade || null,
+            telefone: formData.telefone || null,
+            ativo: formData.ativo,
+          })
+          .eq('id', editingId);
 
-    if (editingMedico) {
-      const index = allUsers.findIndex(u => u.id === editingMedico.id);
-      if (index !== -1) {
-        allUsers[index] = {
-          ...allUsers[index],
-          ...formData,
-        };
+        if (error) throw error;
+        toast.success('Médico atualizado com sucesso!');
+      } else {
+        const { error } = await supabase
+          .from('medicos')
+          .insert({
+            crm: formData.crm,
+            especialidade: formData.especialidade || null,
+            telefone: formData.telefone || null,
+            ativo: formData.ativo,
+          });
+
+        if (error) throw error;
+        toast.success('Médico cadastrado com sucesso!');
       }
-    } else {
-      const novoMedico: User & { senha: string } = {
-        id: generateId(),
-        ...formData,
-        role: 'medico',
-        criadoEm: new Date().toISOString(),
-        senha: 'medico123',
-      };
-      allUsers.push(novoMedico);
-    }
 
-    setCollection('users', allUsers);
-    loadMedicos();
-    setIsDialogOpen(false);
-    toast({
-      title: editingMedico ? 'Médico atualizado' : 'Médico cadastrado',
-      description: editingMedico ? 'Os dados foram atualizados.' : 'O médico foi cadastrado com sucesso.',
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este médico?')) {
-      const allUsers = getAll<User>('users');
-      const filtered = allUsers.filter(u => u.id !== id);
-      setCollection('users', filtered as any);
-      loadMedicos();
-      toast({
-        title: 'Médico excluído',
-        description: 'O médico foi removido do sistema.',
-      });
+      queryClient.invalidateQueries({ queryKey: ['medicos'] });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar médico:', error);
+      toast.error(error.message || 'Erro ao salvar médico');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const getInitials = (nome: string) => {
-    return nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  const handleDelete = async () => {
+    if (!selectedId) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('medicos')
+        .delete()
+        .eq('id', selectedId);
+
+      if (error) throw error;
+      
+      toast.success('Médico excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['medicos'] });
+    } catch (error: any) {
+      console.error('Erro ao excluir médico:', error);
+      toast.error(error.message || 'Erro ao excluir médico');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteOpen(false);
+    }
   };
+
+  const getInitials = (crm: string) => {
+    return crm.slice(0, 2).toUpperCase();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -161,7 +199,7 @@ export default function Medicos() {
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, CRM ou especialidade..."
+                placeholder="Buscar por CRM ou especialidade..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -196,19 +234,19 @@ export default function Medicos() {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarFallback className="bg-primary/10 text-primary">
-                              {getInitials(medico.nome)}
+                              {getInitials(medico.crm)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{medico.nome}</p>
-                            <p className="text-sm text-muted-foreground">{medico.email}</p>
+                            <p className="font-medium">Dr(a). {medico.crm}</p>
+                            <p className="text-sm text-muted-foreground">{medico.especialidade || 'Clínico Geral'}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <Badge variant="outline">{medico.crm}</Badge>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">{medico.especialidade}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{medico.especialidade || '-'}</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {medico.telefone && (
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -218,7 +256,7 @@ export default function Medicos() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={medico.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
+                        <Badge className={medico.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-muted text-muted-foreground'}>
                           {medico.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>
@@ -227,7 +265,7 @@ export default function Medicos() {
                           <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(medico)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleDelete(medico.id)}>
+                          <Button size="icon" variant="ghost" onClick={() => handleDeleteClick(medico.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
@@ -241,47 +279,20 @@ export default function Medicos() {
         </CardContent>
       </Card>
 
-      {/* Dialog */}
+      {/* Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingMedico ? 'Editar Médico' : 'Novo Médico'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Editar Médico' : 'Novo Médico'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome completo *</Label>
+              <Label>CRM *</Label>
               <Input
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder="Dr. Nome Sobrenome"
+                value={formData.crm}
+                onChange={(e) => setFormData({ ...formData, crm: e.target.value })}
+                placeholder="CRM/UF 123456"
               />
-            </div>
-            <div className="space-y-2">
-              <Label>E-mail *</Label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@clinica.com"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>CRM *</Label>
-                <Input
-                  value={formData.crm}
-                  onChange={(e) => setFormData({ ...formData, crm: e.target.value })}
-                  placeholder="CRM/UF 123456"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
             </div>
             <div className="space-y-2">
               <Label>Especialidade</Label>
@@ -289,6 +300,14 @@ export default function Medicos() {
                 value={formData.especialidade}
                 onChange={(e) => setFormData({ ...formData, especialidade: e.target.value })}
                 placeholder="Cardiologia, Pediatria, etc."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input
+                value={formData.telefone}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                placeholder="(11) 99999-9999"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -300,15 +319,37 @@ export default function Medicos() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              {editingMedico ? 'Salvar' : 'Cadastrar'}
-            </Button>
+            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
+              {editingId ? 'Salvar' : 'Cadastrar'}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-destructive text-destructive-foreground"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
