@@ -953,6 +953,5 @@ export default function AgenteIA() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
   );
 }
