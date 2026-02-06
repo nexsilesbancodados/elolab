@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, Menu, Moon, Sun, LogOut, User, Settings, HelpCircle, Plus, Command, Sparkles } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User, Settings, HelpCircle, Plus, Command } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { usePacientes } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
@@ -85,7 +85,6 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 
 export function Navbar({ onMenuClick }: NavbarProps) {
   const { profile, signOut } = useSupabaseAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const { data: pacientes = [] } = usePacientes();
@@ -199,18 +198,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <KeyboardShortcutsHelp />
 
           {/* Theme Toggle */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleTheme}
-            className="h-9 w-9 hover:bg-muted/50"
-          >
-            {theme === 'light' ? (
-              <Moon className="h-[18px] w-[18px]" />
-            ) : (
-              <Sun className="h-[18px] w-[18px]" />
-            )}
-          </Button>
+          <ThemeToggle variant="dropdown" />
 
           {/* Notifications */}
           <DropdownMenu>
