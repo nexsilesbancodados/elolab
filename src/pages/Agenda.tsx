@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -21,12 +21,17 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Agendamento, Paciente, User as UserType, StatusAgendamento } from '@/types';
-import { getAll, generateId } from '@/lib/localStorage';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAgendamentos, usePacientes, useMedicos } from '@/hooks/useSupabaseData';
+import { useQueryClient } from '@tanstack/react-query';
+import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
+import { EmptyAgendamentos } from '@/components/EmptyState';
+import { Database } from '@/integrations/supabase/types';
+
+type StatusAgendamento = Database['public']['Enums']['status_agendamento'];
 
 const HORARIOS = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -35,13 +40,13 @@ const HORARIOS = [
 ];
 
 const STATUS_COLORS: Record<StatusAgendamento, string> = {
-  agendado: 'bg-blue-100 text-blue-800 border-blue-200',
-  confirmado: 'bg-green-100 text-green-800 border-green-200',
-  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200',
-  finalizado: 'bg-gray-100 text-gray-600 border-gray-200',
-  cancelado: 'bg-red-100 text-red-800 border-red-200',
-  faltou: 'bg-orange-100 text-orange-800 border-orange-200',
+  agendado: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300',
+  confirmado: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300',
+  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300',
+  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300',
+  finalizado: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400',
+  cancelado: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300',
+  faltou: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
 const STATUS_LABELS: Record<StatusAgendamento, string> = {
@@ -66,27 +71,32 @@ interface RecurrenceConfig {
   occurrences: number;
 }
 
+interface FormData {
+  id?: string;
+  data?: string;
+  hora_inicio?: string;
+  hora_fim?: string;
+  paciente_id?: string;
+  medico_id?: string;
+  tipo?: string;
+  status?: StatusAgendamento;
+  observacoes?: string;
+}
+
 export default function Agenda() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedMedico, setSelectedMedico] = useState<string>('todos');
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [medicos, setMedicos] = useState<UserType[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ data: string; hora: string } | null>(null);
-  const [formData, setFormData] = useState<Partial<Agendamento>>({});
+  const [formData, setFormData] = useState<FormData>({});
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const queryClient = useQueryClient();
+  const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
+  const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
+  const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setAgendamentos(getAll<Agendamento>('agendamentos'));
-    setPacientes(getAll<Paciente>('pacientes'));
-    setMedicos(getAll<UserType>('users').filter((u) => u.role === 'medico'));
-  };
+  const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
@@ -95,31 +105,40 @@ export default function Agenda() {
 
   const filteredAgendamentos = useMemo(() => {
     return agendamentos.filter((ag) => {
-      if (selectedMedico !== 'todos' && ag.medicoId !== selectedMedico) return false;
+      if (selectedMedico !== 'todos' && ag.medico_id !== selectedMedico) return false;
       return true;
     });
   }, [agendamentos, selectedMedico]);
 
-  const getAgendamentoForSlot = (data: Date, hora: string): Agendamento | undefined => {
+  const getAgendamentoForSlot = (data: Date, hora: string) => {
     const dataStr = format(data, 'yyyy-MM-dd');
     return filteredAgendamentos.find(
-      (ag) => ag.data === dataStr && ag.horaInicio === hora
+      (ag) => ag.data === dataStr && ag.hora_inicio === hora
     );
   };
 
   const handleSlotClick = (data: Date, hora: string) => {
     const existing = getAgendamentoForSlot(data, hora);
     if (existing) {
-      setFormData(existing);
+      setFormData({
+        id: existing.id,
+        data: existing.data,
+        hora_inicio: existing.hora_inicio,
+        hora_fim: existing.hora_fim || undefined,
+        paciente_id: existing.paciente_id,
+        medico_id: existing.medico_id,
+        tipo: existing.tipo || 'consulta',
+        status: (existing.status || 'agendado') as StatusAgendamento,
+        observacoes: existing.observacoes || '',
+      });
       setRecurrence({ type: 'none', occurrences: 4 });
     } else {
-      setSelectedSlot({ data: format(data, 'yyyy-MM-dd'), hora });
       setFormData({
         data: format(data, 'yyyy-MM-dd'),
-        horaInicio: hora,
-        horaFim: HORARIOS[HORARIOS.indexOf(hora) + 1] || '18:30',
+        hora_inicio: hora,
+        hora_fim: HORARIOS[HORARIOS.indexOf(hora) + 1] || '18:30',
         tipo: 'consulta',
-        status: 'agendado',
+        status: 'agendado' as StatusAgendamento,
       });
       setRecurrence({ type: 'none', occurrences: 4 });
     }
@@ -151,61 +170,105 @@ export default function Agenda() {
     return dates;
   };
 
-  const handleSave = () => {
-    if (!formData.pacienteId || !formData.medicoId) {
-      toast({
-        title: 'Erro',
-        description: 'Selecione o paciente e o médico.',
-        variant: 'destructive',
-      });
+  const handleSave = async () => {
+    if (!formData.paciente_id || !formData.medico_id) {
+      toast.error('Selecione o paciente e o médico.');
       return;
     }
 
-    const allAgendamentos = getAll<Agendamento>('agendamentos');
+    setIsSaving(true);
 
-    if (formData.id) {
-      // Update existing
-      const index = allAgendamentos.findIndex((a) => a.id === formData.id);
-      if (index !== -1) {
-        allAgendamentos[index] = { ...allAgendamentos[index], ...formData } as Agendamento;
-      }
-    } else {
-      // Create new (possibly recurring)
-      const dates = generateRecurringDates(formData.data!, recurrence);
-      const recurrenceGroupId = recurrence.type !== 'none' ? generateId() : undefined;
+    try {
+      if (formData.id) {
+        // Update existing
+        const { error } = await supabase
+          .from('agendamentos')
+          .update({
+            paciente_id: formData.paciente_id,
+            medico_id: formData.medico_id,
+            data: formData.data!,
+            hora_inicio: formData.hora_inicio!,
+            hora_fim: formData.hora_fim,
+            tipo: formData.tipo,
+            status: formData.status,
+            observacoes: formData.observacoes,
+          })
+          .eq('id', formData.id);
 
-      dates.forEach((date) => {
-        const newAgendamento: Agendamento = {
-          ...formData,
-          id: generateId(),
+        if (error) throw error;
+        toast.success('Agendamento atualizado com sucesso!');
+      } else {
+        // Create new (possibly recurring)
+        const dates = generateRecurringDates(formData.data!, recurrence);
+        
+        const newAgendamentos = dates.map(date => ({
+          paciente_id: formData.paciente_id!,
+          medico_id: formData.medico_id!,
           data: date,
-          recurrenceGroupId,
-          criadoEm: new Date().toISOString(),
-        } as Agendamento;
-        allAgendamentos.push(newAgendamento);
-      });
-    }
+          hora_inicio: formData.hora_inicio!,
+          hora_fim: formData.hora_fim,
+          tipo: formData.tipo,
+          status: formData.status as StatusAgendamento,
+          observacoes: formData.observacoes,
+        }));
 
-    localStorage.setItem('elolab_clinic_agendamentos', JSON.stringify(allAgendamentos));
-    loadData();
-    setIsFormOpen(false);
-    setRecurrence({ type: 'none', occurrences: 4 });
-    
-    const count = recurrence.type !== 'none' && !formData.id ? recurrence.occurrences : 1;
-    toast({
-      title: formData.id ? 'Agendamento atualizado' : `${count} agendamento(s) criado(s)`,
-      description: recurrence.type !== 'none' && !formData.id 
-        ? `Consultas agendadas: ${RECURRENCE_OPTIONS[recurrence.type].toLowerCase()}`
-        : 'A agenda foi atualizada com sucesso.',
-    });
+        const { error } = await supabase
+          .from('agendamentos')
+          .insert(newAgendamentos);
+
+        if (error) throw error;
+        
+        const count = dates.length;
+        toast.success(
+          count > 1 
+            ? `${count} agendamentos criados com sucesso!` 
+            : 'Agendamento criado com sucesso!'
+        );
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      setIsFormOpen(false);
+      setRecurrence({ type: 'none', occurrences: 4 });
+    } catch (error) {
+      console.error('Error saving agendamento:', error);
+      toast.error('Erro ao salvar agendamento.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleStatusChange = (status: StatusAgendamento) => {
-    setFormData({ ...formData, status });
+  const handleDelete = async () => {
+    if (!formData.id) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('agendamentos')
+        .delete()
+        .eq('id', formData.id);
+
+      if (error) throw error;
+      
+      toast.success('Agendamento excluído!');
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Error deleting agendamento:', error);
+      toast.error('Erro ao excluir agendamento.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getPacienteNome = (id: string) => pacientes.find((p) => p.id === id)?.nome || 'Desconhecido';
-  const getMedicoNome = (id: string) => medicos.find((m) => m.id === id)?.nome || 'Desconhecido';
+  const getMedicoNome = (id: string) => {
+    const medico = medicos.find((m) => m.id === id);
+    return medico ? `Dr(a). ${medico.crm}` : 'Desconhecido';
+  };
+
+  if (isLoading) {
+    return <AgendaSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -223,7 +286,7 @@ export default function Agenda() {
               <SelectItem value="todos">Todos os médicos</SelectItem>
               {medicos.map((medico) => (
                 <SelectItem key={medico.id} value={medico.id}>
-                  {medico.nome}
+                  {medico.crm} - {medico.especialidade}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -231,110 +294,115 @@ export default function Agenda() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <CardTitle className="text-lg">
-                {format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} -{' '}
-                {format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </CardTitle>
-              <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
-              Hoje
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
-              {/* Header with days */}
-              <div className="grid grid-cols-8 border-b bg-muted/50">
-                <div className="p-2 text-center text-sm font-medium text-muted-foreground border-r">
-                  Horário
+      {agendamentos.length === 0 && pacientes.length === 0 ? (
+        <EmptyAgendamentos onAdd={() => {
+          toast.info('Primeiro cadastre pacientes e médicos para criar agendamentos.');
+        }} />
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <CardTitle className="text-lg">
+                    {format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} -{' '}
+                    {format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </CardTitle>
+                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                {weekDays.map((day) => (
-                  <div
-                    key={day.toISOString()}
-                    className={cn(
-                      'p-2 text-center border-r last:border-r-0',
-                      isSameDay(day, new Date()) && 'bg-primary/10'
-                    )}
-                  >
-                    <p className="text-sm font-medium">{format(day, 'EEE', { locale: ptBR })}</p>
-                    <p
-                      className={cn(
-                        'text-lg',
-                        isSameDay(day, new Date()) && 'text-primary font-bold'
-                      )}
-                    >
-                      {format(day, 'dd')}
-                    </p>
-                  </div>
-                ))}
+                <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
+                  Hoje
+                </Button>
               </div>
-
-              {/* Time slots */}
-              <div className="divide-y">
-                {HORARIOS.map((hora) => (
-                  <div key={hora} className="grid grid-cols-8">
-                    <div className="p-2 text-center text-sm text-muted-foreground border-r bg-muted/30">
-                      {hora}
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <div className="min-w-[800px]">
+                  {/* Header with days */}
+                  <div className="grid grid-cols-8 border-b bg-muted/50">
+                    <div className="p-2 text-center text-sm font-medium text-muted-foreground border-r">
+                      Horário
                     </div>
-                    {weekDays.map((day) => {
-                      const agendamento = getAgendamentoForSlot(day, hora);
-                      return (
-                        <div
-                          key={`${day.toISOString()}-${hora}`}
+                    {weekDays.map((day) => (
+                      <div
+                        key={day.toISOString()}
+                        className={cn(
+                          'p-2 text-center border-r last:border-r-0',
+                          isSameDay(day, new Date()) && 'bg-primary/10'
+                        )}
+                      >
+                        <p className="text-sm font-medium">{format(day, 'EEE', { locale: ptBR })}</p>
+                        <p
                           className={cn(
-                            'p-1 border-r last:border-r-0 min-h-[60px] cursor-pointer hover:bg-muted/30 transition-colors',
-                            isSameDay(day, new Date()) && 'bg-primary/5'
+                            'text-lg',
+                            isSameDay(day, new Date()) && 'text-primary font-bold'
                           )}
-                          onClick={() => handleSlotClick(day, hora)}
                         >
-                          {agendamento && (
-                            <div
-                              className={cn(
-                                'rounded p-1.5 text-xs border relative',
-                                STATUS_COLORS[agendamento.status]
-                              )}
-                            >
-                              {(agendamento as any).recurrenceGroupId && (
-                                <Repeat className="absolute top-1 right-1 h-3 w-3 opacity-50" />
-                              )}
-                              <p className="font-medium truncate">
-                                {getPacienteNome(agendamento.pacienteId)}
-                              </p>
-                              <p className="truncate opacity-75">
-                                {getMedicoNome(agendamento.medicoId)}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          {format(day, 'dd')}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Legenda */}
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <Badge key={key} className={cn('text-xs', STATUS_COLORS[key as StatusAgendamento])}>
-            {label}
-          </Badge>
-        ))}
-      </div>
+                  {/* Time slots */}
+                  <div className="divide-y">
+                    {HORARIOS.map((hora) => (
+                      <div key={hora} className="grid grid-cols-8">
+                        <div className="p-2 text-center text-sm text-muted-foreground border-r bg-muted/30">
+                          {hora}
+                        </div>
+                        {weekDays.map((day) => {
+                          const agendamento = getAgendamentoForSlot(day, hora);
+                          return (
+                            <div
+                              key={`${day.toISOString()}-${hora}`}
+                              className={cn(
+                                'p-1 border-r last:border-r-0 min-h-[60px] cursor-pointer hover:bg-muted/30 transition-colors',
+                                isSameDay(day, new Date()) && 'bg-primary/5'
+                              )}
+                              onClick={() => handleSlotClick(day, hora)}
+                            >
+                              {agendamento && (
+                                <div
+                                  className={cn(
+                                    'rounded p-1.5 text-xs border relative',
+                                    STATUS_COLORS[agendamento.status || 'agendado']
+                                  )}
+                                >
+                                  <p className="font-medium truncate">
+                                    {getPacienteNome(agendamento.paciente_id)}
+                                  </p>
+                                  <p className="truncate opacity-75">
+                                    {getMedicoNome(agendamento.medico_id)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Legenda */}
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(STATUS_LABELS).map(([key, label]) => (
+              <Badge key={key} className={cn('text-xs', STATUS_COLORS[key as StatusAgendamento])}>
+                {label}
+              </Badge>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -357,7 +425,7 @@ export default function Agenda() {
                 <Label>Horário</Label>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded">
                   <Clock className="h-4 w-4" />
-                  {formData.horaInicio}
+                  {formData.hora_inicio}
                 </div>
               </div>
             </div>
@@ -365,8 +433,8 @@ export default function Agenda() {
             <div className="space-y-2">
               <Label>Paciente *</Label>
               <Select
-                value={formData.pacienteId}
-                onValueChange={(v) => setFormData({ ...formData, pacienteId: v })}
+                value={formData.paciente_id}
+                onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o paciente" />
@@ -384,8 +452,8 @@ export default function Agenda() {
             <div className="space-y-2">
               <Label>Médico *</Label>
               <Select
-                value={formData.medicoId}
-                onValueChange={(v) => setFormData({ ...formData, medicoId: v })}
+                value={formData.medico_id}
+                onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o médico" />
@@ -393,7 +461,7 @@ export default function Agenda() {
                 <SelectContent>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.nome} - {m.especialidade}
+                      {m.crm} - {m.especialidade}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -405,7 +473,7 @@ export default function Agenda() {
                 <Label>Tipo</Label>
                 <Select
                   value={formData.tipo}
-                  onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}
+                  onValueChange={(v) => setFormData({ ...formData, tipo: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -423,7 +491,7 @@ export default function Agenda() {
                 <Label>Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(v) => handleStatusChange(v as StatusAgendamento)}
+                  onValueChange={(v) => setFormData({ ...formData, status: v as StatusAgendamento })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -458,14 +526,16 @@ export default function Agenda() {
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(RECURRENCE_OPTIONS).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                          <SelectItem key={key} value={key}>
+                            {label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   {recurrence.type !== 'none' && (
                     <div className="space-y-2">
-                      <Label className="text-xs">Quantidade</Label>
+                      <Label className="text-xs">Repetições</Label>
                       <Input
                         type="number"
                         min={2}
@@ -476,11 +546,6 @@ export default function Agenda() {
                     </div>
                   )}
                 </div>
-                {recurrence.type !== 'none' && (
-                  <p className="text-xs text-muted-foreground">
-                    Serão criados {recurrence.occurrences} agendamentos ({RECURRENCE_OPTIONS[recurrence.type].toLowerCase()})
-                  </p>
-                )}
               </div>
             )}
 
@@ -489,15 +554,31 @@ export default function Agenda() {
               <Textarea
                 value={formData.observacoes || ''}
                 onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                placeholder="Observações sobre a consulta..."
                 rows={3}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {formData.id && (
+              <Button variant="destructive" onClick={handleDelete} disabled={isSaving}>
+                Excluir
+              </Button>
+            )}
+            <div className="flex-1" />
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

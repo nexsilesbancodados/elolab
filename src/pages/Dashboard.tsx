@@ -15,8 +15,8 @@ import {
   Package,
   FileText,
   Database,
-  Loader2,
 } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/ui/loading-skeleton';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -94,11 +94,7 @@ export default function Dashboard() {
   const estoqueBaixo = estoque.filter(e => e.quantidade <= e.quantidade_minima).length;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
