@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Play, Check, XCircle, Volume2 } from 'lucide-react';
+import { UserPlus, Play, Check, Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -25,22 +25,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { FilaAtendimento, Agendamento, Paciente, User } from '@/types';
-import { getAll, generateId, setCollection } from '@/lib/localStorage';
+import { toast } from 'sonner';
+import { useFilaAtendimento, useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const STATUS_COLORS = {
-  aguardando: 'bg-yellow-100 text-yellow-800',
-  chamado: 'bg-blue-100 text-blue-800',
-  em_atendimento: 'bg-purple-100 text-purple-800',
-  finalizado: 'bg-green-100 text-green-800',
+const STATUS_COLORS: Record<string, string> = {
+  aguardando: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+  chamado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  em_atendimento: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  finalizado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 };
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<string, string> = {
   aguardando: 'Aguardando',
   chamado: 'Chamado',
   em_atendimento: 'Em Atendimento',
@@ -48,36 +49,33 @@ const STATUS_LABELS = {
 };
 
 export default function Fila() {
-  const [fila, setFila] = useState<FilaAtendimento[]>([]);
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [medicos, setMedicos] = useState<User[]>([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedAgendamento, setSelectedAgendamento] = useState<string>('');
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadData = () => {
-    setFila(getAll<FilaAtendimento>('fila'));
-    setAgendamentos(getAll<Agendamento>('agendamentos'));
-    setPacientes(getAll<Paciente>('pacientes'));
-    setMedicos(getAll<User>('users').filter((u) => u.role === 'medico'));
-  };
-
+  const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const agendamentosHoje = agendamentos.filter(
-    (ag) => ag.data === today && ['confirmado', 'agendado'].includes(ag.status)
-  );
+  const { data: fila = [], isLoading: loadingFila } = useFilaAtendimento();
+  const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos(today);
+  const { data: pacientes = [] } = usePacientes();
+  const { data: medicos = [] } = useMedicos();
+  const { data: salas = [] } = useSalas();
 
-  const agendamentosDisponiveis = agendamentosHoje.filter(
-    (ag) => !fila.some((f) => f.agendamentoId === ag.id)
+  const isLoading = loadingFila || loadingAgendamentos;
+
+  // Atualizar a cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [queryClient]);
+
+  const agendamentosDisponiveis = agendamentos.filter(
+    (ag) => 
+      ['confirmado', 'agendado'].includes(ag.status || '') && 
+      !fila.some((f) => f.agendamento_id === ag.id)
   );
 
   const filaAtiva = fila
@@ -87,116 +85,138 @@ export default function Fila() {
   const getPacienteNome = (agendamentoId: string) => {
     const ag = agendamentos.find((a) => a.id === agendamentoId);
     if (!ag) return 'Desconhecido';
-    return pacientes.find((p) => p.id === ag.pacienteId)?.nome || 'Desconhecido';
+    return pacientes.find((p) => p.id === (ag as any).paciente_id)?.nome || 'Desconhecido';
   };
 
   const getMedicoNome = (agendamentoId: string) => {
     const ag = agendamentos.find((a) => a.id === agendamentoId);
     if (!ag) return 'Desconhecido';
-    return medicos.find((m) => m.id === ag.medicoId)?.nome || 'Desconhecido';
+    const medico = medicos.find((m) => m.id === (ag as any).medico_id);
+    return medico ? `Dr(a). ${medico.crm}` : 'Desconhecido';
   };
 
-  const handleAddToFila = () => {
+  const getSalaNome = (salaId: string | null) => {
+    if (!salaId) return '-';
+    return salas.find(s => s.id === salaId)?.nome || '-';
+  };
+
+  const handleAddToFila = async () => {
     if (!selectedAgendamento) {
-      toast({
-        title: 'Erro',
-        description: 'Selecione um agendamento.',
-        variant: 'destructive',
-      });
+      toast.error('Selecione um agendamento.');
       return;
     }
 
-    const allFila = getAll<FilaAtendimento>('fila');
-    const maxPosicao = Math.max(0, ...allFila.map((f) => f.posicao));
+    setIsSaving(true);
+    try {
+      const maxPosicao = Math.max(0, ...fila.map((f) => f.posicao));
 
-    const novoItem: FilaAtendimento = {
-      id: generateId(),
-      agendamentoId: selectedAgendamento,
-      posicao: maxPosicao + 1,
-      horarioChegada: new Date().toISOString(),
-      status: 'aguardando',
-    };
+      const { error } = await supabase.from('fila_atendimento').insert({
+        agendamento_id: selectedAgendamento,
+        posicao: maxPosicao + 1,
+        status: 'aguardando',
+        horario_chegada: new Date().toISOString(),
+      });
 
-    allFila.push(novoItem);
-    setCollection('fila', allFila);
+      if (error) throw error;
 
-    // Update agendamento status
-    const allAgendamentos = getAll<Agendamento>('agendamentos');
-    const agIndex = allAgendamentos.findIndex((a) => a.id === selectedAgendamento);
-    if (agIndex !== -1) {
-      allAgendamentos[agIndex].status = 'aguardando';
-      setCollection('agendamentos', allAgendamentos);
+      // Atualizar status do agendamento
+      await supabase
+        .from('agendamentos')
+        .update({ status: 'aguardando' })
+        .eq('id', selectedAgendamento);
+
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      
+      setIsAddOpen(false);
+      setSelectedAgendamento('');
+      toast.success('Paciente adicionado à fila de atendimento.');
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+      toast.error('Erro ao adicionar à fila.');
+    } finally {
+      setIsSaving(false);
     }
-
-    loadData();
-    setIsAddOpen(false);
-    setSelectedAgendamento('');
-    toast({
-      title: 'Paciente adicionado',
-      description: 'O paciente foi adicionado à fila de atendimento.',
-    });
   };
 
-  const handleChamar = (item: FilaAtendimento) => {
-    updateFilaStatus(item.id, 'chamado');
-    // Could trigger voice announcement here
-    toast({
-      title: 'Paciente chamado',
-      description: `${getPacienteNome(item.agendamentoId)} foi chamado.`,
-    });
+  const handleChamar = async (item: typeof fila[0]) => {
+    try {
+      const { error } = await supabase
+        .from('fila_atendimento')
+        .update({ status: 'chamado' })
+        .eq('id', item.id);
+
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      toast.success(`${getPacienteNome(item.agendamento_id)} foi chamado.`);
+    } catch (error) {
+      console.error('Error calling patient:', error);
+      toast.error('Erro ao chamar paciente.');
+    }
   };
 
-  const handleIniciarAtendimento = (item: FilaAtendimento, sala: string) => {
-    const allFila = getAll<FilaAtendimento>('fila');
-    const index = allFila.findIndex((f) => f.id === item.id);
-    if (index !== -1) {
-      allFila[index].status = 'em_atendimento';
-      allFila[index].sala = sala;
-      setCollection('fila', allFila);
-    }
+  const handleIniciarAtendimento = async (item: typeof fila[0], salaId: string) => {
+    try {
+      const { error: filaError } = await supabase
+        .from('fila_atendimento')
+        .update({ status: 'em_atendimento', sala_id: salaId })
+        .eq('id', item.id);
 
-    // Update agendamento
-    const allAgendamentos = getAll<Agendamento>('agendamentos');
-    const agIndex = allAgendamentos.findIndex((a) => a.id === item.agendamentoId);
-    if (agIndex !== -1) {
-      allAgendamentos[agIndex].status = 'em_atendimento';
-      setCollection('agendamentos', allAgendamentos);
-    }
+      if (filaError) throw filaError;
 
-    loadData();
-    toast({
-      title: 'Atendimento iniciado',
-      description: `Paciente encaminhado para ${sala}.`,
-    });
+      const { error: agError } = await supabase
+        .from('agendamentos')
+        .update({ status: 'em_atendimento' })
+        .eq('id', item.agendamento_id);
+
+      if (agError) throw agError;
+
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      toast.success('Atendimento iniciado.');
+    } catch (error) {
+      console.error('Error starting consultation:', error);
+      toast.error('Erro ao iniciar atendimento.');
+    }
   };
 
-  const handleFinalizar = (item: FilaAtendimento) => {
-    updateFilaStatus(item.id, 'finalizado');
+  const handleFinalizar = async (item: typeof fila[0]) => {
+    try {
+      const { error: filaError } = await supabase
+        .from('fila_atendimento')
+        .update({ status: 'finalizado' })
+        .eq('id', item.id);
 
-    // Update agendamento
-    const allAgendamentos = getAll<Agendamento>('agendamentos');
-    const agIndex = allAgendamentos.findIndex((a) => a.id === item.agendamentoId);
-    if (agIndex !== -1) {
-      allAgendamentos[agIndex].status = 'finalizado';
-      setCollection('agendamentos', allAgendamentos);
+      if (filaError) throw filaError;
+
+      const { error: agError } = await supabase
+        .from('agendamentos')
+        .update({ status: 'finalizado' })
+        .eq('id', item.agendamento_id);
+
+      if (agError) throw agError;
+
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      toast.success('Atendimento finalizado.');
+    } catch (error) {
+      console.error('Error finishing consultation:', error);
+      toast.error('Erro ao finalizar atendimento.');
     }
-
-    loadData();
-    toast({
-      title: 'Atendimento finalizado',
-      description: 'O atendimento foi concluído.',
-    });
   };
 
-  const updateFilaStatus = (id: string, status: FilaAtendimento['status']) => {
-    const allFila = getAll<FilaAtendimento>('fila');
-    const index = allFila.findIndex((f) => f.id === id);
-    if (index !== -1) {
-      allFila[index].status = status;
-      setCollection('fila', allFila);
-    }
-    loadData();
-  };
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -292,20 +312,20 @@ export default function Fila() {
                     <TableRow key={item.id}>
                       <TableCell className="font-bold text-lg">{item.posicao}</TableCell>
                       <TableCell className="font-medium">
-                        {getPacienteNome(item.agendamentoId)}
+                        {getPacienteNome(item.agendamento_id)}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {getMedicoNome(item.agendamentoId)}
+                        {getMedicoNome(item.agendamento_id)}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {format(new Date(item.horarioChegada), 'HH:mm')}
+                        {item.horario_chegada ? format(new Date(item.horario_chegada), 'HH:mm') : '-'}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[item.status])}>
-                          {STATUS_LABELS[item.status]}
+                        <Badge className={cn(STATUS_COLORS[item.status || 'aguardando'])}>
+                          {STATUS_LABELS[item.status || 'aguardando']}
                         </Badge>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{item.sala || '-'}</TableCell>
+                      <TableCell className="hidden md:table-cell">{getSalaNome(item.sala_id)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {item.status === 'aguardando' && (
@@ -317,14 +337,17 @@ export default function Fila() {
                               <Volume2 className="h-4 w-4" />
                             </Button>
                           )}
-                          {(item.status === 'aguardando' || item.status === 'chamado') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleIniciarAtendimento(item, 'Consultório 1')}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
+                          {(item.status === 'aguardando' || item.status === 'chamado') && salas.length > 0 && (
+                            <Select onValueChange={(salaId) => handleIniciarAtendimento(item, salaId)}>
+                              <SelectTrigger className="w-auto">
+                                <Play className="h-4 w-4" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {salas.filter(s => s.status === 'disponivel').map(sala => (
+                                  <SelectItem key={sala.id} value={sala.id}>{sala.nome}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           )}
                           {item.status === 'em_atendimento' && (
                             <Button
@@ -366,11 +389,12 @@ export default function Fila() {
                     </SelectItem>
                   ) : (
                     agendamentosDisponiveis.map((ag) => {
-                      const paciente = pacientes.find((p) => p.id === ag.pacienteId);
-                      const medico = medicos.find((m) => m.id === ag.medicoId);
+                      const agData = ag as any;
+                      const paciente = pacientes.find((p) => p.id === agData.paciente_id);
+                      const medico = medicos.find((m) => m.id === agData.medico_id);
                       return (
                         <SelectItem key={ag.id} value={ag.id}>
-                          {ag.horaInicio} - {paciente?.nome || 'Paciente'} ({medico?.nome || 'Médico'})
+                          {ag.hora_inicio} - {paciente?.nome || 'Paciente'} ({medico?.crm || 'Médico'})
                         </SelectItem>
                       );
                     })
@@ -380,10 +404,11 @@ export default function Fila() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+            <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleAddToFila} disabled={!selectedAgendamento}>
+            <Button onClick={handleAddToFila} disabled={!selectedAgendamento || isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Adicionar à Fila
             </Button>
           </DialogFooter>

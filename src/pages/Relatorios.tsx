@@ -1,16 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, subMonths, eachDayOfInterval, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   FileText,
-  Download,
   Calendar,
   Users,
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Stethoscope,
-  Printer,
   FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,11 +29,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Agendamento, Paciente, Lancamento, User } from '@/types';
-import { getAll } from '@/lib/localStorage';
+import { usePacientes, useAgendamentos, useLancamentos, useMedicos } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
-import { exportarFinanceiro, exportToExcel } from '@/lib/excelExporter';
-import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF, downloadPDF } from '@/lib/pdfGenerator';
+import { exportarFinanceiro } from '@/lib/excelExporter';
+import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF } from '@/lib/pdfGenerator';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   AreaChart,
   Area,
@@ -50,8 +47,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Legend,
 } from 'recharts';
 
@@ -59,17 +54,13 @@ const CHART_COLORS = ['#0066CC', '#00A86B', '#FFB020', '#FF4D4F', '#722ED1'];
 
 export default function Relatorios() {
   const [periodo, setPeriodo] = useState('mes_atual');
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
-  const [medicos, setMedicos] = useState<User[]>([]);
 
-  useEffect(() => {
-    setAgendamentos(getAll<Agendamento>('agendamentos'));
-    setPacientes(getAll<Paciente>('pacientes'));
-    setLancamentos(getAll<Lancamento>('lancamentos'));
-    setMedicos(getAll<User>('users').filter(u => u.role === 'medico'));
-  }, []);
+  const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
+  const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
+  const { data: lancamentos = [], isLoading: loadingLancamentos } = useLancamentos();
+  const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
+
+  const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos;
 
   const periodoRange = useMemo(() => {
     const now = new Date();
@@ -121,15 +112,15 @@ export default function Relatorios() {
 
     const receitas = lancamentosFiltrados
       .filter(l => l.tipo === 'receita' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const despesas = lancamentosFiltrados
       .filter(l => l.tipo === 'despesa' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const pendentes = lancamentosFiltrados
       .filter(l => l.status === 'pendente')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const taxaComparecimento = totalAtendimentos > 0 
       ? Math.round((atendimentosFinalizados / totalAtendimentos) * 100) 
@@ -160,10 +151,10 @@ export default function Relatorios() {
       const atendimentos = agendamentosFiltrados.filter(a => a.data === diaStr).length;
       const receita = lancamentosFiltrados
         .filter(l => l.data === diaStr && l.tipo === 'receita' && l.status === 'pago')
-        .reduce((acc, l) => acc + l.valor, 0);
+        .reduce((acc, l) => acc + Number(l.valor), 0);
       const despesa = lancamentosFiltrados
         .filter(l => l.data === diaStr && l.tipo === 'despesa' && l.status === 'pago')
-        .reduce((acc, l) => acc + l.valor, 0);
+        .reduce((acc, l) => acc + Number(l.valor), 0);
 
       return {
         data: format(dia, 'dd/MM'),
@@ -177,13 +168,13 @@ export default function Relatorios() {
   // Dados por médico
   const dadosPorMedico = useMemo(() => {
     return medicos.map(medico => {
-      const atendimentos = agendamentosFiltrados.filter(a => a.medicoId === medico.id).length;
+      const atendimentos = agendamentosFiltrados.filter(a => a.medico_id === medico.id).length;
       const finalizados = agendamentosFiltrados.filter(
-        a => a.medicoId === medico.id && a.status === 'finalizado'
+        a => a.medico_id === medico.id && a.status === 'finalizado'
       ).length;
 
       return {
-        nome: medico.nome,
+        nome: medico.crm,
         especialidade: medico.especialidade || 'Geral',
         atendimentos,
         finalizados,
@@ -196,7 +187,8 @@ export default function Relatorios() {
   const dadosPorTipo = useMemo(() => {
     const tipos: Record<string, number> = {};
     agendamentosFiltrados.forEach(a => {
-      tipos[a.tipo] = (tipos[a.tipo] || 0) + 1;
+      const tipo = a.tipo || 'consulta';
+      tipos[tipo] = (tipos[tipo] || 0) + 1;
     });
     return Object.entries(tipos).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -210,8 +202,8 @@ export default function Relatorios() {
     lancamentosFiltrados
       .filter(l => l.tipo === 'receita' && l.status === 'pago')
       .forEach(l => {
-        const forma = l.formaPagamento || 'Não informado';
-        formas[forma] = (formas[forma] || 0) + l.valor;
+        const forma = l.forma_pagamento || 'Não informado';
+        formas[forma] = (formas[forma] || 0) + Number(l.valor);
       });
     return Object.entries(formas).map(([name, value]) => ({
       name: name.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
@@ -232,9 +224,9 @@ export default function Relatorios() {
       tipo: l.tipo,
       categoria: l.categoria,
       descricao: l.descricao,
-      valor: l.valor,
-      status: l.status,
-      formaPagamento: l.formaPagamento,
+      valor: Number(l.valor),
+      status: l.status || 'pendente',
+      formaPagamento: l.forma_pagamento || '',
     })));
   };
 
@@ -256,8 +248,8 @@ export default function Relatorios() {
         tipo: l.tipo,
         categoria: l.categoria,
         descricao: l.descricao,
-        valor: l.valor,
-        status: l.status,
+        valor: Number(l.valor),
+        status: l.status || 'pendente',
       })),
     });
     openPDF(doc);
@@ -279,6 +271,18 @@ export default function Relatorios() {
     });
     openPDF(doc);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -315,7 +319,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
                 <Calendar className="h-6 w-6 text-blue-600" />
               </div>
               <div>
@@ -332,7 +336,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100">
+              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
               <div>
@@ -348,7 +352,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-red-100">
+              <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30">
                 <TrendingDown className="h-6 w-6 text-red-600" />
               </div>
               <div>
@@ -470,6 +474,12 @@ export default function Relatorios() {
         </TabsContent>
 
         <TabsContent value="atendimentos" className="space-y-6">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={handleExportAtendimentosPDF} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Exportar PDF
+            </Button>
+          </div>
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Gráfico de Atendimentos */}
             <Card>
@@ -492,11 +502,11 @@ export default function Relatorios() {
               </CardContent>
             </Card>
 
-            {/* Tipos de Atendimento */}
+            {/* Por Tipo */}
             <Card>
               <CardHeader>
-                <CardTitle>Tipos de Atendimento</CardTitle>
-                <CardDescription>Distribuição</CardDescription>
+                <CardTitle>Por Tipo de Atendimento</CardTitle>
+                <CardDescription>Distribuição por categoria</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -506,12 +516,9 @@ export default function Relatorios() {
                         data={dadosPorTipo}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
                         outerRadius={100}
-                        paddingAngle={5}
                         dataKey="value"
                         label={({ name, value }) => `${name}: ${value}`}
-                        labelLine={false}
                       >
                         {dadosPorTipo.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
@@ -524,40 +531,13 @@ export default function Relatorios() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Indicadores */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Indicadores de Atendimento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-green-600">{estatisticas.taxaComparecimento}%</p>
-                  <p className="text-sm text-muted-foreground">Taxa de Comparecimento</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-primary">{estatisticas.atendimentosFinalizados}</p>
-                  <p className="text-sm text-muted-foreground">Finalizados</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-yellow-600">{estatisticas.cancelamentos}</p>
-                  <p className="text-sm text-muted-foreground">Cancelamentos</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <p className="text-3xl font-bold text-red-600">{estatisticas.faltas}</p>
-                  <p className="text-sm text-muted-foreground">Faltas</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="medicos" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Desempenho por Médico</CardTitle>
-              <CardDescription>Atendimentos no período selecionado</CardDescription>
+              <CardDescription>Atendimentos realizados no período</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -566,53 +546,39 @@ export default function Relatorios() {
                     <TableRow>
                       <TableHead>Médico</TableHead>
                       <TableHead>Especialidade</TableHead>
-                      <TableHead className="text-center">Atendimentos</TableHead>
-                      <TableHead className="text-center">Finalizados</TableHead>
-                      <TableHead className="text-center">Taxa</TableHead>
+                      <TableHead className="text-right">Agendados</TableHead>
+                      <TableHead className="text-right">Finalizados</TableHead>
+                      <TableHead className="text-right">Taxa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dadosPorMedico.map((medico) => (
-                      <TableRow key={medico.nome}>
-                        <TableCell className="font-medium">{medico.nome}</TableCell>
-                        <TableCell>{medico.especialidade}</TableCell>
-                        <TableCell className="text-center">{medico.atendimentos}</TableCell>
-                        <TableCell className="text-center">{medico.finalizados}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge className={cn(
-                            medico.taxa >= 80 ? 'bg-green-100 text-green-800' :
-                            medico.taxa >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          )}>
-                            {medico.taxa}%
-                          </Badge>
+                    {dadosPorMedico.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          Nenhum atendimento no período
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      dadosPorMedico.map((medico, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{medico.nome}</TableCell>
+                          <TableCell>{medico.especialidade}</TableCell>
+                          <TableCell className="text-right">{medico.atendimentos}</TableCell>
+                          <TableCell className="text-right">{medico.finalizados}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge className={cn(
+                              medico.taxa >= 80 && 'bg-green-100 text-green-800',
+                              medico.taxa >= 50 && medico.taxa < 80 && 'bg-yellow-100 text-yellow-800',
+                              medico.taxa < 50 && 'bg-red-100 text-red-800'
+                            )}>
+                              {medico.taxa}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Gráfico de barras por médico */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Comparativo de Atendimentos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosPorMedico} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="nome" type="category" width={120} fontSize={12} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="atendimentos" fill="#0066CC" name="Total" radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="finalizados" fill="#00A86B" name="Finalizados" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>

@@ -1,16 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Lancamento } from '@/types';
-import { getAll } from '@/lib/localStorage';
+import { useLancamentos } from '@/hooks/useSupabaseData';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -22,7 +13,6 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
-  Download,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -37,15 +27,12 @@ import {
   Legend,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FluxoCaixa() {
-  const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'mensal' | 'semanal'>('mensal');
 
-  useEffect(() => {
-    setLancamentos(getAll<Lancamento>('lancamentos'));
-  }, []);
+  const { data: lancamentos = [], isLoading } = useLancamentos();
 
   const mesAtual = currentDate.getMonth();
   const anoAtual = currentDate.getFullYear();
@@ -66,19 +53,19 @@ export default function FluxoCaixa() {
 
     const receitas = lancamentosMes
       .filter(l => l.tipo === 'receita' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const despesas = lancamentosMes
       .filter(l => l.tipo === 'despesa' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const receitasPendentes = lancamentosMes
       .filter(l => l.tipo === 'receita' && l.status === 'pendente')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const despesasPendentes = lancamentosMes
       .filter(l => l.tipo === 'despesa' && l.status === 'pendente')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     return {
       receitas,
@@ -103,11 +90,11 @@ export default function FluxoCaixa() {
 
       const receitas = lancamentosDia
         .filter(l => l.tipo === 'receita')
-        .reduce((acc, l) => acc + l.valor, 0);
+        .reduce((acc, l) => acc + Number(l.valor), 0);
 
       const despesas = lancamentosDia
         .filter(l => l.tipo === 'despesa')
-        .reduce((acc, l) => acc + l.valor, 0);
+        .reduce((acc, l) => acc + Number(l.valor), 0);
 
       saldoAcumulado += receitas - despesas;
 
@@ -135,9 +122,9 @@ export default function FluxoCaixa() {
           categorias[l.categoria] = { receitas: 0, despesas: 0 };
         }
         if (l.tipo === 'receita') {
-          categorias[l.categoria].receitas += l.valor;
+          categorias[l.categoria].receitas += Number(l.valor);
         } else {
-          categorias[l.categoria].despesas += l.valor;
+          categorias[l.categoria].despesas += Number(l.valor);
         }
       });
 
@@ -160,11 +147,11 @@ export default function FluxoCaixa() {
 
     const receitasAnt = lancamentosMesAnterior
       .filter(l => l.tipo === 'receita')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const despesasAnt = lancamentosMesAnterior
       .filter(l => l.tipo === 'despesa')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const variacaoReceita = receitasAnt > 0 
       ? ((totaisMes.receitas - receitasAnt) / receitasAnt) * 100 
@@ -179,6 +166,18 @@ export default function FluxoCaixa() {
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -224,7 +223,7 @@ export default function FluxoCaixa() {
                   </div>
                 )}
               </div>
-              <div className="rounded-lg p-3 bg-green-100">
+              <div className="rounded-lg p-3 bg-green-100 dark:bg-green-900/30">
                 <ArrowUpCircle className="h-6 w-6 text-green-600" />
               </div>
             </div>
@@ -258,7 +257,7 @@ export default function FluxoCaixa() {
                   </div>
                 )}
               </div>
-              <div className="rounded-lg p-3 bg-red-100">
+              <div className="rounded-lg p-3 bg-red-100 dark:bg-red-900/30">
                 <ArrowDownCircle className="h-6 w-6 text-red-600" />
               </div>
             </div>
@@ -284,7 +283,7 @@ export default function FluxoCaixa() {
               </div>
               <div className={cn(
                 'rounded-lg p-3',
-                totaisMes.saldo >= 0 ? 'bg-green-100' : 'bg-red-100'
+                totaisMes.saldo >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
               )}>
                 <Wallet className={cn(
                   'h-6 w-6',

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Activity, Heart, Thermometer, Scale, Ruler } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Activity, Heart, Scale, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,19 +28,41 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Triagem, Paciente, User, Agendamento, FilaAtendimento } from '@/types';
-import { getAll, generateId, setItem } from '@/lib/localStorage';
+import { toast } from 'sonner';
+import { usePacientes, useAgendamentos, useFilaAtendimento, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const CLASSIFICACAO_COLORS = {
+interface Triagem {
+  id: string;
+  paciente_id: string;
+  agendamento_id: string;
+  enfermeiro_id: string;
+  pressao_arterial: string | null;
+  frequencia_cardiaca: number | null;
+  frequencia_respiratoria: number | null;
+  temperatura: number | null;
+  saturacao: number | null;
+  peso: number | null;
+  altura: number | null;
+  imc: number | null;
+  queixa_principal: string | null;
+  classificacao_risco: 'verde' | 'amarelo' | 'laranja' | 'vermelho' | null;
+  observacoes: string | null;
+  data_hora: string | null;
+}
+
+const CLASSIFICACAO_COLORS: Record<string, string> = {
   verde: 'bg-green-500 text-white',
   amarelo: 'bg-yellow-500 text-white',
   laranja: 'bg-orange-500 text-white',
   vermelho: 'bg-red-500 text-white',
 };
 
-const CLASSIFICACAO_LABELS = {
+const CLASSIFICACAO_LABELS: Record<string, string> = {
   verde: 'Não Urgente',
   amarelo: 'Pouco Urgente',
   laranja: 'Urgente',
@@ -48,42 +70,38 @@ const CLASSIFICACAO_LABELS = {
 };
 
 export default function TriagemPage() {
-  const [triagens, setTriagens] = useState<Triagem[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [fila, setFila] = useState<FilaAtendimento[]>([]);
-  const [enfermeiros, setEnfermeiros] = useState<User[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    pacienteId: '',
-    agendamentoId: '',
-    pressaoArterial: '',
-    frequenciaCardiaca: '',
-    frequenciaRespiratoria: '',
+    paciente_id: '',
+    agendamento_id: '',
+    pressao_arterial: '',
+    frequencia_cardiaca: '',
+    frequencia_respiratoria: '',
     temperatura: '',
     saturacao: '',
     peso: '',
     altura: '',
-    queixaPrincipal: '',
-    classificacaoRisco: 'verde' as 'verde' | 'amarelo' | 'laranja' | 'vermelho',
+    queixa_principal: '',
+    classificacao_risco: 'verde' as 'verde' | 'amarelo' | 'laranja' | 'vermelho',
     observacoes: '',
   });
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setTriagens(getAll<Triagem>('triagens'));
-    setPacientes(getAll<Paciente>('pacientes'));
-    setAgendamentos(getAll<Agendamento>('agendamentos'));
-    setFila(getAll<FilaAtendimento>('fila'));
-    setEnfermeiros(getAll<User>('users').filter(u => u.role === 'enfermagem'));
-  };
-
+  const queryClient = useQueryClient();
+  const { user } = useSupabaseAuth();
   const today = format(new Date(), 'yyyy-MM-dd');
+
+  const { data: triagens = [], isLoading: loadingTriagens } = useSupabaseQuery<Triagem>('triagens', {
+    orderBy: { column: 'data_hora', ascending: false },
+  });
+  const { data: pacientes = [] } = usePacientes();
+  const { data: agendamentos = [] } = useAgendamentos(today);
+  const { data: fila = [] } = useFilaAtendimento();
+
+  const isLoading = loadingTriagens;
+
   const filaAguardando = fila.filter(f => f.status === 'aguardando');
+  const triagenHoje = triagens.filter(t => t.data_hora?.startsWith(today));
 
   const calcularIMC = (peso: string, altura: string): number => {
     const p = parseFloat(peso);
@@ -96,70 +114,76 @@ export default function TriagemPage() {
 
   const handleOpenDialog = (pacienteId?: string, agendamentoId?: string) => {
     setFormData({
-      pacienteId: pacienteId || '',
-      agendamentoId: agendamentoId || '',
-      pressaoArterial: '',
-      frequenciaCardiaca: '',
-      frequenciaRespiratoria: '',
+      paciente_id: pacienteId || '',
+      agendamento_id: agendamentoId || '',
+      pressao_arterial: '',
+      frequencia_cardiaca: '',
+      frequencia_respiratoria: '',
       temperatura: '',
       saturacao: '',
       peso: '',
       altura: '',
-      queixaPrincipal: '',
-      classificacaoRisco: 'verde',
+      queixa_principal: '',
+      classificacao_risco: 'verde',
       observacoes: '',
     });
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.pacienteId || !formData.pressaoArterial) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha os campos obrigatórios.',
-        variant: 'destructive',
-      });
+  const handleSave = async () => {
+    if (!formData.paciente_id || !formData.pressao_arterial) {
+      toast.error('Preencha os campos obrigatórios.');
       return;
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('elolab_clinic_currentUser') || '{}');
-    const imc = calcularIMC(formData.peso, formData.altura);
+    setIsSaving(true);
+    try {
+      const imc = calcularIMC(formData.peso, formData.altura);
 
-    const novaTriagem: Triagem = {
-      id: generateId(),
-      pacienteId: formData.pacienteId,
-      agendamentoId: formData.agendamentoId,
-      enfermeiroId: currentUser.id || 'enf-1',
-      pressaoArterial: formData.pressaoArterial,
-      frequenciaCardiaca: parseInt(formData.frequenciaCardiaca) || 0,
-      frequenciaRespiratoria: parseInt(formData.frequenciaRespiratoria) || 0,
-      temperatura: parseFloat(formData.temperatura) || 0,
-      saturacao: parseFloat(formData.saturacao) || 0,
-      peso: parseFloat(formData.peso) || 0,
-      altura: parseFloat(formData.altura) || 0,
-      imc,
-      queixaPrincipal: formData.queixaPrincipal,
-      classificacaoRisco: formData.classificacaoRisco,
-      observacoes: formData.observacoes,
-      dataHora: new Date().toISOString(),
-    };
+      const { error } = await supabase.from('triagens').insert({
+        paciente_id: formData.paciente_id,
+        agendamento_id: formData.agendamento_id || null,
+        enfermeiro_id: user?.id || '',
+        pressao_arterial: formData.pressao_arterial,
+        frequencia_cardiaca: parseInt(formData.frequencia_cardiaca) || null,
+        frequencia_respiratoria: parseInt(formData.frequencia_respiratoria) || null,
+        temperatura: parseFloat(formData.temperatura) || null,
+        saturacao: parseFloat(formData.saturacao) || null,
+        peso: parseFloat(formData.peso) || null,
+        altura: parseFloat(formData.altura) || null,
+        imc: imc || null,
+        queixa_principal: formData.queixa_principal || null,
+        classificacao_risco: formData.classificacao_risco,
+        observacoes: formData.observacoes || null,
+        data_hora: new Date().toISOString(),
+      });
 
-    const allTriagens = getAll<Triagem>('triagens');
-    allTriagens.push(novaTriagem);
-    setItem('triagens', allTriagens);
+      if (error) throw error;
 
-    loadData();
-    setIsDialogOpen(false);
-    toast({
-      title: 'Triagem realizada',
-      description: 'Os dados foram registrados com sucesso.',
-    });
+      queryClient.invalidateQueries({ queryKey: ['triagens'] });
+      setIsDialogOpen(false);
+      toast.success('Triagem realizada com sucesso.');
+    } catch (error) {
+      console.error('Error saving triagem:', error);
+      toast.error('Erro ao salvar triagem.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Desconhecido';
-  const getEnfermeiroNome = (id: string) => enfermeiros.find(e => e.id === id)?.nome || 'Desconhecido';
 
-  const triagenHoje = triagens.filter(t => t.dataHora.startsWith(today));
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -181,7 +205,7 @@ export default function TriagemPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{triagenHoje.filter(t => t.classificacaoRisco === cor).length}</p>
+                  <p className="text-3xl font-bold">{triagenHoje.filter(t => t.classificacao_risco === cor).length}</p>
                   <p className="text-sm text-muted-foreground">{CLASSIFICACAO_LABELS[cor]}</p>
                 </div>
                 <div className={`w-12 h-12 rounded-full ${CLASSIFICACAO_COLORS[cor]} flex items-center justify-center`}>
@@ -203,21 +227,22 @@ export default function TriagemPage() {
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {filaAguardando.map(item => {
-                const ag = agendamentos.find(a => a.id === item.agendamentoId);
-                const paciente = ag ? pacientes.find(p => p.id === ag.pacienteId) : null;
-                const jaTriado = triagens.some(t => t.agendamentoId === item.agendamentoId);
+                const ag = agendamentos.find(a => a.id === item.agendamento_id);
+                const agData = ag as any;
+                const paciente = agData ? pacientes.find(p => p.id === agData.paciente_id) : null;
+                const jaTriado = triagens.some(t => t.agendamento_id === item.agendamento_id);
                 
                 if (jaTriado || !paciente) return null;
                 
                 return (
                   <Card key={item.id} className="cursor-pointer hover:bg-muted/50 transition-colors" 
-                        onClick={() => handleOpenDialog(paciente.id, item.agendamentoId)}>
+                        onClick={() => handleOpenDialog(paciente.id, item.agendamento_id)}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{paciente.nome}</p>
                           <p className="text-sm text-muted-foreground">
-                            Chegada: {format(new Date(item.horarioChegada), 'HH:mm')}
+                            Chegada: {item.horario_chegada ? format(new Date(item.horario_chegada), 'HH:mm') : '-'}
                           </p>
                         </div>
                         <Button size="sm">Triar</Button>
@@ -263,15 +288,15 @@ export default function TriagemPage() {
                 ) : (
                   triagenHoje.map((triagem) => (
                     <TableRow key={triagem.id}>
-                      <TableCell>{format(new Date(triagem.dataHora), 'HH:mm')}</TableCell>
-                      <TableCell className="font-medium">{getPacienteNome(triagem.pacienteId)}</TableCell>
-                      <TableCell className="hidden md:table-cell">{triagem.pressaoArterial} mmHg</TableCell>
-                      <TableCell className="hidden md:table-cell">{triagem.frequenciaCardiaca} bpm</TableCell>
+                      <TableCell>{triagem.data_hora ? format(new Date(triagem.data_hora), 'HH:mm') : '-'}</TableCell>
+                      <TableCell className="font-medium">{getPacienteNome(triagem.paciente_id)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{triagem.pressao_arterial} mmHg</TableCell>
+                      <TableCell className="hidden md:table-cell">{triagem.frequencia_cardiaca} bpm</TableCell>
                       <TableCell className="hidden lg:table-cell">{triagem.temperatura}°C</TableCell>
                       <TableCell className="hidden lg:table-cell">{triagem.saturacao}%</TableCell>
                       <TableCell>
-                        <Badge className={CLASSIFICACAO_COLORS[triagem.classificacaoRisco]}>
-                          {CLASSIFICACAO_LABELS[triagem.classificacaoRisco]}
+                        <Badge className={CLASSIFICACAO_COLORS[triagem.classificacao_risco || 'verde']}>
+                          {CLASSIFICACAO_LABELS[triagem.classificacao_risco || 'verde']}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -293,7 +318,7 @@ export default function TriagemPage() {
             {/* Paciente */}
             <div className="space-y-2">
               <Label>Paciente *</Label>
-              <Select value={formData.pacienteId} onValueChange={(v) => setFormData({ ...formData, pacienteId: v })}>
+              <Select value={formData.paciente_id} onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o paciente" />
                 </SelectTrigger>
@@ -315,8 +340,8 @@ export default function TriagemPage() {
                 <div className="space-y-2">
                   <Label>Pressão Arterial *</Label>
                   <Input
-                    value={formData.pressaoArterial}
-                    onChange={(e) => setFormData({ ...formData, pressaoArterial: e.target.value })}
+                    value={formData.pressao_arterial}
+                    onChange={(e) => setFormData({ ...formData, pressao_arterial: e.target.value })}
                     placeholder="120/80"
                   />
                 </div>
@@ -324,8 +349,8 @@ export default function TriagemPage() {
                   <Label>Frequência Cardíaca</Label>
                   <Input
                     type="number"
-                    value={formData.frequenciaCardiaca}
-                    onChange={(e) => setFormData({ ...formData, frequenciaCardiaca: e.target.value })}
+                    value={formData.frequencia_cardiaca}
+                    onChange={(e) => setFormData({ ...formData, frequencia_cardiaca: e.target.value })}
                     placeholder="bpm"
                   />
                 </div>
@@ -333,8 +358,8 @@ export default function TriagemPage() {
                   <Label>Freq. Respiratória</Label>
                   <Input
                     type="number"
-                    value={formData.frequenciaRespiratoria}
-                    onChange={(e) => setFormData({ ...formData, frequenciaRespiratoria: e.target.value })}
+                    value={formData.frequencia_respiratoria}
+                    onChange={(e) => setFormData({ ...formData, frequencia_respiratoria: e.target.value })}
                     placeholder="irpm"
                   />
                 </div>
@@ -402,17 +427,17 @@ export default function TriagemPage() {
               <div className="space-y-2">
                 <Label>Queixa Principal</Label>
                 <Textarea
-                  value={formData.queixaPrincipal}
-                  onChange={(e) => setFormData({ ...formData, queixaPrincipal: e.target.value })}
+                  value={formData.queixa_principal}
+                  onChange={(e) => setFormData({ ...formData, queixa_principal: e.target.value })}
                   placeholder="Descreva a queixa principal do paciente..."
                 />
               </div>
               <div className="space-y-2">
                 <Label>Classificação de Risco *</Label>
                 <Select 
-                  value={formData.classificacaoRisco} 
+                  value={formData.classificacao_risco} 
                   onValueChange={(v: 'verde' | 'amarelo' | 'laranja' | 'vermelho') => 
-                    setFormData({ ...formData, classificacaoRisco: v })
+                    setFormData({ ...formData, classificacao_risco: v })
                   }
                 >
                   <SelectTrigger>
@@ -457,10 +482,13 @@ export default function TriagemPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar Triagem</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar Triagem
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
