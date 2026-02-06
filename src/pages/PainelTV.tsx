@@ -64,7 +64,8 @@ export default function PainelTV() {
   const [chamadoAtual, setChamadoAtual] = useState<FilaItem | null>(null);
 
   // Media state
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]); // Active only for carousel
+  const [allMediaItems, setAllMediaItems] = useState<MediaItem[]>([]); // All for management
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -211,14 +212,18 @@ export default function PainelTV() {
 
   const loadMedia = async () => {
     try {
-      const { data, error } = await supabase
+      // Load all media for management
+      const { data: allData, error: allError } = await supabase
         .from('tv_panel_media')
         .select('*')
-        .eq('ativo', true)
         .order('ordem');
 
-      if (error) throw error;
-      setMediaItems((data as MediaItem[]) || []);
+      if (allError) throw allError;
+      setAllMediaItems((allData as MediaItem[]) || []);
+
+      // Filter active ones for carousel
+      const activeItems = (allData as MediaItem[])?.filter(m => m.ativo) || [];
+      setMediaItems(activeItems);
     } catch (error) {
       console.error('Erro ao carregar mídias:', error);
     }
@@ -431,8 +436,8 @@ export default function PainelTV() {
 
                 {/* Media List */}
                 <div className="space-y-2">
-                  <Label>Mídias Cadastradas ({mediaItems.length})</Label>
-                  {mediaItems.length === 0 ? (
+                  <Label>Mídias Cadastradas ({allMediaItems.length})</Label>
+                  {allMediaItems.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
                       <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p>Nenhuma mídia cadastrada</p>
@@ -440,7 +445,7 @@ export default function PainelTV() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {mediaItems.map((media) => (
+                      {allMediaItems.map((media) => (
                         <Card key={media.id} className="overflow-hidden">
                           <CardContent className="p-3 flex items-center gap-3">
                             {/* Thumbnail */}
