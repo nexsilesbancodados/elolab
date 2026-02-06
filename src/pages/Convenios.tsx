@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,8 +22,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { getAll, generateId, remove, setCollection } from '@/lib/localStorage';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -35,113 +36,168 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useConvenios } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
-interface Convenio {
-  id: string;
+interface FormData {
   nome: string;
   codigo: string;
   cnpj: string;
   telefone: string;
   email: string;
-  endereco: string;
-  valorConsulta: number;
-  prazoFaturamento: number;
+  website: string;
+  valor_consulta: number;
+  valor_retorno: number;
+  carencia: number;
   ativo: boolean;
-  observacoes: string;
-  criadoEm: string;
 }
 
+const initialFormData: FormData = {
+  nome: '',
+  codigo: '',
+  cnpj: '',
+  telefone: '',
+  email: '',
+  website: '',
+  valor_consulta: 0,
+  valor_retorno: 0,
+  carencia: 0,
+  ativo: true,
+};
+
 export default function Convenios() {
-  const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedConvenio, setSelectedConvenio] = useState<Convenio | null>(null);
-  const [formData, setFormData] = useState<Partial<Convenio>>({});
-  const { toast } = useToast();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const queryClient = useQueryClient();
+  const { data: convenios = [], isLoading } = useConvenios();
 
-  const loadData = () => {
-    const data = getAll<Convenio>('convenios');
-    if (data.length === 0) {
-      // Seed demo data
-      const demoConvenios: Convenio[] = [
-        { id: '1', nome: 'Unimed', codigo: 'UNIM', cnpj: '00.000.000/0001-00', telefone: '(11) 3000-0000', email: 'contato@unimed.com.br', endereco: 'São Paulo, SP', valorConsulta: 180, prazoFaturamento: 30, ativo: true, observacoes: '', criadoEm: new Date().toISOString() },
-        { id: '2', nome: 'Bradesco Saúde', codigo: 'BRAD', cnpj: '00.000.000/0002-00', telefone: '(11) 3001-0000', email: 'contato@bradesco.com.br', endereco: 'São Paulo, SP', valorConsulta: 200, prazoFaturamento: 45, ativo: true, observacoes: '', criadoEm: new Date().toISOString() },
-        { id: '3', nome: 'SulAmérica', codigo: 'SULA', cnpj: '00.000.000/0003-00', telefone: '(11) 3002-0000', email: 'contato@sulamerica.com.br', endereco: 'São Paulo, SP', valorConsulta: 170, prazoFaturamento: 30, ativo: true, observacoes: '', criadoEm: new Date().toISOString() },
-        { id: '4', nome: 'Amil', codigo: 'AMIL', cnpj: '00.000.000/0004-00', telefone: '(11) 3003-0000', email: 'contato@amil.com.br', endereco: 'São Paulo, SP', valorConsulta: 160, prazoFaturamento: 30, ativo: false, observacoes: 'Contrato encerrado', criadoEm: new Date().toISOString() },
-      ];
-      setCollection('convenios', demoConvenios);
-      setConvenios(demoConvenios);
-    } else {
-      setConvenios(data);
-    }
-  };
-
-  const filteredConvenios = convenios.filter(c =>
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredConvenios = useMemo(() => 
+    convenios.filter(c =>
+      c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [convenios, searchTerm]
   );
 
   const handleNew = () => {
-    setSelectedConvenio(null);
-    setFormData({ ativo: true, prazoFaturamento: 30 });
+    setEditingId(null);
+    setFormData(initialFormData);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (convenio: Convenio) => {
-    setSelectedConvenio(convenio);
-    setFormData(convenio);
+  const handleEdit = (convenio: typeof convenios[0]) => {
+    setEditingId(convenio.id);
+    setFormData({
+      nome: convenio.nome,
+      codigo: convenio.codigo,
+      cnpj: convenio.cnpj || '',
+      telefone: convenio.telefone || '',
+      email: convenio.email || '',
+      website: convenio.website || '',
+      valor_consulta: convenio.valor_consulta,
+      valor_retorno: convenio.valor_retorno,
+      carencia: convenio.carencia,
+      ativo: convenio.ativo,
+    });
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (convenio: Convenio) => {
-    setSelectedConvenio(convenio);
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
     setIsDeleteOpen(true);
   };
 
-  const handleDelete = () => {
-    if (selectedConvenio) {
-      remove('convenios', selectedConvenio.id);
-      loadData();
-      toast({ title: 'Convênio excluído', description: 'O convênio foi removido.' });
+  const handleDelete = async () => {
+    if (!selectedId) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('convenios')
+        .delete()
+        .eq('id', selectedId);
+
+      if (error) throw error;
+      
+      toast.success('Convênio excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['convenios'] });
+    } catch (error: any) {
+      console.error('Erro ao excluir:', error);
+      toast.error(error.message || 'Erro ao excluir convênio');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteOpen(false);
     }
-    setIsDeleteOpen(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.nome || !formData.codigo) {
-      toast({ title: 'Erro', description: 'Nome e código são obrigatórios.', variant: 'destructive' });
+      toast.error('Nome e código são obrigatórios.');
       return;
     }
 
-    const allConvenios = getAll<Convenio>('convenios');
-    
-    if (selectedConvenio) {
-      const index = allConvenios.findIndex(c => c.id === selectedConvenio.id);
-      if (index !== -1) {
-        allConvenios[index] = { ...allConvenios[index], ...formData } as Convenio;
-      }
-    } else {
-      allConvenios.push({
-        ...formData,
-        id: generateId(),
-        criadoEm: new Date().toISOString(),
-      } as Convenio);
-    }
+    setIsSubmitting(true);
+    try {
+      const dataToSave = {
+        nome: formData.nome,
+        codigo: formData.codigo,
+        cnpj: formData.cnpj || null,
+        telefone: formData.telefone || null,
+        email: formData.email || null,
+        website: formData.website || null,
+        valor_consulta: formData.valor_consulta,
+        valor_retorno: formData.valor_retorno,
+        carencia: formData.carencia,
+        ativo: formData.ativo,
+      };
 
-    setCollection('convenios', allConvenios);
-    loadData();
-    setIsFormOpen(false);
-    toast({ title: 'Sucesso', description: 'Convênio salvo com sucesso.' });
+      if (editingId) {
+        const { error } = await supabase
+          .from('convenios')
+          .update(dataToSave)
+          .eq('id', editingId);
+
+        if (error) throw error;
+        toast.success('Convênio atualizado com sucesso!');
+      } else {
+        const { error } = await supabase
+          .from('convenios')
+          .insert(dataToSave);
+
+        if (error) throw error;
+        toast.success('Convênio cadastrado com sucesso!');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['convenios'] });
+      setIsFormOpen(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar:', error);
+      toast.error(error.message || 'Erro ao salvar convênio');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -159,7 +215,7 @@ export default function Convenios() {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Lista de Convênios</CardTitle>
+            <CardTitle>Lista de Convênios ({filteredConvenios.length})</CardTitle>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -179,7 +235,7 @@ export default function Convenios() {
                   <TableHead>Convênio</TableHead>
                   <TableHead className="hidden md:table-cell">Código</TableHead>
                   <TableHead className="hidden sm:table-cell">Valor Consulta</TableHead>
-                  <TableHead className="hidden lg:table-cell">Prazo Fatur.</TableHead>
+                  <TableHead className="hidden lg:table-cell">Carência</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -197,14 +253,16 @@ export default function Convenios() {
                     <TableRow key={convenio.id}>
                       <TableCell>
                         <p className="font-medium">{convenio.nome}</p>
-                        <p className="text-xs text-muted-foreground">{convenio.email}</p>
+                        <p className="text-xs text-muted-foreground">{convenio.email || '-'}</p>
                       </TableCell>
                       <TableCell className="hidden md:table-cell font-mono">{convenio.codigo}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{formatCurrency(convenio.valorConsulta)}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{convenio.prazoFaturamento} dias</TableCell>
+                      <TableCell className="hidden sm:table-cell">{formatCurrency(convenio.valor_consulta)}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{convenio.carencia} dias</TableCell>
                       <TableCell>
                         <Badge className={cn(
-                          convenio.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          convenio.ativo 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                            : 'bg-muted text-muted-foreground'
                         )}>
                           {convenio.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
@@ -214,7 +272,7 @@ export default function Convenios() {
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(convenio)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(convenio)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(convenio.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
@@ -232,21 +290,21 @@ export default function Convenios() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedConvenio ? 'Editar Convênio' : 'Novo Convênio'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Editar Convênio' : 'Novo Convênio'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nome *</Label>
                 <Input
-                  value={formData.nome || ''}
+                  value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Código *</Label>
                 <Input
-                  value={formData.codigo || ''}
+                  value={formData.codigo}
                   onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
                   maxLength={10}
                 />
@@ -255,7 +313,7 @@ export default function Convenios() {
             <div className="space-y-2">
               <Label>CNPJ</Label>
               <Input
-                value={formData.cnpj || ''}
+                value={formData.cnpj}
                 onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
                 placeholder="00.000.000/0001-00"
               />
@@ -264,7 +322,7 @@ export default function Convenios() {
               <div className="space-y-2">
                 <Label>Telefone</Label>
                 <Input
-                  value={formData.telefone || ''}
+                  value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                 />
               </div>
@@ -272,49 +330,54 @@ export default function Convenios() {
                 <Label>E-mail</Label>
                 <Input
                   type="email"
-                  value={formData.email || ''}
+                  value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Valor da Consulta</Label>
+                <Label>Valor Consulta</Label>
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.valorConsulta || ''}
-                  onChange={(e) => setFormData({ ...formData, valorConsulta: parseFloat(e.target.value) })}
+                  value={formData.valor_consulta}
+                  onChange={(e) => setFormData({ ...formData, valor_consulta: parseFloat(e.target.value) || 0 })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Prazo de Faturamento (dias)</Label>
+                <Label>Valor Retorno</Label>
                 <Input
                   type="number"
-                  value={formData.prazoFaturamento || 30}
-                  onChange={(e) => setFormData({ ...formData, prazoFaturamento: parseInt(e.target.value) })}
+                  step="0.01"
+                  value={formData.valor_retorno}
+                  onChange={(e) => setFormData({ ...formData, valor_retorno: parseFloat(e.target.value) || 0 })}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea
-                value={formData.observacoes || ''}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                rows={2}
+              <Label>Carência (dias)</Label>
+              <Input
+                type="number"
+                value={formData.carencia}
+                onChange={(e) => setFormData({ ...formData, carencia: parseInt(e.target.value) || 0 })}
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch
-                checked={formData.ativo ?? true}
+                checked={formData.ativo}
                 onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
               />
               <Label>Convênio Ativo</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
+              Salvar
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -325,13 +388,17 @@ export default function Convenios() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o convênio "{selectedConvenio?.nome}"?
+              Tem certeza que deseja excluir este convênio? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Excluir
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-destructive text-destructive-foreground"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
