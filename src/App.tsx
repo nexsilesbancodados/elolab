@@ -39,7 +39,7 @@ const Triagem = lazy(() => import("@/pages/Triagem"));
 const Salas = lazy(() => import("@/pages/Salas"));
 const ListaEspera = lazy(() => import("@/pages/ListaEspera"));
 const FluxoCaixa = lazy(() => import("@/pages/FluxoCaixa"));
-const Telemedicina = lazy(() => import("@/pages/Telemedicina"));
+// Telemedicina removida do escopo
 const Templates = lazy(() => import("@/pages/Templates"));
 const Encaminhamentos = lazy(() => import("@/pages/Encaminhamentos"));
 const Automacoes = lazy(() => import("@/pages/Automacoes"));
@@ -113,7 +113,7 @@ function App() {
                       <Route path="/triagem" element={<Triagem />} />
                       <Route path="/salas" element={<Salas />} />
                       <Route path="/lista-espera" element={<ListaEspera />} />
-                      <Route path="/telemedicina" element={<Telemedicina />} />
+                      {/* Telemedicina removida do escopo */}
                       <Route path="/templates" element={<Templates />} />
                       <Route path="/encaminhamentos" element={<Encaminhamentos />} />
                       <Route path="/financeiro" element={<Financeiro />} />
