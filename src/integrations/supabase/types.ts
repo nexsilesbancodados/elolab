@@ -1765,6 +1765,252 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_agent_actions: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          dados_entrada: Json | null
+          dados_saida: Json | null
+          duracao_ms: number | null
+          erro_mensagem: string | null
+          id: string
+          sucesso: boolean | null
+          tipo_acao: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          dados_entrada?: Json | null
+          dados_saida?: Json | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          id?: string
+          sucesso?: boolean | null
+          tipo_acao: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          dados_entrada?: Json | null
+          dados_saida?: Json | null
+          duracao_ms?: number | null
+          erro_mensagem?: string | null
+          id?: string
+          sucesso?: boolean | null
+          tipo_acao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_agent_actions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_agents: {
+        Row: {
+          atende_fora_horario: boolean | null
+          ativo: boolean | null
+          created_at: string | null
+          horario_atendimento_fim: string | null
+          horario_atendimento_inicio: string | null
+          humor: string
+          id: string
+          instrucoes_personalizadas: string | null
+          max_tokens: number | null
+          mensagem_boas_vindas: string | null
+          mensagem_encerramento: string | null
+          mensagem_fora_horario: string | null
+          nome: string
+          temperatura: number | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          atende_fora_horario?: boolean | null
+          ativo?: boolean | null
+          created_at?: string | null
+          horario_atendimento_fim?: string | null
+          horario_atendimento_inicio?: string | null
+          humor?: string
+          id?: string
+          instrucoes_personalizadas?: string | null
+          max_tokens?: number | null
+          mensagem_boas_vindas?: string | null
+          mensagem_encerramento?: string | null
+          mensagem_fora_horario?: string | null
+          nome: string
+          temperatura?: number | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Update: {
+          atende_fora_horario?: boolean | null
+          ativo?: boolean | null
+          created_at?: string | null
+          horario_atendimento_fim?: string | null
+          horario_atendimento_inicio?: string | null
+          humor?: string
+          id?: string
+          instrucoes_personalizadas?: string | null
+          max_tokens?: number | null
+          mensagem_boas_vindas?: string | null
+          mensagem_encerramento?: string | null
+          mensagem_fora_horario?: string | null
+          nome?: string
+          temperatura?: number | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_conversations: {
+        Row: {
+          contexto: Json | null
+          created_at: string | null
+          id: string
+          paciente_id: string | null
+          remote_jid: string
+          session_id: string | null
+          status: string | null
+          ultima_mensagem_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contexto?: Json | null
+          created_at?: string | null
+          id?: string
+          paciente_id?: string | null
+          remote_jid: string
+          session_id?: string | null
+          status?: string | null
+          ultima_mensagem_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contexto?: Json | null
+          created_at?: string | null
+          id?: string
+          paciente_id?: string | null
+          remote_jid?: string
+          session_id?: string | null
+          status?: string | null
+          ultima_mensagem_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_conversations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          conteudo: string | null
+          conversation_id: string | null
+          created_at: string | null
+          direcao: string
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          status: string | null
+          tipo: string | null
+        }
+        Insert: {
+          conteudo?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          direcao: string
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          status?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          conteudo?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          direcao?: string
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          status?: string | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_sessions: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          id: string
+          instance_id: string | null
+          instance_name: string
+          phone_number: string | null
+          qr_code: string | null
+          qr_code_expires_at: string | null
+          status: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          instance_id?: string | null
+          instance_name: string
+          phone_number?: string | null
+          qr_code?: string | null
+          qr_code_expires_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          instance_id?: string | null
+          instance_name?: string
+          phone_number?: string | null
+          qr_code?: string | null
+          qr_code_expires_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_sessions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
