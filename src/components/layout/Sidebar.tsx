@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,7 +25,6 @@ export function Sidebar() {
   
   const [openGroups, setOpenGroups] = useState<string[]>(DEFAULT_OPEN_GROUPS);
 
-  // Get filtered menu based on user roles
   const filteredMenuGroups = getFilteredMenuGroups(
     profile?.roles || [],
     isAdmin()
@@ -45,8 +43,9 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col border-r bg-sidebar transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64'
+        'flex h-screen flex-col border-r border-sidebar-border transition-all duration-300 ease-out',
+        'bg-gradient-to-b from-sidebar to-sidebar/95 backdrop-blur-xl',
+        collapsed ? 'w-[72px]' : 'w-64'
       )}
     >
       {/* Header */}
@@ -54,7 +53,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-2">
+        <nav className="space-y-1">
           {filteredMenuGroups.map((group, groupIndex) => (
             <SidebarMenuGroup
               key={group.label}
@@ -82,23 +81,29 @@ function SidebarHeader({ collapsed }: SidebarHeaderProps) {
   return (
     <div
       className={cn(
-        'flex h-16 items-center border-b border-sidebar-border px-4',
-        collapsed && 'justify-center'
+        'flex h-16 items-center border-b border-sidebar-border/50 px-4',
+        collapsed && 'justify-center px-2'
       )}
     >
       {!collapsed ? (
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
             <Activity className="h-5 w-5 text-primary-foreground" />
+            <div className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">EloLab</h1>
-            <p className="text-xs text-sidebar-foreground/60">Clínica</p>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight font-display">
+              EloLab
+            </h1>
+            <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 font-medium">
+              Clínica Premium
+            </p>
           </div>
         </div>
       ) : (
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
           <Activity className="h-5 w-5 text-primary-foreground" />
+          <div className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
         </div>
       )}
     </div>
@@ -121,31 +126,35 @@ function SidebarMenuGroup({
   showSeparator,
 }: SidebarMenuGroupProps) {
   return (
-    <div>
-      {showSeparator && <Separator className="my-4 bg-sidebar-border" />}
-
+    <div className={cn(showSeparator && 'pt-4 mt-4 border-t border-sidebar-border/30')}>
       {collapsed ? (
-        // Collapsed mode: just show icons
         <div className="space-y-1">
           {group.items.map((item) => (
             <SidebarNavItem key={item.href} item={item} collapsed={collapsed} />
           ))}
         </div>
       ) : (
-        // Expanded mode: collapsible groups
         <Collapsible open={isOpen} onOpenChange={onToggle}>
-          <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 hover:text-sidebar-foreground/80">
-            {group.label}
+          <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted hover:text-sidebar-foreground/80 transition-colors duration-200">
+            <span className="flex items-center gap-2">
+              {group.label}
+            </span>
             <ChevronRight
               className={cn(
-                'h-4 w-4 transition-transform',
+                'h-3.5 w-3.5 transition-transform duration-200',
                 isOpen && 'rotate-90'
               )}
             />
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-1 pt-1">
-            {group.items.map((item) => (
-              <SidebarNavItem key={item.href} item={item} collapsed={collapsed} />
+          <CollapsibleContent className="space-y-0.5 pt-1">
+            {group.items.map((item, index) => (
+              <div 
+                key={item.href}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
+                <SidebarNavItem item={item} collapsed={collapsed} />
+              </div>
             ))}
           </CollapsibleContent>
         </Collapsible>
@@ -161,13 +170,14 @@ interface SidebarFooterProps {
 
 function SidebarFooter({ collapsed, onToggle }: SidebarFooterProps) {
   return (
-    <div className="border-t border-sidebar-border p-3">
+    <div className="border-t border-sidebar-border/50 p-3">
       <Button
         variant="ghost"
         size="sm"
         onClick={onToggle}
         className={cn(
-          'w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          'w-full text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          'rounded-lg transition-all duration-200',
           collapsed && 'px-2'
         )}
       >
@@ -176,7 +186,7 @@ function SidebarFooter({ collapsed, onToggle }: SidebarFooterProps) {
         ) : (
           <>
             <ChevronLeft className="mr-2 h-4 w-4" />
-            Recolher
+            <span className="text-xs">Recolher</span>
           </>
         )}
       </Button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, Menu, Moon, Sun, LogOut, User, Settings, HelpCircle, Plus, Command } from 'lucide-react';
+import { Bell, Search, Menu, Moon, Sun, LogOut, User, Settings, HelpCircle, Plus, Command, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,10 +91,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { data: pacientes = [] } = usePacientes();
   const [notifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   
-  // Initialize keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Keyboard shortcut for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -119,17 +117,17 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
   const getNotificationColor = (type: Notification['type']) => {
     const colors = {
-      info: 'bg-blue-500',
-      success: 'bg-green-500',
-      warning: 'bg-yellow-500',
-      error: 'bg-red-500',
+      info: 'bg-info',
+      success: 'bg-success',
+      warning: 'bg-warning',
+      error: 'bg-destructive',
     };
     return colors[type];
   };
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 md:px-6">
         {/* Mobile menu button */}
         <Button
           variant="ghost"
@@ -143,40 +141,56 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         {/* Search Trigger */}
         <Button
           variant="outline"
-          className="flex-1 max-w-md justify-start gap-2 text-muted-foreground"
+          className="flex-1 max-w-md justify-start gap-2 text-muted-foreground bg-muted/30 border-border/50 hover:bg-muted/50 hover:border-border"
           onClick={() => setSearchOpen(true)}
         >
           <Search className="h-4 w-4" />
           <span className="hidden sm:inline">Buscar pacientes, prontuários...</span>
           <span className="sm:hidden">Buscar...</span>
-          <kbd className="hidden md:inline-flex pointer-events-none ml-auto h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">
+          <kbd className="hidden md:inline-flex pointer-events-none ml-auto h-5 select-none items-center gap-1 rounded-md border border-border/50 bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
             <Command className="h-3 w-3" />K
           </kbd>
         </Button>
 
         {/* Right section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Quick Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="hidden sm:flex">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="hidden sm:flex h-9 w-9 border-border/50 bg-muted/30 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações Rápidas</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Ações Rápidas</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/agenda">Nova Consulta</Link>
+                <Link to="/agenda" className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  Nova Consulta
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/pacientes">Novo Paciente</Link>
+                <Link to="/pacientes" className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-success" />
+                  Novo Paciente
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/prescricoes">Nova Prescrição</Link>
+                <Link to="/prescricoes" className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-info" />
+                  Nova Prescrição
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/exames">Solicitar Exame</Link>
+                <Link to="/exames" className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-warning" />
+                  Solicitar Exame
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -185,31 +199,36 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <KeyboardShortcutsHelp />
 
           {/* Theme Toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleTheme}
+            className="h-9 w-9 hover:bg-muted/50"
+          >
             {theme === 'light' ? (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-[18px] w-[18px]" />
             ) : (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-[18px] w-[18px]" />
             )}
           </Button>
 
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 hover:bg-muted/50">
+                <Bell className="h-[18px] w-[18px]" />
                 {unreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse">
                     {unreadCount}
-                  </Badge>
+                  </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel className="flex items-center justify-between">
-                Notificações
+                <span className="font-semibold">Notificações</span>
                 {unreadCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge variant="secondary" className="text-xs">
                     {unreadCount} novas
                   </Badge>
                 )}
@@ -224,17 +243,17 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                       !notification.read && 'bg-muted/50'
                     )}
                   >
-                    <div className={cn('w-2 h-2 rounded-full mt-2', getNotificationColor(notification.type))} />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                    <div className={cn('w-2 h-2 rounded-full mt-2 shrink-0', getNotificationColor(notification.type))} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{notification.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">{notification.time}</p>
                     </div>
                   </DropdownMenuItem>
                 ))}
               </ScrollArea>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-center text-primary">
+              <DropdownMenuItem className="text-center text-primary text-sm font-medium">
                 Ver todas as notificações
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -243,23 +262,30 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              <Button variant="ghost" className="flex items-center gap-2.5 px-2 hover:bg-muted/50 h-auto py-1.5">
+                <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-semibold">
                     {profile?.nome ? getInitials(profile.nome) : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">{profile?.nome?.split(' ')[0]}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Sem função'}</p>
+                  <p className="text-sm font-medium leading-tight">{profile?.nome?.split(' ')[0]}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize">{profile?.role || 'Sem função'}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div>
-                  <p className="font-medium">{profile?.nome}</p>
-                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
+              <DropdownMenuLabel className="pb-2">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-sm font-semibold">
+                      {profile?.nome ? getInitials(profile.nome) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{profile?.nome}</p>
+                    <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+                  </div>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -280,7 +306,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 Ajuda
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
+              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4" />
                 Sair
               </DropdownMenuItem>
@@ -291,14 +317,16 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
       {/* Search Dialog */}
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent className="p-0 max-w-xl">
+        <DialogContent className="p-0 max-w-xl overflow-hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Busca Global</DialogTitle>
           </DialogHeader>
-          <CommandComponent className="rounded-lg border-0">
-            <CommandInput placeholder="Buscar pacientes, médicos, prontuários..." />
-            <CommandList>
-              <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+          <CommandComponent className="rounded-xl border-0">
+            <CommandInput placeholder="Buscar pacientes, médicos, prontuários..." className="h-12" />
+            <CommandList className="max-h-[400px]">
+              <CommandEmpty className="py-8 text-center text-muted-foreground">
+                Nenhum resultado encontrado.
+              </CommandEmpty>
               <CommandGroup heading="Pacientes">
                 {pacientes.slice(0, 5).map((paciente) => (
                   <CommandItem
@@ -307,9 +335,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                       setSearchOpen(false);
                       navigate('/pacientes');
                     }}
+                    className="py-3"
                   >
-                    <Avatar className="h-8 w-8 mr-2">
-                      <AvatarFallback className="text-xs">
+                    <Avatar className="h-8 w-8 mr-3">
+                      <AvatarFallback className="bg-muted text-xs font-medium">
                         {getInitials(paciente.nome)}
                       </AvatarFallback>
                     </Avatar>
@@ -321,17 +350,23 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 ))}
               </CommandGroup>
               <CommandSeparator />
-              <CommandGroup heading="Ações">
-                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/agenda'); }}>
-                  <Plus className="mr-2 h-4 w-4" />
+              <CommandGroup heading="Ações Rápidas">
+                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/agenda'); }} className="py-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                    <Plus className="h-4 w-4 text-primary" />
+                  </div>
                   Nova Consulta
                 </CommandItem>
-                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/pacientes'); }}>
-                  <Plus className="mr-2 h-4 w-4" />
+                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/pacientes'); }} className="py-3">
+                  <div className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center mr-3">
+                    <Plus className="h-4 w-4 text-success" />
+                  </div>
                   Novo Paciente
                 </CommandItem>
-                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/prescricoes'); }}>
-                  <Plus className="mr-2 h-4 w-4" />
+                <CommandItem onSelect={() => { setSearchOpen(false); navigate('/prescricoes'); }} className="py-3">
+                  <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center mr-3">
+                    <Plus className="h-4 w-4 text-info" />
+                  </div>
                   Nova Prescrição
                 </CommandItem>
               </CommandGroup>

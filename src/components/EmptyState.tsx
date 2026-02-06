@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
-import { LucideIcon, FileQuestion, Users, Calendar, FileText, Package } from 'lucide-react';
+import { LucideIcon, FileQuestion, Users, Calendar, FileText, Package, SearchX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -17,6 +18,7 @@ interface EmptyStateProps {
     onClick: () => void;
   };
   children?: ReactNode;
+  className?: string;
 }
 
 export function EmptyState({
@@ -26,27 +28,33 @@ export function EmptyState({
   action,
   secondaryAction,
   children,
+  className,
 }: EmptyStateProps) {
   return (
-    <Card className="p-8">
-      <div className="flex flex-col items-center justify-center text-center space-y-4">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <Icon className="h-8 w-8 text-primary" />
+    <Card className={cn("p-8 md:p-12", className)}>
+      <div className="flex flex-col items-center justify-center text-center space-y-6">
+        <div className="relative">
+          <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <Icon className="h-10 w-10 text-primary" />
+          </div>
+          <div className="absolute -right-1 -bottom-1 h-6 w-6 rounded-full bg-muted flex items-center justify-center">
+            <span className="text-sm">✨</span>
+          </div>
         </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-muted-foreground max-w-md">{description}</p>
+        <div className="space-y-2 max-w-md">
+          <h2 className="text-xl font-semibold font-display">{title}</h2>
+          <p className="text-muted-foreground">{description}</p>
         </div>
         {(action || secondaryAction || children) && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap justify-center gap-3 mt-2">
             {action && (
-              <Button onClick={action.onClick}>
+              <Button onClick={action.onClick} size="lg">
                 {action.icon && <action.icon className="mr-2 h-4 w-4" />}
                 {action.label}
               </Button>
             )}
             {secondaryAction && (
-              <Button variant="outline" onClick={secondaryAction.onClick}>
+              <Button variant="outline" size="lg" onClick={secondaryAction.onClick}>
                 {secondaryAction.label}
               </Button>
             )}
@@ -122,7 +130,7 @@ export function EmptyEstoque({ onAdd }: { onAdd: () => void }) {
 export function NoResults({ searchTerm }: { searchTerm: string }) {
   return (
     <EmptyState
-      icon={FileQuestion}
+      icon={SearchX}
       title="Nenhum resultado encontrado"
       description={`Não encontramos resultados para "${searchTerm}". Tente buscar com outros termos.`}
     />
