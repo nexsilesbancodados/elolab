@@ -32,6 +32,7 @@ import {
   Video,
   Files,
   ArrowRightLeft,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -109,6 +110,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Administração',
     items: [
+      { label: 'Automações', icon: Zap, href: '/automacoes', roles: ['admin'] },
       { label: 'Configurações', icon: Settings, href: '/configuracoes' },
     ],
   },
