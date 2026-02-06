@@ -69,7 +69,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Atestados', icon: FileCheck, href: '/atestados', roles: ['admin', 'medico'] },
       { label: 'Salas', icon: DoorOpen, href: '/salas' },
       { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
-      { label: 'Telemedicina', icon: Video, href: '/telemedicina', roles: ['admin', 'medico'] },
+      // Telemedicina removida do escopo
       { label: 'Encaminhamentos', icon: ArrowRightLeft, href: '/encaminhamentos', roles: ['admin', 'medico'] },
     ],
   },
