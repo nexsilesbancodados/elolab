@@ -1,15 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Plus,
-  Filter,
-  Download,
   Edit,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,28 +35,23 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Lancamento, StatusPagamento } from '@/types';
-import { getAll, generateId, remove, setCollection } from '@/lib/localStorage';
+import { toast } from 'sonner';
+import { useLancamentos } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { CardGridSkeleton, TableSkeleton } from '@/components/ui/loading-skeleton';
+import { DeleteConfirmDialog } from '@/components/ConfirmDialog';
+import { Database } from '@/integrations/supabase/types';
+
+type StatusPagamento = Database['public']['Enums']['status_pagamento'];
 
 const STATUS_COLORS: Record<StatusPagamento, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800',
-  pago: 'bg-green-100 text-green-800',
-  cancelado: 'bg-red-100 text-red-800',
-  estornado: 'bg-gray-100 text-gray-800',
-  atrasado: 'bg-orange-100 text-orange-800',
+  pendente: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+  pago: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  cancelado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  estornado: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300',
+  atrasado: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
 const STATUS_LABELS: Record<StatusPagamento, string> = {
@@ -70,44 +62,46 @@ const STATUS_LABELS: Record<StatusPagamento, string> = {
   atrasado: 'Atrasado',
 };
 
-const CATEGORIAS_RECEITA = ['Consulta', 'Exame', 'Procedimento', 'Retorno', 'Outros'];
-const CATEGORIAS_DESPESA = [
-  'Aluguel',
-  'Salários',
-  'Material',
-  'Equipamentos',
-  'Serviços',
-  'Impostos',
-  'Outros',
-];
+const CATEGORIAS_RECEITA = ['consulta', 'exame', 'procedimento', 'retorno', 'outros'];
+const CATEGORIAS_DESPESA = ['aluguel', 'salarios', 'material', 'equipamentos', 'servicos', 'impostos', 'outros'];
+
+interface FormData {
+  id?: string;
+  tipo: 'receita' | 'despesa';
+  data: string;
+  valor: number;
+  categoria: string;
+  descricao: string;
+  status: StatusPagamento;
+  forma_pagamento?: string;
+}
 
 export default function Financeiro() {
-  const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedLancamento, setSelectedLancamento] = useState<Lancamento | null>(null);
-  const [formData, setFormData] = useState<Partial<Lancamento>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    tipo: 'receita',
+    data: format(new Date(), 'yyyy-MM-dd'),
+    valor: 0,
+    categoria: '',
+    descricao: '',
+    status: 'pendente',
+  });
   const [filterTipo, setFilterTipo] = useState<'todos' | 'receita' | 'despesa'>('todos');
   const [filterPeriodo, setFilterPeriodo] = useState('mes_atual');
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setLancamentos(getAll<Lancamento>('lancamentos'));
-  };
+  const queryClient = useQueryClient();
+  const { data: lancamentos = [], isLoading } = useLancamentos();
 
   const filteredLancamentos = useMemo(() => {
     let filtered = [...lancamentos];
 
-    // Filter by type
     if (filterTipo !== 'todos') {
       filtered = filtered.filter((l) => l.tipo === filterTipo);
     }
 
-    // Filter by period
     const now = new Date();
     let startDate: Date;
     let endDate: Date = endOfMonth(now);
@@ -138,84 +132,123 @@ export default function Financeiro() {
   const totais = useMemo(() => {
     const receitas = filteredLancamentos
       .filter((l) => l.tipo === 'receita' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
     const despesas = filteredLancamentos
       .filter((l) => l.tipo === 'despesa' && l.status === 'pago')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
     const pendentes = filteredLancamentos
       .filter((l) => l.status === 'pendente')
-      .reduce((acc, l) => acc + l.valor, 0);
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
     return { receitas, despesas, saldo: receitas - despesas, pendentes };
   }, [filteredLancamentos]);
 
   const handleNew = (tipo: 'receita' | 'despesa') => {
-    setSelectedLancamento(null);
+    setSelectedId(null);
     setFormData({
       tipo,
       data: format(new Date(), 'yyyy-MM-dd'),
-      status: 'pendente',
+      valor: 0,
       categoria: '',
+      descricao: '',
+      status: 'pendente',
     });
     setIsFormOpen(true);
   };
 
-  const handleEdit = (lancamento: Lancamento) => {
-    setSelectedLancamento(lancamento);
-    setFormData(lancamento);
+  const handleEdit = (lancamento: typeof lancamentos[0]) => {
+    setSelectedId(lancamento.id);
+    setFormData({
+      id: lancamento.id,
+      tipo: lancamento.tipo as 'receita' | 'despesa',
+      data: lancamento.data,
+      valor: Number(lancamento.valor),
+      categoria: lancamento.categoria,
+      descricao: lancamento.descricao,
+      status: (lancamento.status || 'pendente') as StatusPagamento,
+      forma_pagamento: lancamento.forma_pagamento || undefined,
+    });
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (lancamento: Lancamento) => {
-    setSelectedLancamento(lancamento);
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
     setIsDeleteOpen(true);
   };
 
-  const handleDelete = () => {
-    if (selectedLancamento) {
-      remove('lancamentos', selectedLancamento.id);
-      loadData();
-      toast({
-        title: 'Lançamento excluído',
-        description: 'O lançamento foi removido com sucesso.',
-      });
+  const handleDelete = async () => {
+    if (!selectedId) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('lancamentos')
+        .delete()
+        .eq('id', selectedId);
+
+      if (error) throw error;
+
+      toast.success('Lançamento excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast.error('Erro ao excluir lançamento.');
+    } finally {
+      setIsSaving(false);
+      setIsDeleteOpen(false);
     }
-    setIsDeleteOpen(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.categoria || !formData.descricao || !formData.valor) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos obrigatórios.',
-        variant: 'destructive',
-      });
+      toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
 
-    const allLancamentos = getAll<Lancamento>('lancamentos');
+    setIsSaving(true);
 
-    if (selectedLancamento) {
-      const index = allLancamentos.findIndex((l) => l.id === selectedLancamento.id);
-      if (index !== -1) {
-        allLancamentos[index] = { ...allLancamentos[index], ...formData } as Lancamento;
+    try {
+      if (selectedId) {
+        const { error } = await supabase
+          .from('lancamentos')
+          .update({
+            tipo: formData.tipo,
+            data: formData.data,
+            valor: formData.valor,
+            categoria: formData.categoria,
+            descricao: formData.descricao,
+            status: formData.status,
+            forma_pagamento: formData.forma_pagamento,
+          })
+          .eq('id', selectedId);
+
+        if (error) throw error;
+        toast.success('Lançamento atualizado com sucesso!');
+      } else {
+        const { error } = await supabase
+          .from('lancamentos')
+          .insert({
+            tipo: formData.tipo,
+            data: formData.data,
+            valor: formData.valor,
+            categoria: formData.categoria,
+            descricao: formData.descricao,
+            status: formData.status,
+            forma_pagamento: formData.forma_pagamento,
+          });
+
+        if (error) throw error;
+        toast.success('Lançamento criado com sucesso!');
       }
-    } else {
-      const newLancamento: Lancamento = {
-        ...formData,
-        id: generateId(),
-        criadoEm: new Date().toISOString(),
-      } as Lancamento;
-      allLancamentos.push(newLancamento);
-    }
 
-    setCollection('lancamentos', allLancamentos);
-    loadData();
-    setIsFormOpen(false);
-    toast({
-      title: selectedLancamento ? 'Lançamento atualizado' : 'Lançamento criado',
-      description: 'O lançamento foi salvo com sucesso.',
-    });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Error saving:', error);
+      toast.error('Erro ao salvar lançamento.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -224,6 +257,28 @@ export default function Financeiro() {
       currency: 'BRL',
     }).format(value);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Financeiro</h1>
+            <p className="text-muted-foreground">Controle de receitas e despesas</p>
+          </div>
+        </div>
+        <CardGridSkeleton count={4} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Lançamentos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TableSkeleton rows={6} cols={6} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -249,12 +304,12 @@ export default function Financeiro() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Receitas</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(totais.receitas)}
                 </p>
               </div>
@@ -264,12 +319,12 @@ export default function Financeiro() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-red-100">
-                <TrendingDown className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30">
+                <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Despesas</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                   {formatCurrency(totais.despesas)}
                 </p>
               </div>
@@ -287,7 +342,7 @@ export default function Financeiro() {
                 <p
                   className={cn(
                     'text-2xl font-bold',
-                    totais.saldo >= 0 ? 'text-green-600' : 'text-red-600'
+                    totais.saldo >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   )}
                 >
                   {formatCurrency(totais.saldo)}
@@ -299,12 +354,12 @@ export default function Financeiro() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-yellow-100">
-                <DollarSign className="h-6 w-6 text-yellow-600" />
+              <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                <DollarSign className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pendentes</p>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                   {formatCurrency(totais.pendentes)}
                 </p>
               </div>
@@ -374,7 +429,7 @@ export default function Financeiro() {
                           <TrendingDown className="h-4 w-4 text-red-600" />
                         )}
                       </TableCell>
-                      <TableCell>{lancamento.categoria}</TableCell>
+                      <TableCell className="capitalize">{lancamento.categoria}</TableCell>
                       <TableCell className="hidden md:table-cell max-w-xs truncate">
                         {lancamento.descricao}
                       </TableCell>
@@ -385,11 +440,11 @@ export default function Financeiro() {
                         )}
                       >
                         {lancamento.tipo === 'despesa' && '-'}
-                        {formatCurrency(lancamento.valor)}
+                        {formatCurrency(Number(lancamento.valor))}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[lancamento.status])}>
-                          {STATUS_LABELS[lancamento.status]}
+                        <Badge className={cn(STATUS_COLORS[lancamento.status || 'pendente'])}>
+                          {STATUS_LABELS[lancamento.status || 'pendente']}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -404,7 +459,7 @@ export default function Financeiro() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteClick(lancamento)}
+                            onClick={() => handleDeleteClick(lancamento.id)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -424,7 +479,7 @@ export default function Financeiro() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedLancamento
+              {selectedId
                 ? 'Editar Lançamento'
                 : `Nova ${formData.tipo === 'receita' ? 'Receita' : 'Despesa'}`}
             </DialogTitle>
@@ -446,7 +501,7 @@ export default function Financeiro() {
                   step="0.01"
                   min="0"
                   value={formData.valor || ''}
-                  onChange={(e) => setFormData({ ...formData, valor: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, valor: parseFloat(e.target.value) || 0 })}
                   placeholder="0,00"
                 />
               </div>
@@ -465,7 +520,7 @@ export default function Financeiro() {
                   {(formData.tipo === 'receita' ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA).map(
                     (cat) => (
                       <SelectItem key={cat} value={cat}>
-                        {cat}
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
                       </SelectItem>
                     )
                   )}
@@ -486,8 +541,8 @@ export default function Financeiro() {
               <div className="space-y-2">
                 <Label>Forma de Pagamento</Label>
                 <Select
-                  value={formData.formaPagamento}
-                  onValueChange={(v) => setFormData({ ...formData, formaPagamento: v as any })}
+                  value={formData.forma_pagamento || ''}
+                  onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
@@ -497,7 +552,8 @@ export default function Financeiro() {
                     <SelectItem value="pix">PIX</SelectItem>
                     <SelectItem value="cartao_credito">Cartão Crédito</SelectItem>
                     <SelectItem value="cartao_debito">Cartão Débito</SelectItem>
-                    <SelectItem value="convenio">Convênio</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -522,34 +578,31 @@ export default function Financeiro() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este lançamento? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation */}
+      <DeleteConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        itemName="este lançamento"
+        onConfirm={handleDelete}
+        isLoading={isSaving}
+      />
     </div>
   );
 }
