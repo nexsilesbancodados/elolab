@@ -1705,6 +1705,42 @@ export type Database = {
           },
         ]
       }
+      tv_panel_media: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          duracao_exibicao: number | null
+          id: string
+          nome: string
+          ordem: number | null
+          tipo: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          duracao_exibicao?: number | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          tipo: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          duracao_exibicao?: number | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          tipo?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string | null
