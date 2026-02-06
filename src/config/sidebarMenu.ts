@@ -26,6 +26,7 @@ import {
   ArrowRightLeft,
   Zap,
   Bot,
+  Activity,
   LucideIcon,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
@@ -96,6 +97,7 @@ export const menuGroups: MenuGroup[] = [
     label: 'Administração',
     roles: ['admin'],
     items: [
+      { label: 'Analytics', icon: Activity, href: '/analytics' },
       { label: 'Agente IA', icon: Bot, href: '/agente-ia' },
       { label: 'Automações', icon: Zap, href: '/automacoes' },
       { label: 'Configurações', icon: Settings, href: '/configuracoes' },

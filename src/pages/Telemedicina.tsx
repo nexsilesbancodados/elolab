@@ -1,81 +1,104 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Video,
   VideoOff,
   Mic,
   MicOff,
-  Phone,
   PhoneOff,
   Monitor,
   MessageSquare,
-  Users,
   Calendar,
   Clock,
   User,
-  Settings,
-  Maximize2,
-  Camera,
   FileText,
+  Camera,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { Agendamento, Paciente, User as UserType } from '@/types';
-import { getAll } from '@/lib/localStorage';
+import { toast } from 'sonner';
+import { useAgendamentos, usePacientes, useMedicos } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 
-interface ConsultaTelemedicina {
+interface TeleconsultaData {
   id: string;
-  agendamentoId: string;
-  paciente: Paciente;
-  medico: UserType;
+  pacienteNome: string;
+  pacienteTelefone: string;
+  pacienteEmail: string;
+  medicoNome: string;
   horaInicio: string;
+  data: string;
   status: 'aguardando' | 'em_andamento' | 'finalizada';
+  jitsiRoomName: string;
 }
 
 export default function Telemedicina() {
-  const [consultas, setConsultas] = useState<ConsultaTelemedicina[]>([]);
-  const [consultaSelecionada, setConsultaSelecionada] = useState<ConsultaTelemedicina | null>(null);
+  const { data: agendamentos = [] } = useAgendamentos();
+  const { data: pacientes = [] } = usePacientes();
+  const { data: medicos = [] } = useMedicos();
+  
+  const [consultas, setConsultas] = useState<TeleconsultaData[]>([]);
+  const [consultaSelecionada, setConsultaSelecionada] = useState<TeleconsultaData | null>(null);
   const [emChamada, setEmChamada] = useState(false);
   const [videoAtivo, setVideoAtivo] = useState(true);
   const [micAtivo, setMicAtivo] = useState(true);
   const [mensagens, setMensagens] = useState<Array<{ remetente: string; texto: string; hora: string }>>([]);
   const [novaMensagem, setNovaMensagem] = useState('');
   const [anotacoes, setAnotacoes] = useState('');
-  const { toast } = useToast();
+  const jitsiContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     carregarConsultas();
-  }, []);
+  }, [agendamentos, pacientes, medicos]);
 
   const carregarConsultas = () => {
-    const agendamentos = getAll<Agendamento>('agendamentos');
-    const pacientes = getAll<Paciente>('pacientes');
-    const usuarios = getAll<UserType>('users');
-
-    // Filtrar consultas de telemedicina do dia
     const hoje = format(new Date(), 'yyyy-MM-dd');
+    
     const teleconsultas = agendamentos
       .filter((a) => a.tipo === 'telemedicina' && a.data === hoje && a.status !== 'cancelado')
-      .map((a) => ({
-        id: a.id,
-        agendamentoId: a.id,
-        paciente: pacientes.find((p) => p.id === a.pacienteId)!,
-        medico: usuarios.find((u) => u.id === a.medicoId)!,
-        horaInicio: a.horaInicio,
-        status: 'aguardando' as const,
-      }))
-      .filter((c) => c.paciente && c.medico);
+      .map((a) => {
+        const paciente = pacientes.find((p) => p.id === a.paciente_id);
+        const medico = medicos.find((m) => m.id === a.medico_id);
+        
+        if (!paciente || !medico) return null;
+        
+        const roomName = `elolab-${a.id.slice(0, 8)}`;
+        
+        return {
+          id: a.id,
+          pacienteNome: paciente.nome,
+          pacienteTelefone: paciente.telefone || '',
+          pacienteEmail: paciente.email || '',
+          medicoNome: medico.crm,
+          horaInicio: a.hora_inicio,
+          data: a.data,
+          status: 'aguardando' as const,
+          jitsiRoomName: roomName,
+        };
+      })
+      .filter(Boolean) as TeleconsultaData[];
 
     setConsultas(teleconsultas);
+  };
+
+  const gerarLinkJitsi = (roomName: string) => {
+    return `https://meet.jit.si/${roomName}`;
+  };
+
+  const copiarLink = async () => {
+    if (!consultaSelecionada) return;
+    const link = gerarLinkJitsi(consultaSelecionada.jitsiRoomName);
+    await navigator.clipboard.writeText(link);
+    toast.success('Link copiado! Envie para o paciente.');
   };
 
   const iniciarChamada = () => {
@@ -85,23 +108,54 @@ export default function Telemedicina() {
     setMensagens([
       {
         remetente: 'Sistema',
-        texto: 'Chamada iniciada. Aguardando conexão...',
+        texto: 'Sala de videoconferência iniciada. Aguardando paciente...',
         hora: format(new Date(), 'HH:mm'),
       },
     ]);
 
-    toast({
-      title: 'Chamada iniciada',
-      description: `Teleconsulta com ${consultaSelecionada.paciente.nome}`,
-    });
+    // Carregar Jitsi Meet API
+    if (jitsiContainerRef.current) {
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: consultaSelecionada.jitsiRoomName,
+        width: '100%',
+        height: '100%',
+        parentNode: jitsiContainerRef.current,
+        configOverwrite: {
+          startWithAudioMuted: !micAtivo,
+          startWithVideoMuted: !videoAtivo,
+          prejoinPageEnabled: false,
+          disableDeepLinking: true,
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: [
+            'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+            'fodeviceselection', 'hangup', 'chat', 'settings', 'raisehand',
+            'videoquality', 'filmstrip', 'tileview',
+          ],
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          DEFAULT_BACKGROUND: '#1a1a2e',
+        },
+      };
+
+      // @ts-ignore - Jitsi API is loaded from external script
+      if (window.JitsiMeetExternalAPI) {
+        // @ts-ignore
+        new window.JitsiMeetExternalAPI(domain, options);
+      }
+    }
+
+    toast.success('Sala de videoconferência iniciada!');
   };
 
   const encerrarChamada = () => {
     setEmChamada(false);
-    toast({
-      title: 'Chamada encerrada',
-      description: 'A teleconsulta foi finalizada.',
-    });
+    // Limpar o container do Jitsi
+    if (jitsiContainerRef.current) {
+      jitsiContainerRef.current.innerHTML = '';
+    }
+    toast.info('Teleconsulta encerrada.');
   };
 
   const enviarMensagem = () => {
@@ -120,13 +174,16 @@ export default function Telemedicina() {
 
   return (
     <div className="space-y-6">
+      {/* Carregar Jitsi API */}
+      <script src="https://meet.jit.si/external_api.js" async />
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Telemedicina</h1>
-          <p className="text-muted-foreground">Consultas por videochamada</p>
+          <p className="text-muted-foreground">Consultas por videochamada com Jitsi Meet</p>
         </div>
         <Badge variant="outline" className="gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           Sistema Online
         </Badge>
       </div>
@@ -166,11 +223,11 @@ export default function Telemedicina() {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarFallback>
-                              {consulta.paciente.nome.charAt(0)}
+                              {consulta.pacienteNome.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{consulta.paciente.nome}</p>
+                            <p className="font-medium truncate">{consulta.pacienteNome}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {consulta.horaInicio}
@@ -178,9 +235,9 @@ export default function Telemedicina() {
                           </div>
                           <Badge
                             className={cn(
-                              consulta.status === 'aguardando' && 'bg-yellow-100 text-yellow-800',
-                              consulta.status === 'em_andamento' && 'bg-green-100 text-green-800',
-                              consulta.status === 'finalizada' && 'bg-gray-100 text-gray-800'
+                              consulta.status === 'aguardando' && 'bg-warning/20 text-warning-foreground',
+                              consulta.status === 'em_andamento' && 'bg-success/20 text-success-foreground',
+                              consulta.status === 'finalizada' && 'bg-muted text-muted-foreground'
                             )}
                           >
                             {consulta.status.replace('_', ' ')}
@@ -205,64 +262,62 @@ export default function Telemedicina() {
                 <p className="text-sm">Escolha uma teleconsulta na lista ao lado</p>
               </div>
             ) : !emChamada ? (
-              <div className="flex flex-col items-center justify-center h-[600px] bg-gradient-to-b from-muted/50 to-muted">
+              <div className="flex flex-col items-center justify-center h-[600px] bg-gradient-to-b from-muted/50 to-muted p-6">
                 <Avatar className="h-24 w-24 mb-4">
                   <AvatarFallback className="text-3xl">
-                    {consultaSelecionada.paciente.nome.charAt(0)}
+                    {consultaSelecionada.pacienteNome.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="text-2xl font-bold mb-2">{consultaSelecionada.paciente.nome}</h2>
-                <p className="text-muted-foreground mb-6">
+                <h2 className="text-2xl font-bold mb-2">{consultaSelecionada.pacienteNome}</h2>
+                <p className="text-muted-foreground mb-4">
                   Horário: {consultaSelecionada.horaInicio}
                 </p>
-                <Button size="lg" className="gap-2" onClick={iniciarChamada}>
-                  <Video className="h-5 w-5" />
-                  Iniciar Videochamada
-                </Button>
+                
+                {/* Link da sala */}
+                <div className="bg-background border rounded-lg p-4 mb-6 w-full max-w-md">
+                  <p className="text-sm text-muted-foreground mb-2">Link da sala (envie para o paciente):</p>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={gerarLinkJitsi(consultaSelecionada.jitsiRoomName)} 
+                      readOnly 
+                      className="text-sm"
+                    />
+                    <Button variant="outline" size="icon" onClick={copiarLink}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => window.open(gerarLinkJitsi(consultaSelecionada.jitsiRoomName), '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button size="lg" className="gap-2" onClick={iniciarChamada}>
+                    <Video className="h-5 w-5" />
+                    Iniciar Videochamada
+                  </Button>
+                </div>
                 <p className="text-sm text-muted-foreground mt-4">
-                  Certifique-se que sua câmera e microfone estão funcionando
+                  A videoconferência usa Jitsi Meet - gratuito e sem necessidade de conta
                 </p>
               </div>
             ) : (
-              <div className="relative h-[600px] bg-gray-900 rounded-lg overflow-hidden">
-                {/* Vídeo Principal (Simulado) */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <Avatar className="h-32 w-32 mx-auto mb-4">
-                      <AvatarFallback className="text-4xl bg-primary">
-                        {consultaSelecionada.paciente.nome.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="text-xl">{consultaSelecionada.paciente.nome}</p>
-                    <p className="text-sm text-gray-400 mt-2">Conectado</p>
-                  </div>
-                </div>
-
-                {/* Vídeo do Médico (Picture-in-Picture Simulado) */}
-                <div className="absolute bottom-20 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600">
-                  <div className="flex items-center justify-center h-full">
-                    {videoAtivo ? (
-                      <User className="h-12 w-12 text-gray-500" />
-                    ) : (
-                      <VideoOff className="h-12 w-12 text-red-500" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Duração da Chamada */}
-                <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full text-white text-sm flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  Em chamada
-                </div>
-
-                {/* Controles */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-black/50 px-4 py-2 rounded-full">
+              <div className="relative h-[600px] bg-background rounded-lg overflow-hidden">
+                {/* Container do Jitsi */}
+                <div ref={jitsiContainerRef} className="absolute inset-0" />
+                
+                {/* Controles sobrepostos */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-background/80 backdrop-blur px-4 py-2 rounded-full border shadow-lg">
                   <Button
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      'rounded-full text-white hover:bg-white/20',
-                      !micAtivo && 'bg-red-500 hover:bg-red-600'
+                      'rounded-full',
+                      !micAtivo && 'bg-destructive text-destructive-foreground'
                     )}
                     onClick={() => setMicAtivo(!micAtivo)}
                   >
@@ -272,19 +327,19 @@ export default function Telemedicina() {
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      'rounded-full text-white hover:bg-white/20',
-                      !videoAtivo && 'bg-red-500 hover:bg-red-600'
+                      'rounded-full',
+                      !videoAtivo && 'bg-destructive text-destructive-foreground'
                     )}
                     onClick={() => setVideoAtivo(!videoAtivo)}
                   >
                     {videoAtivo ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/20">
+                  <Button variant="ghost" size="icon" className="rounded-full">
                     <Monitor className="h-5 w-5" />
                   </Button>
                   <Button
                     size="icon"
-                    className="rounded-full bg-red-500 hover:bg-red-600 h-12 w-12"
+                    className="rounded-full bg-destructive hover:bg-destructive/90 h-12 w-12"
                     onClick={encerrarChamada}
                   >
                     <PhoneOff className="h-5 w-5" />
@@ -381,32 +436,20 @@ export default function Telemedicina() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Nome</p>
-                    <p className="font-medium">{consultaSelecionada.paciente.nome}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">CPF</p>
-                    <p className="font-medium">{consultaSelecionada.paciente.cpf}</p>
+                    <p className="font-medium">{consultaSelecionada.pacienteNome}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Telefone</p>
-                    <p className="font-medium">{consultaSelecionada.paciente.telefone}</p>
+                    <p className="font-medium">{consultaSelecionada.pacienteTelefone || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Convênio</p>
-                    <p className="font-medium">{consultaSelecionada.paciente.convenio?.nome || 'Particular'}</p>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium">{consultaSelecionada.pacienteEmail || '-'}</p>
                   </div>
-                  {consultaSelecionada.paciente.alergias?.length > 0 && (
-                    <div className="col-span-2">
-                      <p className="text-sm text-muted-foreground">Alergias</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {consultaSelecionada.paciente.alergias.map((alergia, i) => (
-                          <Badge key={i} variant="destructive" className="text-xs">
-                            {alergia}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Médico</p>
+                    <p className="font-medium">{consultaSelecionada.medicoNome}</p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
@@ -420,8 +463,8 @@ export default function Telemedicina() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-blue-100">
-                  <Camera className="h-6 w-6 text-blue-600" />
+                <div className="p-3 rounded-full bg-info/10">
+                  <Camera className="h-6 w-6 text-info" />
                 </div>
                 <div>
                   <h3 className="font-medium">Verifique sua Câmera</h3>
@@ -435,13 +478,13 @@ export default function Telemedicina() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-green-100">
-                  <Mic className="h-6 w-6 text-green-600" />
+                <div className="p-3 rounded-full bg-success/10">
+                  <Mic className="h-6 w-6 text-success" />
                 </div>
                 <div>
                   <h3 className="font-medium">Teste o Microfone</h3>
                   <p className="text-sm text-muted-foreground">
-                    O áudio precisa estar funcionando
+                    Verifique se o áudio está funcionando
                   </p>
                 </div>
               </div>
@@ -450,13 +493,13 @@ export default function Telemedicina() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-purple-100">
-                  <Monitor className="h-6 w-6 text-purple-600" />
+                <div className="p-3 rounded-full bg-warning/10">
+                  <Video className="h-6 w-6 text-warning" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Conexão Estável</h3>
+                  <h3 className="font-medium">Jitsi Meet</h3>
                   <p className="text-sm text-muted-foreground">
-                    Recomendamos conexão de banda larga
+                    Gratuito, sem downloads, sem conta necessária
                   </p>
                 </div>
               </div>
