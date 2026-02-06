@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Eye, Printer, FileText, Calendar, Download } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Search, Eye, Printer, FileText, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,27 +30,27 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { Paciente, User } from '@/types';
-import { getAll, generateId, setCollection } from '@/lib/localStorage';
+import { toast } from 'sonner';
+import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { gerarAtestado, openPDF, downloadPDF } from '@/lib/pdfGenerator';
+import { gerarAtestado, openPDF } from '@/lib/pdfGenerator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Atestado {
   id: string;
-  tipo: 'comparecimento' | 'afastamento' | 'aptidao' | 'acompanhante';
-  pacienteId: string;
-  medicoId: string;
-  data: string;
-  dataAtendimento: string;
-  diasAfastamento?: number;
-  dataInicio?: string;
-  dataFim?: string;
-  incluirCid: boolean;
-  cid?: string;
-  observacoes: string;
-  status: 'ativo' | 'cancelado';
-  criadoEm: string;
+  tipo: string | null;
+  paciente_id: string;
+  medico_id: string;
+  data_emissao: string | null;
+  data_inicio: string | null;
+  data_fim: string | null;
+  dias: number | null;
+  motivo: string | null;
+  cid: string | null;
+  observacoes: string | null;
+  created_at: string | null;
 }
 
 const TIPOS_ATESTADO = [
@@ -61,69 +61,70 @@ const TIPOS_ATESTADO = [
 ];
 
 export default function Atestados() {
-  const [atestados, setAtestados] = useState<Atestado[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [medicos, setMedicos] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedAtestado, setSelectedAtestado] = useState<Atestado | null>(null);
-  const [formData, setFormData] = useState<Partial<Atestado>>({});
-  const { toast } = useToast();
+  const [formData, setFormData] = useState<Partial<Atestado & { incluirCid: boolean }>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const loadData = () => {
-    setAtestados(getAll<Atestado>('atestados'));
-    setPacientes(getAll<Paciente>('pacientes'));
-    setMedicos(getAll<User>('users').filter(u => u.role === 'medico'));
-  };
-
-  const filteredAtestados = atestados.filter(a => {
-    const paciente = pacientes.find(p => p.id === a.pacienteId);
-    return paciente?.nome.toLowerCase().includes(searchTerm.toLowerCase());
+  const { data: atestados = [], isLoading: loadingAtestados } = useSupabaseQuery<Atestado>('atestados', {
+    orderBy: { column: 'created_at', ascending: false },
   });
+  const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
+  const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
+
+  const isLoading = loadingAtestados || loadingPacientes || loadingMedicos;
+
+  const filteredAtestados = useMemo(() => {
+    return atestados.filter(a => {
+      const paciente = pacientes.find(p => p.id === a.paciente_id);
+      return paciente?.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [atestados, pacientes, searchTerm]);
 
   const handleNew = () => {
     setSelectedAtestado(null);
     setFormData({
       tipo: 'comparecimento',
-      data: format(new Date(), 'yyyy-MM-dd'),
-      dataAtendimento: format(new Date(), 'yyyy-MM-dd'),
+      data_emissao: format(new Date(), 'yyyy-MM-dd'),
       incluirCid: false,
-      status: 'ativo',
     });
     setIsFormOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.pacienteId || !formData.medicoId) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos obrigatórios.',
-        variant: 'destructive',
-      });
+  const handleSave = async () => {
+    if (!formData.paciente_id || !formData.medico_id) {
+      toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
 
-    const allAtestados = getAll<Atestado>('atestados');
-    const newAtestado: Atestado = {
-      ...formData,
-      id: generateId(),
-      observacoes: formData.observacoes || '',
-      criadoEm: new Date().toISOString(),
-    } as Atestado;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('atestados').insert({
+        tipo: formData.tipo,
+        paciente_id: formData.paciente_id,
+        medico_id: formData.medico_id,
+        data_emissao: formData.data_emissao,
+        data_inicio: formData.data_inicio,
+        dias: formData.dias,
+        cid: formData.incluirCid ? formData.cid : null,
+        observacoes: formData.observacoes,
+      });
 
-    allAtestados.push(newAtestado);
-    setCollection('atestados', allAtestados);
-    loadData();
-    setIsFormOpen(false);
-    toast({
-      title: 'Atestado emitido',
-      description: 'O documento foi gerado com sucesso.',
-    });
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['atestados'] });
+      setIsFormOpen(false);
+      toast.success('Atestado emitido com sucesso.');
+    } catch (error) {
+      console.error('Error saving atestado:', error);
+      toast.error('Erro ao emitir atestado.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleView = (atestado: Atestado) => {
@@ -132,35 +133,43 @@ export default function Atestados() {
   };
 
   const handlePrint = (atestado: Atestado) => {
-    const paciente = pacientes.find(p => p.id === atestado.pacienteId);
-    const medico = medicos.find(m => m.id === atestado.medicoId);
+    const paciente = pacientes.find(p => p.id === atestado.paciente_id);
+    const medico = medicos.find(m => m.id === atestado.medico_id);
     
     if (!paciente || !medico) {
-      toast({
-        title: 'Erro',
-        description: 'Dados do paciente ou médico não encontrados.',
-        variant: 'destructive',
-      });
+      toast.error('Dados do paciente ou médico não encontrados.');
       return;
     }
 
     const doc = gerarAtestado(
-      { nome: paciente.nome, cpf: paciente.cpf },
-      { nome: medico.nome, crm: medico.crm, especialidade: medico.especialidade },
+      { nome: paciente.nome, cpf: paciente.cpf || '' },
+      { nome: medico.crm, crm: medico.crm, especialidade: medico.especialidade || '' },
       {
-        tipo: atestado.tipo,
-        dataAtendimento: atestado.dataAtendimento,
-        diasAfastamento: atestado.diasAfastamento,
-        cid: atestado.cid,
-        observacoes: atestado.observacoes,
+        tipo: atestado.tipo as any,
+        dataAtendimento: atestado.data_emissao || '',
+        diasAfastamento: atestado.dias || undefined,
+        cid: atestado.cid || undefined,
+        observacoes: atestado.observacoes || '',
       }
     );
     openPDF(doc);
   };
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Desconhecido';
-  const getMedicoNome = (id: string) => medicos.find(m => m.id === id)?.nome || 'Desconhecido';
-  const getTipoLabel = (tipo: string) => TIPOS_ATESTADO.find(t => t.value === tipo)?.label || tipo;
+  const getMedicoNome = (id: string) => {
+    const medico = medicos.find(m => m.id === id);
+    return medico ? `Dr(a). ${medico.crm}` : 'Desconhecido';
+  };
+  const getTipoLabel = (tipo: string | null) => TIPOS_ATESTADO.find(t => t.value === tipo)?.label || tipo;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -182,8 +191,8 @@ export default function Atestados() {
             key={tipo.value}
             className="cursor-pointer hover:border-primary transition-colors"
             onClick={() => {
-              setFormData({ ...formData, tipo: tipo.value as any });
-              handleNew();
+              setFormData({ tipo: tipo.value, data_emissao: format(new Date(), 'yyyy-MM-dd'), incluirCid: false });
+              setIsFormOpen(true);
             }}
           >
             <CardContent className="p-4 flex flex-col items-center text-center">
@@ -218,14 +227,13 @@ export default function Atestados() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Paciente</TableHead>
                   <TableHead className="hidden md:table-cell">Médico</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAtestados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>Nenhum atestado encontrado</p>
                     </TableCell>
@@ -233,20 +241,12 @@ export default function Atestados() {
                 ) : (
                   filteredAtestados.map((atestado) => (
                     <TableRow key={atestado.id}>
-                      <TableCell>{format(new Date(atestado.data), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>{atestado.data_emissao ? format(new Date(atestado.data_emissao), 'dd/MM/yyyy') : '-'}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{getTipoLabel(atestado.tipo)}</Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{getPacienteNome(atestado.pacienteId)}</TableCell>
-                      <TableCell className="hidden md:table-cell">{getMedicoNome(atestado.medicoId)}</TableCell>
-                      <TableCell>
-                        <Badge className={cn(
-                          atestado.status === 'ativo' && 'bg-green-100 text-green-800',
-                          atestado.status === 'cancelado' && 'bg-red-100 text-red-800'
-                        )}>
-                          {atestado.status}
-                        </Badge>
-                      </TableCell>
+                      <TableCell className="font-medium">{getPacienteNome(atestado.paciente_id)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{getMedicoNome(atestado.medico_id)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleView(atestado)}>
@@ -276,8 +276,8 @@ export default function Atestados() {
             <div className="space-y-2">
               <Label>Tipo de Documento *</Label>
               <Select
-                value={formData.tipo}
-                onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}
+                value={formData.tipo || ''}
+                onValueChange={(v) => setFormData({ ...formData, tipo: v })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -293,8 +293,8 @@ export default function Atestados() {
             <div className="space-y-2">
               <Label>Paciente *</Label>
               <Select
-                value={formData.pacienteId}
-                onValueChange={(v) => setFormData({ ...formData, pacienteId: v })}
+                value={formData.paciente_id || ''}
+                onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o paciente" />
@@ -310,15 +310,15 @@ export default function Atestados() {
             <div className="space-y-2">
               <Label>Médico *</Label>
               <Select
-                value={formData.medicoId}
-                onValueChange={(v) => setFormData({ ...formData, medicoId: v })}
+                value={formData.medico_id || ''}
+                onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o médico" />
                 </SelectTrigger>
                 <SelectContent>
                   {medicos.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                    <SelectItem key={m.id} value={m.id}>{m.crm} - {m.especialidade}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -329,8 +329,8 @@ export default function Atestados() {
                 <Label>Data do Atendimento</Label>
                 <Input
                   type="date"
-                  value={formData.dataAtendimento}
-                  onChange={(e) => setFormData({ ...formData, dataAtendimento: e.target.value })}
+                  value={formData.data_emissao || ''}
+                  onChange={(e) => setFormData({ ...formData, data_emissao: e.target.value })}
                 />
               </div>
               {formData.tipo === 'afastamento' && (
@@ -339,8 +339,8 @@ export default function Atestados() {
                   <Input
                     type="number"
                     min={1}
-                    value={formData.diasAfastamento || ''}
-                    onChange={(e) => setFormData({ ...formData, diasAfastamento: parseInt(e.target.value) })}
+                    value={formData.dias || ''}
+                    onChange={(e) => setFormData({ ...formData, dias: parseInt(e.target.value) })}
                   />
                 </div>
               )}
@@ -350,7 +350,7 @@ export default function Atestados() {
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="incluirCid"
-                  checked={formData.incluirCid}
+                  checked={formData.incluirCid || false}
                   onCheckedChange={(checked) => setFormData({ ...formData, incluirCid: checked as boolean })}
                 />
                 <Label htmlFor="incluirCid" className="text-sm">Incluir CID-10 no documento</Label>
@@ -379,10 +379,11 @@ export default function Atestados() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Emitir Atestado
             </Button>
           </DialogFooter>
@@ -404,20 +405,20 @@ export default function Atestados() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-medium">{format(new Date(selectedAtestado.data), 'dd/MM/yyyy')}</p>
+                  <p className="font-medium">{selectedAtestado.data_emissao ? format(new Date(selectedAtestado.data_emissao), 'dd/MM/yyyy') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Paciente</p>
-                  <p className="font-medium">{getPacienteNome(selectedAtestado.pacienteId)}</p>
+                  <p className="font-medium">{getPacienteNome(selectedAtestado.paciente_id)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Médico</p>
-                  <p className="font-medium">{getMedicoNome(selectedAtestado.medicoId)}</p>
+                  <p className="font-medium">{getMedicoNome(selectedAtestado.medico_id)}</p>
                 </div>
-                {selectedAtestado.diasAfastamento && (
+                {selectedAtestado.dias && (
                   <div>
                     <p className="text-sm text-muted-foreground">Dias de Afastamento</p>
-                    <p className="font-medium">{selectedAtestado.diasAfastamento} dias</p>
+                    <p className="font-medium">{selectedAtestado.dias} dias</p>
                   </div>
                 )}
               </div>
@@ -433,10 +434,12 @@ export default function Atestados() {
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               Fechar
             </Button>
-            <Button>
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir
-            </Button>
+            {selectedAtestado && (
+              <Button onClick={() => handlePrint(selectedAtestado)}>
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

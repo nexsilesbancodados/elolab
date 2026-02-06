@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, FileText, Pill, Edit, Trash2, Copy } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, FileText, Pill, Edit, Trash2, Copy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,122 +31,209 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { getAll, remove, generateId, setCollection } from '@/lib/localStorage';
-import { PrescriptionTemplate, CertificateTemplate } from '@/types/templates';
+import { toast } from 'sonner';
+import { useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const PRESCRIPTION_TYPES = {
+const PRESCRIPTION_TYPES: Record<string, string> = {
   simples: 'Receita Simples',
   controle_especial: 'Controle Especial',
   antimicrobiano: 'Antimicrobiano',
 };
 
-const CERTIFICATE_TYPES = {
+const CERTIFICATE_TYPES: Record<string, string> = {
   comparecimento: 'Comparecimento',
   afastamento: 'Afastamento',
   aptidao: 'Aptidão',
   acompanhante: 'Acompanhante',
 };
 
+interface PrescriptionTemplate {
+  id: string;
+  nome: string;
+  tipo: string | null;
+  medicamentos: unknown;
+  observacoes_gerais: string | null;
+  criado_por: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface CertificateTemplate {
+  id: string;
+  nome: string;
+  tipo: string | null;
+  conteudo: string | null;
+  cid: string | null;
+  dias_afastamento: number | null;
+  criado_por: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 export default function Templates() {
-  const [prescriptionTemplates, setPrescriptionTemplates] = useState<PrescriptionTemplate[]>([]);
-  const [certificateTemplates, setCertificateTemplates] = useState<CertificateTemplate[]>([]);
   const [isPrescriptionFormOpen, setIsPrescriptionFormOpen] = useState(false);
   const [isCertificateFormOpen, setIsCertificateFormOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: 'prescription' | 'certificate'; id: string }>({ open: false, type: 'prescription', id: '' });
   const [prescriptionForm, setPrescriptionForm] = useState<Partial<PrescriptionTemplate>>({});
   const [certificateForm, setCertificateForm] = useState<Partial<CertificateTemplate>>({});
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const loadData = () => {
-    setPrescriptionTemplates(getAll<PrescriptionTemplate>('prescription_templates'));
-    setCertificateTemplates(getAll<CertificateTemplate>('certificate_templates'));
-  };
+  const { data: prescriptionTemplates = [], isLoading: loadingPrescriptions } = useSupabaseQuery<PrescriptionTemplate>('templates_prescricao', {
+    orderBy: { column: 'nome', ascending: true },
+  });
 
-  const handleSavePrescription = () => {
+  const { data: certificateTemplates = [], isLoading: loadingCertificates } = useSupabaseQuery<CertificateTemplate>('templates_atestado', {
+    orderBy: { column: 'nome', ascending: true },
+  });
+
+  const isLoading = loadingPrescriptions || loadingCertificates;
+
+  const handleSavePrescription = async () => {
     if (!prescriptionForm.nome || !prescriptionForm.tipo) {
-      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios', variant: 'destructive' });
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
 
-    const templates = getAll<PrescriptionTemplate>('prescription_templates');
-    
-    if (prescriptionForm.id) {
-      const index = templates.findIndex(t => t.id === prescriptionForm.id);
-      if (index !== -1) {
-        templates[index] = { ...templates[index], ...prescriptionForm, atualizadoEm: new Date().toISOString() } as PrescriptionTemplate;
-      }
-    } else {
-      templates.push({
-        ...prescriptionForm,
-        id: generateId(),
-        medicamentos: prescriptionForm.medicamentos || [],
-        criadoEm: new Date().toISOString(),
-      } as PrescriptionTemplate);
-    }
+    setIsSaving(true);
+    try {
+      if (prescriptionForm.id) {
+        const { error } = await supabase
+          .from('templates_prescricao')
+          .update({
+            nome: prescriptionForm.nome,
+            tipo: prescriptionForm.tipo,
+            observacoes_gerais: prescriptionForm.observacoes_gerais,
+            medicamentos: (prescriptionForm.medicamentos || []) as any, // Cast to any to satisfy Json type
+          })
+          .eq('id', prescriptionForm.id);
 
-    setCollection('prescription_templates', templates);
-    loadData();
-    setIsPrescriptionFormOpen(false);
-    setPrescriptionForm({});
-    toast({ title: 'Sucesso', description: 'Template salvo com sucesso' });
+        if (error) throw error;
+        toast.success('Template atualizado com sucesso');
+      } else {
+        const { error } = await supabase
+          .from('templates_prescricao')
+          .insert({
+            nome: prescriptionForm.nome,
+            tipo: prescriptionForm.tipo,
+            observacoes_gerais: prescriptionForm.observacoes_gerais,
+            medicamentos: (prescriptionForm.medicamentos || []) as any, // Cast to any to satisfy Json type
+          });
+
+        if (error) throw error;
+        toast.success('Template criado com sucesso');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['templates_prescricao'] });
+      setIsPrescriptionFormOpen(false);
+      setPrescriptionForm({});
+    } catch (error) {
+      console.error('Error saving prescription template:', error);
+      toast.error('Erro ao salvar template');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSaveCertificate = () => {
+  const handleSaveCertificate = async () => {
     if (!certificateForm.nome || !certificateForm.tipo || !certificateForm.conteudo) {
-      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios', variant: 'destructive' });
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
 
-    const templates = getAll<CertificateTemplate>('certificate_templates');
-    
-    if (certificateForm.id) {
-      const index = templates.findIndex(t => t.id === certificateForm.id);
-      if (index !== -1) {
-        templates[index] = { ...templates[index], ...certificateForm, atualizadoEm: new Date().toISOString() } as CertificateTemplate;
+    setIsSaving(true);
+    try {
+      if (certificateForm.id) {
+        const { error } = await supabase
+          .from('templates_atestado')
+          .update({
+            nome: certificateForm.nome,
+            tipo: certificateForm.tipo,
+            conteudo: certificateForm.conteudo,
+            cid: certificateForm.cid,
+            dias_afastamento: certificateForm.dias_afastamento,
+          })
+          .eq('id', certificateForm.id);
+
+        if (error) throw error;
+        toast.success('Template atualizado com sucesso');
+      } else {
+        const { error } = await supabase
+          .from('templates_atestado')
+          .insert({
+            nome: certificateForm.nome,
+            tipo: certificateForm.tipo,
+            conteudo: certificateForm.conteudo,
+            cid: certificateForm.cid,
+            dias_afastamento: certificateForm.dias_afastamento,
+          });
+
+        if (error) throw error;
+        toast.success('Template criado com sucesso');
       }
-    } else {
-      templates.push({
-        ...certificateForm,
-        id: generateId(),
-        criadoEm: new Date().toISOString(),
-      } as CertificateTemplate);
+
+      queryClient.invalidateQueries({ queryKey: ['templates_atestado'] });
+      setIsCertificateFormOpen(false);
+      setCertificateForm({});
+    } catch (error) {
+      console.error('Error saving certificate template:', error);
+      toast.error('Erro ao salvar template');
+    } finally {
+      setIsSaving(false);
     }
-
-    setCollection('certificate_templates', templates);
-    loadData();
-    setIsCertificateFormOpen(false);
-    setCertificateForm({});
-    toast({ title: 'Sucesso', description: 'Template salvo com sucesso' });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const { type, id } = deleteDialog;
-    const collection = type === 'prescription' ? 'prescription_templates' : 'certificate_templates';
-    remove(collection, id);
-    loadData();
-    setDeleteDialog({ open: false, type: 'prescription', id: '' });
-    toast({ title: 'Sucesso', description: 'Template excluído' });
+    const table = type === 'prescription' ? 'templates_prescricao' : 'templates_atestado';
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: [table] });
+      toast.success('Template excluído');
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast.error('Erro ao excluir template');
+    } finally {
+      setIsSaving(false);
+      setDeleteDialog({ open: false, type: 'prescription', id: '' });
+    }
   };
 
-  const duplicateTemplate = (template: PrescriptionTemplate | CertificateTemplate, type: 'prescription' | 'certificate') => {
-    const collection = type === 'prescription' ? 'prescription_templates' : 'certificate_templates';
-    const templates = getAll<any>(collection);
-    const newTemplate = {
-      ...template,
-      id: generateId(),
-      nome: `${template.nome} (cópia)`,
-      criadoEm: new Date().toISOString(),
-    };
-    templates.push(newTemplate);
-    setCollection(collection, templates);
-    loadData();
-    toast({ title: 'Sucesso', description: 'Template duplicado' });
+  const duplicateTemplate = async (template: PrescriptionTemplate | CertificateTemplate, type: 'prescription' | 'certificate') => {
+    const table = type === 'prescription' ? 'templates_prescricao' : 'templates_atestado';
+
+    try {
+      const { id, created_at, updated_at, ...rest } = template as any;
+      const { error } = await supabase.from(table).insert({
+        ...rest,
+        nome: `${template.nome} (cópia)`,
+      });
+
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: [table] });
+      toast.success('Template duplicado');
+    } catch (error) {
+      console.error('Error duplicating template:', error);
+      toast.error('Erro ao duplicar template');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -193,7 +280,7 @@ export default function Templates() {
                         <CardTitle className="text-lg">{template.nome}</CardTitle>
                         <CardDescription>
                           <Badge variant="outline" className="mt-1">
-                            {PRESCRIPTION_TYPES[template.tipo]}
+                            {PRESCRIPTION_TYPES[template.tipo || 'simples']}
                           </Badge>
                         </CardDescription>
                       </div>
@@ -212,7 +299,7 @@ export default function Templates() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
-                      {template.medicamentos?.length || 0} medicamento(s)
+                      {Array.isArray(template.medicamentos) ? template.medicamentos.length : 0} medicamento(s)
                     </p>
                   </CardContent>
                 </Card>
@@ -247,7 +334,7 @@ export default function Templates() {
                         <CardTitle className="text-lg">{template.nome}</CardTitle>
                         <CardDescription>
                           <Badge variant="outline" className="mt-1">
-                            {CERTIFICATE_TYPES[template.tipo]}
+                            {CERTIFICATE_TYPES[template.tipo || 'comparecimento']}
                           </Badge>
                         </CardDescription>
                       </div>
@@ -295,8 +382,8 @@ export default function Templates() {
               <div className="space-y-2">
                 <Label>Tipo *</Label>
                 <Select
-                  value={prescriptionForm.tipo}
-                  onValueChange={(v) => setPrescriptionForm({ ...prescriptionForm, tipo: v as any })}
+                  value={prescriptionForm.tipo || ''}
+                  onValueChange={(v) => setPrescriptionForm({ ...prescriptionForm, tipo: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
@@ -312,16 +399,19 @@ export default function Templates() {
             <div className="space-y-2">
               <Label>Observações Gerais</Label>
               <Textarea
-                value={prescriptionForm.observacoesGerais || ''}
-                onChange={(e) => setPrescriptionForm({ ...prescriptionForm, observacoesGerais: e.target.value })}
+                value={prescriptionForm.observacoes_gerais || ''}
+                onChange={(e) => setPrescriptionForm({ ...prescriptionForm, observacoes_gerais: e.target.value })}
                 placeholder="Instruções gerais para o paciente..."
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPrescriptionFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSavePrescription}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsPrescriptionFormOpen(false)} disabled={isSaving}>Cancelar</Button>
+            <Button onClick={handleSavePrescription} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -345,8 +435,8 @@ export default function Templates() {
               <div className="space-y-2">
                 <Label>Tipo *</Label>
                 <Select
-                  value={certificateForm.tipo}
-                  onValueChange={(v) => setCertificateForm({ ...certificateForm, tipo: v as any })}
+                  value={certificateForm.tipo || ''}
+                  onValueChange={(v) => setCertificateForm({ ...certificateForm, tipo: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
@@ -365,8 +455,8 @@ export default function Templates() {
                   <Label>Dias de Afastamento</Label>
                   <Input
                     type="number"
-                    value={certificateForm.diasAfastamento || ''}
-                    onChange={(e) => setCertificateForm({ ...certificateForm, diasAfastamento: parseInt(e.target.value) })}
+                    value={certificateForm.dias_afastamento || ''}
+                    onChange={(e) => setCertificateForm({ ...certificateForm, dias_afastamento: parseInt(e.target.value) })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -393,8 +483,11 @@ export default function Templates() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCertificateFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveCertificate}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsCertificateFormOpen(false)} disabled={isSaving}>Cancelar</Button>
+            <Button onClick={handleSaveCertificate} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -409,8 +502,9 @@ export default function Templates() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

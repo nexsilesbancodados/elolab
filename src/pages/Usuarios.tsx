@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Shield, UserCheck, UserX } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit, Trash2, Shield, UserCheck, UserX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,13 +38,31 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { User, UserRole } from '@/types';
-import { getAll, generateId, remove, getItem, setItem, setCollection } from '@/lib/localStorage';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { toast } from 'sonner';
+import { useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSupabaseAuth, AppRole } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const ROLE_LABELS: Record<UserRole, string> = {
+interface Profile {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  avatar: string | null;
+  ativo: boolean | null;
+  created_at: string | null;
+}
+
+interface UserRole {
+  id: string;
+  user_id: string;
+  role: AppRole;
+}
+
+const ROLE_LABELS: Record<AppRole, string> = {
   admin: 'Administrador',
   medico: 'Médico',
   recepcao: 'Recepção',
@@ -52,161 +70,170 @@ const ROLE_LABELS: Record<UserRole, string> = {
   financeiro: 'Financeiro',
 };
 
-const ROLE_COLORS: Record<UserRole, string> = {
-  admin: 'bg-red-100 text-red-800',
-  medico: 'bg-blue-100 text-blue-800',
-  recepcao: 'bg-green-100 text-green-800',
-  enfermagem: 'bg-purple-100 text-purple-800',
-  financeiro: 'bg-yellow-100 text-yellow-800',
+const ROLE_COLORS: Record<AppRole, string> = {
+  admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  medico: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  recepcao: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  enfermagem: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  financeiro: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
 };
 
 export default function Usuarios() {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<Partial<User & { senha: string }>>({});
-  const { toast } = useToast();
-  const { profile: currentUser } = useSupabaseAuth();
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [formData, setFormData] = useState<Partial<Profile & { role: AppRole }>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const queryClient = useQueryClient();
+  const { user: currentUser } = useSupabaseAuth();
 
-  const loadData = () => {
-    setUsuarios(getAll<User>('users'));
-  };
+  const { data: profiles = [], isLoading: loadingProfiles } = useSupabaseQuery<Profile>('profiles', {
+    orderBy: { column: 'nome', ascending: true },
+  });
 
-  const handleNew = () => {
-    setSelectedUser(null);
+  const { data: userRoles = [], isLoading: loadingRoles } = useSupabaseQuery<UserRole>('user_roles', {});
+
+  const isLoading = loadingProfiles || loadingRoles;
+
+  const usuarios = useMemo(() => {
+    return profiles.map(profile => {
+      const roles = userRoles.filter(r => r.user_id === profile.id);
+      return {
+        ...profile,
+        roles: roles.map(r => r.role),
+      };
+    });
+  }, [profiles, userRoles]);
+
+  const handleEdit = (user: typeof usuarios[0]) => {
+    setSelectedUser(user);
     setFormData({
-      ativo: true,
-      role: 'recepcao',
+      nome: user.nome,
+      email: user.email,
+      telefone: user.telefone || '',
+      ativo: user.ativo ?? true,
+      role: user.roles[0] || 'recepcao',
     });
     setIsFormOpen(true);
   };
 
-  const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setFormData(user);
-    setIsFormOpen(true);
-  };
-
-  const handleDeleteClick = (user: User) => {
+  const handleDeleteClick = (user: typeof usuarios[0]) => {
     setSelectedUser(user);
     setIsDeleteOpen(true);
   };
 
-  const handleDelete = () => {
-    if (selectedUser) {
-      if (selectedUser.id === currentUser?.id) {
-        toast({
-          title: 'Erro',
-          description: 'Você não pode excluir seu próprio usuário.',
-          variant: 'destructive',
+  const handleDelete = async () => {
+    if (!selectedUser) return;
+
+    if (selectedUser.id === currentUser?.id) {
+      toast.error('Você não pode excluir seu próprio usuário.');
+      setIsDeleteOpen(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Remover roles
+      await supabase.from('user_roles').delete().eq('user_id', selectedUser.id);
+      
+      // Nota: não podemos excluir o perfil diretamente pois está vinculado ao auth.users
+      // Apenas desativamos
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ativo: false })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
+      toast.success('Usuário desativado com sucesso.');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Erro ao desativar usuário.');
+    } finally {
+      setIsSaving(false);
+      setIsDeleteOpen(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedUser || !formData.nome) {
+      toast.error('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Atualizar perfil
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          nome: formData.nome,
+          telefone: formData.telefone || null,
+          ativo: formData.ativo,
+        })
+        .eq('id', selectedUser.id);
+
+      if (profileError) throw profileError;
+
+      // Atualizar role se necessário
+      if (formData.role) {
+        // Remover roles antigos
+        await supabase.from('user_roles').delete().eq('user_id', selectedUser.id);
+        
+        // Adicionar novo role
+        const { error: roleError } = await supabase.from('user_roles').insert({
+          user_id: selectedUser.id,
+          role: formData.role,
         });
-        setIsDeleteOpen(false);
-        return;
+
+        if (roleError) throw roleError;
       }
-      remove('users', selectedUser.id);
-      loadData();
-      toast({
-        title: 'Usuário excluído',
-        description: 'O usuário foi removido com sucesso.',
-      });
+
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['user_roles'] });
+      setIsFormOpen(false);
+      toast.success('Usuário atualizado com sucesso.');
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast.error('Erro ao salvar usuário.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsDeleteOpen(false);
   };
 
-  const handleSave = () => {
-    if (!formData.nome || !formData.email || !formData.role) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos obrigatórios.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!selectedUser && !formData.senha) {
-      toast({
-        title: 'Erro',
-        description: 'A senha é obrigatória para novos usuários.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const allUsers = getAll<User>('users');
-
-    // Check for duplicate email
-    const emailExists = allUsers.some(
-      (u) => u.email === formData.email && u.id !== selectedUser?.id
-    );
-    if (emailExists) {
-      toast({
-        title: 'Erro',
-        description: 'Este email já está em uso.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (selectedUser) {
-      const index = allUsers.findIndex((u) => u.id === selectedUser.id);
-      if (index !== -1) {
-        allUsers[index] = { ...allUsers[index], ...formData } as User;
-      }
-    } else {
-      const newUser: User = {
-        id: generateId(),
-        nome: formData.nome!,
-        email: formData.email!,
-        role: formData.role!,
-        crm: formData.crm,
-        especialidade: formData.especialidade,
-        ativo: formData.ativo ?? true,
-        criadoEm: new Date().toISOString(),
-      };
-      allUsers.push(newUser);
-
-      // Store password separately (in a real app, this would be hashed)
-      const passwords = (getItem<Record<string, string>>('passwords') || {});
-      passwords[newUser.email] = formData.senha;
-      setItem('passwords', passwords);
-    }
-
-    setCollection('users', allUsers);
-    loadData();
-    setIsFormOpen(false);
-    toast({
-      title: selectedUser ? 'Usuário atualizado' : 'Usuário criado',
-      description: 'Os dados foram salvos com sucesso.',
-    });
-  };
-
-  const handleToggleAtivo = (user: User) => {
+  const handleToggleAtivo = async (user: typeof usuarios[0]) => {
     if (user.id === currentUser?.id) {
-      toast({
-        title: 'Erro',
-        description: 'Você não pode desativar seu próprio usuário.',
-        variant: 'destructive',
-      });
+      toast.error('Você não pode desativar seu próprio usuário.');
       return;
     }
 
-    const allUsers = getAll<User>('users');
-    const index = allUsers.findIndex((u) => u.id === user.id);
-    if (index !== -1) {
-      allUsers[index].ativo = !allUsers[index].ativo;
-      setCollection('users', allUsers);
-      loadData();
-      toast({
-        title: allUsers[index].ativo ? 'Usuário ativado' : 'Usuário desativado',
-        description: `${user.nome} foi ${allUsers[index].ativo ? 'ativado' : 'desativado'}.`,
-      });
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ativo: !user.ativo })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast.success(user.ativo ? 'Usuário desativado.' : 'Usuário ativado.');
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      toast.error('Erro ao alterar status do usuário.');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -215,10 +242,6 @@ export default function Usuarios() {
           <h1 className="text-3xl font-bold text-foreground">Usuários</h1>
           <p className="text-muted-foreground">Gerencie os usuários do sistema</p>
         </div>
-        <Button onClick={handleNew} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Usuário
-        </Button>
       </div>
 
       <Card>
@@ -233,7 +256,6 @@ export default function Usuarios() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Função</TableHead>
-                  <TableHead className="hidden md:table-cell">Especialidade</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -241,7 +263,7 @@ export default function Usuarios() {
               <TableBody>
                 {usuarios.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -250,7 +272,7 @@ export default function Usuarios() {
                     <TableRow key={usuario.id} className={!usuario.ativo ? 'opacity-50' : ''}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {usuario.role === 'admin' && (
+                          {usuario.roles.includes('admin') && (
                             <Shield className="h-4 w-4 text-red-500" />
                           )}
                           <span className="font-medium">{usuario.nome}</span>
@@ -258,17 +280,22 @@ export default function Usuarios() {
                       </TableCell>
                       <TableCell>{usuario.email}</TableCell>
                       <TableCell>
-                        <Badge className={cn(ROLE_COLORS[usuario.role])}>
-                          {ROLE_LABELS[usuario.role]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {usuario.especialidade || '-'}
+                        <div className="flex flex-wrap gap-1">
+                          {usuario.roles.length > 0 ? (
+                            usuario.roles.map(role => (
+                              <Badge key={role} className={cn(ROLE_COLORS[role])}>
+                                {ROLE_LABELS[role]}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Sem função</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={usuario.ativo}
+                            checked={usuario.ativo ?? true}
                             onCheckedChange={() => handleToggleAtivo(usuario)}
                             disabled={usuario.id === currentUser?.id}
                           />
@@ -307,7 +334,7 @@ export default function Usuarios() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedUser ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -319,30 +346,29 @@ export default function Usuarios() {
             </div>
 
             <div className="space-y-2">
-              <Label>Email *</Label>
+              <Label>Email</Label>
               <Input
                 type="email"
                 value={formData.email || ''}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled
+                className="bg-muted"
               />
             </div>
 
-            {!selectedUser && (
-              <div className="space-y-2">
-                <Label>Senha *</Label>
-                <Input
-                  type="password"
-                  value={formData.senha || ''}
-                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input
+                value={formData.telefone || ''}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
 
             <div className="space-y-2">
-              <Label>Função *</Label>
+              <Label>Função</Label>
               <Select
                 value={formData.role}
-                onValueChange={(v) => setFormData({ ...formData, role: v as UserRole })}
+                onValueChange={(v) => setFormData({ ...formData, role: v as AppRole })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a função" />
@@ -357,27 +383,6 @@ export default function Usuarios() {
               </Select>
             </div>
 
-            {formData.role === 'medico' && (
-              <>
-                <div className="space-y-2">
-                  <Label>CRM</Label>
-                  <Input
-                    value={formData.crm || ''}
-                    onChange={(e) => setFormData({ ...formData, crm: e.target.value })}
-                    placeholder="CRM/UF 123456"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Especialidade</Label>
-                  <Input
-                    value={formData.especialidade || ''}
-                    onChange={(e) => setFormData({ ...formData, especialidade: e.target.value })}
-                    placeholder="Ex: Cardiologia"
-                  />
-                </div>
-              </>
-            )}
-
             <div className="flex items-center gap-2">
               <Switch
                 checked={formData.ativo ?? true}
@@ -387,10 +392,13 @@ export default function Usuarios() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -399,19 +407,20 @@ export default function Usuarios() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar desativação</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o usuário "{selectedUser?.nome}"? Esta ação não pode
-              ser desfeita.
+              Tem certeza que deseja desativar o usuário "{selectedUser?.nome}"? O usuário não poderá mais acessar o sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSaving}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground"
+              disabled={isSaving}
             >
-              Excluir
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Desativar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
