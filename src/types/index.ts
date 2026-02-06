@@ -1,3 +1,10 @@
+// Re-export Supabase types
+export * from './supabase';
+
+// ========================================
+// Legacy Types (for backward compatibility)
+// ========================================
+
 // User & Auth Types
 export type UserRole = 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro';
 
