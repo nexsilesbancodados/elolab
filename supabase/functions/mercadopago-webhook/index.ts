@@ -196,6 +196,9 @@ async function processPaymentNotification(
             mp_payment_id: payment.id?.toString(),
           })
           .eq("id", registro.id);
+
+        // Send activation email with invite code AFTER payment approval
+        await sendActivationEmail(registro, supabase);
       }
     }
 
@@ -272,6 +275,9 @@ async function processSubscriptionNotification(
             mp_payment_id: preapproval.id?.toString(),
           })
           .eq("id", registro.id);
+
+        // Send activation email with invite code AFTER subscription approval
+        await sendActivationEmail(registro, supabase);
       }
     }
 
@@ -282,5 +288,71 @@ async function processSubscriptionNotification(
       .eq("data_id", preapprovalId);
   } catch (error) {
     console.error("Erro ao processar notificação de assinatura:", error);
+  }
+}
+
+// Send activation email with invite code after payment/subscription approval
+async function sendActivationEmail(registro: any, supabase: any) {
+  const brevoApiKey = Deno.env.get("BREVO_API_KEY");
+  if (!brevoApiKey) {
+    console.log("BREVO_API_KEY not configured, skipping activation email");
+    return;
+  }
+
+  try {
+    // Get plan details
+    const { data: plano } = await supabase
+      .from("planos")
+      .select("*")
+      .eq("id", registro.plano_id)
+      .single();
+
+    const appUrl = "https://real-world-made.lovable.app";
+    const activationLink = `${appUrl}/auth?codigo=${registro.codigo_convite}&email=${encodeURIComponent(registro.email)}&plano=${registro.plano_slug}`;
+    const planoNome = plano?.nome || registro.plano_slug;
+    const planoValor = plano ? Number(plano.valor).toFixed(2) : "0.00";
+
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": brevoApiKey,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "EloLab", email: "noreply@elolab.com.br" },
+        to: [{ email: registro.email, name: registro.nome }],
+        subject: `🎉 Pagamento aprovado! Seu código de ativação do ${planoNome}`,
+        htmlContent: `
+          <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #1a9a7a, #14b8a6); padding: 40px 30px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 28px; margin: 0;">Pagamento Aprovado! ✅</h1>
+              <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">Bem-vindo ao EloLab</p>
+            </div>
+            <div style="padding: 30px;">
+              <p style="color: #374151; font-size: 16px; line-height: 1.6;">Olá, <strong>${registro.nome}</strong>!</p>
+              <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">Sua assinatura do <strong>${planoNome}</strong> foi confirmada com sucesso. Use o código abaixo para criar sua conta:</p>
+              <div style="background: #f0fdf4; border: 2px dashed #1a9a7a; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+                <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px;">Seu código de ativação</p>
+                <p style="color: #1a9a7a; font-size: 36px; font-weight: 800; letter-spacing: 4px; margin: 0;">${registro.codigo_convite}</p>
+              </div>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${activationLink}" style="display: inline-block; background: linear-gradient(135deg, #1a9a7a, #14b8a6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  Criar Minha Conta →
+                </a>
+              </div>
+              <p style="color: #9ca3af; font-size: 12px; text-align: center;">Este código expira em 7 dias. Sua assinatura de R$ ${planoValor}/mês está ativa.</p>
+            </div>
+            <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">EloLab — Gestão Inteligente para Clínicas</p>
+            </div>
+          </div>
+        `,
+      }),
+    });
+
+    console.log("Activation email sent to:", registro.email);
+  } catch (error) {
+    console.error("Erro ao enviar email de ativação:", error);
   }
 }

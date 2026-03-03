@@ -200,27 +200,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send welcome email with invite code via Brevo
-    if (brevoApiKey) {
+    // Only send welcome email with invite code for TRIAL mode
+    // For BUY mode, the email is sent after payment approval via webhook
+    if (brevoApiKey && mode === 'trial') {
       const appUrl = 'https://real-world-made.lovable.app'
       const activationLink = `${appUrl}/auth?codigo=${inviteCode}&email=${encodeURIComponent(email)}&plano=${plano.slug}`
-
-      const isTrial = mode === 'trial'
-      const subject = isTrial
-        ? `🎁 Seu teste grátis de ${plano.trial_dias || 3} dias começou! Código de ativação`
-        : `🎉 Compra confirmada! Seu código de ativação do ${plano.nome}`
-
-      const headerText = isTrial
-        ? `Teste Grátis de ${plano.trial_dias || 3} Dias`
-        : `Compra Confirmada!`
-
-      const bodyText = isTrial
-        ? `Seu período de teste gratuito de <strong>${plano.trial_dias || 3} dias</strong> começa assim que você criar sua conta. Use o código abaixo:`
-        : `Sua assinatura do <strong>${plano.nome}</strong> foi processada com sucesso. Use o código abaixo para criar sua conta e começar a usar:`
-
-      const footerText = isTrial
-        ? `Este código expira em 7 dias. Após o teste, o plano custa R$ ${Number(plano.valor).toFixed(2)}/mês.`
-        : `Este código expira em 7 dias. Sua assinatura de R$ ${Number(plano.valor).toFixed(2)}/mês já está ativa.`
 
       try {
         await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -233,16 +217,16 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             sender: { name: 'EloLab', email: 'noreply@elolab.com.br' },
             to: [{ email, name: nome }],
-            subject,
+            subject: `🎁 Seu teste grátis de ${plano.trial_dias || 3} dias começou! Código de ativação`,
             htmlContent: `
               <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden;">
                 <div style="background: linear-gradient(135deg, #1a9a7a, #14b8a6); padding: 40px 30px; text-align: center;">
                   <h1 style="color: #ffffff; font-size: 28px; margin: 0;">Bem-vindo ao EloLab!</h1>
-                  <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">${headerText}</p>
+                  <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">Teste Grátis de ${plano.trial_dias || 3} Dias</p>
                 </div>
                 <div style="padding: 30px;">
                   <p style="color: #374151; font-size: 16px; line-height: 1.6;">Olá, <strong>${nome}</strong>!</p>
-                  <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">${bodyText}</p>
+                  <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">Seu período de teste gratuito de <strong>${plano.trial_dias || 3} dias</strong> começa assim que você criar sua conta. Use o código abaixo:</p>
                   <div style="background: #f0fdf4; border: 2px dashed #1a9a7a; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
                     <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px;">Seu código de ativação</p>
                     <p style="color: #1a9a7a; font-size: 36px; font-weight: 800; letter-spacing: 4px; margin: 0;">${inviteCode}</p>
@@ -252,7 +236,7 @@ Deno.serve(async (req) => {
                       Criar Minha Conta →
                     </a>
                   </div>
-                  <p style="color: #9ca3af; font-size: 12px; text-align: center;">${footerText}</p>
+                  <p style="color: #9ca3af; font-size: 12px; text-align: center;">Este código expira em 7 dias. Após o teste, o plano custa R$ ${Number(plano.valor).toFixed(2)}/mês.</p>
                 </div>
                 <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                   <p style="color: #9ca3af; font-size: 12px; margin: 0;">EloLab — Gestão Inteligente para Clínicas</p>
@@ -271,10 +255,11 @@ Deno.serve(async (req) => {
         success: true,
         mode,
         message: mode === 'buy' && checkoutUrl
-          ? 'Redirecionando para pagamento...'
+          ? 'Redirecionando para pagamento. Após aprovação, você receberá o código de ativação por e-mail.'
           : 'Registro criado! Verifique seu e-mail para o código de ativação.',
         checkout_url: checkoutUrl,
-        invite_code: inviteCode,
+        // Only return invite_code for trial mode; for buy mode, code is sent after payment
+        ...(mode === 'trial' ? { invite_code: inviteCode } : {}),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
