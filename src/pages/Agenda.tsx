@@ -483,7 +483,6 @@ export default function Agenda() {
                     <SelectItem value="retorno">Retorno</SelectItem>
                     <SelectItem value="exame">Exame</SelectItem>
                     <SelectItem value="procedimento">Procedimento</SelectItem>
-                    <SelectItem value="telemedicina">Telemedicina</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

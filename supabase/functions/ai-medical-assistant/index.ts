@@ -2,20 +2,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 interface MedicalAssistantRequest {
   action: 'suggest_diagnosis' | 'check_interactions' | 'fill_prescription'
   data: {
-    // Para suggest_diagnosis
     queixa_principal?: string
     historia_doenca_atual?: string
     exames_fisicos?: string
-    // Para check_interactions
     medicamentos?: string[]
     alergias?: string[]
-    // Para fill_prescription
     diagnostico?: string
   }
 }
@@ -30,10 +27,10 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
 
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY não configurada')
+    if (!deepseekApiKey) {
+      throw new Error('DEEPSEEK_API_KEY não configurada')
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -121,15 +118,15 @@ Sugira os medicamentos mais apropriados.`
         throw new Error(`Ação desconhecida: ${action}`)
     }
 
-    // Chamar Lovable AI Gateway
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Chamar DeepSeek API
+    const aiResponse = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -141,7 +138,7 @@ Sugira os medicamentos mais apropriados.`
 
     if (!aiResponse.ok) {
       const error = await aiResponse.text()
-      throw new Error(`Erro na API de IA: ${error}`)
+      throw new Error(`Erro na API DeepSeek: ${error}`)
     }
 
     const aiResult = await aiResponse.json()
