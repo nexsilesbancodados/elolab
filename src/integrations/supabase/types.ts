@@ -2372,6 +2372,7 @@ export type Database = {
       can_access_clinical: { Args: { _user_id: string }; Returns: boolean }
       can_access_financial: { Args: { _user_id: string }; Returns: boolean }
       can_manage_data: { Args: { _user_id: string }; Returns: boolean }
+      delete_all_app_data: { Args: never; Returns: undefined }
       get_user_plan: {
         Args: { _user_id: string }
         Returns: {
