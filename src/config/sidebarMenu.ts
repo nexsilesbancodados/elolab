@@ -21,7 +21,6 @@ import {
   Tv,
   FileCheck,
   HandCoins,
-  Video,
   Files,
   ArrowRightLeft,
   Zap,
@@ -44,6 +43,8 @@ export interface MenuItem {
 
 export interface MenuGroup {
   label: string;
+  icon: LucideIcon;
+  color: string;
   items: MenuItem[];
   roles?: AppRole[];
 }
@@ -51,6 +52,8 @@ export interface MenuGroup {
 export const menuGroups: MenuGroup[] = [
   {
     label: 'Principal',
+    icon: LayoutDashboard,
+    color: '#6366f1',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
       { label: 'Agenda', icon: Calendar, href: '/agenda' },
@@ -60,6 +63,8 @@ export const menuGroups: MenuGroup[] = [
   },
   {
     label: 'Clínica',
+    icon: Stethoscope,
+    color: '#10b981',
     roles: ['admin', 'medico', 'enfermagem'],
     items: [
       { label: 'Médicos', icon: Stethoscope, href: '/medicos' },
@@ -72,12 +77,13 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Atestados', icon: FileCheck, href: '/atestados', roles: ['admin', 'medico'] },
       { label: 'Salas', icon: DoorOpen, href: '/salas' },
       { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
-      // Telemedicina removida do escopo
       { label: 'Encaminhamentos', icon: ArrowRightLeft, href: '/encaminhamentos', roles: ['admin', 'medico'] },
     ],
   },
   {
     label: 'Operacional',
+    icon: Package,
+    color: '#f59e0b',
     items: [
       { label: 'Templates', icon: Files, href: '/templates', roles: ['admin', 'medico'] },
       { label: 'Estoque', icon: Package, href: '/estoque' },
@@ -89,6 +95,8 @@ export const menuGroups: MenuGroup[] = [
   },
   {
     label: 'Financeiro',
+    icon: Wallet,
+    color: '#ef4444',
     roles: ['admin', 'financeiro'],
     items: [
       { label: 'Visão Geral', icon: DollarSign, href: '/financeiro' },
@@ -101,6 +109,8 @@ export const menuGroups: MenuGroup[] = [
   },
   {
     label: 'Administração',
+    icon: Settings,
+    color: '#8b5cf6',
     roles: ['admin'],
     items: [
       { label: 'Analytics', icon: Activity, href: '/analytics' },
@@ -125,17 +135,13 @@ export function getFilteredMenuGroups(
 
   return menuGroups
     .filter((group) => {
-      // If group has no roles restriction, show it
       if (!group.roles || group.roles.length === 0) return true;
-      // Check if user has any of the required roles
       return group.roles.some((role) => userRoles.includes(role));
     })
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
-        // If item has no roles restriction, show it
         if (!item.roles || item.roles.length === 0) return true;
-        // Check if user has any of the required roles
         return item.roles.some((role) => userRoles.includes(role));
       }),
     }))

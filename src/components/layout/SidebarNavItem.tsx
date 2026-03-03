@@ -7,13 +7,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { ChevronRight } from 'lucide-react';
 
 interface SidebarNavItemProps {
   item: MenuItem;
   collapsed: boolean;
+  groupColor?: string;
 }
 
-export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
+export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemProps) {
   const Icon = item.icon;
 
   const linkContent = (
@@ -26,26 +28,23 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
           'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
           'text-sidebar-foreground/70 hover:text-sidebar-foreground',
           isActive && !item.external
-            ? 'bg-sidebar-accent text-sidebar-primary shadow-sm'
+            ? 'text-white shadow-sm'
             : 'hover:bg-sidebar-accent/50',
-          collapsed && 'justify-center px-2'
+          collapsed && 'justify-center px-2',
+          !collapsed && 'ml-6'
         )
       }
+      style={({ isActive }) => isActive && !item.external && groupColor ? { backgroundColor: groupColor } : {}}
     >
       {({ isActive }) => (
         <>
-          {/* Active indicator */}
-          {isActive && !item.external && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-sidebar-primary shadow-lg shadow-sidebar-primary/30" />
-          )}
-          
           {/* Icon container */}
           <div
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200',
               isActive && !item.external
-                ? 'bg-sidebar-primary/15 text-sidebar-primary'
-                : 'text-sidebar-foreground/60 group-hover:text-sidebar-foreground group-hover:bg-sidebar-accent/50'
+                ? 'text-white'
+                : 'text-sidebar-foreground/60 group-hover:text-sidebar-foreground'
             )}
           >
             <Icon className="h-[18px] w-[18px]" />
@@ -53,7 +52,12 @@ export function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
           
           {/* Label */}
           {!collapsed && (
-            <span className="truncate">{item.label}</span>
+            <span className="truncate flex-1">{item.label}</span>
+          )}
+
+          {/* Active chevron */}
+          {isActive && !item.external && !collapsed && (
+            <ChevronRight className="h-3 w-3" />
           )}
           
           {/* Badge */}
