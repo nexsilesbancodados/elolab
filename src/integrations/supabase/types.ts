@@ -216,6 +216,63 @@ export type Database = {
           },
         ]
       }
+      assinaturas_plano: {
+        Row: {
+          created_at: string | null
+          data_cancelamento: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          id: string
+          mp_assinatura_id: string | null
+          plano_id: string | null
+          plano_slug: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_cancelamento?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          id?: string
+          mp_assinatura_id?: string | null
+          plano_id?: string | null
+          plano_slug: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_cancelamento?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          id?: string
+          mp_assinatura_id?: string | null
+          plano_id?: string | null
+          plano_slug?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_plano_mp_assinatura_id_fkey"
+            columns: ["mp_assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "assinaturas_mercadopago"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_plano_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atestados: {
         Row: {
           cid: string | null
@@ -1417,6 +1474,51 @@ export type Database = {
           },
         ]
       }
+      planos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          destaque: boolean | null
+          features: Json
+          frequencia: string
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          destaque?: boolean | null
+          features?: Json
+          frequencia?: string
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+          updated_at?: string | null
+          valor: number
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          destaque?: boolean | null
+          features?: Json
+          frequencia?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       prescricoes: {
         Row: {
           created_at: string | null
@@ -2232,6 +2334,14 @@ export type Database = {
       can_access_clinical: { Args: { _user_id: string }; Returns: boolean }
       can_access_financial: { Args: { _user_id: string }; Returns: boolean }
       can_manage_data: { Args: { _user_id: string }; Returns: boolean }
+      get_user_plan: {
+        Args: { _user_id: string }
+        Returns: {
+          plano_nome: string
+          plano_slug: string
+          status: string
+        }[]
+      }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -2245,6 +2355,10 @@ export type Database = {
       is_financeiro: { Args: { _user_id: string }; Returns: boolean }
       is_medico: { Args: { _user_id: string }; Returns: boolean }
       is_recepcao: { Args: { _user_id: string }; Returns: boolean }
+      user_has_feature: {
+        Args: { _feature: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "medico" | "recepcao" | "enfermagem" | "financeiro"
