@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await req.json()
-    const { plano_id, plano_slug, nome, email, telefone, clinica } = body
+    const { plano_id, plano_slug, nome, email, telefone, clinica, mode = 'trial' } = body
 
     if (!nome || !email || !plano_slug) {
       return new Response(
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         plano_slug: plano.slug,
         codigo_convite: inviteCode,
         expires_at: expiresAt.toISOString(),
-        status: 'pendente',
+        status: mode === 'buy' ? 'aguardando_pagamento' : 'pendente',
       })
       .select()
       .single()
@@ -71,11 +71,12 @@ Deno.serve(async (req) => {
       )
     }
 
-    // If Mercado Pago is configured, create checkout for post-trial billing
     let checkoutUrl = null
-    if (mpAccessToken) {
+
+    // MODE: BUY — create Mercado Pago checkout and redirect
+    if (mode === 'buy' && mpAccessToken) {
       try {
-        const siteUrl = supabaseUrl.replace('.supabase.co', '.supabase.co')
+        const appUrl = 'https://real-world-made.lovable.app'
         const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
           headers: {
@@ -93,18 +94,25 @@ Deno.serve(async (req) => {
             payer: { name: nome, email },
             external_reference: registro.id,
             back_urls: {
-              success: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'supabase.co')}/functions/v1/public-checkout?action=confirm&id=${registro.id}`,
-              failure: `https://real-world-made.lovable.app/?status=error`,
-              pending: `https://real-world-made.lovable.app/?status=pending`,
+              success: `${appUrl}/?status=success&id=${registro.id}`,
+              failure: `${appUrl}/?status=error`,
+              pending: `${appUrl}/?status=pending`,
             },
             auto_return: 'approved',
-            free_trial: { frequency: plano.trial_dias || 3, frequency_type: 'days' },
           }),
         })
 
         if (preferenceRes.ok) {
           const prefData = await preferenceRes.json()
           checkoutUrl = prefData.init_point || prefData.sandbox_init_point
+
+          // Update registro with MP reference
+          await supabase
+            .from('registros_pendentes')
+            .update({ mp_payment_id: prefData.id })
+            .eq('id', registro.id)
+        } else {
+          console.error('MP error:', await preferenceRes.text())
         }
       } catch (mpErr) {
         console.error('Erro Mercado Pago:', mpErr)
@@ -116,6 +124,23 @@ Deno.serve(async (req) => {
       const appUrl = 'https://real-world-made.lovable.app'
       const activationLink = `${appUrl}/auth?codigo=${inviteCode}&email=${encodeURIComponent(email)}&plano=${plano.slug}`
 
+      const isTrial = mode === 'trial'
+      const subject = isTrial
+        ? `🎁 Seu teste grátis de ${plano.trial_dias || 3} dias começou! Código de ativação`
+        : `🎉 Compra confirmada! Seu código de ativação do ${plano.nome}`
+
+      const headerText = isTrial
+        ? `Teste Grátis de ${plano.trial_dias || 3} Dias`
+        : `Compra Confirmada!`
+
+      const bodyText = isTrial
+        ? `Seu período de teste gratuito de <strong>${plano.trial_dias || 3} dias</strong> começa assim que você criar sua conta. Use o código abaixo:`
+        : `Sua assinatura do <strong>${plano.nome}</strong> foi processada com sucesso. Use o código abaixo para criar sua conta e começar a usar:`
+
+      const footerText = isTrial
+        ? `Este código expira em 7 dias. Após o teste, o plano custa R$ ${Number(plano.valor).toFixed(2)}/mês.`
+        : `Este código expira em 7 dias. Sua assinatura de R$ ${Number(plano.valor).toFixed(2)}/mês já está ativa.`
+
       await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -126,31 +151,26 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           sender: { name: 'EloLab', email: 'noreply@elolab.com.br' },
           to: [{ email, name: nome }],
-          subject: `🎉 Bem-vindo ao ${plano.nome}! Seu código de ativação`,
+          subject,
           htmlContent: `
             <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden;">
-              <div style="background: linear-gradient(135deg, #0ea5e9, #14b8a6); padding: 40px 30px; text-align: center;">
+              <div style="background: linear-gradient(135deg, #1a9a7a, #14b8a6); padding: 40px 30px; text-align: center;">
                 <h1 style="color: #ffffff; font-size: 28px; margin: 0;">Bem-vindo ao EloLab!</h1>
-                <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">Seu plano ${plano.nome} está pronto</p>
+                <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">${headerText}</p>
               </div>
               <div style="padding: 30px;">
                 <p style="color: #374151; font-size: 16px; line-height: 1.6;">Olá, <strong>${nome}</strong>!</p>
-                <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-                  Seu período de teste gratuito de <strong>${plano.trial_dias || 3} dias</strong> começa agora.
-                  Use o código abaixo para criar sua conta:
-                </p>
-                <div style="background: #f0f9ff; border: 2px dashed #0ea5e9; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+                <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">${bodyText}</p>
+                <div style="background: #f0fdf4; border: 2px dashed #1a9a7a; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
                   <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px;">Seu código de ativação</p>
-                  <p style="color: #0ea5e9; font-size: 36px; font-weight: 800; letter-spacing: 4px; margin: 0;">${inviteCode}</p>
+                  <p style="color: #1a9a7a; font-size: 36px; font-weight: 800; letter-spacing: 4px; margin: 0;">${inviteCode}</p>
                 </div>
                 <div style="text-align: center; margin: 24px 0;">
-                  <a href="${activationLink}" style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #14b8a6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  <a href="${activationLink}" style="display: inline-block; background: linear-gradient(135deg, #1a9a7a, #14b8a6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                     Criar Minha Conta →
                   </a>
                 </div>
-                <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-                  Este código expira em 7 dias. Plano: ${plano.nome} (${plano.trial_dias || 3} dias grátis, depois R$ ${Number(plano.valor).toFixed(2)}/mês)
-                </p>
+                <p style="color: #9ca3af; font-size: 12px; text-align: center;">${footerText}</p>
               </div>
               <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                 <p style="color: #9ca3af; font-size: 12px; margin: 0;">EloLab — Gestão Inteligente para Clínicas</p>
@@ -164,7 +184,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Registro criado! Verifique seu e-mail.',
+        mode,
+        message: mode === 'buy' && checkoutUrl
+          ? 'Redirecionando para pagamento...'
+          : 'Registro criado! Verifique seu e-mail para o código de ativação.',
         checkout_url: checkoutUrl,
         invite_code: inviteCode,
       }),

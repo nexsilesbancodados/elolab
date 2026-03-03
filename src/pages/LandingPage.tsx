@@ -78,6 +78,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [checkoutDialog, setCheckoutDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [checkoutMode, setCheckoutMode] = useState<'trial' | 'buy'>('trial');
   const [form, setForm] = useState({ nome: '', email: '', telefone: '', clinica: '' });
 
   const { data: planos } = useQuery({
@@ -102,9 +103,10 @@ export default function LandingPage() {
     onSuccess: (data: any) => {
       setCheckoutDialog(false);
       if (data?.checkout_url) {
+        toast.success('Redirecionando para o pagamento...');
         window.location.href = data.checkout_url;
       } else {
-        toast.success('Checkout criado! Verifique seu e-mail para instruções.');
+        toast.success('✅ Verifique seu e-mail! Enviamos o código de ativação para criar sua conta.', { duration: 8000 });
       }
     },
     onError: (err: any) => toast.error(err.message || 'Erro ao processar. Tente novamente.'),
@@ -112,11 +114,12 @@ export default function LandingPage() {
 
   const handleSelectPlan = (plano: any) => { setSelectedPlan(plano); setCheckoutDialog(true); };
 
-  const handleCheckout = () => {
+  const handleCheckout = (mode: 'trial' | 'buy') => {
     if (!form.nome || !form.email) { toast.error('Preencha nome e e-mail'); return; }
     checkoutMutation.mutate({
       plano_id: selectedPlan.id, plano_slug: selectedPlan.slug,
       nome: form.nome, email: form.email, telefone: form.telefone, clinica: form.clinica,
+      mode,
     });
   };
 
@@ -567,47 +570,77 @@ export default function LandingPage() {
 
       {/* ─── Checkout Dialog ─── */}
       <Dialog open={checkoutDialog} onOpenChange={setCheckoutDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Assine o {selectedPlan?.nome}</DialogTitle>
+            <DialogTitle className="text-xl">Assine o {selectedPlan?.nome}</DialogTitle>
             <DialogDescription>
-              Comece com {selectedPlan?.trial_dias || 3} dias grátis. Preencha seus dados.
+              Preencha seus dados e escolha como deseja começar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Nome completo *</Label>
-              <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Dr. João Silva" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Nome completo *</Label>
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Dr. João Silva" />
+              </div>
+              <div>
+                <Label>E-mail *</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="joao@clinica.com" />
+              </div>
             </div>
-            <div>
-              <Label>E-mail *</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="joao@clinica.com" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telefone</Label>
+                <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(11) 99999-9999" />
+              </div>
+              <div>
+                <Label>Nome da Clínica</Label>
+                <Input value={form.clinica} onChange={(e) => setForm({ ...form, clinica: e.target.value })} placeholder="Clínica São Lucas" />
+              </div>
             </div>
-            <div>
-              <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(11) 99999-9999" />
+
+            {/* Plan summary */}
+            <div className="bg-[hsl(168,76%,95%)] rounded-xl p-4 border border-[hsl(168,76%,36%)]/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[hsl(215,28%,17%)]">{selectedPlan?.nome}</p>
+                  <p className="text-sm text-[hsl(215,15%,50%)]">
+                    {selectedPlan && new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedPlan.valor)}/mês
+                  </p>
+                </div>
+                <div className="text-right">
+                  <Badge className="bg-[hsl(168,76%,36%)] text-white text-xs">
+                    {selectedPlan?.trial_dias || 3} dias grátis
+                  </Badge>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label>Nome da Clínica</Label>
-              <Input value={form.clinica} onChange={(e) => setForm({ ...form, clinica: e.target.value })} placeholder="Clínica São Lucas" />
-            </div>
-            <div className="bg-[hsl(168,76%,95%)] rounded-lg p-3 text-sm border border-[hsl(168,76%,36%)]/20">
-              <p className="font-medium text-[hsl(215,28%,17%)]">{selectedPlan?.nome}</p>
-              <p className="text-[hsl(215,15%,50%)]">
-                {selectedPlan?.trial_dias || 3} dias grátis, depois{' '}
-                {selectedPlan && new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedPlan.valor)}/mês
-              </p>
+
+            {/* Two action buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <Button
+                onClick={() => handleCheckout('trial')}
+                disabled={checkoutMutation.isPending}
+                variant="outline"
+                className="h-14 flex flex-col items-center justify-center gap-0.5 border-[hsl(168,76%,36%)] text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,36%)]/10 rounded-xl"
+              >
+                <span className="text-sm font-bold">
+                  {checkoutMutation.isPending ? 'Processando...' : 'Testar 3 dias grátis'}
+                </span>
+                <span className="text-[10px] font-normal opacity-70">Sem cartão de crédito</span>
+              </Button>
+              <Button
+                onClick={() => handleCheckout('buy')}
+                disabled={checkoutMutation.isPending}
+                className="h-14 flex flex-col items-center justify-center gap-0.5 bg-[hsl(40,90%,55%)] hover:bg-[hsl(40,90%,48%)] text-white border-0 rounded-xl"
+              >
+                <span className="text-sm font-bold">
+                  {checkoutMutation.isPending ? 'Processando...' : 'Comprar agora'}
+                </span>
+                <span className="text-[10px] font-normal opacity-80">Pagamento via Mercado Pago</span>
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              onClick={handleCheckout}
-              disabled={checkoutMutation.isPending}
-              className="w-full bg-[hsl(40,90%,55%)] hover:bg-[hsl(40,90%,48%)] text-white border-0"
-            >
-              {checkoutMutation.isPending ? 'Processando...' : 'Começar Teste Grátis'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
