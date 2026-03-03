@@ -307,40 +307,48 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Clinic Reception / Painel TV Section ─── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
-            <div className="absolute -inset-3 bg-[hsl(40,90%,55%)]/5 rounded-3xl blur-xl" />
-            <img
-              src={clinicReception}
-              alt="Recepção de clínica moderna com painel TV do InovaLab"
-              className="relative z-10 w-full rounded-2xl shadow-xl"
-            />
+            <div className="absolute -inset-4 bg-gradient-to-br from-[hsl(40,90%,55%)]/8 to-[hsl(168,76%,36%)]/5 rounded-[2rem] blur-2xl" />
+            <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
+              <img
+                src={clinicReception}
+                alt="Recepção de clínica moderna com painel TV do InovaLab"
+                className="w-full object-cover"
+              />
+            </div>
           </div>
-          <div className="order-1 lg:order-2">
-            <Badge className="bg-[hsl(40,90%,90%)] text-[hsl(40,90%,35%)] mb-4 text-xs">EXPERIÊNCIA DO PACIENTE</Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold font-['Plus_Jakarta_Sans'] text-[hsl(215,28%,17%)] mb-6">
+          <div className="order-1 lg:order-2 space-y-6">
+            <Badge className="bg-[hsl(40,90%,92%)] text-[hsl(40,80%,32%)] hover:bg-[hsl(40,90%,88%)] px-4 py-1.5 text-xs font-semibold tracking-wide uppercase border-0">
+              Experiência do Paciente
+            </Badge>
+            <h2 className="text-3xl sm:text-[2.6rem] font-extrabold font-['Plus_Jakarta_Sans'] text-[hsl(215,28%,17%)] leading-[1.12]">
               Modernize a recepção da sua clínica
             </h2>
-            <p className="text-[hsl(215,15%,50%)] mb-8 leading-relaxed">
+            <p className="text-[hsl(215,15%,45%)] text-base leading-relaxed max-w-md">
               Painel TV em tempo real, fila de atendimento digital e check-in automatizado para uma experiência premium ao paciente.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-5 pt-2">
               {[
                 { icon: Monitor, text: 'Painel TV com fila de atendimento em tempo real' },
                 { icon: Clock, text: 'Redução de até 60% no tempo de espera' },
                 { icon: Smartphone, text: 'Check-in digital via smartphone' },
                 { icon: Users, text: 'Triagem Manchester automatizada' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-[hsl(40,90%,90%)] flex items-center justify-center shrink-0">
-                    <item.icon className="h-4.5 w-4.5 text-[hsl(40,90%,45%)]" />
+                <div key={i} className="flex items-center gap-4">
+                  <div className="h-11 w-11 rounded-xl bg-[hsl(40,90%,93%)] flex items-center justify-center shrink-0 shadow-sm">
+                    <item.icon className="h-5 w-5 text-[hsl(40,80%,40%)]" />
                   </div>
-                  <span className="text-sm font-medium text-[hsl(215,28%,17%)]">{item.text}</span>
+                  <span className="text-[15px] font-medium text-[hsl(215,28%,17%)]">{item.text}</span>
                 </div>
               ))}
             </div>
-            <Button className="mt-8 bg-[hsl(40,90%,55%)] hover:bg-[hsl(40,90%,48%)] text-white border-0 rounded-full" onClick={() => scrollTo('pricing')}>
+            <Button
+              size="lg"
+              className="mt-4 bg-[hsl(40,90%,55%)] hover:bg-[hsl(40,90%,48%)] text-white border-0 rounded-full shadow-lg shadow-[hsl(40,90%,55%)]/25 px-8 h-12 text-base font-semibold"
+              onClick={() => scrollTo('pricing')}
+            >
               Começar agora <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
