@@ -385,11 +385,42 @@ export default function Relatorios() {
         </Card>
       </div>
 
+      {/* KPIs Extras */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Taxa Comparecimento</p>
+            <p className="text-2xl font-bold text-primary">{estatisticas.taxaComparecimento}%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Ticket Médio</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(estatisticas.atendimentosFinalizados > 0 ? estatisticas.receitas / estatisticas.atendimentosFinalizados : 0)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Cancelamentos</p>
+            <p className="text-2xl font-bold text-destructive">{estatisticas.cancelamentos}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Valores Pendentes</p>
+            <p className="text-2xl font-bold text-destructive">{formatCurrency(estatisticas.pendentes)}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="financeiro" className="space-y-6">
         <TabsList>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="atendimentos">Atendimentos</TabsTrigger>
           <TabsTrigger value="medicos">Por Médico</TabsTrigger>
+          <TabsTrigger value="status">Status Agendamentos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="financeiro" className="space-y-6">
@@ -579,6 +610,38 @@ export default function Relatorios() {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="status" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Status</CardTitle>
+              <CardDescription>Status dos agendamentos no período</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={(() => {
+                    const statusCount: Record<string, number> = {};
+                    agendamentosFiltrados.forEach(a => {
+                      const s = a.status || 'agendado';
+                      statusCount[s] = (statusCount[s] || 0) + 1;
+                    });
+                    return Object.entries(statusCount).map(([name, value]) => ({
+                      name: name.charAt(0).toUpperCase() + name.slice(1).replace('_', ' '),
+                      quantidade: value,
+                    }));
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip />
+                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Quantidade" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
