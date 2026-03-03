@@ -222,11 +222,13 @@ export type Database = {
           data_cancelamento: string | null
           data_fim: string | null
           data_inicio: string | null
+          em_trial: boolean | null
           id: string
           mp_assinatura_id: string | null
           plano_id: string | null
           plano_slug: string
           status: string
+          trial_fim: string | null
           updated_at: string | null
           user_id: string
         }
@@ -235,11 +237,13 @@ export type Database = {
           data_cancelamento?: string | null
           data_fim?: string | null
           data_inicio?: string | null
+          em_trial?: boolean | null
           id?: string
           mp_assinatura_id?: string | null
           plano_id?: string | null
           plano_slug: string
           status?: string
+          trial_fim?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -248,11 +252,13 @@ export type Database = {
           data_cancelamento?: string | null
           data_fim?: string | null
           data_inicio?: string | null
+          em_trial?: boolean | null
           id?: string
           mp_assinatura_id?: string | null
           plano_id?: string | null
           plano_slug?: string
           status?: string
+          trial_fim?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1524,6 +1530,7 @@ export type Database = {
           nome: string
           ordem: number | null
           slug: string
+          trial_dias: number | null
           updated_at: string | null
           valor: number
         }
@@ -1538,6 +1545,7 @@ export type Database = {
           nome: string
           ordem?: number | null
           slug: string
+          trial_dias?: number | null
           updated_at?: string | null
           valor: number
         }
@@ -1552,6 +1560,7 @@ export type Database = {
           nome?: string
           ordem?: number | null
           slug?: string
+          trial_dias?: number | null
           updated_at?: string | null
           valor?: number
         }
@@ -2373,12 +2382,15 @@ export type Database = {
       can_access_financial: { Args: { _user_id: string }; Returns: boolean }
       can_manage_data: { Args: { _user_id: string }; Returns: boolean }
       delete_all_app_data: { Args: never; Returns: undefined }
+      expire_trials: { Args: never; Returns: undefined }
       get_user_plan: {
         Args: { _user_id: string }
         Returns: {
+          em_trial: boolean
           plano_nome: string
           plano_slug: string
           status: string
+          trial_fim: string
         }[]
       }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
@@ -2394,6 +2406,10 @@ export type Database = {
       is_financeiro: { Args: { _user_id: string }; Returns: boolean }
       is_medico: { Args: { _user_id: string }; Returns: boolean }
       is_recepcao: { Args: { _user_id: string }; Returns: boolean }
+      start_free_trial: {
+        Args: { _plano_slug: string; _user_id: string }
+        Returns: Json
+      }
       user_has_feature: {
         Args: { _feature: string; _user_id: string }
         Returns: boolean

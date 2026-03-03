@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { toast } from 'sonner';
 
 export interface Plano {
   id: string;
@@ -13,12 +14,15 @@ export interface Plano {
   ativo: boolean;
   destaque: boolean;
   ordem: number;
+  trial_dias: number;
 }
 
 export interface AssinaturaPlano {
   plano_slug: string;
   plano_nome: string;
   status: string;
+  em_trial: boolean;
+  trial_fim: string | null;
 }
 
 export function usePlanos() {
@@ -43,7 +47,7 @@ export function useUserPlan() {
     queryKey: ['user_plan', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data, error } = await supabase.rpc('get_user_plan', {
+      const { data, error } = await supabase.rpc('get_user_plan' as any, {
         _user_id: user.id,
       });
       if (error) {
@@ -57,9 +61,7 @@ export function useUserPlan() {
 
   const hasFeature = (feature: string): boolean => {
     if (!assinatura) return false;
-    // Ultra includes everything
     if (assinatura.plano_slug === 'elolab-ultra') return true;
-    // Max includes everything except chatbot/agente_ia
     if (assinatura.plano_slug === 'elolab-max') {
       return feature !== 'agente_ia' && feature !== 'chatbot_whatsapp';
     }
@@ -68,7 +70,13 @@ export function useUserPlan() {
 
   const isUltra = assinatura?.plano_slug === 'elolab-ultra';
   const isMax = assinatura?.plano_slug === 'elolab-max';
-  const hasActivePlan = !!assinatura && assinatura.status === 'ativa';
+  const hasActivePlan = !!assinatura && (assinatura.status === 'ativa' || assinatura.status === 'trial');
+  const isTrial = assinatura?.em_trial === true && assinatura?.status === 'trial';
+  const trialEnd = assinatura?.trial_fim ? new Date(assinatura.trial_fim) : null;
+
+  const trialDaysLeft = trialEnd
+    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return {
     plan: assinatura,
@@ -77,7 +85,36 @@ export function useUserPlan() {
     isUltra,
     isMax,
     hasActivePlan,
+    isTrial,
+    trialEnd,
+    trialDaysLeft,
     planName: assinatura?.plano_nome || null,
     planSlug: assinatura?.plano_slug || null,
   };
+}
+
+export function useStartTrial() {
+  const { user } = useSupabaseAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (planoSlug: string) => {
+      if (!user) throw new Error('Usuário não autenticado');
+      const { data, error } = await supabase.rpc('start_free_trial' as any, {
+        _user_id: user.id,
+        _plano_slug: planoSlug,
+      });
+      if (error) throw error;
+      const result = data as unknown as { success: boolean; error?: string; plano_nome?: string; trial_end?: string };
+      if (!result.success) throw new Error(result.error || 'Erro ao iniciar trial');
+      return result;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['user_plan'] });
+      toast.success(`Teste grátis ativado! ${data.plano_nome} por 3 dias.`);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Erro ao iniciar período de teste');
+    },
+  });
 }

@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Sparkles, Zap } from 'lucide-react';
-import { useUserPlan, usePlanos } from '@/hooks/useSubscriptionPlan';
+import { Check, Crown, Sparkles, Zap, Clock, Gift } from 'lucide-react';
+import { useUserPlan, usePlanos, useStartTrial } from '@/hooks/useSubscriptionPlan';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const planIcons: Record<string, React.ReactNode> = {
   'elolab-max': <Crown className="h-8 w-8" />,
@@ -42,7 +42,8 @@ const featureLabels: Record<string, string> = {
 
 export default function Planos() {
   const { data: planos, isLoading } = usePlanos();
-  const { planSlug, hasActivePlan } = useUserPlan();
+  const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
+  const startTrial = useStartTrial();
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -60,7 +61,37 @@ export default function Planos() {
         <p className="text-xl text-muted-foreground">
           Potencialize sua clínica com as melhores ferramentas
         </p>
+        {!hasActivePlan && (
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium">
+            <Gift className="h-4 w-4" />
+            Teste grátis por 3 dias — sem cartão de crédito!
+          </div>
+        )}
       </div>
+
+      {/* Trial Banner */}
+      {isTrial && trialEnd && (
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium text-primary">Período de teste ativo</p>
+                  <p className="text-sm text-muted-foreground">
+                    {trialDaysLeft > 0
+                      ? `Restam ${trialDaysLeft} dia${trialDaysLeft !== 1 ? 's' : ''} — expira em ${format(trialEnd, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
+                      : 'Seu período de teste expirou'}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" onClick={() => navigate(`/pagamentos?plano=${planSlug}`)}>
+                Assinar Agora
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
         {planos?.map((plano) => {
@@ -101,6 +132,12 @@ export default function Planos() {
                   <span className="text-muted-foreground">/{plano.frequencia === 'mensal' ? 'mês' : plano.frequencia}</span>
                 </div>
 
+                {!hasActivePlan && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    🎁 {plano.trial_dias || 3} dias grátis para testar
+                  </p>
+                )}
+
                 <ul className="space-y-2 text-left">
                   {(plano.features as string[]).map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">
@@ -111,19 +148,32 @@ export default function Planos() {
                 </ul>
               </CardContent>
 
-              <CardFooter className="mt-auto">
+              <CardFooter className="mt-auto flex flex-col gap-2">
                 {isCurrentPlan ? (
                   <Button className="w-full" variant="outline" disabled>
-                    Plano Atual
+                    {isTrial ? 'Em Teste' : 'Plano Atual'}
                   </Button>
                 ) : (
-                  <Button
-                    className="w-full"
-                    variant={isHighlighted ? 'default' : 'outline'}
-                    onClick={() => navigate(`/pagamentos?plano=${plano.slug}`)}
-                  >
-                    {hasActivePlan ? 'Fazer Upgrade' : 'Assinar Agora'}
-                  </Button>
+                  <>
+                    {!hasActivePlan && (
+                      <Button
+                        className="w-full"
+                        variant={isHighlighted ? 'default' : 'outline'}
+                        onClick={() => startTrial.mutate(plano.slug)}
+                        disabled={startTrial.isPending}
+                      >
+                        <Gift className="h-4 w-4 mr-2" />
+                        {startTrial.isPending ? 'Ativando...' : `Testar Grátis ${plano.trial_dias || 3} Dias`}
+                      </Button>
+                    )}
+                    <Button
+                      className="w-full"
+                      variant={hasActivePlan && isHighlighted ? 'default' : 'outline'}
+                      onClick={() => navigate(`/pagamentos?plano=${plano.slug}`)}
+                    >
+                      {hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
+                    </Button>
+                  </>
                 )}
               </CardFooter>
             </Card>
