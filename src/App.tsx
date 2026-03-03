@@ -45,6 +45,7 @@ const Encaminhamentos = lazy(() => import("@/pages/Encaminhamentos"));
 const Automacoes = lazy(() => import("@/pages/Automacoes"));
 const AgenteIA = lazy(() => import("@/pages/AgenteIA"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
+const Pagamentos = lazy(() => import("@/pages/Pagamentos"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Loading fallback component
@@ -120,6 +121,7 @@ function App() {
                       <Route path="/contas-receber" element={<ContasReceber />} />
                       <Route path="/contas-pagar" element={<ContasPagar />} />
                       <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
+                      <Route path="/pagamentos" element={<Pagamentos />} />
                       <Route path="/relatorios" element={<Relatorios />} />
                       <Route path="/estoque" element={<Estoque />} />
                       <Route path="/convenios" element={<Convenios />} />

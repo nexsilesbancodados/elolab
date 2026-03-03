@@ -90,6 +90,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Contas a Receber', icon: HandCoins, href: '/contas-receber' },
       { label: 'Contas a Pagar', icon: CreditCard, href: '/contas-pagar' },
       { label: 'Fluxo de Caixa', icon: Wallet, href: '/fluxo-caixa' },
+      { label: 'Pagamentos MP', icon: CreditCard, href: '/pagamentos' },
       { label: 'Relatórios', icon: BarChart3, href: '/relatorios' },
     ],
   },
