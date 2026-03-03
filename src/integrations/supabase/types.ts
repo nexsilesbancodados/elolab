@@ -148,6 +148,74 @@ export type Database = {
           },
         ]
       }
+      assinaturas_mercadopago: {
+        Row: {
+          checkout_url: string | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          detalhes: Json | null
+          dia_cobranca: number | null
+          frequencia: string
+          id: string
+          mp_plan_id: string | null
+          mp_preapproval_id: string | null
+          nome_plano: string
+          paciente_id: string | null
+          proximo_pagamento: string | null
+          status: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          checkout_url?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          detalhes?: Json | null
+          dia_cobranca?: number | null
+          frequencia?: string
+          id?: string
+          mp_plan_id?: string | null
+          mp_preapproval_id?: string | null
+          nome_plano: string
+          paciente_id?: string | null
+          proximo_pagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor: number
+        }
+        Update: {
+          checkout_url?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          detalhes?: Json | null
+          dia_cobranca?: number | null
+          frequencia?: string
+          id?: string
+          mp_plan_id?: string | null
+          mp_preapproval_id?: string | null
+          nome_plano?: string
+          paciente_id?: string | null
+          proximo_pagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_mercadopago_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atestados: {
         Row: {
           cid: string | null
@@ -970,6 +1038,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mercadopago_webhook_logs: {
+        Row: {
+          created_at: string | null
+          data_id: string | null
+          erro_mensagem: string | null
+          event_id: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processado: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_id?: string | null
+          erro_mensagem?: string | null
+          event_id?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          processado?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          data_id?: string | null
+          erro_mensagem?: string | null
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processado?: boolean | null
+        }
+        Relationships: []
+      }
       movimentacoes_estoque: {
         Row: {
           created_at: string | null
@@ -1200,6 +1301,118 @@ export type Database = {
             columns: ["convenio_id"]
             isOneToOne: false
             referencedRelation: "convenios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos_mercadopago: {
+        Row: {
+          agendamento_id: string | null
+          boleto_url: string | null
+          checkout_url: string | null
+          created_at: string | null
+          data_aprovacao: string | null
+          data_criacao: string | null
+          data_expiracao: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          detalhes_pagamento: Json | null
+          id: string
+          lancamento_id: string | null
+          metodo_pagamento: string | null
+          moeda: string | null
+          mp_external_reference: string | null
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          notificacao_webhook: Json | null
+          paciente_id: string | null
+          parcelas: number | null
+          qr_code_base64: string | null
+          qr_code_pix: string | null
+          status: string
+          tipo: string
+          updated_at: string | null
+          valor: number
+          valor_pago: number | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          boleto_url?: string | null
+          checkout_url?: string | null
+          created_at?: string | null
+          data_aprovacao?: string | null
+          data_criacao?: string | null
+          data_expiracao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          detalhes_pagamento?: Json | null
+          id?: string
+          lancamento_id?: string | null
+          metodo_pagamento?: string | null
+          moeda?: string | null
+          mp_external_reference?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          notificacao_webhook?: Json | null
+          paciente_id?: string | null
+          parcelas?: number | null
+          qr_code_base64?: string | null
+          qr_code_pix?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+          valor: number
+          valor_pago?: number | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          boleto_url?: string | null
+          checkout_url?: string | null
+          created_at?: string | null
+          data_aprovacao?: string | null
+          data_criacao?: string | null
+          data_expiracao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          detalhes_pagamento?: Json | null
+          id?: string
+          lancamento_id?: string | null
+          metodo_pagamento?: string | null
+          moeda?: string | null
+          mp_external_reference?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          notificacao_webhook?: Json | null
+          paciente_id?: string | null
+          parcelas?: number | null
+          qr_code_base64?: string | null
+          qr_code_pix?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+          valor?: number
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_mercadopago_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_mercadopago_lancamento_id_fkey"
+            columns: ["lancamento_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_mercadopago_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
             referencedColumns: ["id"]
           },
         ]
