@@ -21,6 +21,7 @@ import dashboardMockup from '@/assets/dashboard-mockup.webp';
 import doctorTablet from '@/assets/doctor-tablet.webp';
 import clinicReception from '@/assets/clinic-reception.webp';
 import whatsappAi from '@/assets/whatsapp-ai.webp';
+import logoInovalab from '@/assets/logo-inovalab.jpeg';
 
 /* ─── data ─── */
 const stats = [
@@ -49,7 +50,7 @@ const managementFeatures = [
 ];
 
 const testimonials = [
-  { name: 'Dra. Fernanda Lima', role: 'Dermatologista', text: 'Reduzi 40% do tempo administrativo com o EloLab. O prontuário eletrônico é incrível e a equipe de suporte é sensacional!' },
+  { name: 'Dra. Fernanda Lima', role: 'Dermatologista', text: 'Reduzi 40% do tempo administrativo com o InovaLab. O prontuário eletrônico é incrível e a equipe de suporte é sensacional!' },
   { name: 'Dr. Carlos Mendes', role: 'Ortopedista', text: 'O agente de IA no WhatsApp revolucionou meu consultório. Atendimento 24h sem esforço, meus pacientes adoram.' },
   { name: 'Dra. Ana Souza', role: 'Pediatra', text: 'A triagem Manchester e a fila de atendimento mudaram completamente o fluxo da clínica. Recomendo muito!' },
 ];
@@ -129,11 +130,11 @@ export default function LandingPage() {
             <Shield className="h-3.5 w-3.5" /> Software de acordo com as normas da LGPD
           </span>
           <div className="flex items-center gap-4 ml-auto">
-            <a href="mailto:contato@elolab.com.br" className="hidden sm:flex items-center gap-1.5 hover:underline text-white/90">
-              <Mail className="h-3.5 w-3.5" /> contato@elolab.com.br
+            <a href="mailto:contato@inovalab.com.br" className="hidden sm:flex items-center gap-1.5 hover:underline text-white/90">
+              <Mail className="h-3.5 w-3.5" /> contato@inovalab.com.br
             </a>
             <button onClick={() => navigate('/auth')} className="flex items-center gap-1.5 hover:underline font-medium">
-              <LogIn className="h-4 w-4" /> Entrar
+              <LogIn className="h-4 w-4" /> Entrar no InovaLab
             </button>
           </div>
         </div>
@@ -143,9 +144,9 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-border/40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <Heart className="h-7 w-7 text-[hsl(168,76%,36%)]" />
+            <img src={logoInovalab} alt="InovaLab" className="h-9 w-9 rounded-lg object-contain" />
             <span className="text-xl font-bold font-['Plus_Jakarta_Sans'] text-[hsl(215,28%,17%)]">
-              elo<span className="text-[hsl(168,76%,36%)]">lab</span>
+              INOVA<span className="text-[hsl(168,76%,36%)]">LAB</span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[hsl(215,15%,50%)]">
@@ -209,7 +210,7 @@ export default function LandingPage() {
               <div className="absolute -inset-4 bg-gradient-to-r from-[hsl(168,76%,36%)]/10 to-[hsl(40,90%,55%)]/10 rounded-3xl blur-2xl" />
               <img
                 src={dashboardMockup}
-                alt="Dashboard do EloLab em laptop e tablet mostrando agenda e analytics"
+                alt="Dashboard do InovaLab em laptop e tablet mostrando agenda e analytics"
                 className="relative z-10 w-full max-w-xl rounded-2xl shadow-2xl border border-white/50"
               />
             </div>
@@ -298,7 +299,7 @@ export default function LandingPage() {
             <div className="absolute -inset-3 bg-[hsl(168,76%,36%)]/5 rounded-3xl blur-xl" />
             <img
               src={doctorTablet}
-              alt="Médica utilizando prontuário eletrônico EloLab no tablet"
+              alt="Médica utilizando prontuário eletrônico InovaLab no tablet"
               className="relative z-10 w-full rounded-2xl shadow-xl"
             />
           </div>
@@ -312,7 +313,7 @@ export default function LandingPage() {
             <div className="absolute -inset-3 bg-[hsl(40,90%,55%)]/5 rounded-3xl blur-xl" />
             <img
               src={clinicReception}
-              alt="Recepção de clínica moderna com painel TV do EloLab"
+              alt="Recepção de clínica moderna com painel TV do InovaLab"
               className="relative z-10 w-full rounded-2xl shadow-xl"
             />
           </div>
@@ -374,7 +375,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-6 p-4 bg-[hsl(142,70%,95%)] rounded-xl border border-[hsl(142,70%,80%)]">
               <p className="text-sm text-[hsl(142,70%,25%)] font-medium">
-                💡 Exclusivo do plano <strong>EloLab Ultra</strong> — potencialize seu atendimento com IA.
+                💡 Exclusivo do plano <strong>InovaLab Ultra</strong> — potencialize seu atendimento com IA.
               </p>
             </div>
           </div>
@@ -382,7 +383,7 @@ export default function LandingPage() {
             <div className="absolute -inset-3 bg-[hsl(142,70%,50%)]/5 rounded-3xl blur-xl" />
             <img
               src={whatsappAi}
-              alt="WhatsApp com agente IA do EloLab fazendo agendamento automático"
+              alt="WhatsApp com agente IA do InovaLab fazendo agendamento automático"
               className="relative z-10 w-full max-w-sm rounded-2xl shadow-xl"
             />
           </div>
@@ -422,7 +423,7 @@ export default function LandingPage() {
               O que os nossos clientes dizem
             </h2>
             <p className="text-[hsl(215,15%,50%)] text-lg max-w-xl mx-auto">
-              Valorizamos o feedback dos nossos clientes. Veja o que eles dizem sobre o EloLab.
+              Valorizamos o feedback dos nossos clientes. Veja o que eles dizem sobre o InovaLab.
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -538,7 +539,7 @@ export default function LandingPage() {
             Comece a transformar sua clínica hoje
           </h2>
           <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
-            Junte-se a milhares de médicos que já simplificaram a gestão do consultório com o EloLab.
+            Junte-se a milhares de médicos que já simplificaram a gestão do consultório com o InovaLab.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -566,17 +567,17 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-4 gap-8 mb-8">
             <div className="sm:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <Heart className="h-6 w-6 text-[hsl(168,76%,36%)]" />
+                <img src={logoInovalab} alt="InovaLab" className="h-8 w-8 rounded-lg object-contain" />
                 <span className="text-lg font-bold font-['Plus_Jakarta_Sans']">
-                  elo<span className="text-[hsl(168,76%,36%)]">lab</span>
+                  INOVA<span className="text-[hsl(168,76%,36%)]">LAB</span>
                 </span>
               </div>
               <p className="text-white/60 text-sm leading-relaxed max-w-sm mb-4">
                 Software de gestão completo para clínicas e consultórios médicos. Agenda, prontuário, financeiro e IA — tudo em um só lugar.
               </p>
               <div className="flex items-center gap-4 text-sm text-white/50">
-                <a href="mailto:contato@elolab.com.br" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                  <Mail className="h-3.5 w-3.5" /> contato@elolab.com.br
+                <a href="mailto:contato@inovalab.com.br" className="flex items-center gap-1.5 hover:text-white transition-colors">
+                  <Mail className="h-3.5 w-3.5" /> contato@inovalab.com.br
                 </a>
               </div>
             </div>
@@ -594,12 +595,12 @@ export default function LandingPage() {
               <div className="space-y-2 text-sm text-white/60">
                 <button onClick={() => navigate('/auth')} className="block hover:text-white transition-colors">Login</button>
                 <button onClick={() => scrollTo('pricing')} className="block hover:text-white transition-colors">Criar conta</button>
-                <a href="mailto:contato@elolab.com.br" className="block hover:text-white transition-colors">Suporte</a>
+                <a href="mailto:contato@inovalab.com.br" className="block hover:text-white transition-colors">Suporte</a>
               </div>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40">
-            <span>© {new Date().getFullYear()} EloLab. Todos os direitos reservados.</span>
+            <span>© {new Date().getFullYear()} InovaLab. Todos os direitos reservados.</span>
             <div className="flex items-center gap-1.5">
               <Shield className="h-4 w-4" /> Software em conformidade com a LGPD
             </div>
