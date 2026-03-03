@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { usePacientes, useAgendamentos, useLancamentos, useMedicos } from '@/hooks/useSupabaseData';
+import { usePacientes, useAgendamentos, useLancamentos, useMedicos, useEstoque } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 import { exportarFinanceiro } from '@/lib/excelExporter';
 import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF } from '@/lib/pdfGenerator';
@@ -59,8 +59,9 @@ export default function Relatorios() {
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: lancamentos = [], isLoading: loadingLancamentos } = useLancamentos();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
+  const { data: estoque = [], isLoading: loadingEstoque } = useEstoque();
 
-  const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos;
+  const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos || loadingEstoque;
 
   const periodoRange = useMemo(() => {
     const now = new Date();
@@ -416,11 +417,13 @@ export default function Relatorios() {
       </div>
 
       <Tabs defaultValue="financeiro" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="atendimentos">Atendimentos</TabsTrigger>
           <TabsTrigger value="medicos">Por Médico</TabsTrigger>
-          <TabsTrigger value="status">Status Agendamentos</TabsTrigger>
+          <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
+          <TabsTrigger value="estoque">Estoque</TabsTrigger>
+          <TabsTrigger value="status">Status</TabsTrigger>
         </TabsList>
 
         <TabsContent value="financeiro" className="space-y-6">
@@ -610,6 +613,162 @@ export default function Relatorios() {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pacientes" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Total de Pacientes</p>
+                <p className="text-2xl font-bold">{pacientes.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Com Convênio</p>
+                <p className="text-2xl font-bold">{pacientes.filter(p => p.convenio_id).length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Com Alergias</p>
+                <p className="text-2xl font-bold text-destructive">
+                  {pacientes.filter(p => p.alergias && p.alergias.length > 0).length}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Sexo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={(() => {
+                        const sexos: Record<string, number> = {};
+                        pacientes.forEach(p => {
+                          const s = p.sexo || 'Não informado';
+                          sexos[s] = (sexos[s] || 0) + 1;
+                        });
+                        return Object.entries(sexos).map(([name, value]) => ({
+                          name: name === 'M' ? 'Masculino' : name === 'F' ? 'Feminino' : name,
+                          value,
+                        }));
+                      })()}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {[0, 1, 2, 3].map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="estoque" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Itens em Estoque</p>
+                <p className="text-2xl font-bold">{estoque.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Estoque Crítico</p>
+                <p className="text-2xl font-bold text-destructive">
+                  {estoque.filter(e => e.quantidade <= (e.quantidade_minima || 0)).length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Valor Total</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(estoque.reduce((acc, e) => acc + (e.quantidade * (e.valor_unitario || 0)), 0))}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Itens com Estoque Crítico</CardTitle>
+              <CardDescription>Abaixo da quantidade mínima</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-right">Qtd. Atual</TableHead>
+                      <TableHead className="text-right">Qtd. Mínima</TableHead>
+                      <TableHead className="text-right">Valor Unit.</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {estoque
+                      .filter(e => e.quantidade <= (e.quantidade_minima || 0))
+                      .sort((a, b) => a.quantidade - b.quantidade)
+                      .map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.nome}</TableCell>
+                          <TableCell>{item.categoria}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="destructive">{item.quantidade}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">{item.quantidade_minima || 0}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.valor_unitario || 0)}</TableCell>
+                        </TableRow>
+                      ))}
+                    {estoque.filter(e => e.quantidade <= (e.quantidade_minima || 0)).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          Nenhum item com estoque crítico
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição por Categoria</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={(() => {
+                    const cats: Record<string, number> = {};
+                    estoque.forEach(e => {
+                      cats[e.categoria] = (cats[e.categoria] || 0) + 1;
+                    });
+                    return Object.entries(cats).map(([name, value]) => ({ name, quantidade: value }));
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip />
+                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Itens" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
