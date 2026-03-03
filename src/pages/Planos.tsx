@@ -1,16 +1,33 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Sparkles, Zap, Clock, Gift } from 'lucide-react';
+import { Check, Crown, Sparkles, Zap, Clock, Gift, ArrowRight, Shield, Headphones } from 'lucide-react';
 import { useUserPlan, usePlanos, useStartTrial } from '@/hooks/useSubscriptionPlan';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const planIcons: Record<string, React.ReactNode> = {
-  'elolab-max': <Crown className="h-8 w-8" />,
-  'elolab-ultra': <Sparkles className="h-8 w-8" />,
+const planConfig: Record<string, {
+  icon: React.ReactNode;
+  gradient: string;
+  iconBg: string;
+  borderAccent: string;
+  btnClass: string;
+}> = {
+  'elolab-max': {
+    icon: <Crown className="h-7 w-7" />,
+    gradient: 'from-primary/5 via-transparent to-transparent',
+    iconBg: 'bg-primary/10 text-primary',
+    borderAccent: 'border-primary/20 hover:border-primary/50',
+    btnClass: '',
+  },
+  'elolab-ultra': {
+    icon: <Sparkles className="h-7 w-7" />,
+    gradient: 'from-amber-500/8 via-transparent to-transparent',
+    iconBg: 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 text-amber-600 dark:text-amber-400',
+    borderAccent: 'border-amber-400/30 hover:border-amber-400/60',
+    btnClass: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 border-0',
+  },
 };
 
 const featureLabels: Record<string, string> = {
@@ -40,6 +57,8 @@ const featureLabels: Record<string, string> = {
   chatbot_whatsapp: 'Chatbot Atendente 24h',
 };
 
+const premiumFeatures = ['agente_ia', 'chatbot_whatsapp'];
+
 export default function Planos() {
   const { data: planos, isLoading } = usePlanos();
   const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
@@ -49,20 +68,30 @@ export default function Planos() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Carregando planos...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Carregando planos...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Escolha seu Plano</h1>
-        <p className="text-xl text-muted-foreground">
-          Potencialize sua clínica com as melhores ferramentas
+    <div className="space-y-10 max-w-5xl mx-auto pb-12">
+      {/* Header */}
+      <div className="text-center space-y-4 pt-4">
+        <div className="inline-flex items-center gap-2 bg-primary/8 text-primary rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase">
+          <Zap className="h-3.5 w-3.5" />
+          Planos & Preços
+        </div>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Escolha o plano ideal
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          Potencialize sua clínica com as melhores ferramentas de gestão médica
         </p>
         {!hasActivePlan && (
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium">
+          <div className="inline-flex items-center gap-2 bg-success/10 text-success rounded-full px-5 py-2.5 text-sm font-medium border border-success/20">
             <Gift className="h-4 w-4" />
             Teste grátis por 3 dias — sem cartão de crédito!
           </div>
@@ -71,93 +100,125 @@ export default function Planos() {
 
       {/* Trial Banner */}
       {isTrial && trialEnd && (
-        <div className="max-w-4xl mx-auto">
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium text-primary">Período de teste ativo</p>
-                  <p className="text-sm text-muted-foreground">
-                    {trialDaysLeft > 0
-                      ? `Restam ${trialDaysLeft} dia${trialDaysLeft !== 1 ? 's' : ''} — expira em ${format(trialEnd, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
-                      : 'Seu período de teste expirou'}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" onClick={() => navigate(`/pagamentos?plano=${planSlug}`)}>
-                Assinar Agora
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-primary/10">
+              <Clock className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Período de teste ativo</p>
+              <p className="text-sm text-muted-foreground">
+                {trialDaysLeft > 0
+                  ? `Restam ${trialDaysLeft} dia${trialDaysLeft !== 1 ? 's' : ''} — expira em ${format(trialEnd, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
+                  : 'Seu período de teste expirou'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={() => navigate(`/pagamentos?plano=${planSlug}`)} className="gap-2 shrink-0">
+            Assinar Agora
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
-      <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+      {/* Plan Cards */}
+      <div className="grid gap-8 md:grid-cols-2">
         {planos?.map((plano) => {
           const isCurrentPlan = planSlug === plano.slug;
           const isHighlighted = plano.destaque;
+          const config = planConfig[plano.slug] || planConfig['elolab-max'];
+          const features = plano.features as string[];
 
           return (
-            <Card
+            <div
               key={plano.id}
-              className={`relative flex flex-col ${
-                isHighlighted
-                  ? 'border-primary shadow-lg shadow-primary/10 scale-[1.02]'
-                  : 'border-border'
-              }`}
+              className={`
+                relative flex flex-col rounded-2xl border-2 bg-card overflow-hidden transition-all duration-500
+                ${config.borderAccent}
+                ${isHighlighted ? 'shadow-xl shadow-amber-500/10 md:scale-[1.03]' : 'shadow-md hover:shadow-lg'}
+              `}
             >
+              {/* Gradient overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-b ${config.gradient} pointer-events-none`} />
+
+              {/* Popular badge */}
               {isHighlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                    <Zap className="h-3 w-3 mr-1" />
-                    Mais Popular
-                  </Badge>
+                <div className="absolute top-0 right-0">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-lg">
+                    ⚡ MAIS POPULAR
+                  </div>
                 </div>
               )}
 
-              <CardHeader className="text-center pb-2">
-                <div className={`mx-auto mb-2 ${isHighlighted ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {planIcons[plano.slug]}
+              {/* Header */}
+              <div className="relative p-8 pb-4">
+                <div className={`inline-flex p-3 rounded-xl ${config.iconBg} mb-4`}>
+                  {config.icon}
                 </div>
-                <CardTitle className="text-2xl">{plano.nome}</CardTitle>
-                <CardDescription>{plano.descricao}</CardDescription>
-              </CardHeader>
+                <h2 className="text-2xl font-bold text-foreground">{plano.nome}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{plano.descricao}</p>
+              </div>
 
-              <CardContent className="text-center pb-4">
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">
+              {/* Price */}
+              <div className="relative px-8 pb-6">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-5xl font-extrabold tracking-tight text-foreground">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(plano.valor)}
                   </span>
-                  <span className="text-muted-foreground">/{plano.frequencia === 'mensal' ? 'mês' : plano.frequencia}</span>
+                  <span className="text-muted-foreground font-medium">
+                    /{plano.frequencia === 'mensal' ? 'mês' : plano.frequencia}
+                  </span>
                 </div>
-
                 {!hasActivePlan && (
-                  <p className="text-xs text-muted-foreground mb-4">
-                    🎁 {plano.trial_dias || 3} dias grátis para testar
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                    <Gift className="h-3.5 w-3.5 text-success" />
+                    {plano.trial_dias || 3} dias grátis para experimentar
                   </p>
                 )}
+              </div>
 
-                <ul className="space-y-2 text-left">
-                  {(plano.features as string[]).map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary shrink-0" />
-                      <span>{featureLabels[feature] || feature}</span>
-                    </li>
-                  ))}
+              {/* Divider */}
+              <div className="mx-8 border-t border-border/60" />
+
+              {/* Features */}
+              <div className="relative flex-1 p-8 pt-6">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                  O que está incluído
+                </p>
+                <ul className="space-y-3">
+                  {features.map((feature) => {
+                    const isPremium = premiumFeatures.includes(feature);
+                    return (
+                      <li key={feature} className="flex items-start gap-3 text-sm">
+                        <div className={`mt-0.5 shrink-0 rounded-full p-0.5 ${isPremium ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-success/15 text-success'}`}>
+                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                        </div>
+                        <span className="text-foreground/90">
+                          {featureLabels[feature] || feature}
+                          {isPremium && (
+                            <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 border-amber-400/40 text-amber-600 dark:text-amber-400">
+                              Exclusivo
+                            </Badge>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
-              </CardContent>
+              </div>
 
-              <CardFooter className="mt-auto flex flex-col gap-2">
+              {/* Footer */}
+              <div className="relative p-8 pt-2 flex flex-col gap-3">
                 {isCurrentPlan ? (
-                  <Button className="w-full" variant="outline" disabled>
-                    {isTrial ? 'Em Teste' : 'Plano Atual'}
+                  <Button className="w-full h-12 text-base" variant="outline" disabled>
+                    <Shield className="h-4 w-4 mr-2" />
+                    {isTrial ? 'Em Período de Teste' : 'Seu Plano Atual'}
                   </Button>
                 ) : (
                   <>
                     {!hasActivePlan && (
                       <Button
-                        className="w-full"
+                        className={`w-full h-12 text-base font-semibold ${isHighlighted ? config.btnClass : ''}`}
                         variant={isHighlighted ? 'default' : 'outline'}
                         onClick={() => startTrial.mutate(plano.slug)}
                         disabled={startTrial.isPending}
@@ -167,18 +228,35 @@ export default function Planos() {
                       </Button>
                     )}
                     <Button
-                      className="w-full"
-                      variant={hasActivePlan && isHighlighted ? 'default' : 'outline'}
+                      className="w-full h-12 text-base"
+                      variant={hasActivePlan && isHighlighted ? 'default' : 'ghost'}
                       onClick={() => navigate(`/pagamentos?plano=${plano.slug}`)}
                     >
                       {hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </>
                 )}
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           );
         })}
+      </div>
+
+      {/* Trust bar */}
+      <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-success" />
+          <span>Dados criptografados</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-primary" />
+          <span>Cancele quando quiser</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Headphones className="h-4 w-4 text-primary" />
+          <span>Suporte prioritário</span>
+        </div>
       </div>
     </div>
   );
