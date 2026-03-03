@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, Upload, Database, Trash2, HardDrive, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -29,7 +28,6 @@ import {
   downloadBackup, 
   validateBackup, 
   restoreBackup, 
-  clearAllData, 
   getStorageStats,
   BackupData 
 } from '@/lib/backup';
@@ -44,31 +42,46 @@ const COLLECTION_LABELS: Record<string, string> = {
   atestados: 'Atestados',
   lancamentos: 'Lançamentos Financeiros',
   estoque: 'Itens de Estoque',
-  users: 'Usuários',
   convenios: 'Convênios',
   salas: 'Salas',
-  fila: 'Fila de Atendimento',
-  prescription_templates: 'Templates de Prescrição',
-  certificate_templates: 'Templates de Atestado',
-  audit_log: 'Histórico de Alterações',
+  fila_atendimento: 'Fila de Atendimento',
+  templates_prescricao: 'Templates de Prescrição',
+  templates_atestado: 'Templates de Atestado',
+  medicos: 'Médicos',
+  funcionarios: 'Funcionários',
+  exames: 'Exames',
+  encaminhamentos: 'Encaminhamentos',
+  lista_espera: 'Lista de Espera',
 };
 
 export function BackupRestore() {
-  const [stats, setStats] = useState(() => getStorageStats());
+  const [stats, setStats] = useState<{ used: string; collections: Record<string, number> }>({ used: 'Carregando...', collections: {} });
   const [previewData, setPreviewData] = useState<BackupData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [overwrite, setOverwrite] = useState(true);
   const [restoring, setRestoring] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleDownload = () => {
-    downloadBackup();
-    toast({
-      title: 'Backup criado',
-      description: 'O arquivo de backup foi baixado com sucesso.',
-    });
+  useEffect(() => {
+    getStorageStats().then(setStats);
+  }, []);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadBackup();
+      toast({
+        title: 'Backup criado',
+        description: 'O arquivo de backup foi baixado com sucesso.',
+      });
+    } catch {
+      toast({ title: 'Erro ao criar backup', variant: 'destructive' });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +115,6 @@ export function BackupRestore() {
     };
     reader.readAsText(file);
     
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -112,31 +124,22 @@ export function BackupRestore() {
     if (!previewData) return;
     
     setRestoring(true);
-    
-    // Simulate progress
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const result = restoreBackup(previewData, overwrite);
-    
-    setRestoring(false);
-    setShowPreview(false);
-    setStats(getStorageStats());
-    
-    toast({
-      title: 'Backup restaurado',
-      description: `${result.restored} registros foram restaurados com sucesso.`,
-    });
-  };
-
-  const handleClearAll = () => {
-    clearAllData();
-    setStats(getStorageStats());
-    setShowClearDialog(false);
-    
-    toast({
-      title: 'Dados limpos',
-      description: 'Todos os dados foram removidos. Recarregue a página para ver as alterações.',
-    });
+    try {
+      const result = await restoreBackup(previewData, overwrite);
+      
+      setShowPreview(false);
+      const newStats = await getStorageStats();
+      setStats(newStats);
+      
+      toast({
+        title: 'Backup restaurado',
+        description: `${result.restored} registros foram restaurados com sucesso.`,
+      });
+    } catch {
+      toast({ title: 'Erro ao restaurar backup', variant: 'destructive' });
+    } finally {
+      setRestoring(false);
+    }
   };
 
   return (
@@ -150,17 +153,17 @@ export function BackupRestore() {
               Fazer Backup
             </CardTitle>
             <CardDescription>
-              Baixe todos os dados do sistema em um arquivo JSON
+              Baixe todos os dados do Supabase em um arquivo JSON
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <HardDrive className="h-4 w-4" />
-              <span>Espaço utilizado: {stats.used}</span>
+              <span>{stats.used}</span>
             </div>
-            <Button onClick={handleDownload} className="w-full">
+            <Button onClick={handleDownload} className="w-full" disabled={downloading}>
               <Download className="mr-2 h-4 w-4" />
-              Baixar Backup
+              {downloading ? 'Exportando...' : 'Baixar Backup'}
             </Button>
           </CardContent>
         </Card>
@@ -173,7 +176,7 @@ export function BackupRestore() {
               Restaurar Backup
             </CardTitle>
             <CardDescription>
-              Carregue um arquivo de backup para restaurar os dados
+              Carregue um arquivo de backup para restaurar os dados no Supabase
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -201,10 +204,10 @@ export function BackupRestore() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Dados Atuais
+            Dados Atuais no Supabase
           </CardTitle>
           <CardDescription>
-            Resumo dos dados armazenados no sistema
+            Resumo dos registros armazenados no banco de dados
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -218,16 +221,6 @@ export function BackupRestore() {
                   <Badge variant="secondary">{count}</Badge>
                 </div>
               ))}
-          </div>
-          
-          <div className="mt-6 pt-6 border-t">
-            <Button 
-              variant="destructive" 
-              onClick={() => setShowClearDialog(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Limpar Todos os Dados
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -268,8 +261,8 @@ export function BackupRestore() {
                   ))}
               </div>
 
-              <div className="flex items-center space-x-2 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-primary" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="overwrite">Substituir dados existentes</Label>
@@ -277,7 +270,7 @@ export function BackupRestore() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {overwrite 
-                      ? 'Dados existentes serão substituídos' 
+                      ? 'Dados existentes serão atualizados' 
                       : 'Apenas novos registros serão adicionados'}
                   </p>
                 </div>
@@ -302,25 +295,6 @@ export function BackupRestore() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Clear All Dialog */}
-      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limpar todos os dados?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Todos os dados do sistema serão permanentemente removidos.
-              Recomendamos fazer um backup antes de continuar.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearAll} className="bg-destructive text-destructive-foreground">
-              Sim, limpar tudo
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

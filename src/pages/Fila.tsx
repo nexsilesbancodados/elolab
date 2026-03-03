@@ -139,6 +139,19 @@ export default function Fila() {
     }
   };
 
+  const chamarPorVoz = (nome: string, sala?: string | null) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(
+        sala ? `Paciente ${nome}, por favor, dirija-se à ${sala}.` : `Paciente ${nome}, por favor, dirija-se à recepção.`
+      );
+      msg.lang = 'pt-BR';
+      msg.rate = 0.9;
+      msg.pitch = 1;
+      window.speechSynthesis.speak(msg);
+    }
+  };
+
   const handleChamar = async (item: typeof fila[0]) => {
     try {
       const { error } = await supabase
@@ -148,8 +161,12 @@ export default function Fila() {
 
       if (error) throw error;
       
+      const nomePaciente = getPacienteNome(item.agendamento_id);
+      const salaNome = getSalaNome(item.sala_id);
+      chamarPorVoz(nomePaciente, salaNome !== '-' ? salaNome : null);
+      
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success(`${getPacienteNome(item.agendamento_id)} foi chamado.`);
+      toast.success(`${nomePaciente} foi chamado.`);
     } catch (error) {
       console.error('Error calling patient:', error);
       toast.error('Erro ao chamar paciente.');
