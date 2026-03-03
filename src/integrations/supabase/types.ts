@@ -1279,6 +1279,44 @@ export type Database = {
         }
         Relationships: []
       }
+      paciente_portal_tokens: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          paciente_id: string
+          token: string
+          ultimo_acesso: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          paciente_id: string
+          token?: string
+          ultimo_acesso?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          paciente_id?: string
+          token?: string
+          ultimo_acesso?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paciente_portal_tokens_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           alergias: string[] | null

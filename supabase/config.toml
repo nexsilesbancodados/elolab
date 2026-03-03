@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.mercadopago-webhook]
 verify_jwt = false
+
+[functions.whatsapp-notifications]
+verify_jwt = false
+
+[functions.patient-portal]
+verify_jwt = false
