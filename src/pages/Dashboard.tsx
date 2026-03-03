@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServiceStatusBanner } from '@/components/ServiceStatusBanner';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePacientes, useAgendamentos, useLancamentos, useEstoque, useMedicos } from '@/hooks/useSupabaseData';
@@ -125,6 +126,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <ServiceStatusBanner />
       {/* Header */}
       <div className="relative">
         <div className="flex flex-col gap-1">
