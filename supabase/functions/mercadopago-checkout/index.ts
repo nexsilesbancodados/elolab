@@ -78,30 +78,38 @@ async function createPreference(
   supabase: any,
   headers: Record<string, string>
 ) {
-  const { paciente_id, lancamento_id, agendamento_id, descricao, valor, parcelas_max } = body;
+  const { paciente_id, lancamento_id, agendamento_id, descricao, valor, parcelas_max, payer_email, payer_name } = body;
 
   const externalReference = crypto.randomUUID();
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
 
+  // POST /checkout/preferences per MP API docs
   const preference = {
     items: [
       {
-        title: descricao || "Consulta Médica",
+        title: descricao || "Consulta Médica - EloLab",
         quantity: 1,
         unit_price: Number(valor),
         currency_id: "BRL",
       },
     ],
+    payer: {
+      ...(payer_name && { name: payer_name }),
+      ...(payer_email && { email: payer_email }),
+    },
     external_reference: externalReference,
     payment_methods: {
       installments: parcelas_max || 12,
     },
     back_urls: {
-      success: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook?status=success`,
-      failure: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook?status=failure`,
-      pending: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook?status=pending`,
+      success: `${supabaseUrl}/functions/v1/mercadopago-webhook?status=success`,
+      failure: `${supabaseUrl}/functions/v1/mercadopago-webhook?status=failure`,
+      pending: `${supabaseUrl}/functions/v1/mercadopago-webhook?status=pending`,
     },
     auto_return: "approved",
-    notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+    notification_url: webhookUrl,
+    statement_descriptor: "ELOLAB",
   };
 
   const response = await callMercadoPagoWithRetry(
@@ -151,7 +159,7 @@ async function createSubscription(
   supabase: any,
   headers: Record<string, string>
 ) {
-  const { paciente_id, nome_plano, descricao, valor, frequencia } = body;
+  const { paciente_id, nome_plano, descricao, valor, frequencia, payer_email } = body;
 
   const frequenciaMap: Record<string, { frequency: number; frequency_type: string }> = {
     mensal: { frequency: 1, frequency_type: "months" },
@@ -161,17 +169,24 @@ async function createSubscription(
   };
 
   const freq = frequenciaMap[frequencia] || frequenciaMap.mensal;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
 
+  // POST /preapproval per MP API docs
+  // payer_email is REQUIRED for subscriptions without a plan
   const preapproval = {
+    payer_email: payer_email || undefined,
     reason: nome_plano,
+    external_reference: crypto.randomUUID(),
     auto_recurring: {
       frequency: freq.frequency,
       frequency_type: freq.frequency_type,
       transaction_amount: Number(valor),
       currency_id: "BRL",
     },
-    back_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook?type=subscription`,
-    notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`,
+    back_url: `${supabaseUrl}/functions/v1/mercadopago-webhook?type=subscription`,
+    notification_url: webhookUrl,
+    status: "pending",
   };
 
   const response = await callMercadoPagoWithRetry(
@@ -217,6 +232,7 @@ async function getPayment(
   headers: Record<string, string>
 ) {
   const { payment_id } = body;
+  // GET /v1/payments/{id} per MP API docs
   const response = await callMercadoPagoWithRetry(
     `${MP_API_BASE}/v1/payments/${payment_id}`,
     "GET",
@@ -238,6 +254,7 @@ async function cancelSubscription(
 ) {
   const { assinatura_id, mp_preapproval_id } = body;
 
+  // PUT /preapproval/{id} with status: "cancelled" per MP API docs
   const response = await callMercadoPagoWithRetry(
     `${MP_API_BASE}/preapproval/${mp_preapproval_id}`,
     "PUT",

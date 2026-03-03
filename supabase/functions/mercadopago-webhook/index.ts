@@ -19,16 +19,16 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Handle redirect back_urls (GET)
+    // Handle redirect back_urls (GET) — user returning from checkout
     if (req.method === "GET") {
       const url = new URL(req.url);
       const status = url.searchParams.get("status") || "unknown";
-      // Redirect to app
+      const appUrl = "https://real-world-made.lovable.app";
       return new Response(null, {
         status: 302,
         headers: {
           ...corsHeaders,
-          Location: `/financeiro?mp_status=${status}`,
+          Location: `${appUrl}/financeiro?mp_status=${status}`,
         },
       });
     }
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("Webhook recebido:", JSON.stringify(body));
 
-    // Log webhook
+    // Log webhook event
     await supabase.from("mercadopago_webhook_logs").insert({
       event_type: body.type || body.action || "unknown",
       event_id: body.id?.toString(),
@@ -54,19 +54,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Process payment notification
-    if (body.type === "payment" || body.action === "payment.created" || body.action === "payment.updated") {
+    // Process payment notification (payment.created, payment.updated)
+    if (
+      body.type === "payment" ||
+      body.action === "payment.created" ||
+      body.action === "payment.updated"
+    ) {
       const paymentId = body.data?.id;
       if (paymentId) {
-        await processPaymentNotification(paymentId, mpToken, supabase);
+        await processPaymentNotification(paymentId.toString(), mpToken, supabase);
       }
     }
 
-    // Process subscription notification
-    if (body.type === "subscription_preapproval" || body.action?.includes("preapproval")) {
+    // Process subscription notification (subscription_preapproval)
+    if (
+      body.type === "subscription_preapproval" ||
+      body.action?.includes("preapproval") ||
+      body.type === "subscription_preapproval_plan"
+    ) {
       const preapprovalId = body.data?.id;
       if (preapprovalId) {
-        await processSubscriptionNotification(preapprovalId, mpToken, supabase);
+        await processSubscriptionNotification(preapprovalId.toString(), mpToken, supabase);
+      }
+    }
+
+    // Process authorized_payment (subscription payment)
+    if (
+      body.type === "subscription_authorized_payment" ||
+      body.action?.includes("authorized_payment")
+    ) {
+      const paymentId = body.data?.id;
+      if (paymentId) {
+        await processPaymentNotification(paymentId.toString(), mpToken, supabase);
       }
     }
 
@@ -76,8 +95,9 @@ Deno.serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Erro no webhook:", error);
+    // Always return 200 to MP to prevent retries
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 200, // Always return 200 to MP to avoid retries
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -89,6 +109,7 @@ async function processPaymentNotification(
   supabase: any
 ) {
   try {
+    // GET /v1/payments/{id} per MP API docs
     const response = await fetch(`${MP_API_BASE}/v1/payments/${paymentId}`, {
       headers: {
         Authorization: `Bearer ${mpToken}`,
@@ -102,7 +123,7 @@ async function processPaymentNotification(
     }
 
     const payment = await response.json();
-    console.log("Pagamento processado:", payment.id, payment.status);
+    console.log("Pagamento processado:", payment.id, payment.status, "ref:", payment.external_reference);
 
     const statusMap: Record<string, string> = {
       approved: "aprovado",
@@ -138,19 +159,43 @@ async function processPaymentNotification(
         })
         .eq("id", pagamentos[0].id);
 
-      // Also update lancamento if linked
+      // Update linked lancamento if payment is approved
       if (pagamentos[0].lancamento_id && status === "aprovado") {
         await supabase
           .from("lancamentos")
           .update({
             status: "pago",
-            forma_pagamento: payment.payment_type_id === "credit_card"
-              ? "cartao_credito"
-              : payment.payment_type_id === "debit_card"
-              ? "cartao_debito"
-              : payment.payment_type_id || "mercadopago",
+            forma_pagamento:
+              payment.payment_type_id === "credit_card"
+                ? "cartao_credito"
+                : payment.payment_type_id === "debit_card"
+                ? "cartao_debito"
+                : payment.payment_type_id === "account_money"
+                ? "mercadopago"
+                : payment.payment_type_id || "mercadopago",
           })
           .eq("id", pagamentos[0].lancamento_id);
+      }
+    }
+
+    // Check if this payment is for a registro_pendente (public checkout)
+    if (payment.external_reference && payment.status === "approved") {
+      const { data: registro } = await supabase
+        .from("registros_pendentes")
+        .select("*")
+        .eq("id", payment.external_reference)
+        .eq("status", "aguardando_pagamento")
+        .single();
+
+      if (registro) {
+        console.log("Activating registro_pendente:", registro.id);
+        await supabase
+          .from("registros_pendentes")
+          .update({
+            status: "pago",
+            mp_payment_id: payment.id?.toString(),
+          })
+          .eq("id", registro.id);
       }
     }
 
@@ -174,6 +219,7 @@ async function processSubscriptionNotification(
   supabase: any
 ) {
   try {
+    // GET /preapproval/{id} per MP API docs
     const response = await fetch(`${MP_API_BASE}/preapproval/${preapprovalId}`, {
       headers: {
         Authorization: `Bearer ${mpToken}`,
@@ -187,6 +233,7 @@ async function processSubscriptionNotification(
     }
 
     const preapproval = await response.json();
+    console.log("Assinatura processada:", preapproval.id, preapproval.status, "ref:", preapproval.external_reference);
 
     const statusMap: Record<string, string> = {
       authorized: "ativa",
@@ -197,6 +244,7 @@ async function processSubscriptionNotification(
 
     const status = statusMap[preapproval.status] || preapproval.status;
 
+    // Update assinaturas_mercadopago
     await supabase
       .from("assinaturas_mercadopago")
       .update({
@@ -206,6 +254,28 @@ async function processSubscriptionNotification(
       })
       .eq("mp_preapproval_id", preapprovalId);
 
+    // If subscription is now authorized, activate the registro_pendente
+    if (preapproval.status === "authorized" && preapproval.external_reference) {
+      const { data: registro } = await supabase
+        .from("registros_pendentes")
+        .select("*")
+        .eq("id", preapproval.external_reference)
+        .eq("status", "aguardando_pagamento")
+        .single();
+
+      if (registro) {
+        console.log("Activating registro_pendente from subscription:", registro.id);
+        await supabase
+          .from("registros_pendentes")
+          .update({
+            status: "pago",
+            mp_payment_id: preapproval.id?.toString(),
+          })
+          .eq("id", registro.id);
+      }
+    }
+
+    // Mark webhook log as processed
     await supabase
       .from("mercadopago_webhook_logs")
       .update({ processado: true })
