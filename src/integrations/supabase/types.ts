@@ -480,6 +480,92 @@ export type Database = {
         }
         Relationships: []
       }
+      coletas_laboratorio: {
+        Row: {
+          codigo_amostra: string
+          coletado_por: string | null
+          created_at: string | null
+          data_coleta: string | null
+          exame_id: string | null
+          id: string
+          jejum_horas: number | null
+          jejum_necessario: boolean | null
+          medico_solicitante_id: string | null
+          observacoes: string | null
+          paciente_id: string
+          status: string
+          tipo_amostra: string
+          tubo: string | null
+          updated_at: string | null
+          urgente: boolean | null
+        }
+        Insert: {
+          codigo_amostra?: string
+          coletado_por?: string | null
+          created_at?: string | null
+          data_coleta?: string | null
+          exame_id?: string | null
+          id?: string
+          jejum_horas?: number | null
+          jejum_necessario?: boolean | null
+          medico_solicitante_id?: string | null
+          observacoes?: string | null
+          paciente_id: string
+          status?: string
+          tipo_amostra?: string
+          tubo?: string | null
+          updated_at?: string | null
+          urgente?: boolean | null
+        }
+        Update: {
+          codigo_amostra?: string
+          coletado_por?: string | null
+          created_at?: string | null
+          data_coleta?: string | null
+          exame_id?: string | null
+          id?: string
+          jejum_horas?: number | null
+          jejum_necessario?: boolean | null
+          medico_solicitante_id?: string | null
+          observacoes?: string | null
+          paciente_id?: string
+          status?: string
+          tipo_amostra?: string
+          tubo?: string | null
+          updated_at?: string | null
+          urgente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coletas_laboratorio_coletado_por_fkey"
+            columns: ["coletado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coletas_laboratorio_exame_id_fkey"
+            columns: ["exame_id"]
+            isOneToOne: false
+            referencedRelation: "exames"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coletas_laboratorio_medico_solicitante_id_fkey"
+            columns: ["medico_solicitante_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coletas_laboratorio_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consentimentos_lgpd: {
         Row: {
           aceito: boolean
@@ -1566,6 +1652,56 @@ export type Database = {
         }
         Relationships: []
       }
+      precos_exames_convenio: {
+        Row: {
+          ativo: boolean | null
+          codigo_tuss: string | null
+          convenio_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          tipo_exame: string
+          updated_at: string | null
+          valor_filme: number | null
+          valor_tabela: number
+          valor_total: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          codigo_tuss?: string | null
+          convenio_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tipo_exame: string
+          updated_at?: string | null
+          valor_filme?: number | null
+          valor_tabela?: number
+          valor_total?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          codigo_tuss?: string | null
+          convenio_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          tipo_exame?: string
+          updated_at?: string | null
+          valor_filme?: number | null
+          valor_tabela?: number
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precos_exames_convenio_convenio_id_fkey"
+            columns: ["convenio_id"]
+            isOneToOne: false
+            referencedRelation: "convenios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescricoes: {
         Row: {
           created_at: string | null
@@ -1852,6 +1988,114 @@ export type Database = {
           },
         ]
       }
+      resultados_laboratorio: {
+        Row: {
+          coleta_id: string
+          created_at: string | null
+          data_liberacao: string | null
+          data_validacao: string | null
+          equipamento: string | null
+          exame_id: string | null
+          id: string
+          liberado: boolean | null
+          liberado_por: string | null
+          metodo: string | null
+          observacoes: string | null
+          paciente_id: string
+          parametro: string
+          resultado: string
+          status_resultado: string | null
+          unidade: string | null
+          updated_at: string | null
+          validado_por: string | null
+          valor_referencia_max: number | null
+          valor_referencia_min: number | null
+          valor_referencia_texto: string | null
+        }
+        Insert: {
+          coleta_id: string
+          created_at?: string | null
+          data_liberacao?: string | null
+          data_validacao?: string | null
+          equipamento?: string | null
+          exame_id?: string | null
+          id?: string
+          liberado?: boolean | null
+          liberado_por?: string | null
+          metodo?: string | null
+          observacoes?: string | null
+          paciente_id: string
+          parametro: string
+          resultado: string
+          status_resultado?: string | null
+          unidade?: string | null
+          updated_at?: string | null
+          validado_por?: string | null
+          valor_referencia_max?: number | null
+          valor_referencia_min?: number | null
+          valor_referencia_texto?: string | null
+        }
+        Update: {
+          coleta_id?: string
+          created_at?: string | null
+          data_liberacao?: string | null
+          data_validacao?: string | null
+          equipamento?: string | null
+          exame_id?: string | null
+          id?: string
+          liberado?: boolean | null
+          liberado_por?: string | null
+          metodo?: string | null
+          observacoes?: string | null
+          paciente_id?: string
+          parametro?: string
+          resultado?: string
+          status_resultado?: string | null
+          unidade?: string | null
+          updated_at?: string | null
+          validado_por?: string | null
+          valor_referencia_max?: number | null
+          valor_referencia_min?: number | null
+          valor_referencia_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resultados_laboratorio_coleta_id_fkey"
+            columns: ["coleta_id"]
+            isOneToOne: false
+            referencedRelation: "coletas_laboratorio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resultados_laboratorio_exame_id_fkey"
+            columns: ["exame_id"]
+            isOneToOne: false
+            referencedRelation: "exames"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resultados_laboratorio_liberado_por_fkey"
+            columns: ["liberado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resultados_laboratorio_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resultados_laboratorio_validado_por_fkey"
+            columns: ["validado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retornos: {
         Row: {
           agendamento_id: string | null
@@ -1972,6 +2216,66 @@ export type Database = {
             columns: ["medico_responsavel"]
             isOneToOne: false
             referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          criado_por: string | null
+          data_conclusao: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          id: string
+          prioridade: string
+          responsavel_id: string | null
+          status: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

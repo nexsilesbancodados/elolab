@@ -27,6 +27,8 @@ import {
   Zap,
   Bot,
   Activity,
+  ListTodo,
+  TestTube,
   LucideIcon,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
@@ -63,6 +65,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Médicos', icon: Stethoscope, href: '/medicos' },
       { label: 'Funcionários', icon: UserCheck, href: '/funcionarios', roles: ['admin'] },
       { label: 'Exames', icon: FlaskConical, href: '/exames' },
+      { label: 'Laboratório', icon: TestTube, href: '/laboratorio' },
       { label: 'Triagem', icon: Heart, href: '/triagem', roles: ['admin', 'enfermagem'] },
       { label: 'Prontuários', icon: FileText, href: '/prontuarios', roles: ['admin', 'medico'] },
       { label: 'Prescrições', icon: Receipt, href: '/prescricoes', roles: ['admin', 'medico'] },
@@ -79,6 +82,8 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Templates', icon: Files, href: '/templates', roles: ['admin', 'medico'] },
       { label: 'Estoque', icon: Package, href: '/estoque' },
       { label: 'Convênios', icon: Building2, href: '/convenios', roles: ['admin', 'recepcao'] },
+      { label: 'Preços Exames', icon: DollarSign, href: '/precos-exames', roles: ['admin', 'financeiro'] },
+      { label: 'Tarefas', icon: ListTodo, href: '/tarefas' },
       { label: 'Painel TV', icon: Tv, href: '/painel-tv', external: true },
     ],
   },

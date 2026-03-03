@@ -49,6 +49,9 @@ const Analytics = lazy(() => import("@/pages/Analytics"));
 const Pagamentos = lazy(() => import("@/pages/Pagamentos"));
 const Planos = lazy(() => import("@/pages/Planos"));
 const PortalPaciente = lazy(() => import("@/pages/PortalPaciente"));
+const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
+const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
+const Tarefas = lazy(() => import("@/pages/Tarefas"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Loading fallback component
@@ -137,6 +140,9 @@ function App() {
                       <Route path="/agente-ia" element={<AgenteIA />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/planos" element={<Planos />} />
+                      <Route path="/laboratorio" element={<Laboratorio />} />
+                      <Route path="/precos-exames" element={<PrecosExames />} />
+                      <Route path="/tarefas" element={<Tarefas />} />
                     </Route>
                     
                     {/* Redirects */}
