@@ -174,7 +174,7 @@ export default function LandingPage() {
     onSuccess: (data: any) => {
       setCheckoutDialog(false);
       if (data?.checkout_url) {
-        toast.success('Redirecionando para o pagamento...');
+        toast.success('Redirecionando para o pagamento. Após aprovação, você receberá o código por e-mail.', { duration: 6000 });
         window.location.href = data.checkout_url;
       } else {
         toast.success('✅ Verifique seu e-mail! Enviamos o código de ativação para criar sua conta.', { duration: 8000 });
