@@ -11,8 +11,11 @@ import { StatsCards } from '@/components/whatsapp/StatsCards';
 import { SessionsTab } from '@/components/whatsapp/SessionsTab';
 import { AgentsTab } from '@/components/whatsapp/AgentsTab';
 import { ConversationsTab } from '@/components/whatsapp/ConversationsTab';
+import { FeatureGate } from '@/components/FeatureGate';
+import { useUserPlan } from '@/hooks/useSubscriptionPlan';
 
 export default function AgenteIA() {
+  const { hasFeature, isLoading: planLoading } = useUserPlan();
   const { data: agents = [], isLoading: loadingAgents } = useWhatsAppAgents();
   const { data: sessions = [], isLoading: loadingSessions } = useWhatsAppSessions();
   const { data: conversations = [] } = useWhatsAppConversations();
@@ -29,7 +32,12 @@ export default function AgenteIA() {
     linkAgentToSession,
   } = useWhatsAppMutations();
 
+  if (planLoading) {
+    return <div className="p-6 text-muted-foreground">Verificando plano...</div>;
+  }
+
   return (
+    <FeatureGate feature="agente_ia" hasAccess={hasFeature('agente_ia')} requiredPlan="EloLab Ultra">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -93,5 +101,6 @@ export default function AgenteIA() {
         </TabsContent>
       </Tabs>
     </div>
+    </FeatureGate>
   );
 }

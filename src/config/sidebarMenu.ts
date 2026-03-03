@@ -101,6 +101,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Analytics', icon: Activity, href: '/analytics' },
       { label: 'Agente IA', icon: Bot, href: '/agente-ia' },
       { label: 'Automações', icon: Zap, href: '/automacoes' },
+      { label: 'Planos', icon: CreditCard, href: '/planos' },
       { label: 'Configurações', icon: Settings, href: '/configuracoes' },
     ],
   },

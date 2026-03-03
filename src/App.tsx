@@ -46,6 +46,7 @@ const Automacoes = lazy(() => import("@/pages/Automacoes"));
 const AgenteIA = lazy(() => import("@/pages/AgenteIA"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
 const Pagamentos = lazy(() => import("@/pages/Pagamentos"));
+const Planos = lazy(() => import("@/pages/Planos"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Loading fallback component
@@ -131,6 +132,7 @@ function App() {
                       <Route path="/automacoes" element={<Automacoes />} />
                       <Route path="/agente-ia" element={<AgenteIA />} />
                       <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/planos" element={<Planos />} />
                     </Route>
                     
                     {/* Redirects */}
