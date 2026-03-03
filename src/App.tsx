@@ -14,6 +14,7 @@ import { InstallPWA } from "@/components/InstallPWA";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy loaded pages for better initial load performance
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -90,6 +91,7 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Public Routes */}
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/aceitar-convite" element={<AceitarConvite />} />
@@ -138,7 +140,7 @@ function App() {
                     </Route>
                     
                     {/* Redirects */}
-                    <Route path="/" element={<Navigate to="/auth" replace />} />
+                    {/* Removed old redirect - landing page is now at / */}
                     
                     {/* 404 */}
                     <Route path="*" element={<NotFound />} />

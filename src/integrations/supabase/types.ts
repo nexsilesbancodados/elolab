@@ -1790,6 +1790,68 @@ export type Database = {
         }
         Relationships: []
       }
+      registros_pendentes: {
+        Row: {
+          activated_at: string | null
+          clinica: string | null
+          codigo_convite: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          mp_payment_id: string | null
+          nome: string
+          plano_id: string | null
+          plano_slug: string
+          status: string
+          telefone: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          clinica?: string | null
+          codigo_convite: string
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          mp_payment_id?: string | null
+          nome: string
+          plano_id?: string | null
+          plano_slug: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          clinica?: string | null
+          codigo_convite?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          mp_payment_id?: string | null
+          nome?: string
+          plano_id?: string | null
+          plano_slug?: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registros_pendentes_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retornos: {
         Row: {
           agendamento_id: string | null
