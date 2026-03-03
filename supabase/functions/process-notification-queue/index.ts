@@ -27,15 +27,14 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const brevoApiKey = Deno.env.get('BREVO_API_KEY')
 
-    if (!resendApiKey) {
-      throw new Error('RESEND_API_KEY não configurada')
+    if (!brevoApiKey) {
+      throw new Error('BREVO_API_KEY não configurada')
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Buscar notificações pendentes
     const { data: pendentes, error: fetchError } = await supabase
       .from('notification_queue')
       .select('*')
@@ -56,13 +55,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Processando ${pendentes.length} notificações pendentes`)
-
     let successCount = 0
     let errorCount = 0
 
     for (const notif of pendentes as NotificationItem[]) {
-      // Marcar como enviando
       await supabase
         .from('notification_queue')
         .update({ status: 'enviando', tentativas: notif.tentativas + 1 })
@@ -70,34 +66,29 @@ Deno.serve(async (req) => {
 
       try {
         if (notif.tipo === 'email' && notif.destinatario_email) {
-          const emailRes = await fetch('https://api.resend.com/emails', {
+          const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
+              'api-key': brevoApiKey,
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
             },
             body: JSON.stringify({
-              from: 'EloLab <onboarding@resend.dev>',
-              to: [notif.destinatario_email],
+              sender: { name: 'EloLab Clínica', email: 'noreply@elolab.com.br' },
+              to: [{ email: notif.destinatario_email, name: notif.destinatario_nome || '' }],
               subject: notif.assunto || 'Notificação EloLab',
-              html: notif.conteudo.replace(/\n/g, '<br>'),
+              htmlContent: notif.conteudo.replace(/\n/g, '<br>'),
             }),
           })
-
-          const result = await emailRes.json()
 
           if (emailRes.ok) {
             await supabase
               .from('notification_queue')
-              .update({
-                status: 'enviado',
-                enviado_em: new Date().toISOString(),
-              })
+              .update({ status: 'enviado', enviado_em: new Date().toISOString() })
               .eq('id', notif.id)
-
             successCount++
-            console.log(`✅ E-mail enviado para ${notif.destinatario_email}`)
           } else {
+            const result = await emailRes.json()
             const novasTentativas = notif.tentativas + 1
             await supabase
               .from('notification_queue')
@@ -106,25 +97,24 @@ Deno.serve(async (req) => {
                 erro_mensagem: JSON.stringify(result),
               })
               .eq('id', notif.id)
-
             errorCount++
-            console.error(`❌ Erro ao enviar para ${notif.destinatario_email}:`, result)
           }
-        } else if (notif.tipo === 'sms' || notif.tipo === 'whatsapp') {
-          // TODO: Implementar integração com Twilio/Z-API
-          console.log(`⏭️ SMS/WhatsApp não implementado ainda para ${notif.destinatario_telefone}`)
-          
+        } else if (notif.tipo === 'whatsapp' && notif.destinatario_telefone) {
+          // WhatsApp via Evolution API
+          const evolutionUrl = Deno.env.get('EVOLUTION_API_URL')
+          const evolutionKey = Deno.env.get('EVOLUTION_API_KEY')
+
+          if (evolutionUrl && evolutionKey) {
+            // TODO: implement WhatsApp sending via Evolution API
+            console.log(`⏭️ WhatsApp para ${notif.destinatario_telefone} - implementação pendente`)
+          }
+
           await supabase
             .from('notification_queue')
-            .update({
-              status: 'erro',
-              erro_mensagem: 'Integração SMS/WhatsApp não configurada',
-            })
+            .update({ status: 'erro', erro_mensagem: 'Integração WhatsApp pendente de configuração completa' })
             .eq('id', notif.id)
-
           errorCount++
         } else {
-          console.log(`⏭️ Tipo de notificação não suportado: ${notif.tipo}`)
           errorCount++
         }
       } catch (err) {
@@ -136,15 +126,12 @@ Deno.serve(async (req) => {
             erro_mensagem: String(err),
           })
           .eq('id', notif.id)
-
         errorCount++
-        console.error(`❌ Exceção ao processar notificação ${notif.id}:`, err)
       }
     }
 
     const duration = Date.now() - startTime
 
-    // Log da automação
     await supabase.from('automation_logs').insert({
       tipo: 'fila_notificacao',
       nome: 'Processamento de Fila de Notificações',
@@ -160,12 +147,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Fila processada',
-        stats: {
-          processados: pendentes.length,
-          sucesso: successCount,
-          erros: errorCount,
-          duracao_ms: duration,
-        },
+        stats: { processados: pendentes.length, sucesso: successCount, erros: errorCount, duracao_ms: duration },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

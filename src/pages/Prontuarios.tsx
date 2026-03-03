@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { gerarProntuarioPDF, downloadPDF } from '@/lib/pdfGenerator';
 import {
   Dialog,
   DialogContent,
@@ -318,6 +319,26 @@ export default function Prontuarios() {
               <span>{currentProntuario.id ? 'Visualizar Prontuário' : 'Novo Atendimento'}</span>
               <div className="flex gap-2">
                 {selectedPaciente && user?.id && <ReturnScheduler pacienteId={selectedPaciente.id} prontuarioId={currentProntuario.id} medicoId={user.id} compact />}
+                {currentProntuario.id && (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const doc = gerarProntuarioPDF(
+                      { nome: selectedPaciente?.nome || '', cpf: selectedPaciente?.cpf || undefined, dataNascimento: selectedPaciente?.data_nascimento || undefined, alergias: selectedPaciente?.alergias || [] },
+                      { nome: user?.nome || 'Médico' },
+                      {
+                        data: currentProntuario.data,
+                        queixaPrincipal: currentProntuario.queixa_principal,
+                        historiaDoencaAtual: currentProntuario.historia_doenca_atual,
+                        examesFisicos: currentProntuario.exames_fisicos,
+                        hipoteseDiagnostica: currentProntuario.hipotese_diagnostica,
+                        conduta: currentProntuario.conduta,
+                      },
+                      prescricoes.filter(p => p.medicamento)
+                    );
+                    downloadPDF(doc, `prontuario-${selectedPaciente?.nome?.replace(/\s+/g, '-') || 'paciente'}`);
+                  }}>
+                    <FileDown className="h-4 w-4 mr-2" />Exportar PDF
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => setShowDischargeReport(true)}><FileDown className="h-4 w-4 mr-2" />Relatório de Alta</Button>
               </div>
             </DialogTitle>

@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')!
     const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')!
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')!
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await req.json()
@@ -233,14 +233,14 @@ DADOS DO PACIENTE:
 
             // Chamar IA
             const startTime = Date.now()
-            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            const aiResponse = await fetch('https://api.deepseek.com/chat/completions', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${lovableApiKey}`,
+                'Authorization': `Bearer ${deepseekApiKey}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-3-flash-preview',
+                model: 'deepseek-chat',
                 messages: [
                   { role: 'system', content: systemPrompt },
                   ...conversationHistory,
@@ -248,8 +248,6 @@ DADOS DO PACIENTE:
                 ],
                 max_tokens: agent.max_tokens || 2000,
                 temperature: parseFloat(agent.temperatura) || 0.7,
-                tools: getAgentTools(agent.tipo),
-                tool_choice: 'auto',
               }),
             })
 

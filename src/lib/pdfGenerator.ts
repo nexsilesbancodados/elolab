@@ -361,6 +361,132 @@ export function gerarEtiquetaPaciente(
   return doc;
 }
 
+// Gerar PDF do prontuário completo
+export function gerarProntuarioPDF(
+  paciente: { nome: string; cpf?: string; dataNascimento?: string; alergias?: string[] },
+  medico: { nome: string; crm?: string; especialidade?: string },
+  prontuario: {
+    data: string;
+    queixaPrincipal?: string;
+    historiaDoencaAtual?: string;
+    examesFisicos?: string;
+    hipoteseDiagnostica?: string;
+    conduta?: string;
+  },
+  prescricoes: Array<{ medicamento: string; dosagem?: string; posologia?: string; duracao?: string }> = []
+) {
+  const doc = new jsPDF();
+
+  addHeader(doc, 'PRONTUÁRIO DE ATENDIMENTO');
+
+  // Data
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Data do Atendimento: ${formatDateBR(prontuario.data)}`, 20, 60);
+
+  // Dados do paciente
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DADOS DO PACIENTE', 20, 75);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Nome: ${paciente.nome}`, 20, 82);
+  if (paciente.cpf) doc.text(`CPF: ${paciente.cpf}`, 120, 82);
+  if (paciente.dataNascimento) {
+    doc.text(`Data Nasc.: ${formatDateBR(paciente.dataNascimento)}`, 20, 89);
+  }
+  if (paciente.alergias && paciente.alergias.length > 0) {
+    doc.setTextColor(220, 38, 38);
+    doc.text(`⚠️ Alergias: ${paciente.alergias.join(', ')}`, 20, 96);
+    doc.setTextColor(0, 0, 0);
+  }
+
+  doc.line(20, 102, 190, 102);
+
+  let yPos = 112;
+
+  // Seções do prontuário
+  const sections = [
+    { title: 'QUEIXA PRINCIPAL', content: prontuario.queixaPrincipal },
+    { title: 'HISTÓRIA DA DOENÇA ATUAL', content: prontuario.historiaDoencaAtual },
+    { title: 'EXAME FÍSICO', content: prontuario.examesFisicos },
+    { title: 'HIPÓTESE DIAGNÓSTICA', content: prontuario.hipoteseDiagnostica },
+    { title: 'CONDUTA', content: prontuario.conduta },
+  ];
+
+  for (const section of sections) {
+    if (!section.content) continue;
+
+    if (yPos > 240) {
+      doc.addPage();
+      yPos = 30;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(section.title, 20, yPos);
+    yPos += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    const lines = doc.splitTextToSize(section.content, 160);
+    doc.text(lines, 20, yPos);
+    yPos += lines.length * 5 + 8;
+  }
+
+  // Prescrições
+  if (prescricoes.length > 0) {
+    if (yPos > 220) {
+      doc.addPage();
+      yPos = 30;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('PRESCRIÇÕES', 20, yPos);
+    yPos += 8;
+
+    for (const [i, presc] of prescricoes.entries()) {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 30;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`${i + 1}. ${presc.medicamento}`, 25, yPos);
+      yPos += 5;
+
+      doc.setFont('helvetica', 'normal');
+      const details = [presc.dosagem, presc.posologia, presc.duracao].filter(Boolean).join(' | ');
+      if (details) {
+        doc.text(details, 30, yPos);
+        yPos += 5;
+      }
+      yPos += 3;
+    }
+  }
+
+  // Assinatura do médico
+  const assinaturaY = Math.min(yPos + 20, 250);
+  doc.line(60, assinaturaY, 150, assinaturaY);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(medico.nome, 105, assinaturaY + 6, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`CRM: ${medico.crm || 'N/A'} | ${medico.especialidade || ''}`, 105, assinaturaY + 12, { align: 'center' });
+
+  addFooter(doc);
+
+  return doc;
+}
+
+function formatDateBR(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 // Gerar relatório de atendimentos
 export function gerarRelatorioAtendimentos(
   dados: {
