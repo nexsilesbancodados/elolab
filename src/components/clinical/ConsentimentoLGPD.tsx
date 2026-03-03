@@ -59,11 +59,6 @@ const TIPOS_CONSENTIMENTO = [
     titulo: 'Comunicações e Marketing',
     descricao: 'Autorizo o recebimento de comunicações sobre novos serviços, lembretes de consultas e mensagens de aniversário.',
   },
-  {
-    tipo: 'telemedicina',
-    titulo: 'Telemedicina',
-    descricao: 'Declaro estar ciente e de acordo com as condições para atendimento via telemedicina, incluindo gravação das sessões para fins médicos.',
-  },
 ];
 
 const TERMO_LGPD = `

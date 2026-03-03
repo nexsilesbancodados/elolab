@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Tag } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Tag, Link, Copy, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -174,6 +174,28 @@ export default function Pacientes() {
     }
   };
 
+  const handleGeneratePortalLink = async (pacienteId: string, pacienteNome: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('paciente_portal_tokens')
+        .insert({ paciente_id: pacienteId })
+        .select('token')
+        .single();
+
+      if (error) throw error;
+
+      const portalUrl = `${window.location.origin}/portal-paciente?token=${data.token}`;
+      await navigator.clipboard.writeText(portalUrl);
+      toast({
+        title: 'Link copiado!',
+        description: `Link do portal de ${pacienteNome} copiado para a área de transferência.`,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar link:', error);
+      toast({ title: 'Erro ao gerar link do portal', variant: 'destructive' });
+    }
+  };
+
   const calcularIdade = (dataNascimento: string | null) => {
     if (!dataNascimento) return 0;
     const hoje = new Date();
@@ -298,6 +320,9 @@ export default function Pacientes() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(paciente)}>
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleGeneratePortalLink(paciente.id, paciente.nome)} title="Gerar link do portal">
+                            <Link className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(paciente)}>
                             <Edit className="h-4 w-4" />

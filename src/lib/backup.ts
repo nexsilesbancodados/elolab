@@ -1,7 +1,8 @@
-// Backup and Restore System
+// Backup and Restore System - Supabase version
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
-const COLLECTIONS = [
+const SUPABASE_TABLES = [
   'pacientes',
   'agendamentos',
   'prontuarios',
@@ -9,16 +10,37 @@ const COLLECTIONS = [
   'atestados',
   'lancamentos',
   'estoque',
-  'users',
   'convenios',
   'salas',
-  'fila',
-  'prescription_templates',
-  'certificate_templates',
-  'audit_log',
-];
+  'fila_atendimento',
+  'templates_prescricao',
+  'templates_atestado',
+  'medicos',
+  'funcionarios',
+  'exames',
+  'encaminhamentos',
+  'lista_espera',
+] as const;
 
-const DB_PREFIX = 'elolab_clinic_';
+const TABLE_LABELS: Record<string, string> = {
+  pacientes: 'Pacientes',
+  agendamentos: 'Agendamentos',
+  prontuarios: 'Prontuários',
+  prescricoes: 'Prescrições',
+  atestados: 'Atestados',
+  lancamentos: 'Lançamentos Financeiros',
+  estoque: 'Itens de Estoque',
+  convenios: 'Convênios',
+  salas: 'Salas',
+  fila_atendimento: 'Fila de Atendimento',
+  templates_prescricao: 'Templates de Prescrição',
+  templates_atestado: 'Templates de Atestado',
+  medicos: 'Médicos',
+  funcionarios: 'Funcionários',
+  exames: 'Exames',
+  encaminhamentos: 'Encaminhamentos',
+  lista_espera: 'Lista de Espera',
+};
 
 export interface BackupData {
   version: string;
@@ -30,32 +52,31 @@ export interface BackupData {
   };
 }
 
-export function createBackup(): BackupData {
+export async function createBackup(): Promise<BackupData> {
   const collections: Record<string, any[]> = {};
   const collectionCounts: Record<string, number> = {};
   let totalRecords = 0;
 
-  COLLECTIONS.forEach(collection => {
-    const key = DB_PREFIX + collection;
-    const data = localStorage.getItem(key);
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        collections[collection] = parsed;
-        collectionCounts[collection] = Array.isArray(parsed) ? parsed.length : 0;
-        totalRecords += collectionCounts[collection];
-      } catch {
-        collections[collection] = [];
-        collectionCounts[collection] = 0;
+  for (const table of SUPABASE_TABLES) {
+    try {
+      const { data, error } = await supabase.from(table).select('*');
+      if (error) {
+        console.warn(`Erro ao exportar ${table}:`, error.message);
+        collections[table] = [];
+        collectionCounts[table] = 0;
+      } else {
+        collections[table] = data || [];
+        collectionCounts[table] = data?.length || 0;
+        totalRecords += collectionCounts[table];
       }
-    } else {
-      collections[collection] = [];
-      collectionCounts[collection] = 0;
+    } catch {
+      collections[table] = [];
+      collectionCounts[table] = 0;
     }
-  });
+  }
 
   return {
-    version: '1.0.0',
+    version: '2.0.0',
     createdAt: new Date().toISOString(),
     collections,
     metadata: {
@@ -65,8 +86,8 @@ export function createBackup(): BackupData {
   };
 }
 
-export function downloadBackup(): void {
-  const backup = createBackup();
+export async function downloadBackup(): Promise<void> {
+  const backup = await createBackup();
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   
@@ -95,68 +116,68 @@ export function validateBackup(data: any): { valid: boolean; error?: string; bac
   return { valid: true, backup: data as BackupData };
 }
 
-export function restoreBackup(backup: BackupData, overwrite: boolean = true): { success: boolean; restored: number } {
+export async function restoreBackup(backup: BackupData, overwrite: boolean = true): Promise<{ success: boolean; restored: number }> {
   let restored = 0;
 
-  Object.entries(backup.collections).forEach(([collection, data]) => {
-    if (COLLECTIONS.includes(collection)) {
-      const key = DB_PREFIX + collection;
-      
+  // Order matters for foreign keys - restore parents first
+  const orderedTables = [
+    'convenios', 'medicos', 'funcionarios', 'salas',
+    'pacientes', 'agendamentos', 'prontuarios', 'prescricoes',
+    'atestados', 'lancamentos', 'estoque', 'exames',
+    'encaminhamentos', 'lista_espera', 'fila_atendimento',
+    'templates_prescricao', 'templates_atestado',
+  ];
+
+  for (const table of orderedTables) {
+    const data = backup.collections[table];
+    if (!data || !Array.isArray(data) || data.length === 0) continue;
+
+    try {
       if (overwrite) {
-        localStorage.setItem(key, JSON.stringify(data));
-        restored += Array.isArray(data) ? data.length : 0;
-      } else {
-        // Merge with existing data
-        const existing = localStorage.getItem(key);
-        let existingData: any[] = [];
-        if (existing) {
-          try {
-            existingData = JSON.parse(existing);
-          } catch {}
+        // Upsert - insert or update on conflict
+        const { error } = await supabase.from(table as any).upsert(data, { onConflict: 'id' });
+        if (error) {
+          console.warn(`Erro ao restaurar ${table}:`, error.message);
+        } else {
+          restored += data.length;
         }
-        
-        if (Array.isArray(data) && Array.isArray(existingData)) {
-          const existingIds = new Set(existingData.map((item: any) => item.id));
-          const newItems = data.filter((item: any) => !existingIds.has(item.id));
-          const merged = [...existingData, ...newItems];
-          localStorage.setItem(key, JSON.stringify(merged));
-          restored += newItems.length;
+      } else {
+        // Insert only new records (ignore conflicts)
+        const { error } = await supabase.from(table as any).upsert(data, { onConflict: 'id', ignoreDuplicates: true });
+        if (error) {
+          console.warn(`Erro ao restaurar ${table}:`, error.message);
+        } else {
+          restored += data.length;
         }
       }
+    } catch (err) {
+      console.warn(`Erro ao restaurar ${table}:`, err);
     }
-  });
+  }
 
   return { success: true, restored };
 }
 
 export function clearAllData(): void {
-  COLLECTIONS.forEach(collection => {
-    localStorage.removeItem(DB_PREFIX + collection);
-  });
+  // This is now a no-op since data is in Supabase
+  // Kept for interface compatibility
+  console.warn('clearAllData: Para limpar dados do Supabase, use o painel de administração.');
 }
 
-export function getStorageStats(): { used: string; collections: Record<string, number> } {
+export async function getStorageStats(): Promise<{ used: string; collections: Record<string, number> }> {
   const collectionCounts: Record<string, number> = {};
-  let totalSize = 0;
 
-  COLLECTIONS.forEach(collection => {
-    const key = DB_PREFIX + collection;
-    const data = localStorage.getItem(key);
-    if (data) {
-      totalSize += data.length;
-      try {
-        const parsed = JSON.parse(data);
-        collectionCounts[collection] = Array.isArray(parsed) ? parsed.length : 0;
-      } catch {
-        collectionCounts[collection] = 0;
-      }
+  for (const table of SUPABASE_TABLES) {
+    try {
+      const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
+      collectionCounts[table] = error ? 0 : (count || 0);
+    } catch {
+      collectionCounts[table] = 0;
     }
-  });
+  }
 
-  // Convert bytes to human readable
-  const kb = totalSize / 1024;
-  const mb = kb / 1024;
-  const used = mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb.toFixed(2)} KB`;
+  const total = Object.values(collectionCounts).reduce((a, b) => a + b, 0);
+  const used = `${total} registros no Supabase`;
 
   return { used, collections: collectionCounts };
 }
