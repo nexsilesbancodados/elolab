@@ -335,7 +335,9 @@ export default function LandingPage() {
                   </Button>
                   <Button
                     size="lg"
+                    variant="outline"
                     className="border-[hsl(168,76%,36%)]/30 text-[hsl(168,76%,30%)] hover:bg-[hsl(168,76%,36%)]/8 rounded-xl h-14 font-medium"
+                    onClick={() => scrollTo('features')}
                   >
                     <PlayCircle className="mr-2 h-5 w-5" /> Ver funcionalidades
                   </Button>
