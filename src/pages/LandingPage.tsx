@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -253,17 +253,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
-      {/* ═══════════════ SINGLE FIXED ANIMATED BACKGROUND ═══════════════ */}
+      {/* ═══════════════ SINGLE FIXED 3D DOTTED BACKGROUND ═══════════════ */}
       <div className="fixed inset-0 z-0 bg-[hsl(215,28%,8%)]">
-        {/* Gradient mesh effect */}
-        <div className="absolute inset-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,30%)]/15 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(200,80%,40%)]/12 blur-[120px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
-          <div className="absolute top-[30%] right-[20%] w-[40%] h-[40%] rounded-full bg-[hsl(260,60%,40%)]/8 blur-[100px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
-          <div className="absolute bottom-[20%] left-[15%] w-[35%] h-[35%] rounded-full bg-[hsl(168,76%,50%)]/6 blur-[90px] animate-pulse" style={{ animationDuration: '9s', animationDelay: '1s' }} />
+        <DottedSurface />
+        {/* Gradient overlays for depth */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,30%)]/10 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(200,80%,40%)]/8 blur-[120px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
         </div>
-        {/* Subtle grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, hsl(168,76%,50%) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       </div>
       {/* All content scrolls over the fixed bg */}
       <div className="relative z-10">
