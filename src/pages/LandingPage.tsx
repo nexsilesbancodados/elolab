@@ -272,14 +272,14 @@ export default function LandingPage() {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-[hsl(168,76%,97%)]" />
 
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-[hsl(168,76%,50%)]/20 blur-sm animate-pulse"
+              className="absolute rounded-full bg-[hsl(168,76%,50%)]/15 blur-sm animate-pulse"
               style={{
                 width: `${8 + i * 4}px`,
                 height: `${8 + i * 4}px`,
@@ -296,7 +296,7 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <Reveal>
-                <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-md border border-white/10 text-white rounded-full px-5 py-2.5 text-sm font-medium mb-8">
+                <div className="inline-flex items-center gap-2 bg-[hsl(168,76%,36%)]/8 backdrop-blur-md border border-[hsl(168,76%,36%)]/15 text-[hsl(168,76%,30%)] rounded-full px-5 py-2.5 text-sm font-medium mb-8">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(168,76%,50%)] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[hsl(168,76%,50%)]" />
@@ -306,9 +306,9 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={100}>
-                <h1 className="text-[2.75rem] sm:text-[3.5rem] lg:text-[4.25rem] font-extrabold leading-[1.05] tracking-tight font-display text-white mb-6">
+                <h1 className="text-[2.75rem] sm:text-[3.5rem] lg:text-[4.25rem] font-extrabold leading-[1.05] tracking-tight font-display text-[hsl(215,28%,17%)] mb-6">
                   Gestão clínica{' '}
-                  <span className="bg-gradient-to-r from-[hsl(168,76%,50%)] via-[hsl(168,76%,60%)] to-[hsl(200,80%,55%)] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[hsl(168,76%,36%)] via-[hsl(168,76%,45%)] to-[hsl(168,76%,50%)] bg-clip-text text-transparent">
                     inteligente
                   </span>{' '}
                   e completa
@@ -316,7 +316,7 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={200}>
-                <p className="text-lg sm:text-xl text-white/60 leading-relaxed max-w-[540px] mb-10">
+                <p className="text-lg sm:text-xl text-[hsl(215,15%,42%)] leading-relaxed max-w-[540px] mb-10">
                   Agenda, prontuário eletrônico, financeiro e IA em uma plataforma segura, moderna e em conformidade com a LGPD.
                 </p>
               </Reveal>
@@ -335,9 +335,7 @@ export default function LandingPage() {
                   </Button>
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10 rounded-xl h-14 font-medium backdrop-blur-sm"
-                    onClick={() => scrollTo('features')}
+                    className="border-[hsl(168,76%,36%)]/30 text-[hsl(168,76%,30%)] hover:bg-[hsl(168,76%,36%)]/8 rounded-xl h-14 font-medium"
                   >
                     <PlayCircle className="mr-2 h-5 w-5" /> Ver funcionalidades
                   </Button>
