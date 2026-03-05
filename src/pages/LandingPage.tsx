@@ -765,28 +765,28 @@ export default function LandingPage() {
 
       {/* ═══════════════ FINAL CTA WITH IMAGE ═══════════════ */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/85 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(168,76%,36%)] via-[hsl(168,76%,32%)] to-[hsl(168,76%,28%)]" />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-[hsl(168,76%,36%)]/[0.08] rounded-full blur-[180px]" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[hsl(200,80%,50%)]/[0.05] rounded-full blur-[150px]" />
+          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-white/[0.06] rounded-full blur-[180px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-white/[0.04] rounded-full blur-[150px]" />
         </div>
         <div className="max-w-4xl mx-auto text-center relative z-10 py-32 px-4">
           <Reveal>
-            <div className="inline-flex items-center gap-2 bg-white/[0.06] backdrop-blur rounded-full px-5 py-2.5 text-sm text-white/60 font-medium mb-8 border border-white/[0.08]">
-              <Award className="h-4 w-4 text-[hsl(168,76%,50%)]" /> +500 clínicas já confiam no EloLab
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-full px-5 py-2.5 text-sm text-white font-medium mb-8 border border-white/20">
+              <Award className="h-4 w-4 text-white" /> +500 clínicas já confiam no EloLab
             </div>
             <h2 className="text-3xl sm:text-[3rem] font-extrabold font-display text-white leading-tight mb-5">
               Comece a transformar{' '}
-              <span className="bg-gradient-to-r from-[hsl(168,76%,50%)] to-[hsl(200,80%,55%)] bg-clip-text text-transparent">sua clínica</span>{' '}
+              <span className="text-white/90 underline decoration-white/30 underline-offset-4">sua clínica</span>{' '}
               hoje
             </h2>
-            <p className="text-white/40 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
               Junte-se a milhares de profissionais de saúde que já simplificaram a gestão do consultório.
             </p>
             {/* Mini gallery */}
             <div className="flex justify-center gap-3 mb-12">
               {[dashboardPreview, doctorUsingTablet, clinicWaitingRoom, whatsappPhone].map((img, i) => (
-                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/10 hover:ring-[hsl(168,76%,50%)]/50 transition-all duration-300 hover:scale-110">
+                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/30 hover:ring-white/60 transition-all duration-300 hover:scale-110">
                   <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               ))}
@@ -794,7 +794,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white rounded-xl text-base px-8 h-14 shadow-2xl shadow-[hsl(168,76%,36%)]/25 font-bold group"
+                className="bg-white text-[hsl(168,76%,30%)] hover:bg-white/90 rounded-xl text-base px-8 h-14 shadow-2xl font-bold group"
                 onClick={() => scrollTo('pricing')}
               >
                 Testar grátis 3 dias <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -802,7 +802,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white/15 text-white hover:bg-white/[0.06] rounded-xl text-base px-8 h-14 font-medium"
+                className="border-white/30 text-white hover:bg-white/10 rounded-xl text-base px-8 h-14 font-medium"
                 onClick={() => navigate('/auth')}
               >
                 <LogIn className="mr-2 h-5 w-5" /> Já tenho conta
@@ -813,7 +813,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="bg-[hsl(215,28%,6%)]/95 backdrop-blur-lg text-white py-16 px-4 relative">
+      <footer className="bg-[hsl(168,76%,97%)] text-[hsl(215,28%,17%)] py-16 px-4 relative">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div className="lg:col-span-2">
@@ -823,38 +823,38 @@ export default function LandingPage() {
                   ELO<span className="text-[hsl(168,76%,36%)]">LAB</span>
                 </span>
               </div>
-              <p className="text-white/35 text-sm leading-relaxed max-w-sm mb-6">
+              <p className="text-[hsl(215,15%,50%)] text-sm leading-relaxed max-w-sm mb-6">
                 Software de gestão completo para clínicas e consultórios médicos. Agenda, prontuário, financeiro e IA — tudo em um só lugar.
               </p>
-              <div className="flex flex-col gap-2 text-sm text-white/30">
-                <a href="mailto:contato@elolab.com.br" className="flex items-center gap-2 hover:text-white/60 transition-colors">
+              <div className="flex flex-col gap-2 text-sm text-[hsl(215,15%,45%)]">
+                <a href="mailto:contato@elolab.com.br" className="flex items-center gap-2 hover:text-[hsl(168,76%,36%)] transition-colors">
                   <Mail className="h-4 w-4" /> contato@elolab.com.br
                 </a>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-sm mb-4 text-white/50 uppercase tracking-wider">Produto</h4>
-              <div className="space-y-3 text-sm text-white/35">
-                <button onClick={() => scrollTo('features')} className="block hover:text-white/70 transition-colors">Funcionalidades</button>
-                <button onClick={() => scrollTo('how-it-works')} className="block hover:text-white/70 transition-colors">Como funciona</button>
-                <button onClick={() => scrollTo('pricing')} className="block hover:text-white/70 transition-colors">Planos e preços</button>
-                <button onClick={() => scrollTo('faq')} className="block hover:text-white/70 transition-colors">FAQ</button>
+              <h4 className="font-bold text-sm mb-4 text-[hsl(168,76%,36%)] uppercase tracking-wider">Produto</h4>
+              <div className="space-y-3 text-sm text-[hsl(215,15%,45%)]">
+                <button onClick={() => scrollTo('features')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Funcionalidades</button>
+                <button onClick={() => scrollTo('how-it-works')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Como funciona</button>
+                <button onClick={() => scrollTo('pricing')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Planos e preços</button>
+                <button onClick={() => scrollTo('faq')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">FAQ</button>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-sm mb-4 text-white/50 uppercase tracking-wider">Acesso</h4>
-              <div className="space-y-3 text-sm text-white/35">
-                <button onClick={() => navigate('/auth')} className="block hover:text-white/70 transition-colors">Login</button>
-                <button onClick={() => scrollTo('pricing')} className="block hover:text-white/70 transition-colors">Criar conta grátis</button>
-                <button onClick={() => navigate('/portal-paciente')} className="block hover:text-white/70 transition-colors">Portal do Paciente</button>
-                <a href="mailto:contato@elolab.com.br" className="block hover:text-white/70 transition-colors">Suporte</a>
+              <h4 className="font-bold text-sm mb-4 text-[hsl(168,76%,36%)] uppercase tracking-wider">Acesso</h4>
+              <div className="space-y-3 text-sm text-[hsl(215,15%,45%)]">
+                <button onClick={() => navigate('/auth')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Login</button>
+                <button onClick={() => scrollTo('pricing')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Criar conta grátis</button>
+                <button onClick={() => navigate('/portal-paciente')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Portal do Paciente</button>
+                <a href="mailto:contato@elolab.com.br" className="block hover:text-[hsl(168,76%,36%)] transition-colors">Suporte</a>
               </div>
             </div>
           </div>
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/20">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[hsl(215,15%,60%)]">
             <span>© {new Date().getFullYear()} EloLab. Todos os direitos reservados.</span>
             <div className="flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5" /> Em conformidade com a LGPD
+              <Shield className="h-3.5 w-3.5 text-[hsl(168,76%,36%)]" /> Em conformidade com a LGPD
             </div>
           </div>
         </div>
