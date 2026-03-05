@@ -238,134 +238,14 @@ export default function LandingPage() {
   };
 
   const scrollTo = (id: string) => {
-    setMobileMenu(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  const navLinks = [
-    { label: 'Funcionalidades', id: 'features' },
-    { label: 'Como funciona', id: 'how-it-works' },
-    { label: 'Depoimentos', id: 'testimonials' },
-    { label: 'Planos', id: 'pricing' },
-    { label: 'FAQ', id: 'faq' },
-  ];
 
   return (
     <div className="min-h-screen bg-white text-[hsl(215,28%,17%)] font-sans overflow-x-hidden">
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-white/95 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-b border-[hsl(220,13%,91%)]/50'
-          : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[72px]">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src={logoInovalab} alt="EloLab" className="h-9 w-9 rounded-lg object-contain" />
-            <span className="text-[22px] font-extrabold font-display tracking-tight">
-              <span className={scrolled ? 'text-[hsl(215,28%,17%)]' : 'text-white'}>ELO</span>
-              <span className="text-[hsl(168,76%,36%)]">LAB</span>
-            </span>
-          </div>
-
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  scrolled
-                    ? 'text-[hsl(215,15%,45%)] hover:text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,96%)]'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
-                  scrolled
-                    ? 'text-[hsl(215,15%,45%)] hover:text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,96%)]'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
-                }`}>
-                  Mais <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-[hsl(220,13%,91%)] p-1.5 bg-white">
-                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">Atalhos</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigate('/auth')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <LogIn className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" />
-                  <div><p className="font-medium text-sm">Acessar sistema</p><p className="text-xs text-[hsl(215,15%,55%)]">Login para usuários</p></div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollTo('pricing')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <Zap className="mr-3 h-4 w-4 text-[hsl(38,92%,50%)]" />
-                  <div><p className="font-medium text-sm">Testar grátis</p><p className="text-xs text-[hsl(215,15%,55%)]">3 dias sem cartão</p></div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
-                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">Páginas</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigate('/portal-paciente')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <Users className="mr-3 h-4 w-4 text-[hsl(200,80%,50%)]" />
-                  <div><p className="font-medium text-sm">Portal do Paciente</p><p className="text-xs text-[hsl(215,15%,55%)]">Resultados e agendamentos</p></div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/aceitar-convite')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <Mail className="mr-3 h-4 w-4 text-[hsl(280,65%,55%)]" />
-                  <div><p className="font-medium text-sm">Aceitar convite</p><p className="text-xs text-[hsl(215,15%,55%)]">Ativação por convite</p></div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
-                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">Contato</DropdownMenuLabel>
-                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <a href="mailto:contato@elolab.com.br"><Mail className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" /><div><p className="font-medium text-sm">E-mail</p><p className="text-xs text-[hsl(215,15%,55%)]">contato@elolab.com.br</p></div></a>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)]">
-                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer"><Phone className="mr-3 h-4 w-4 text-[hsl(142,70%,35%)]" /><div><p className="font-medium text-sm">WhatsApp</p><p className="text-xs text-[hsl(215,15%,55%)]">Suporte via chat</p></div></a>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className={`hidden sm:inline-flex font-semibold ${scrolled ? 'text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,96%)]' : 'text-white hover:bg-white/10'}`} onClick={() => navigate('/auth')}>
-              <LogIn className="mr-1.5 h-4 w-4" /> Entrar
-            </Button>
-            <Button size="sm" className="bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white shadow-lg shadow-[hsl(168,76%,36%)]/25 font-semibold px-5 rounded-lg" onClick={() => scrollTo('pricing')}>
-              Começar grátis
-            </Button>
-            <button className="lg:hidden p-2" onClick={() => setMobileMenu(!mobileMenu)}>
-              {mobileMenu ? <X className={`h-5 w-5 ${scrolled ? '' : 'text-white'}`} /> : <Menu className={`h-5 w-5 ${scrolled ? '' : 'text-white'}`} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenu && (
-          <div className="lg:hidden bg-white border-t px-4 pb-5 pt-2 shadow-lg animate-fade-in max-h-[80vh] overflow-y-auto">
-            <div className="space-y-1 mb-3">
-              {navLinks.map((item) => (
-                <button key={item.id} onClick={() => scrollTo(item.id)} className="block w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">{item.label}</button>
-              ))}
-            </div>
-            <div className="border-t border-[hsl(220,13%,93%)] pt-3 mb-3">
-              <p className="px-4 py-1.5 text-[10px] font-bold text-[hsl(215,15%,55%)] uppercase tracking-widest">Páginas</p>
-              <button onClick={() => { setMobileMenu(false); navigate('/portal-paciente'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
-                <Users className="h-4 w-4 text-[hsl(200,80%,50%)]" /> Portal do Paciente
-              </button>
-              <button onClick={() => { setMobileMenu(false); navigate('/aceitar-convite'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
-                <Mail className="h-4 w-4 text-[hsl(280,65%,55%)]" /> Aceitar convite
-              </button>
-            </div>
-            <div className="border-t border-[hsl(220,13%,93%)] pt-3 space-y-2">
-              <Button className="w-full bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl h-12 shadow-lg shadow-[hsl(168,76%,36%)]/20" onClick={() => { setMobileMenu(false); navigate('/auth'); }}>
-                <LogIn className="mr-2 h-4 w-4" /> Entrar no sistema
-              </Button>
-              <Button variant="outline" className="w-full border-[hsl(220,13%,91%)] rounded-xl h-12 font-semibold" onClick={() => { setMobileMenu(false); scrollTo('pricing'); }}>
-                Começar grátis
-              </Button>
-            </div>
-          </div>
-        )}
-      </nav>
+      <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
