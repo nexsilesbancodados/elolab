@@ -380,15 +380,47 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {mobileMenu && (
-          <div className="lg:hidden bg-white border-t px-4 pb-4 pt-2 space-y-1 shadow-lg animate-fade-in">
-            {navLinks.map((item) => (
-              <button key={item.id} onClick={() => scrollTo(item.id)} className="block w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
-                {item.label}
+          <div className="lg:hidden bg-white border-t px-4 pb-5 pt-2 shadow-lg animate-fade-in max-h-[80vh] overflow-y-auto">
+            <div className="space-y-1 mb-3">
+              {navLinks.map((item) => (
+                <button key={item.id} onClick={() => scrollTo(item.id)} className="block w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 mb-3">
+              <p className="px-4 py-1.5 text-[10px] font-bold text-[hsl(215,15%,55%)] uppercase tracking-widest">Páginas</p>
+              <button onClick={() => { setMobileMenu(false); navigate('/portal-paciente'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Users className="h-4 w-4 text-[hsl(200,80%,50%)]" /> Portal do Paciente
               </button>
-            ))}
-            <button onClick={() => { setMobileMenu(false); navigate('/auth'); }} className="block w-full text-left px-4 py-3 text-sm font-semibold text-[hsl(168,76%,36%)]">
-              Entrar no sistema
-            </button>
+              <button onClick={() => { setMobileMenu(false); navigate('/aceitar-convite'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Mail className="h-4 w-4 text-[hsl(280,65%,55%)]" /> Aceitar convite
+              </button>
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 mb-3">
+              <p className="px-4 py-1.5 text-[10px] font-bold text-[hsl(215,15%,55%)] uppercase tracking-widest">Contato</p>
+              <a href="mailto:contato@elolab.com.br" className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Mail className="h-4 w-4 text-[hsl(168,76%,36%)]" /> contato@elolab.com.br
+              </a>
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 space-y-2">
+              <Button
+                className="w-full bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl h-12 shadow-lg shadow-[hsl(168,76%,36%)]/20"
+                onClick={() => { setMobileMenu(false); navigate('/auth'); }}
+              >
+                <LogIn className="mr-2 h-4 w-4" /> Entrar no sistema
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-[hsl(220,13%,91%)] rounded-xl h-12 font-semibold"
+                onClick={() => { setMobileMenu(false); scrollTo('pricing'); }}
+              >
+                Começar grátis
+              </Button>
+            </div>
           </div>
         )}
       </nav>
