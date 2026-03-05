@@ -399,7 +399,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ STATS BANNER WITH IMAGE ═══════════════ */}
       <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/70 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)] backdrop-blur-md" />
         {/* Marquee strip top */}
         <div className="relative z-10 mb-10">
           <MarqueeStrip />
@@ -426,7 +426,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ FEATURES GRID WITH PHOTOS ═══════════════ */}
       <section id="features" className="relative py-28 px-4">
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading
@@ -485,7 +485,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ HOW IT WORKS WITH PHOTOS ═══════════════ */}
       <section id="how-it-works" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading
@@ -529,7 +529,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ LARGE FEATURE - PRONTUÁRIO WITH PHOTO ═══════════════ */}
       <section className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/90 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal>
             <div>
@@ -583,7 +583,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ DIFFERENTIALS WITH IMAGE BACKGROUND ═══════════════ */}
       <section id="differentials" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading badge="🏥 Diferenciais" title="Por que clínicas escolhem o" highlight="EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
@@ -595,10 +595,10 @@ export default function LandingPage() {
             <Reveal className="lg:col-span-2">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl h-full min-h-[400px]">
                 <img src={clinicWaitingRoom} alt="Sala de espera moderna" className="w-full h-full object-cover absolute inset-0" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(168,76%,25%)]/80 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 z-10">
                   <h3 className="text-white font-extrabold text-xl font-display mb-2">Ambiente moderno</h3>
-                  <p className="text-white/60 text-sm">Painel TV integrado para exibir a fila de atendimento na recepção</p>
+                  <p className="text-white/70 text-sm">Painel TV integrado para exibir a fila de atendimento na recepção</p>
                 </div>
               </div>
             </Reveal>
@@ -623,7 +623,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ WHATSAPP AI WITH PHOTO ═══════════════ */}
       <section id="whatsapp-ai" className="py-28 px-4 relative">
-        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/88 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div>
@@ -683,7 +683,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ TESTIMONIALS WITH PHOTOS ═══════════════ */}
       <section id="testimonials" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/88 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading badge="⭐ Depoimentos" title="Quem usa," highlight="recomenda" description="Veja o que profissionais de saúde dizem sobre o EloLab." />
@@ -737,7 +737,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ FAQ ═══════════════ */}
       <section id="faq" className="py-28 px-4 relative">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-3xl mx-auto">
           <Reveal>
             <SectionHeading badge="❓ Perguntas frequentes" title="Tire suas" highlight="dúvidas" description="Tudo que você precisa saber antes de começar." />
