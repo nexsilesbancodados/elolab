@@ -7,6 +7,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
@@ -261,6 +269,84 @@ export default function LandingPage() {
                 {item.label}
               </button>
             ))}
+
+            {/* Dropdown "Mais" */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
+                    scrolled
+                      ? 'text-[hsl(215,15%,45%)] hover:text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,96%)]'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Mais <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-[hsl(220,13%,91%)] p-1.5 bg-white">
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Atalhos rápidos
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/auth')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <LogIn className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Acessar sistema</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Login para usuários cadastrados</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollTo('pricing')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Zap className="mr-3 h-4 w-4 text-[hsl(38,92%,50%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Testar grátis</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">3 dias sem cartão de crédito</p>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
+
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Páginas
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/portal-paciente')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Users className="mr-3 h-4 w-4 text-[hsl(200,80%,50%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Portal do Paciente</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Acesse resultados e agendamentos</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/aceitar-convite')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Mail className="mr-3 h-4 w-4 text-[hsl(280,65%,55%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Aceitar convite</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Ativação de conta por convite</p>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
+
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Contato
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <a href="mailto:contato@elolab.com.br">
+                    <Mail className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" />
+                    <div>
+                      <p className="font-medium text-sm">Fale conosco</p>
+                      <p className="text-xs text-[hsl(215,15%,55%)]">contato@elolab.com.br</p>
+                    </div>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+                    <Phone className="mr-3 h-4 w-4 text-[hsl(142,70%,35%)]" />
+                    <div>
+                      <p className="font-medium text-sm">WhatsApp</p>
+                      <p className="text-xs text-[hsl(215,15%,55%)]">Suporte via chat</p>
+                    </div>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center gap-3">
@@ -294,15 +380,47 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {mobileMenu && (
-          <div className="lg:hidden bg-white border-t px-4 pb-4 pt-2 space-y-1 shadow-lg animate-fade-in">
-            {navLinks.map((item) => (
-              <button key={item.id} onClick={() => scrollTo(item.id)} className="block w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
-                {item.label}
+          <div className="lg:hidden bg-white border-t px-4 pb-5 pt-2 shadow-lg animate-fade-in max-h-[80vh] overflow-y-auto">
+            <div className="space-y-1 mb-3">
+              {navLinks.map((item) => (
+                <button key={item.id} onClick={() => scrollTo(item.id)} className="block w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 mb-3">
+              <p className="px-4 py-1.5 text-[10px] font-bold text-[hsl(215,15%,55%)] uppercase tracking-widest">Páginas</p>
+              <button onClick={() => { setMobileMenu(false); navigate('/portal-paciente'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Users className="h-4 w-4 text-[hsl(200,80%,50%)]" /> Portal do Paciente
               </button>
-            ))}
-            <button onClick={() => { setMobileMenu(false); navigate('/auth'); }} className="block w-full text-left px-4 py-3 text-sm font-semibold text-[hsl(168,76%,36%)]">
-              Entrar no sistema
-            </button>
+              <button onClick={() => { setMobileMenu(false); navigate('/aceitar-convite'); }} className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Mail className="h-4 w-4 text-[hsl(280,65%,55%)]" /> Aceitar convite
+              </button>
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 mb-3">
+              <p className="px-4 py-1.5 text-[10px] font-bold text-[hsl(215,15%,55%)] uppercase tracking-widest">Contato</p>
+              <a href="mailto:contato@elolab.com.br" className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[hsl(215,15%,40%)] hover:bg-[hsl(168,76%,96%)] rounded-lg">
+                <Mail className="h-4 w-4 text-[hsl(168,76%,36%)]" /> contato@elolab.com.br
+              </a>
+            </div>
+
+            <div className="border-t border-[hsl(220,13%,93%)] pt-3 space-y-2">
+              <Button
+                className="w-full bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl h-12 shadow-lg shadow-[hsl(168,76%,36%)]/20"
+                onClick={() => { setMobileMenu(false); navigate('/auth'); }}
+              >
+                <LogIn className="mr-2 h-4 w-4" /> Entrar no sistema
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-[hsl(220,13%,91%)] rounded-xl h-12 font-semibold"
+                onClick={() => { setMobileMenu(false); scrollTo('pricing'); }}
+              >
+                Começar grátis
+              </Button>
+            </div>
           </div>
         )}
       </nav>
