@@ -343,10 +343,10 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={400}>
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-10 text-sm text-white/40">
-                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,50%)]" /> Sem fidelidade</span>
-                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,50%)]" /> Suporte humano</span>
-                  <span className="flex items-center gap-2"><Lock className="h-4 w-4 text-[hsl(168,76%,50%)]" /> LGPD</span>
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-10 text-sm text-[hsl(215,15%,55%)]">
+                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" /> Sem fidelidade</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" /> Suporte humano</span>
+                  <span className="flex items-center gap-2"><Lock className="h-4 w-4 text-[hsl(168,76%,36%)]" /> LGPD</span>
                 </div>
               </Reveal>
             </div>
@@ -355,35 +355,35 @@ export default function LandingPage() {
             <Reveal delay={500} className="hidden lg:block">
               <div className="relative">
                 <div className="absolute -inset-8 bg-gradient-to-br from-[hsl(168,76%,50%)]/10 to-[hsl(200,80%,50%)]/5 rounded-[2rem] blur-3xl" />
-                <div className="relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl p-4 shadow-2xl">
+                <div className="relative bg-white/80 backdrop-blur-sm border border-[hsl(168,76%,36%)]/10 rounded-2xl p-4 shadow-2xl shadow-[hsl(168,76%,36%)]/10">
                   <div className="flex gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-[hsl(0,72%,51%)]/60" />
-                    <div className="w-3 h-3 rounded-full bg-[hsl(38,92%,50%)]/60" />
-                    <div className="w-3 h-3 rounded-full bg-[hsl(142,70%,35%)]/60" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(0,72%,65%)]" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(38,92%,60%)]" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(168,76%,45%)]" />
                   </div>
-                  <img src={dashboardPreview} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-white/5" loading="eager" />
+                  <img src={dashboardPreview} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-[hsl(168,76%,36%)]/10" loading="eager" />
                 </div>
                 {/* Floating mini card */}
-                <div className="absolute -bottom-6 -left-8 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_4s_ease-in-out_infinite]">
+                <div className="absolute -bottom-6 -left-8 bg-white border border-[hsl(168,76%,36%)]/15 rounded-xl p-3 shadow-xl animate-[float_4s_ease-in-out_infinite]">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-[hsl(168,76%,36%)] flex items-center justify-center">
                       <TrendingUp className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold">+32%</p>
-                      <p className="text-white/50 text-[10px]">Eficiência</p>
+                      <p className="text-[hsl(215,28%,17%)] text-xs font-bold">+32%</p>
+                      <p className="text-[hsl(215,15%,55%)] text-[10px]">Eficiência</p>
                     </div>
                   </div>
                 </div>
                 {/* Another floating card */}
-                <div className="absolute -top-4 -right-6 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_5s_ease-in-out_infinite_1s]">
+                <div className="absolute -top-4 -right-6 bg-white border border-[hsl(168,76%,36%)]/15 rounded-xl p-3 shadow-xl animate-[float_5s_ease-in-out_infinite_1s]">
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-[hsl(142,70%,35%)] flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-lg bg-[hsl(168,76%,45%)] flex items-center justify-center">
                       <Users className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold">1.2K</p>
-                      <p className="text-white/50 text-[10px]">Pacientes/mês</p>
+                      <p className="text-[hsl(215,28%,17%)] text-xs font-bold">1.2K</p>
+                      <p className="text-[hsl(215,15%,55%)] text-[10px]">Pacientes/mês</p>
                     </div>
                   </div>
                 </div>
@@ -393,7 +393,7 @@ export default function LandingPage() {
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <ChevronDown className="h-6 w-6 text-white/30" />
+          <ChevronDown className="h-6 w-6 text-[hsl(168,76%,36%)]/40" />
         </div>
       </section>
 
