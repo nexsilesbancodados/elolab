@@ -14,13 +14,13 @@ import { EloLabNavbar } from '@/components/blocks/EloLabNavbar';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
-  Check, Crown, Sparkles, Zap, Shield, Calendar, Users, FileText,
-  Stethoscope, BarChart3, Bot, ArrowRight, Star, ChevronRight,
-  Heart, Clock, Smartphone, LogIn, PlayCircle, DollarSign, Package,
-  ClipboardList, Monitor, Brain, MessageSquare, HeadphonesIcon,
-  CheckCircle2, Phone, Mail, MapPin, Menu, X, ChevronDown,
-  Activity, Layers, Lock, TrendingUp, Award, ArrowUpRight,
-  MousePointerClick, CircleDot, Rocket, Settings2, TestTube,
+  Crown, Sparkles, Zap, Shield, Calendar, Users, FileText,
+  Stethoscope, BarChart3, Bot, ArrowRight, Star,
+  Heart, Clock, Smartphone, LogIn, PlayCircle, DollarSign,
+  ClipboardList, Monitor, MessageSquare,
+  CheckCircle2, ChevronDown,
+  Activity, Layers, Lock, Award,
+  MousePointerClick, Rocket, Settings2,
 } from 'lucide-react';
 import heroInstitutional from '@/assets/hero-institutional.webp';
 import doctorTablet from '@/assets/doctor-tablet.webp';
