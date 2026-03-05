@@ -34,6 +34,7 @@ import clinicWaitingRoom from '@/assets/clinic-waiting-room.webp';
 import medicalTeam from '@/assets/medical-team.webp';
 import whatsappPhone from '@/assets/whatsapp-phone.webp';
 import bannerPattern from '@/assets/banner-pattern.webp';
+import { DottedSurface } from '@/components/ui/dotted-surface';
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 2000) {
