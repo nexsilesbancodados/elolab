@@ -11,6 +11,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
 import { EloLabNavbar } from '@/components/blocks/EloLabNavbar';
+import { ModernPricingSection } from '@/components/ui/animated-glassy-pricing';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
@@ -581,71 +582,24 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ PRICING ═══════════════ */}
-      <section id="pricing" className="py-28 px-4 bg-[hsl(210,40%,98%)]">
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <SectionHeading badge="💳 Planos e preços" title="Escolha o plano ideal para" highlight="sua clínica" description="Comece com 3 dias grátis. Sem cartão de crédito. Cancele quando quiser." />
-          </Reveal>
-          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
-            {planos?.map((plano: any) => {
-              const isHighlighted = plano.destaque;
-              return (
-                <Reveal key={plano.id}>
-                  <Card className={`relative flex flex-col rounded-2xl overflow-hidden h-full transition-all duration-400 ${
-                    isHighlighted
-                      ? 'border-2 border-[hsl(168,76%,36%)] shadow-2xl shadow-[hsl(168,76%,36%)]/12 scale-[1.02] hover:shadow-[hsl(168,76%,36%)]/20'
-                      : 'border border-[hsl(220,13%,91%)] shadow-lg hover:shadow-2xl'
-                  }`}>
-                    {isHighlighted && (
-                      <div className="bg-gradient-to-r from-[hsl(168,76%,36%)] to-[hsl(168,76%,30%)] text-white text-center py-2.5 text-sm font-bold tracking-wide">
-                        <Zap className="h-3.5 w-3.5 inline mr-1.5" /> MAIS POPULAR
-                      </div>
-                    )}
-                    <CardHeader className="text-center pb-2 pt-8">
-                      <div className={`mx-auto mb-4 h-14 w-14 rounded-2xl flex items-center justify-center ${
-                        isHighlighted ? 'bg-[hsl(168,76%,36%)]/10 text-[hsl(168,76%,36%)]' : 'bg-[hsl(215,20%,95%)] text-[hsl(215,15%,45%)]'
-                      }`}>{planIcons[plano.slug]}</div>
-                      <CardTitle className="text-2xl font-extrabold font-display">{plano.nome}</CardTitle>
-                      <p className="text-sm text-[hsl(215,15%,50%)] mt-1">{plano.descricao}</p>
-                    </CardHeader>
-                    <CardContent className="text-center pb-4">
-                      <div className="mb-3 pt-2">
-                        <span className="text-sm text-[hsl(215,15%,50%)] align-top">R$ </span>
-                        <span className="text-[3.5rem] font-extrabold leading-none tracking-tight font-display">{Math.floor(plano.valor)}</span>
-                        <span className="text-[hsl(215,15%,50%)] text-base">/mês</span>
-                      </div>
-                      <p className="text-xs text-[hsl(168,76%,36%)] font-bold mb-7">🎁 {plano.trial_dias || 3} dias grátis para testar</p>
-                      <ul className="space-y-3 text-left">
-                        {(plano.features as string[]).slice(0, 12).map((feature: string) => (
-                          <li key={feature} className="flex items-center gap-2.5 text-sm">
-                            <CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)] shrink-0" />
-                            <span className="font-medium">{featureLabels[feature] || feature}</span>
-                          </li>
-                        ))}
-                        {(plano.features as string[]).length > 12 && (
-                          <li className="text-xs text-[hsl(168,76%,36%)] font-bold pl-[26px]">+ {(plano.features as string[]).length - 12} recursos adicionais</li>
-                        )}
-                      </ul>
-                    </CardContent>
-                    <CardFooter className="mt-auto flex flex-col gap-2 px-6 pb-7">
-                      <Button
-                        className={`w-full h-13 text-base rounded-xl font-bold ${
-                          isHighlighted
-                            ? 'bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white shadow-lg shadow-[hsl(168,76%,36%)]/20'
-                            : 'bg-[hsl(215,28%,17%)] hover:bg-[hsl(215,28%,12%)] text-white'
-                        }`}
-                        onClick={() => handleSelectPlan(plano)}
-                      >
-                        Começar grátis <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                      <p className="text-xs text-center text-[hsl(215,15%,55%)] mt-1">Sem compromisso · Cancele quando quiser</p>
-                    </CardFooter>
-                  </Card>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
+      <section id="pricing">
+        <ModernPricingSection
+          title={<>Escolha o plano ideal para <span className="text-[hsl(168,76%,36%)]">sua clínica</span></>}
+          subtitle="Comece com 3 dias grátis. Sem cartão de crédito. Cancele quando quiser."
+          showAnimatedBackground={true}
+          plans={
+            planos?.map((plano: any) => ({
+              planName: plano.nome,
+              description: plano.descricao || '',
+              price: Math.floor(plano.valor).toString(),
+              features: (plano.features as string[]).slice(0, 10).map((f: string) => featureLabels[f] || f),
+              buttonText: 'Começar grátis',
+              isPopular: plano.destaque,
+              buttonVariant: plano.destaque ? 'primary' as const : 'secondary' as const,
+              onButtonClick: () => handleSelectPlan(plano),
+            })) || []
+          }
+        />
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}

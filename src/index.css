@@ -8,6 +8,7 @@
 
 @layer base {
   :root {
+    --button-ripple-color: rgba(0, 0, 0, 0.15);
     /* Primary - Deep Ocean Blue with Teal undertones */
     --primary: 200 80% 50%;
     --primary-foreground: 0 0% 100%;
