@@ -89,6 +89,16 @@ function isAppSubdomain() {
 function App() {
   const isApp = isAppSubdomain();
 
+  // Global unhandled promise rejection handler
+  React.useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      console.error("Unhandled rejection:", event.reason);
+      event.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -109,7 +119,7 @@ function App() {
                         <Route path="/login" element={<Navigate to="/auth" replace />} />
                         <Route path="/aceitar-convite" element={<AceitarConvite />} />
                         <Route path="/portal-paciente" element={<PortalPaciente />} />
-                        <Route path="/painel-tv" element={<PainelTV />} />
+                        <Route path="/painel-tv" element={<SupabaseProtectedRoute><PainelTV /></SupabaseProtectedRoute>} />
                         
                         {/* Protected Routes */}
                         <Route
