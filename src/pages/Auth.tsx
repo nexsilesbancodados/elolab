@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import logoInovalab from '@/assets/logo-inovalab.jpeg';
@@ -360,7 +360,15 @@ export default function Auth() {
             </p>
           </div>
 
-          <p className="text-center text-xs text-[hsl(215,15%,60%)] mt-6">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 mt-4 text-sm font-medium text-[hsl(168,76%,36%)] hover:text-[hsl(168,76%,28%)] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao site
+          </Link>
+
+          <p className="text-center text-xs text-[hsl(215,15%,60%)] mt-4">
             © {new Date().getFullYear()} EloLab. Todos os direitos reservados.
           </p>
         </div>
