@@ -21,13 +21,19 @@ import {
   ClipboardList, Monitor, MessageSquare,
   CheckCircle2, ChevronDown,
   Activity, Layers, Lock, Award,
-  MousePointerClick, Rocket, Settings2,
+  MousePointerClick, Rocket, Settings2, Phone, Globe, TrendingUp
 } from 'lucide-react';
 import heroInstitutional from '@/assets/hero-institutional.webp';
 import doctorTablet from '@/assets/doctor-tablet.webp';
 import clinicReception from '@/assets/clinic-reception.webp';
 import whatsappAi from '@/assets/whatsapp-ai.webp';
 import logoInovalab from '@/assets/logo-inovalab.jpeg';
+import dashboardPreview from '@/assets/dashboard-preview.webp';
+import doctorUsingTablet from '@/assets/doctor-using-tablet.webp';
+import clinicWaitingRoom from '@/assets/clinic-waiting-room.webp';
+import medicalTeam from '@/assets/medical-team.webp';
+import whatsappPhone from '@/assets/whatsapp-phone.webp';
+import bannerPattern from '@/assets/banner-pattern.webp';
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 2000) {
@@ -61,13 +67,13 @@ function AnimatedStat({ value, suffix, label, icon: Icon }: { value: number; suf
   const { count, ref } = useCounter(value);
   return (
     <div ref={ref} className="text-center group">
-      <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-[hsl(168,76%,36%)]/8 flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300">
-        <Icon className="h-5 w-5 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-300" />
+      <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300 border border-white/10">
+        <Icon className="h-6 w-6 text-[hsl(168,76%,50%)] group-hover:text-white transition-colors duration-300" />
       </div>
-      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-foreground">
-        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,36%)]">{suffix}</span>
+      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-white">
+        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,50%)]">{suffix}</span>
       </div>
-      <div className="text-muted-foreground text-sm mt-2 font-medium">{label}</div>
+      <div className="text-white/50 text-sm mt-2 font-medium">{label}</div>
     </div>
   );
 }
@@ -88,20 +94,9 @@ function Reveal({ children, className = '', delay = 0 }: { children: React.React
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+      className={`transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
     >
       {children}
-    </div>
-  );
-}
-
-/* ─── Floating orbs (decorative) ─── */
-function FloatingOrbs() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <div className="absolute top-1/4 left-[10%] w-72 h-72 bg-[hsl(168,76%,50%)]/[0.07] rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute top-1/2 right-[5%] w-96 h-96 bg-[hsl(200,80%,50%)]/[0.05] rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
-      <div className="absolute bottom-[10%] left-[30%] w-80 h-80 bg-[hsl(280,65%,55%)]/[0.04] rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '7s', animationDelay: '4s' }} />
     </div>
   );
 }
@@ -115,18 +110,18 @@ const stats = [
 ];
 
 const featureCards = [
-  { icon: Calendar, title: 'Agenda inteligente', desc: 'Agendamento online com recorrência, fila de espera e confirmação automática via WhatsApp.', color: 'hsl(200,80%,50%)' },
-  { icon: FileText, title: 'Prontuário eletrônico', desc: 'Centralize todo o histórico clínico com segurança LGPD. Acesse de qualquer dispositivo.', color: 'hsl(168,76%,36%)' },
-  { icon: DollarSign, title: 'Financeiro completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios detalhados.', color: 'hsl(38,92%,50%)' },
-  { icon: ClipboardList, title: 'Laudos e exames', desc: 'Liberação de resultados via web com total segurança, rastreabilidade e assinatura digital.', color: 'hsl(280,65%,55%)' },
-  { icon: BarChart3, title: 'Analytics e KPIs', desc: 'Dashboards inteligentes com indicadores em tempo real para decisões baseadas em dados.', color: 'hsl(0,72%,51%)' },
-  { icon: Bot, title: 'IA no WhatsApp', desc: 'Agente inteligente que agenda, confirma e responde pacientes 24h por dia, 7 dias por semana.', color: 'hsl(142,70%,35%)' },
+  { icon: Calendar, title: 'Agenda inteligente', desc: 'Agendamento online com recorrência, fila de espera e confirmação automática via WhatsApp.', color: 'hsl(200,80%,50%)', image: dashboardPreview },
+  { icon: FileText, title: 'Prontuário eletrônico', desc: 'Centralize todo o histórico clínico com segurança LGPD. Acesse de qualquer dispositivo.', color: 'hsl(168,76%,36%)', image: doctorUsingTablet },
+  { icon: DollarSign, title: 'Financeiro completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios detalhados.', color: 'hsl(38,92%,50%)', image: clinicReception },
+  { icon: ClipboardList, title: 'Laudos e exames', desc: 'Liberação de resultados via web com total segurança, rastreabilidade e assinatura digital.', color: 'hsl(280,65%,55%)', image: medicalTeam },
+  { icon: BarChart3, title: 'Analytics e KPIs', desc: 'Dashboards inteligentes com indicadores em tempo real para decisões baseadas em dados.', color: 'hsl(0,72%,51%)', image: dashboardPreview },
+  { icon: Bot, title: 'IA no WhatsApp', desc: 'Agente inteligente que agenda, confirma e responde pacientes 24h por dia, 7 dias por semana.', color: 'hsl(142,70%,35%)', image: whatsappPhone },
 ];
 
 const howItWorks = [
-  { step: '01', icon: MousePointerClick, title: 'Crie sua conta', desc: 'Cadastre-se em menos de 2 minutos. Sem cartão de crédito, sem burocracia.' },
-  { step: '02', icon: Settings2, title: 'Configure sua clínica', desc: 'Cadastre médicos, salas, convênios e personalize o sistema para seu fluxo.' },
-  { step: '03', icon: Rocket, title: 'Comece a atender', desc: 'Agende pacientes, gerencie prontuários e controle suas finanças em um só lugar.' },
+  { step: '01', icon: MousePointerClick, title: 'Crie sua conta', desc: 'Cadastre-se em menos de 2 minutos. Sem cartão de crédito, sem burocracia.', image: dashboardPreview },
+  { step: '02', icon: Settings2, title: 'Configure sua clínica', desc: 'Cadastre médicos, salas, convênios e personalize o sistema para seu fluxo.', image: doctorUsingTablet },
+  { step: '03', icon: Rocket, title: 'Comece a atender', desc: 'Agende pacientes, gerencie prontuários e controle suas finanças em um só lugar.', image: clinicWaitingRoom },
 ];
 
 const differentials = [
@@ -189,6 +184,20 @@ function SectionHeading({ badge, title, highlight, description }: {
   );
 }
 
+/* ─── Marquee Logos Strip ─── */
+function MarqueeStrip() {
+  const logos = ['🏥 Clínica São Lucas', '🏨 Hospital Vila Nova', '💊 Centro Médico Saúde+', '🩺 Consultório Premium', '🏥 Clínica Bem Estar', '🏨 Hospital Central', '💊 MedCenter', '🩺 Ortho Clinic'];
+  return (
+    <div className="overflow-hidden py-4">
+      <div className="flex animate-[scroll_30s_linear_infinite] gap-12 whitespace-nowrap">
+        {[...logos, ...logos].map((logo, i) => (
+          <span key={i} className="text-white/20 text-sm font-medium tracking-wide flex-shrink-0">{logo}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [checkoutDialog, setCheckoutDialog] = useState(false);
@@ -244,6 +253,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white text-[hsl(215,28%,17%)] font-sans overflow-x-hidden">
+      {/* Marquee animation keyframe */}
+      <style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
@@ -256,8 +267,23 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/50 to-transparent" />
         </div>
 
-        {/* Subtle animated grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-[hsl(168,76%,50%)]/20 blur-sm animate-pulse"
+              style={{
+                width: `${8 + i * 4}px`,
+                height: `${8 + i * 4}px`,
+                top: `${15 + i * 13}%`,
+                left: `${10 + i * 15}%`,
+                animationDuration: `${3 + i}s`,
+                animationDelay: `${i * 0.5}s`,
+              }}
+            />
+          ))}
+        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-0 w-full">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -324,13 +350,37 @@ export default function LandingPage() {
             <Reveal delay={500} className="hidden lg:block">
               <div className="relative">
                 <div className="absolute -inset-8 bg-gradient-to-br from-[hsl(168,76%,50%)]/10 to-[hsl(200,80%,50%)]/5 rounded-[2rem] blur-3xl" />
-                <div className="relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex gap-2 mb-4">
+                <div className="relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl p-4 shadow-2xl">
+                  <div className="flex gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-[hsl(0,72%,51%)]/60" />
                     <div className="w-3 h-3 rounded-full bg-[hsl(38,92%,50%)]/60" />
                     <div className="w-3 h-3 rounded-full bg-[hsl(142,70%,35%)]/60" />
                   </div>
-                  <img src={doctorTablet} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-white/5" loading="eager" />
+                  <img src={dashboardPreview} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-white/5" loading="eager" />
+                </div>
+                {/* Floating mini card */}
+                <div className="absolute -bottom-6 -left-8 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_4s_ease-in-out_infinite]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-[hsl(168,76%,36%)] flex items-center justify-center">
+                      <TrendingUp className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white text-xs font-bold">+32%</p>
+                      <p className="text-white/50 text-[10px]">Eficiência</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Another floating card */}
+                <div className="absolute -top-4 -right-6 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_5s_ease-in-out_infinite_1s]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-[hsl(142,70%,35%)] flex items-center justify-center">
+                      <Users className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white text-xs font-bold">1.2K</p>
+                      <p className="text-white/50 text-[10px]">Pacientes/mês</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Reveal>
@@ -342,13 +392,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════ TRUSTED BY / STATS ═══════════════ */}
-      <section className="relative py-24 px-4 bg-white border-b border-[hsl(220,13%,91%)]/50">
-        <FloatingOrbs />
+      {/* ═══════════════ STATS BANNER WITH IMAGE ═══════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={bannerPattern} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/80 backdrop-blur-sm" />
+        </div>
+        {/* Marquee strip top */}
+        <div className="relative z-10 border-b border-white/5 mb-10">
+          <MarqueeStrip />
+        </div>
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
-            <p className="text-center text-sm font-semibold text-[hsl(215,15%,55%)] uppercase tracking-widest mb-12">
-              Números que comprovam resultados
+            <p className="text-center text-sm font-semibold text-[hsl(168,76%,50%)] uppercase tracking-widest mb-12">
+              📊 Números que comprovam resultados
             </p>
           </Reveal>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
@@ -359,9 +416,13 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+        {/* Marquee strip bottom */}
+        <div className="relative z-10 border-t border-white/5 mt-10">
+          <MarqueeStrip />
+        </div>
       </section>
 
-      {/* ═══════════════ FEATURES GRID ═══════════════ */}
+      {/* ═══════════════ FEATURES GRID WITH PHOTOS ═══════════════ */}
       <section id="features" className="relative py-28 px-4 bg-[hsl(210,40%,98%)]">
         <div className="max-w-6xl mx-auto">
           <Reveal>
@@ -375,13 +436,19 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featureCards.map((f, i) => (
               <Reveal key={i} delay={i * 80}>
-                <div className="group relative bg-white border border-[hsl(220,13%,91%)]/80 rounded-2xl p-7 hover:shadow-2xl hover:shadow-black/[0.06] hover:-translate-y-1.5 transition-all duration-400 h-full overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-bl-full" style={{ background: `radial-gradient(circle at top right, ${f.color}08, transparent)` }} />
-                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110" style={{ backgroundColor: `${f.color}12` }}>
-                    <f.icon className="h-6 w-6" style={{ color: f.color }} />
+                <div className="group relative bg-white border border-[hsl(220,13%,91%)]/80 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-black/[0.08] hover:-translate-y-2 transition-all duration-500 h-full">
+                  {/* Photo header */}
+                  <div className="relative h-40 overflow-hidden">
+                    <img src={f.image} alt={f.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                    <div className="absolute top-3 left-3 h-10 w-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: f.color }}>
+                      <f.icon className="h-5 w-5 text-white" />
+                    </div>
                   </div>
-                  <h3 className="font-bold text-[17px] mb-2 font-display">{f.title}</h3>
-                  <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed">{f.desc}</p>
+                  <div className="p-6 pt-2">
+                    <h3 className="font-bold text-[17px] mb-2 font-display">{f.title}</h3>
+                    <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed">{f.desc}</p>
+                  </div>
                   <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `linear-gradient(90deg, ${f.color}, ${f.color}60)` }} />
                 </div>
               </Reveal>
@@ -390,9 +457,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════ HOW IT WORKS ═══════════════ */}
+      {/* ═══════════════ RIBBON BANNER CTA ═══════════════ */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(168,76%,36%)] via-[hsl(168,76%,32%)] to-[hsl(200,80%,40%)]" />
+        <div className="absolute inset-0 opacity-10">
+          <img src={bannerPattern} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="relative z-10 max-w-5xl mx-auto py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+              <Zap className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-white font-display">Teste grátis por 3 dias!</h3>
+              <p className="text-white/70 text-sm">Sem cartão de crédito · Sem compromisso · Cancele quando quiser</p>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="bg-white text-[hsl(168,76%,30%)] hover:bg-white/90 rounded-xl h-13 px-8 font-bold shadow-xl shrink-0"
+            onClick={() => scrollTo('pricing')}
+          >
+            Começar agora <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </section>
+
+      {/* ═══════════════ HOW IT WORKS WITH PHOTOS ═══════════════ */}
       <section id="how-it-works" className="py-28 px-4 bg-white relative overflow-hidden">
-        <FloatingOrbs />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading
@@ -402,43 +494,45 @@ export default function LandingPage() {
               description="Sem burocracia, sem instalação. Configure sua clínica em minutos."
             />
           </Reveal>
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-[60px] left-[16.5%] right-[16.5%] h-[2px] bg-gradient-to-r from-[hsl(168,76%,36%)]/20 via-[hsl(168,76%,36%)]/40 to-[hsl(168,76%,36%)]/20" />
+          <div className="space-y-20">
             {howItWorks.map((s, i) => (
               <Reveal key={i} delay={i * 150}>
-                <div className="relative text-center group">
-                  <div className="relative mx-auto mb-6">
-                    <div className="mx-auto h-[120px] w-[120px] rounded-[2rem] bg-gradient-to-br from-[hsl(168,76%,36%)]/8 to-[hsl(168,76%,36%)]/3 flex items-center justify-center group-hover:from-[hsl(168,76%,36%)] group-hover:to-[hsl(168,76%,30%)] transition-all duration-500 shadow-lg shadow-[hsl(168,76%,36%)]/5 group-hover:shadow-[hsl(168,76%,36%)]/20">
-                      <s.icon className="h-10 w-10 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-500" />
+                <div className={`grid lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+                  <div className={`${i % 2 === 1 ? 'lg:order-2' : ''}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-12 w-12 rounded-2xl bg-[hsl(168,76%,36%)] flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-[hsl(168,76%,36%)]/20">
+                        {s.step}
+                      </div>
+                      <div className="h-px flex-1 bg-gradient-to-r from-[hsl(168,76%,36%)]/30 to-transparent" />
                     </div>
-                    <div className="absolute -top-2 -right-2 h-9 w-9 rounded-full bg-[hsl(168,76%,36%)] text-white flex items-center justify-center text-sm font-extrabold shadow-lg">
-                      {s.step}
+                    <h3 className="text-2xl sm:text-3xl font-extrabold font-display mb-3">{s.title}</h3>
+                    <p className="text-[hsl(215,15%,42%)] text-base leading-relaxed max-w-md">{s.desc}</p>
+                  </div>
+                  <div className={`${i % 2 === 1 ? 'lg:order-1' : ''}`}>
+                    <div className="relative group">
+                      <div className="absolute -inset-3 bg-gradient-to-br from-[hsl(168,76%,36%)]/8 to-transparent rounded-[1.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <img
+                        src={s.image}
+                        alt={s.title}
+                        className="relative w-full rounded-2xl shadow-xl ring-1 ring-black/5 group-hover:shadow-2xl transition-shadow duration-500"
+                        loading="lazy"
+                      />
                     </div>
                   </div>
-                  <h3 className="text-xl font-extrabold font-display mb-2">{s.title}</h3>
-                  <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed max-w-[280px] mx-auto">{s.desc}</p>
                 </div>
               </Reveal>
             ))}
           </div>
-          <Reveal delay={500}>
-            <div className="text-center mt-14">
-              <Button
-                size="lg"
-                className="bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white rounded-xl text-base px-8 h-14 shadow-xl shadow-[hsl(168,76%,36%)]/15 font-bold group"
-                onClick={() => scrollTo('pricing')}
-              >
-                Começar agora <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
-          </Reveal>
         </div>
       </section>
 
-      {/* ═══════════════ LARGE FEATURE - PRONTUÁRIO ═══════════════ */}
-      <section className="py-28 px-4 bg-[hsl(210,40%,98%)]">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      {/* ═══════════════ LARGE FEATURE - PRONTUÁRIO WITH PHOTO ═══════════════ */}
+      <section className="py-28 px-4 bg-[hsl(210,40%,98%)] relative overflow-hidden">
+        {/* Background decorative image */}
+        <div className="absolute top-0 right-0 w-1/3 h-full opacity-[0.03]">
+          <img src={doctorUsingTablet} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal>
             <div>
               <span className="inline-flex items-center gap-2 bg-[hsl(168,76%,36%)]/8 text-[hsl(168,76%,30%)] rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-5 border border-[hsl(168,76%,36%)]/15">
@@ -474,34 +568,61 @@ export default function LandingPage() {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[hsl(168,76%,36%)]/6 to-transparent rounded-[2rem] blur-2xl" />
               <img src={clinicReception} alt="Recepção moderna com EloLab" className="relative z-10 w-full rounded-2xl shadow-2xl shadow-black/12 ring-1 ring-black/5" loading="lazy" />
+              {/* Overlay photo card */}
+              <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-2xl p-4 border border-[hsl(220,13%,93%)] z-20">
+                <div className="flex items-center gap-3">
+                  <img src={doctorUsingTablet} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                  <div>
+                    <p className="font-bold text-sm">Acesso rápido</p>
+                    <p className="text-xs text-[hsl(215,15%,50%)]">De qualquer dispositivo</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ═══════════════ DIFFERENTIALS GRID ═══════════════ */}
-      <section id="differentials" className="py-28 px-4 bg-white">
+      {/* ═══════════════ DIFFERENTIALS WITH IMAGE BACKGROUND ═══════════════ */}
+      <section id="differentials" className="py-28 px-4 bg-white relative overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading badge="🏥 Diferenciais" title="Por que clínicas escolhem o" highlight="EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
           </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {differentials.map((f, i) => (
-              <Reveal key={i} delay={i * 80}>
-                <div className="group bg-[hsl(210,40%,98%)] hover:bg-white rounded-2xl border border-transparent hover:border-[hsl(220,13%,91%)] p-7 hover:shadow-2xl hover:shadow-black/[0.04] hover:-translate-y-1.5 transition-all duration-400">
-                  <div className="h-12 w-12 rounded-2xl bg-[hsl(168,76%,36%)]/8 flex items-center justify-center mb-5 group-hover:bg-[hsl(168,76%,36%)] transition-all duration-300 group-hover:scale-110">
-                    <f.icon className="h-6 w-6 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-300" />
-                  </div>
-                  <h3 className="font-bold text-[16px] mb-1.5 font-display">{f.title}</h3>
-                  <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed">{f.desc}</p>
+
+          {/* Image + Cards layout */}
+          <div className="grid lg:grid-cols-5 gap-8 items-start">
+            {/* Large image */}
+            <Reveal className="lg:col-span-2">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl h-full min-h-[400px]">
+                <img src={clinicWaitingRoom} alt="Sala de espera moderna" className="w-full h-full object-cover absolute inset-0" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/80 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 z-10">
+                  <h3 className="text-white font-extrabold text-xl font-display mb-2">Ambiente moderno</h3>
+                  <p className="text-white/60 text-sm">Painel TV integrado para exibir a fila de atendimento na recepção</p>
                 </div>
-              </Reveal>
-            ))}
+              </div>
+            </Reveal>
+
+            {/* Cards grid */}
+            <div className="lg:col-span-3 grid sm:grid-cols-2 gap-4">
+              {differentials.map((f, i) => (
+                <Reveal key={i} delay={i * 80}>
+                  <div className="group bg-[hsl(210,40%,98%)] hover:bg-white rounded-2xl border border-transparent hover:border-[hsl(220,13%,91%)] p-6 hover:shadow-2xl hover:shadow-black/[0.04] hover:-translate-y-1 transition-all duration-400">
+                    <div className="h-11 w-11 rounded-xl bg-[hsl(168,76%,36%)]/8 flex items-center justify-center mb-4 group-hover:bg-[hsl(168,76%,36%)] transition-all duration-300 group-hover:scale-110">
+                      <f.icon className="h-5 w-5 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-300" />
+                    </div>
+                    <h3 className="font-bold text-[15px] mb-1 font-display">{f.title}</h3>
+                    <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed">{f.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════ WHATSAPP AI ═══════════════ */}
+      {/* ═══════════════ WHATSAPP AI WITH PHOTO ═══════════════ */}
       <section id="whatsapp-ai" className="py-28 px-4 bg-[hsl(210,40%,98%)]">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
@@ -542,15 +663,30 @@ export default function LandingPage() {
           <Reveal delay={200}>
             <div className="relative flex justify-center">
               <div className="absolute -inset-6 bg-[hsl(142,70%,50%)]/5 rounded-[2.5rem] blur-2xl" />
-              <img src={whatsappAi} alt="WhatsApp com agente IA do EloLab" className="relative z-10 w-full max-w-[360px] rounded-[2rem] shadow-2xl shadow-black/12 ring-1 ring-black/5" loading="lazy" />
+              <img src={whatsappPhone} alt="WhatsApp com agente IA do EloLab" className="relative z-10 w-full max-w-[360px] rounded-[2rem] shadow-2xl shadow-black/12 ring-1 ring-black/5" loading="lazy" />
+              {/* Floating notification card */}
+              <div className="absolute top-8 -right-4 bg-white rounded-xl shadow-2xl p-3 border border-[hsl(220,13%,93%)] z-20 animate-[float_4s_ease-in-out_infinite]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-[hsl(142,70%,90%)] flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-[hsl(142,70%,35%)]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">IA respondeu!</p>
+                    <p className="text-[10px] text-[hsl(215,15%,50%)]">Consulta agendada ✅</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ═══════════════ TESTIMONIALS ═══════════════ */}
-      <section id="testimonials" className="py-28 px-4 bg-white relative overflow-hidden">
-        <FloatingOrbs />
+      {/* ═══════════════ TESTIMONIALS WITH PHOTOS ═══════════════ */}
+      <section id="testimonials" className="py-28 px-4 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={medicalTeam} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-white/[0.92] backdrop-blur-sm" />
+        </div>
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading badge="⭐ Depoimentos" title="Quem usa," highlight="recomenda" description="Veja o que profissionais de saúde dizem sobre o EloLab." />
@@ -558,7 +694,7 @@ export default function LandingPage() {
           <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((t, i) => (
               <Reveal key={i} delay={i * 120}>
-                <Card className="border-[hsl(220,13%,91%)]/60 bg-white shadow-sm hover:shadow-2xl hover:shadow-black/[0.05] hover:-translate-y-2 transition-all duration-400 rounded-2xl h-full">
+                <Card className="border-[hsl(220,13%,91%)]/60 bg-white/80 backdrop-blur shadow-sm hover:shadow-2xl hover:shadow-black/[0.05] hover:-translate-y-2 transition-all duration-400 rounded-2xl h-full">
                   <CardContent className="p-7">
                     <div className="flex gap-0.5 mb-5">
                       {[...Array(5)].map((_, j) => (
@@ -629,14 +765,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════ FINAL CTA ═══════════════ */}
+      {/* ═══════════════ FINAL CTA WITH IMAGE ═══════════════ */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,12%)] via-[hsl(215,30%,9%)] to-[hsl(215,35%,6%)]" />
         <div className="absolute inset-0">
+          <img src={heroInstitutional} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,8%)]/95 via-[hsl(215,30%,9%)]/90 to-[hsl(168,76%,20%)]/50" />
+        </div>
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-[hsl(168,76%,36%)]/[0.08] rounded-full blur-[180px]" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[hsl(200,80%,50%)]/[0.05] rounded-full blur-[150px]" />
         </div>
-        <div className="max-w-3xl mx-auto text-center relative z-10 py-32 px-4">
+        <div className="max-w-4xl mx-auto text-center relative z-10 py-32 px-4">
           <Reveal>
             <div className="inline-flex items-center gap-2 bg-white/[0.06] backdrop-blur rounded-full px-5 py-2.5 text-sm text-white/60 font-medium mb-8 border border-white/[0.08]">
               <Award className="h-4 w-4 text-[hsl(168,76%,50%)]" /> +500 clínicas já confiam no EloLab
@@ -646,9 +785,17 @@ export default function LandingPage() {
               <span className="bg-gradient-to-r from-[hsl(168,76%,50%)] to-[hsl(200,80%,55%)] bg-clip-text text-transparent">sua clínica</span>{' '}
               hoje
             </h2>
-            <p className="text-white/40 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+            <p className="text-white/40 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
               Junte-se a milhares de profissionais de saúde que já simplificaram a gestão do consultório.
             </p>
+            {/* Mini gallery */}
+            <div className="flex justify-center gap-3 mb-12">
+              {[dashboardPreview, doctorUsingTablet, clinicWaitingRoom, whatsappPhone].map((img, i) => (
+                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/10 hover:ring-[hsl(168,76%,50%)]/50 transition-all duration-300 hover:scale-110">
+                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
@@ -756,6 +903,9 @@ export default function LandingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Float animation keyframe */}
+      <style>{`@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }`}</style>
     </div>
   );
 }
