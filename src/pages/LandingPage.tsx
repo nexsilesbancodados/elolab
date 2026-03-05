@@ -399,7 +399,7 @@ export default function LandingPage() {
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/70 backdrop-blur-md" />
         {/* Marquee strip top */}
-        <div className="relative z-10 border-b border-white/5 mb-10">
+        <div className="relative z-10 mb-10">
           <MarqueeStrip />
         </div>
         <div className="max-w-6xl mx-auto relative z-10">
@@ -417,7 +417,7 @@ export default function LandingPage() {
           </div>
         </div>
         {/* Marquee strip bottom */}
-        <div className="relative z-10 border-t border-white/5 mt-10">
+        <div className="relative z-10 mt-10">
           <MarqueeStrip />
         </div>
       </section>
@@ -450,7 +450,7 @@ export default function LandingPage() {
                     <h3 className="font-bold text-[17px] mb-2 font-display">{f.title}</h3>
                     <p className="text-sm text-[hsl(215,15%,45%)] leading-relaxed">{f.desc}</p>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `linear-gradient(90deg, ${f.color}, ${f.color}60)` }} />
+                  
                 </div>
               </Reveal>
             ))}
@@ -502,7 +502,7 @@ export default function LandingPage() {
                       <div className="h-12 w-12 rounded-2xl bg-[hsl(168,76%,36%)] flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-[hsl(168,76%,36%)]/20">
                         {s.step}
                       </div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-[hsl(168,76%,36%)]/30 to-transparent" />
+                      
                     </div>
                     <h3 className="text-2xl sm:text-3xl font-extrabold font-display mb-3">{s.title}</h3>
                     <p className="text-[hsl(215,15%,42%)] text-base leading-relaxed max-w-md">{s.desc}</p>
@@ -697,7 +697,7 @@ export default function LandingPage() {
                       ))}
                     </div>
                     <p className="text-[15px] text-[hsl(215,15%,35%)] mb-6 leading-relaxed italic">"{t.text}"</p>
-                    <div className="flex items-center gap-3 pt-4 border-t border-[hsl(220,13%,93%)]">
+                    <div className="flex items-center gap-3 pt-4">
                       <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[hsl(168,76%,36%)]/15 to-[hsl(200,80%,50%)]/10 flex items-center justify-center text-lg">{t.avatar}</div>
                       <div>
                         <p className="font-bold text-sm">{t.name}</p>
@@ -849,7 +849,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="border-t border-white/[0.05] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/20">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/20">
             <span>© {new Date().getFullYear()} EloLab. Todos os direitos reservados.</span>
             <div className="flex items-center gap-1.5">
               <Shield className="h-3.5 w-3.5" /> Em conformidade com a LGPD
