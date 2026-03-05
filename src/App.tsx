@@ -80,7 +80,15 @@ const queryClient = new QueryClient({
   },
 });
 
+// Check if we're on the app subdomain
+function isAppSubdomain() {
+  const hostname = window.location.hostname;
+  return hostname.startsWith('app.') || hostname.includes('localhost') || hostname.includes('lovable.app');
+}
+
 function App() {
+  const isApp = isAppSubdomain();
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -93,63 +101,70 @@ function App() {
                 <NotificationBanner />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/login" element={<Navigate to="/auth" replace />} />
-                    <Route path="/aceitar-convite" element={<AceitarConvite />} />
-                    <Route path="/portal-paciente" element={<PortalPaciente />} />
-                    <Route path="/painel-tv" element={<PainelTV />} />
-                    
-                    {/* Protected Routes */}
-                    <Route
-                      element={
-                        <SupabaseProtectedRoute>
-                          <MainLayout />
-                        </SupabaseProtectedRoute>
-                      }
-                    >
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/pacientes" element={<Pacientes />} />
-                      <Route path="/agenda" element={<Agenda />} />
-                      <Route path="/fila" element={<Fila />} />
-                      <Route path="/prontuarios" element={<Prontuarios />} />
-                      <Route path="/prescricoes" element={<Prescricoes />} />
-                      <Route path="/atestados" element={<Atestados />} />
-                      <Route path="/medicos" element={<Medicos />} />
-                      <Route path="/funcionarios" element={<Funcionarios />} />
-                      <Route path="/exames" element={<Exames />} />
-                      <Route path="/triagem" element={<Triagem />} />
-                      <Route path="/salas" element={<Salas />} />
-                      <Route path="/lista-espera" element={<ListaEspera />} />
-                      {/* Telemedicina removida do escopo */}
-                      <Route path="/templates" element={<Templates />} />
-                      <Route path="/encaminhamentos" element={<Encaminhamentos />} />
-                      <Route path="/financeiro" element={<Financeiro />} />
-                      <Route path="/contas-receber" element={<ContasReceber />} />
-                      <Route path="/contas-pagar" element={<ContasPagar />} />
-                      <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
-                      <Route path="/pagamentos" element={<Pagamentos />} />
-                      <Route path="/relatorios" element={<Relatorios />} />
-                      <Route path="/estoque" element={<Estoque />} />
-                      <Route path="/convenios" element={<Convenios />} />
-                      <Route path="/usuarios" element={<Usuarios />} />
-                      <Route path="/seguranca" element={<Configuracoes />} />
-                      <Route path="/configuracoes" element={<Configuracoes />} />
-                      <Route path="/automacoes" element={<Automacoes />} />
-                      <Route path="/agente-ia" element={<AgenteIA />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/planos" element={<Planos />} />
-                      <Route path="/laboratorio" element={<Laboratorio />} />
-                      <Route path="/precos-exames" element={<PrecosExames />} />
-                      <Route path="/tarefas" element={<Tarefas />} />
-                    </Route>
-                    
-                    {/* Redirects */}
-                    {/* Removed old redirect - landing page is now at / */}
-                    
-                    {/* 404 */}
-                    <Route path="*" element={<NotFound />} />
+                    {isApp ? (
+                      <>
+                        {/* App subdomain routes (app.elolab.com.br) */}
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/login" element={<Navigate to="/auth" replace />} />
+                        <Route path="/aceitar-convite" element={<AceitarConvite />} />
+                        <Route path="/portal-paciente" element={<PortalPaciente />} />
+                        <Route path="/painel-tv" element={<PainelTV />} />
+                        
+                        {/* Protected Routes */}
+                        <Route
+                          element={
+                            <SupabaseProtectedRoute>
+                              <MainLayout />
+                            </SupabaseProtectedRoute>
+                          }
+                        >
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/pacientes" element={<Pacientes />} />
+                          <Route path="/agenda" element={<Agenda />} />
+                          <Route path="/fila" element={<Fila />} />
+                          <Route path="/prontuarios" element={<Prontuarios />} />
+                          <Route path="/prescricoes" element={<Prescricoes />} />
+                          <Route path="/atestados" element={<Atestados />} />
+                          <Route path="/medicos" element={<Medicos />} />
+                          <Route path="/funcionarios" element={<Funcionarios />} />
+                          <Route path="/exames" element={<Exames />} />
+                          <Route path="/triagem" element={<Triagem />} />
+                          <Route path="/salas" element={<Salas />} />
+                          <Route path="/lista-espera" element={<ListaEspera />} />
+                          <Route path="/templates" element={<Templates />} />
+                          <Route path="/encaminhamentos" element={<Encaminhamentos />} />
+                          <Route path="/financeiro" element={<Financeiro />} />
+                          <Route path="/contas-receber" element={<ContasReceber />} />
+                          <Route path="/contas-pagar" element={<ContasPagar />} />
+                          <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
+                          <Route path="/pagamentos" element={<Pagamentos />} />
+                          <Route path="/relatorios" element={<Relatorios />} />
+                          <Route path="/estoque" element={<Estoque />} />
+                          <Route path="/convenios" element={<Convenios />} />
+                          <Route path="/usuarios" element={<Usuarios />} />
+                          <Route path="/seguranca" element={<Configuracoes />} />
+                          <Route path="/configuracoes" element={<Configuracoes />} />
+                          <Route path="/automacoes" element={<Automacoes />} />
+                          <Route path="/agente-ia" element={<AgenteIA />} />
+                          <Route path="/analytics" element={<Analytics />} />
+                          <Route path="/planos" element={<Planos />} />
+                          <Route path="/laboratorio" element={<Laboratorio />} />
+                          <Route path="/precos-exames" element={<PrecosExames />} />
+                          <Route path="/tarefas" element={<Tarefas />} />
+                        </Route>
+                        
+                        <Route path="*" element={<NotFound />} />
+                      </>
+                    ) : (
+                      <>
+                        {/* Main domain routes (elolab.com.br) */}
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/portal-paciente" element={<PortalPaciente />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </>
+                    )}
                   </Routes>
                 </Suspense>
                 <InstallPWA />
