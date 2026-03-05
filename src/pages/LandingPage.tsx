@@ -11,6 +11,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
 import { EloLabNavbar } from '@/components/blocks/EloLabNavbar';
+import { ModernPricingSection } from '@/components/ui/animated-glassy-pricing';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
