@@ -80,10 +80,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Check if we're on the app subdomain
+// Check if we're on the app subdomain (app.elolab.com.br)
 function isAppSubdomain() {
   const hostname = window.location.hostname;
-  return hostname.startsWith('app.') || hostname.includes('localhost') || hostname.includes('lovable.app');
+  // Only treat as app subdomain if hostname starts with "app."
+  // localhost and lovable.app previews show the landing page (marketing site)
+  return hostname.startsWith('app.');
 }
 
 function App() {
