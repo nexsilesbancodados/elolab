@@ -252,7 +252,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[hsl(215,28%,17%)] font-sans overflow-x-hidden">
+    <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
+      {/* ═══════════════ SINGLE FIXED BACKGROUND ═══════════════ */}
+      <div className="fixed inset-0 z-0">
+        <img src={heroInstitutional} alt="" className="w-full h-full object-cover" loading="eager" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,8%)]/80 via-[hsl(215,28%,12%)]/70 to-[hsl(168,76%,20%)]/40" />
+      </div>
+      {/* All content scrolls over the fixed bg */}
+      <div className="relative z-10">
       {/* Marquee animation keyframe */}
       <style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
 
