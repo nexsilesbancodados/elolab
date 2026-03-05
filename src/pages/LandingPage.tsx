@@ -68,13 +68,13 @@ function AnimatedStat({ value, suffix, label, icon: Icon }: { value: number; suf
   const { count, ref } = useCounter(value);
   return (
     <div ref={ref} className="text-center group">
-      <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300 border border-white/10">
-        <Icon className="h-6 w-6 text-[hsl(168,76%,50%)] group-hover:text-white transition-colors duration-300" />
+      <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-[hsl(168,76%,36%)]/10 flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300">
+        <Icon className="h-6 w-6 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-300" />
       </div>
-      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-white">
-        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,50%)]">{suffix}</span>
+      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-[hsl(215,28%,17%)]">
+        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,36%)]">{suffix}</span>
       </div>
-      <div className="text-white/50 text-sm mt-2 font-medium">{label}</div>
+      <div className="text-[hsl(215,15%,50%)] text-sm mt-2 font-medium">{label}</div>
     </div>
   );
 }
@@ -192,7 +192,7 @@ function MarqueeStrip() {
     <div className="overflow-hidden py-4">
       <div className="flex animate-[scroll_30s_linear_infinite] gap-12 whitespace-nowrap">
         {[...logos, ...logos].map((logo, i) => (
-          <span key={i} className="text-white/20 text-sm font-medium tracking-wide flex-shrink-0">{logo}</span>
+          <span key={i} className="text-[hsl(168,76%,36%)]/30 text-sm font-medium tracking-wide flex-shrink-0">{logo}</span>
         ))}
       </div>
     </div>
@@ -254,13 +254,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
-      {/* ═══════════════ SINGLE FIXED 3D DOTTED BACKGROUND ═══════════════ */}
-      <div className="fixed inset-0 z-0 bg-[hsl(215,28%,8%)]">
+      {/* ═══════════════ SINGLE FIXED WHITE+GREEN BACKGROUND ═══════════════ */}
+      <div className="fixed inset-0 z-0 bg-white">
         <DottedSurface />
-        {/* Gradient overlays for depth */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,30%)]/10 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(200,80%,40%)]/8 blur-[120px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,90%)]/40 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(168,76%,85%)]/30 blur-[120px]" />
         </div>
       </div>
       {/* All content scrolls over the fixed bg */}
