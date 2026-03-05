@@ -93,6 +93,7 @@ export default function TriagemPage() {
 
   const { data: triagens = [], isLoading: loadingTriagens } = useSupabaseQuery<Triagem>('triagens', {
     orderBy: { column: 'data_hora', ascending: false },
+    staleTime: 1000 * 15, // 15 seconds for real-time triage
   });
   const { data: pacientes = [] } = usePacientes();
   const { data: agendamentos = [] } = useAgendamentos(today);
