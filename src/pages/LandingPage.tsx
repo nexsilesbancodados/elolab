@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import {
   Crown, Sparkles, Zap, Shield, Calendar, Users, FileText,
   Stethoscope, BarChart3, Bot, ArrowRight, Star,
-  Heart, Clock, Smartphone, LogIn, PlayCircle, DollarSign,
+  Heart, Clock, Smartphone, LogIn, PlayCircle, DollarSign, Mail,
   ClipboardList, Monitor, MessageSquare,
   CheckCircle2, ChevronDown,
   Activity, Layers, Lock, Award,
