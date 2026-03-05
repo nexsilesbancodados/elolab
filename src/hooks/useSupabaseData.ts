@@ -11,6 +11,7 @@ export function useSupabaseQuery<T>(
     orderBy?: { column: string; ascending?: boolean };
     filters?: Array<{ column: string; operator: string; value: unknown }>;
     enabled?: boolean;
+    staleTime?: number;
   }
 ) {
   const { user } = useSupabaseAuth();
@@ -44,6 +45,7 @@ export function useSupabaseQuery<T>(
       return data as T[];
     },
     enabled: options?.enabled !== false && !!user,
+    ...(options?.staleTime !== undefined ? { staleTime: options.staleTime } : {}),
   });
 }
 
@@ -323,6 +325,7 @@ export function useFilaAtendimento() {
   }>('fila_atendimento', {
     select: '*, agendamentos(*, pacientes(*), medicos(*))',
     orderBy: { column: 'posicao', ascending: true },
+    staleTime: 1000 * 15, // 15 seconds for real-time queue
   });
 }
 
