@@ -193,7 +193,6 @@ export default function LandingPage() {
   const [checkoutDialog, setCheckoutDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '', clinica: '' });
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
