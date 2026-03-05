@@ -269,6 +269,84 @@ export default function LandingPage() {
                 {item.label}
               </button>
             ))}
+
+            {/* Dropdown "Mais" */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
+                    scrolled
+                      ? 'text-[hsl(215,15%,45%)] hover:text-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,96%)]'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Mais <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-[hsl(220,13%,91%)] p-1.5 bg-white">
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Atalhos rápidos
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/auth')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <LogIn className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Acessar sistema</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Login para usuários cadastrados</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollTo('pricing')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Zap className="mr-3 h-4 w-4 text-[hsl(38,92%,50%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Testar grátis</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">3 dias sem cartão de crédito</p>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
+
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Páginas
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/portal-paciente')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Users className="mr-3 h-4 w-4 text-[hsl(200,80%,50%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Portal do Paciente</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Acesse resultados e agendamentos</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/aceitar-convite')} className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <Mail className="mr-3 h-4 w-4 text-[hsl(280,65%,55%)]" />
+                  <div>
+                    <p className="font-medium text-sm">Aceitar convite</p>
+                    <p className="text-xs text-[hsl(215,15%,55%)]">Ativação de conta por convite</p>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1.5 bg-[hsl(220,13%,93%)]" />
+
+                <DropdownMenuLabel className="text-xs text-[hsl(215,15%,50%)] font-semibold uppercase tracking-wider px-3 py-2">
+                  Contato
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <a href="mailto:contato@elolab.com.br">
+                    <Mail className="mr-3 h-4 w-4 text-[hsl(168,76%,36%)]" />
+                    <div>
+                      <p className="font-medium text-sm">Fale conosco</p>
+                      <p className="text-xs text-[hsl(215,15%,55%)]">contato@elolab.com.br</p>
+                    </div>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-[hsl(168,76%,96%)] focus:bg-[hsl(168,76%,96%)]">
+                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+                    <Phone className="mr-3 h-4 w-4 text-[hsl(142,70%,35%)]" />
+                    <div>
+                      <p className="font-medium text-sm">WhatsApp</p>
+                      <p className="text-xs text-[hsl(215,15%,55%)]">Suporte via chat</p>
+                    </div>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center gap-3">
