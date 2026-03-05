@@ -252,7 +252,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[hsl(215,28%,17%)] font-sans overflow-x-hidden">
+    <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
+      {/* ═══════════════ SINGLE FIXED BACKGROUND ═══════════════ */}
+      <div className="fixed inset-0 z-0">
+        <img src={heroInstitutional} alt="" className="w-full h-full object-cover" loading="eager" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,8%)]/80 via-[hsl(215,28%,12%)]/70 to-[hsl(168,76%,20%)]/40" />
+      </div>
+      {/* All content scrolls over the fixed bg */}
+      <div className="relative z-10">
       {/* Marquee animation keyframe */}
       <style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
 
@@ -261,11 +268,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroInstitutional} alt="" className="w-full h-full object-cover" loading="eager" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,8%)]/95 via-[hsl(215,28%,12%)]/85 to-[hsl(168,76%,20%)]/60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/50 to-transparent" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/50 to-transparent" />
 
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -394,10 +397,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ STATS BANNER WITH IMAGE ═══════════════ */}
       <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={bannerPattern} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/80 backdrop-blur-sm" />
-        </div>
+        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/70 backdrop-blur-md" />
         {/* Marquee strip top */}
         <div className="relative z-10 border-b border-white/5 mb-10">
           <MarqueeStrip />
@@ -423,7 +423,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FEATURES GRID WITH PHOTOS ═══════════════ */}
-      <section id="features" className="relative py-28 px-4 bg-[hsl(210,40%,98%)]">
+      <section id="features" className="relative py-28 px-4">
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading
@@ -459,10 +460,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ RIBBON BANNER CTA ═══════════════ */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(168,76%,36%)] via-[hsl(168,76%,32%)] to-[hsl(200,80%,40%)]" />
-        <div className="absolute inset-0 opacity-10">
-          <img src={bannerPattern} alt="" className="w-full h-full object-cover" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(168,76%,36%)]/90 via-[hsl(168,76%,32%)]/90 to-[hsl(200,80%,40%)]/90 backdrop-blur-lg" />
         <div className="relative z-10 max-w-5xl mx-auto py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
@@ -484,7 +482,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ HOW IT WORKS WITH PHOTOS ═══════════════ */}
-      <section id="how-it-works" className="py-28 px-4 bg-white relative overflow-hidden">
+      <section id="how-it-works" className="py-28 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading
@@ -527,11 +526,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ LARGE FEATURE - PRONTUÁRIO WITH PHOTO ═══════════════ */}
-      <section className="py-28 px-4 bg-[hsl(210,40%,98%)] relative overflow-hidden">
-        {/* Background decorative image */}
-        <div className="absolute top-0 right-0 w-1/3 h-full opacity-[0.03]">
-          <img src={doctorUsingTablet} alt="" className="w-full h-full object-cover" />
-        </div>
+      <section className="py-28 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/90 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal>
             <div>
@@ -584,7 +580,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ DIFFERENTIALS WITH IMAGE BACKGROUND ═══════════════ */}
-      <section id="differentials" className="py-28 px-4 bg-white relative overflow-hidden">
+      <section id="differentials" className="py-28 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading badge="🏥 Diferenciais" title="Por que clínicas escolhem o" highlight="EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
@@ -623,7 +620,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ WHATSAPP AI WITH PHOTO ═══════════════ */}
-      <section id="whatsapp-ai" className="py-28 px-4 bg-[hsl(210,40%,98%)]">
+      <section id="whatsapp-ai" className="py-28 px-4 relative">
+        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/88 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div>
@@ -683,10 +681,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ TESTIMONIALS WITH PHOTOS ═══════════════ */}
       <section id="testimonials" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={medicalTeam} alt="" className="w-full h-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-white/[0.92] backdrop-blur-sm" />
-        </div>
+        <div className="absolute inset-0 bg-white/88 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading badge="⭐ Depoimentos" title="Quem usa," highlight="recomenda" description="Veja o que profissionais de saúde dizem sobre o EloLab." />
@@ -739,7 +734,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}
-      <section id="faq" className="py-28 px-4 bg-white">
+      <section id="faq" className="py-28 px-4 relative">
+        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
         <div className="max-w-3xl mx-auto">
           <Reveal>
             <SectionHeading badge="❓ Perguntas frequentes" title="Tire suas" highlight="dúvidas" description="Tudo que você precisa saber antes de começar." />
@@ -767,10 +763,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ FINAL CTA WITH IMAGE ═══════════════ */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroInstitutional} alt="" className="w-full h-full object-cover" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,8%)]/95 via-[hsl(215,30%,9%)]/90 to-[hsl(168,76%,20%)]/50" />
-        </div>
+        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/85 backdrop-blur-lg" />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-[hsl(168,76%,36%)]/[0.08] rounded-full blur-[180px]" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[hsl(200,80%,50%)]/[0.05] rounded-full blur-[150px]" />
@@ -818,7 +811,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="bg-[hsl(215,28%,6%)] text-white py-16 px-4">
+      <footer className="bg-[hsl(215,28%,6%)]/95 backdrop-blur-lg text-white py-16 px-4 relative">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div className="lg:col-span-2">
@@ -906,6 +899,7 @@ export default function LandingPage() {
 
       {/* Float animation keyframe */}
       <style>{`@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }`}</style>
+      </div>{/* end relative z-10 wrapper */}
     </div>
   );
 }
