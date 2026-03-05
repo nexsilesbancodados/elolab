@@ -68,13 +68,13 @@ function AnimatedStat({ value, suffix, label, icon: Icon }: { value: number; suf
   const { count, ref } = useCounter(value);
   return (
     <div ref={ref} className="text-center group">
-      <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300 border border-white/10">
-        <Icon className="h-6 w-6 text-[hsl(168,76%,50%)] group-hover:text-white transition-colors duration-300" />
+      <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-[hsl(168,76%,36%)]/10 flex items-center justify-center group-hover:bg-[hsl(168,76%,36%)] transition-colors duration-300">
+        <Icon className="h-6 w-6 text-[hsl(168,76%,36%)] group-hover:text-white transition-colors duration-300" />
       </div>
-      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-white">
-        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,50%)]">{suffix}</span>
+      <div className="text-4xl sm:text-5xl font-extrabold font-display tabular-nums text-[hsl(215,28%,17%)]">
+        {count.toLocaleString('pt-BR')}<span className="text-[hsl(168,76%,36%)]">{suffix}</span>
       </div>
-      <div className="text-white/50 text-sm mt-2 font-medium">{label}</div>
+      <div className="text-[hsl(215,15%,50%)] text-sm mt-2 font-medium">{label}</div>
     </div>
   );
 }
@@ -192,7 +192,7 @@ function MarqueeStrip() {
     <div className="overflow-hidden py-4">
       <div className="flex animate-[scroll_30s_linear_infinite] gap-12 whitespace-nowrap">
         {[...logos, ...logos].map((logo, i) => (
-          <span key={i} className="text-white/20 text-sm font-medium tracking-wide flex-shrink-0">{logo}</span>
+          <span key={i} className="text-[hsl(168,76%,36%)]/30 text-sm font-medium tracking-wide flex-shrink-0">{logo}</span>
         ))}
       </div>
     </div>
@@ -254,13 +254,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
-      {/* ═══════════════ SINGLE FIXED 3D DOTTED BACKGROUND ═══════════════ */}
-      <div className="fixed inset-0 z-0 bg-[hsl(215,28%,8%)]">
+      {/* ═══════════════ SINGLE FIXED WHITE+GREEN BACKGROUND ═══════════════ */}
+      <div className="fixed inset-0 z-0 bg-white">
         <DottedSurface />
-        {/* Gradient overlays for depth */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,30%)]/10 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(200,80%,40%)]/8 blur-[120px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,90%)]/40 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(168,76%,85%)]/30 blur-[120px]" />
         </div>
       </div>
       {/* All content scrolls over the fixed bg */}
@@ -273,14 +272,14 @@ export default function LandingPage() {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-[hsl(168,76%,97%)]" />
 
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-[hsl(168,76%,50%)]/20 blur-sm animate-pulse"
+              className="absolute rounded-full bg-[hsl(168,76%,50%)]/15 blur-sm animate-pulse"
               style={{
                 width: `${8 + i * 4}px`,
                 height: `${8 + i * 4}px`,
@@ -297,7 +296,7 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <Reveal>
-                <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-md border border-white/10 text-white rounded-full px-5 py-2.5 text-sm font-medium mb-8">
+                <div className="inline-flex items-center gap-2 bg-[hsl(168,76%,36%)]/8 backdrop-blur-md border border-[hsl(168,76%,36%)]/15 text-[hsl(168,76%,30%)] rounded-full px-5 py-2.5 text-sm font-medium mb-8">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(168,76%,50%)] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[hsl(168,76%,50%)]" />
@@ -307,9 +306,9 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={100}>
-                <h1 className="text-[2.75rem] sm:text-[3.5rem] lg:text-[4.25rem] font-extrabold leading-[1.05] tracking-tight font-display text-white mb-6">
+                <h1 className="text-[2.75rem] sm:text-[3.5rem] lg:text-[4.25rem] font-extrabold leading-[1.05] tracking-tight font-display text-[hsl(215,28%,17%)] mb-6">
                   Gestão clínica{' '}
-                  <span className="bg-gradient-to-r from-[hsl(168,76%,50%)] via-[hsl(168,76%,60%)] to-[hsl(200,80%,55%)] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[hsl(168,76%,36%)] via-[hsl(168,76%,45%)] to-[hsl(168,76%,50%)] bg-clip-text text-transparent">
                     inteligente
                   </span>{' '}
                   e completa
@@ -317,7 +316,7 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={200}>
-                <p className="text-lg sm:text-xl text-white/60 leading-relaxed max-w-[540px] mb-10">
+                <p className="text-lg sm:text-xl text-[hsl(215,15%,42%)] leading-relaxed max-w-[540px] mb-10">
                   Agenda, prontuário eletrônico, financeiro e IA em uma plataforma segura, moderna e em conformidade com a LGPD.
                 </p>
               </Reveal>
@@ -337,7 +336,7 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10 rounded-xl h-14 font-medium backdrop-blur-sm"
+                    className="border-[hsl(168,76%,36%)]/30 text-[hsl(168,76%,30%)] hover:bg-[hsl(168,76%,36%)]/8 rounded-xl h-14 font-medium"
                     onClick={() => scrollTo('features')}
                   >
                     <PlayCircle className="mr-2 h-5 w-5" /> Ver funcionalidades
@@ -346,10 +345,10 @@ export default function LandingPage() {
               </Reveal>
 
               <Reveal delay={400}>
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-10 text-sm text-white/40">
-                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,50%)]" /> Sem fidelidade</span>
-                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,50%)]" /> Suporte humano</span>
-                  <span className="flex items-center gap-2"><Lock className="h-4 w-4 text-[hsl(168,76%,50%)]" /> LGPD</span>
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-10 text-sm text-[hsl(215,15%,55%)]">
+                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" /> Sem fidelidade</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" /> Suporte humano</span>
+                  <span className="flex items-center gap-2"><Lock className="h-4 w-4 text-[hsl(168,76%,36%)]" /> LGPD</span>
                 </div>
               </Reveal>
             </div>
@@ -358,35 +357,35 @@ export default function LandingPage() {
             <Reveal delay={500} className="hidden lg:block">
               <div className="relative">
                 <div className="absolute -inset-8 bg-gradient-to-br from-[hsl(168,76%,50%)]/10 to-[hsl(200,80%,50%)]/5 rounded-[2rem] blur-3xl" />
-                <div className="relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl p-4 shadow-2xl">
+                <div className="relative bg-white/80 backdrop-blur-sm border border-[hsl(168,76%,36%)]/10 rounded-2xl p-4 shadow-2xl shadow-[hsl(168,76%,36%)]/10">
                   <div className="flex gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-[hsl(0,72%,51%)]/60" />
-                    <div className="w-3 h-3 rounded-full bg-[hsl(38,92%,50%)]/60" />
-                    <div className="w-3 h-3 rounded-full bg-[hsl(142,70%,35%)]/60" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(0,72%,65%)]" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(38,92%,60%)]" />
+                    <div className="w-3 h-3 rounded-full bg-[hsl(168,76%,45%)]" />
                   </div>
-                  <img src={dashboardPreview} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-white/5" loading="eager" />
+                  <img src={dashboardPreview} alt="Dashboard EloLab" className="w-full rounded-xl shadow-lg ring-1 ring-[hsl(168,76%,36%)]/10" loading="eager" />
                 </div>
                 {/* Floating mini card */}
-                <div className="absolute -bottom-6 -left-8 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_4s_ease-in-out_infinite]">
+                <div className="absolute -bottom-6 -left-8 bg-white border border-[hsl(168,76%,36%)]/15 rounded-xl p-3 shadow-xl animate-[float_4s_ease-in-out_infinite]">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-[hsl(168,76%,36%)] flex items-center justify-center">
                       <TrendingUp className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold">+32%</p>
-                      <p className="text-white/50 text-[10px]">Eficiência</p>
+                      <p className="text-[hsl(215,28%,17%)] text-xs font-bold">+32%</p>
+                      <p className="text-[hsl(215,15%,55%)] text-[10px]">Eficiência</p>
                     </div>
                   </div>
                 </div>
                 {/* Another floating card */}
-                <div className="absolute -top-4 -right-6 bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-xl animate-[float_5s_ease-in-out_infinite_1s]">
+                <div className="absolute -top-4 -right-6 bg-white border border-[hsl(168,76%,36%)]/15 rounded-xl p-3 shadow-xl animate-[float_5s_ease-in-out_infinite_1s]">
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-[hsl(142,70%,35%)] flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-lg bg-[hsl(168,76%,45%)] flex items-center justify-center">
                       <Users className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold">1.2K</p>
-                      <p className="text-white/50 text-[10px]">Pacientes/mês</p>
+                      <p className="text-[hsl(215,28%,17%)] text-xs font-bold">1.2K</p>
+                      <p className="text-[hsl(215,15%,55%)] text-[10px]">Pacientes/mês</p>
                     </div>
                   </div>
                 </div>
@@ -396,13 +395,13 @@ export default function LandingPage() {
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <ChevronDown className="h-6 w-6 text-white/30" />
+          <ChevronDown className="h-6 w-6 text-[hsl(168,76%,36%)]/40" />
         </div>
       </section>
 
       {/* ═══════════════ STATS BANNER WITH IMAGE ═══════════════ */}
       <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/70 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)] backdrop-blur-md" />
         {/* Marquee strip top */}
         <div className="relative z-10 mb-10">
           <MarqueeStrip />
@@ -429,7 +428,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ FEATURES GRID WITH PHOTOS ═══════════════ */}
       <section id="features" className="relative py-28 px-4">
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading
@@ -488,7 +487,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ HOW IT WORKS WITH PHOTOS ═══════════════ */}
       <section id="how-it-works" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading
@@ -532,7 +531,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ LARGE FEATURE - PRONTUÁRIO WITH PHOTO ═══════════════ */}
       <section className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/90 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal>
             <div>
@@ -586,7 +585,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ DIFFERENTIALS WITH IMAGE BACKGROUND ═══════════════ */}
       <section id="differentials" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <SectionHeading badge="🏥 Diferenciais" title="Por que clínicas escolhem o" highlight="EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
@@ -598,10 +597,10 @@ export default function LandingPage() {
             <Reveal className="lg:col-span-2">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl h-full min-h-[400px]">
                 <img src={clinicWaitingRoom} alt="Sala de espera moderna" className="w-full h-full object-cover absolute inset-0" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(215,28%,8%)]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(168,76%,25%)]/80 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 z-10">
                   <h3 className="text-white font-extrabold text-xl font-display mb-2">Ambiente moderno</h3>
-                  <p className="text-white/60 text-sm">Painel TV integrado para exibir a fila de atendimento na recepção</p>
+                  <p className="text-white/70 text-sm">Painel TV integrado para exibir a fila de atendimento na recepção</p>
                 </div>
               </div>
             </Reveal>
@@ -626,7 +625,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ WHATSAPP AI WITH PHOTO ═══════════════ */}
       <section id="whatsapp-ai" className="py-28 px-4 relative">
-        <div className="absolute inset-0 bg-[hsl(210,40%,98%)]/88 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div>
@@ -686,7 +685,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ TESTIMONIALS WITH PHOTOS ═══════════════ */}
       <section id="testimonials" className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/88 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal>
             <SectionHeading badge="⭐ Depoimentos" title="Quem usa," highlight="recomenda" description="Veja o que profissionais de saúde dizem sobre o EloLab." />
@@ -740,7 +739,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ FAQ ═══════════════ */}
       <section id="faq" className="py-28 px-4 relative">
-        <div className="absolute inset-0 bg-white/92 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-lg" />
         <div className="max-w-3xl mx-auto">
           <Reveal>
             <SectionHeading badge="❓ Perguntas frequentes" title="Tire suas" highlight="dúvidas" description="Tudo que você precisa saber antes de começar." />
@@ -768,28 +767,28 @@ export default function LandingPage() {
 
       {/* ═══════════════ FINAL CTA WITH IMAGE ═══════════════ */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[hsl(215,28%,8%)]/85 backdrop-blur-lg" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(168,76%,36%)] via-[hsl(168,76%,32%)] to-[hsl(168,76%,28%)]" />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-[hsl(168,76%,36%)]/[0.08] rounded-full blur-[180px]" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[hsl(200,80%,50%)]/[0.05] rounded-full blur-[150px]" />
+          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-white/[0.06] rounded-full blur-[180px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-white/[0.04] rounded-full blur-[150px]" />
         </div>
         <div className="max-w-4xl mx-auto text-center relative z-10 py-32 px-4">
           <Reveal>
-            <div className="inline-flex items-center gap-2 bg-white/[0.06] backdrop-blur rounded-full px-5 py-2.5 text-sm text-white/60 font-medium mb-8 border border-white/[0.08]">
-              <Award className="h-4 w-4 text-[hsl(168,76%,50%)]" /> +500 clínicas já confiam no EloLab
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-full px-5 py-2.5 text-sm text-white font-medium mb-8 border border-white/20">
+              <Award className="h-4 w-4 text-white" /> +500 clínicas já confiam no EloLab
             </div>
             <h2 className="text-3xl sm:text-[3rem] font-extrabold font-display text-white leading-tight mb-5">
               Comece a transformar{' '}
-              <span className="bg-gradient-to-r from-[hsl(168,76%,50%)] to-[hsl(200,80%,55%)] bg-clip-text text-transparent">sua clínica</span>{' '}
+              <span className="text-white/90 underline decoration-white/30 underline-offset-4">sua clínica</span>{' '}
               hoje
             </h2>
-            <p className="text-white/40 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
               Junte-se a milhares de profissionais de saúde que já simplificaram a gestão do consultório.
             </p>
             {/* Mini gallery */}
             <div className="flex justify-center gap-3 mb-12">
               {[dashboardPreview, doctorUsingTablet, clinicWaitingRoom, whatsappPhone].map((img, i) => (
-                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/10 hover:ring-[hsl(168,76%,50%)]/50 transition-all duration-300 hover:scale-110">
+                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/30 hover:ring-white/60 transition-all duration-300 hover:scale-110">
                   <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               ))}
@@ -797,7 +796,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white rounded-xl text-base px-8 h-14 shadow-2xl shadow-[hsl(168,76%,36%)]/25 font-bold group"
+                className="bg-white text-[hsl(168,76%,30%)] hover:bg-white/90 rounded-xl text-base px-8 h-14 shadow-2xl font-bold group"
                 onClick={() => scrollTo('pricing')}
               >
                 Testar grátis 3 dias <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -805,7 +804,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white/15 text-white hover:bg-white/[0.06] rounded-xl text-base px-8 h-14 font-medium"
+                className="border-white/30 text-white hover:bg-white/10 rounded-xl text-base px-8 h-14 font-medium"
                 onClick={() => navigate('/auth')}
               >
                 <LogIn className="mr-2 h-5 w-5" /> Já tenho conta
@@ -816,7 +815,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer className="bg-[hsl(215,28%,6%)]/95 backdrop-blur-lg text-white py-16 px-4 relative">
+      <footer className="bg-[hsl(168,76%,97%)] text-[hsl(215,28%,17%)] py-16 px-4 relative">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div className="lg:col-span-2">
@@ -826,38 +825,38 @@ export default function LandingPage() {
                   ELO<span className="text-[hsl(168,76%,36%)]">LAB</span>
                 </span>
               </div>
-              <p className="text-white/35 text-sm leading-relaxed max-w-sm mb-6">
+              <p className="text-[hsl(215,15%,50%)] text-sm leading-relaxed max-w-sm mb-6">
                 Software de gestão completo para clínicas e consultórios médicos. Agenda, prontuário, financeiro e IA — tudo em um só lugar.
               </p>
-              <div className="flex flex-col gap-2 text-sm text-white/30">
-                <a href="mailto:contato@elolab.com.br" className="flex items-center gap-2 hover:text-white/60 transition-colors">
+              <div className="flex flex-col gap-2 text-sm text-[hsl(215,15%,45%)]">
+                <a href="mailto:contato@elolab.com.br" className="flex items-center gap-2 hover:text-[hsl(168,76%,36%)] transition-colors">
                   <Mail className="h-4 w-4" /> contato@elolab.com.br
                 </a>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-sm mb-4 text-white/50 uppercase tracking-wider">Produto</h4>
-              <div className="space-y-3 text-sm text-white/35">
-                <button onClick={() => scrollTo('features')} className="block hover:text-white/70 transition-colors">Funcionalidades</button>
-                <button onClick={() => scrollTo('how-it-works')} className="block hover:text-white/70 transition-colors">Como funciona</button>
-                <button onClick={() => scrollTo('pricing')} className="block hover:text-white/70 transition-colors">Planos e preços</button>
-                <button onClick={() => scrollTo('faq')} className="block hover:text-white/70 transition-colors">FAQ</button>
+              <h4 className="font-bold text-sm mb-4 text-[hsl(168,76%,36%)] uppercase tracking-wider">Produto</h4>
+              <div className="space-y-3 text-sm text-[hsl(215,15%,45%)]">
+                <button onClick={() => scrollTo('features')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Funcionalidades</button>
+                <button onClick={() => scrollTo('how-it-works')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Como funciona</button>
+                <button onClick={() => scrollTo('pricing')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Planos e preços</button>
+                <button onClick={() => scrollTo('faq')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">FAQ</button>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-sm mb-4 text-white/50 uppercase tracking-wider">Acesso</h4>
-              <div className="space-y-3 text-sm text-white/35">
-                <button onClick={() => navigate('/auth')} className="block hover:text-white/70 transition-colors">Login</button>
-                <button onClick={() => scrollTo('pricing')} className="block hover:text-white/70 transition-colors">Criar conta grátis</button>
-                <button onClick={() => navigate('/portal-paciente')} className="block hover:text-white/70 transition-colors">Portal do Paciente</button>
-                <a href="mailto:contato@elolab.com.br" className="block hover:text-white/70 transition-colors">Suporte</a>
+              <h4 className="font-bold text-sm mb-4 text-[hsl(168,76%,36%)] uppercase tracking-wider">Acesso</h4>
+              <div className="space-y-3 text-sm text-[hsl(215,15%,45%)]">
+                <button onClick={() => navigate('/auth')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Login</button>
+                <button onClick={() => scrollTo('pricing')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Criar conta grátis</button>
+                <button onClick={() => navigate('/portal-paciente')} className="block hover:text-[hsl(168,76%,36%)] transition-colors">Portal do Paciente</button>
+                <a href="mailto:contato@elolab.com.br" className="block hover:text-[hsl(168,76%,36%)] transition-colors">Suporte</a>
               </div>
             </div>
           </div>
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/20">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[hsl(215,15%,60%)]">
             <span>© {new Date().getFullYear()} EloLab. Todos os direitos reservados.</span>
             <div className="flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5" /> Em conformidade com a LGPD
+              <Shield className="h-3.5 w-3.5 text-[hsl(168,76%,36%)]" /> Em conformidade com a LGPD
             </div>
           </div>
         </div>
