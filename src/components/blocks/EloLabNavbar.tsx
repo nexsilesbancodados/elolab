@@ -28,7 +28,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import logoInovalab from "@/assets/logo-elolab.png";
+import logoIcon from "@/assets/logo-icon.png";
 
 interface NavMenuItem {
   title: string;
@@ -259,7 +259,7 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               className="flex items-center gap-2.5"
             >
-              <img src={logoInovalab} className="h-9 w-9 rounded-lg object-contain" alt="EloLab" />
+              <img src={logoIcon} className="h-10 w-10 object-contain" alt="EloLab" />
               <span className="text-[22px] font-extrabold font-display tracking-tight">
                 <span className={scrolled ? "text-[hsl(215,28%,17%)]" : "text-white"}>
                   ELO
@@ -304,7 +304,7 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-2.5"
           >
-            <img src={logoInovalab} className="h-9 w-9 rounded-lg object-contain" alt="EloLab" />
+            <img src={logoIcon} className="h-10 w-10 object-contain" alt="EloLab" />
             <span className="text-[22px] font-extrabold font-display tracking-tight">
               <span className={scrolled ? "text-[hsl(215,28%,17%)]" : "text-white"}>ELO</span>
               <span className="text-[hsl(168,76%,36%)]">LAB</span>
@@ -324,7 +324,7 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
               <SheetHeader>
                 <SheetTitle>
                   <div className="flex items-center gap-2.5">
-                    <img src={logoInovalab} className="h-8 w-8 rounded-lg object-contain" alt="EloLab" />
+                    <img src={logoIcon} className="h-9 w-9 object-contain" alt="EloLab" />
                     <span className="text-lg font-extrabold font-display tracking-tight">
                       ELO<span className="text-[hsl(168,76%,36%)]">LAB</span>
                     </span>
