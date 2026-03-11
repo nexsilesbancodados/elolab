@@ -331,9 +331,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
-      {/* ═══════════════ FIXED WHITE+GREEN BACKGROUND ═══════════════ */}
+      {/* ═══════════════ FIXED BACKGROUND ═══════════════ */}
       <div className="fixed inset-0 z-0 bg-white">
-        <DottedSurface />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,90%)]/40 blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(168,76%,85%)]/30 blur-[120px]" />
