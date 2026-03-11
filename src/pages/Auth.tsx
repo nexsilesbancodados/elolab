@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import logoInovalab from '@/assets/logo-elolab.png';
+import logoInovalab from '@/assets/logo-icon.png';
 import heroInstitutional from '@/assets/hero-institutional.webp';
 
 const loginSchema = z.object({

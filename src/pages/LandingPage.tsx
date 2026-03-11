@@ -25,7 +25,7 @@ import heroInstitutional from '@/assets/hero-institutional.webp';
 import doctorTablet from '@/assets/doctor-tablet.webp';
 import clinicReception from '@/assets/clinic-reception.webp';
 import whatsappAi from '@/assets/whatsapp-ai.webp';
-import logoInovalab from '@/assets/logo-elolab.png';
+import logoInovalab from '@/assets/logo-icon.png';
 import dashboardPreview from '@/assets/dashboard-preview.webp';
 import doctorUsingTablet from '@/assets/doctor-using-tablet.webp';
 import clinicWaitingRoom from '@/assets/clinic-waiting-room.webp';
