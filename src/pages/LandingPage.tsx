@@ -35,8 +35,6 @@ import bannerWideClinic from '@/assets/banner-wide-clinic.webp';
 import carouselClinic1 from '@/assets/carousel-clinic-1.webp';
 import carouselDoctor2 from '@/assets/carousel-doctor-2.webp';
 import carouselTeam3 from '@/assets/carousel-team-3.webp';
-import { DottedSurface } from '@/components/ui/dotted-surface';
-import { TubesBackground } from '@/components/ui/neon-flow';
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 2000) {
