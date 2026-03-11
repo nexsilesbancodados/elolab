@@ -28,7 +28,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import logoInovalab from "@/assets/logo-inovalab.jpeg";
+import logoInovalab from "@/assets/logo-elolab.png";
 
 interface NavMenuItem {
   title: string;
