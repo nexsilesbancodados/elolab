@@ -324,7 +324,7 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
               <SheetHeader>
                 <SheetTitle>
                   <div className="flex items-center gap-2.5">
-                    <img src={logoInovalab} className="h-8 w-8 rounded-lg object-contain" alt="EloLab" />
+                    <img src={logoIcon} className="h-9 w-9 object-contain" alt="EloLab" />
                     <span className="text-lg font-extrabold font-display tracking-tight">
                       ELO<span className="text-[hsl(168,76%,36%)]">LAB</span>
                     </span>
