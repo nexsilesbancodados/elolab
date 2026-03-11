@@ -302,11 +302,11 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
         <div className="flex lg:hidden items-center justify-between h-[72px]">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-3"
           >
-            <img src={logoIcon} className="h-10 w-10 object-contain" alt="EloLab" />
-            <span className="text-[22px] font-extrabold font-display tracking-tight">
-              <span className={scrolled ? "text-[hsl(215,28%,17%)]" : "text-white"}>ELO</span>
+            <img src={logoIcon} className="h-12 w-12 object-contain" alt="EloLab" />
+            <span className="text-[24px] font-extrabold font-display tracking-tight">
+              <span className={scrolled ? "text-[hsl(215,28%,17%)]" : "text-[hsl(215,28%,17%)] drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"}>ELO</span>
               <span className="text-[hsl(168,76%,36%)]">LAB</span>
             </span>
           </button>
