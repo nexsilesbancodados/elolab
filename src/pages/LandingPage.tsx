@@ -35,8 +35,6 @@ import bannerWideClinic from '@/assets/banner-wide-clinic.webp';
 import carouselClinic1 from '@/assets/carousel-clinic-1.webp';
 import carouselDoctor2 from '@/assets/carousel-doctor-2.webp';
 import carouselTeam3 from '@/assets/carousel-team-3.webp';
-import { DottedSurface } from '@/components/ui/dotted-surface';
-import { TubesBackground } from '@/components/ui/neon-flow';
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 2000) {
@@ -333,9 +331,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-[hsl(215,28%,17%)] font-sans overflow-x-hidden relative">
-      {/* ═══════════════ FIXED WHITE+GREEN BACKGROUND ═══════════════ */}
+      {/* ═══════════════ FIXED BACKGROUND ═══════════════ */}
       <div className="fixed inset-0 z-0 bg-white">
-        <DottedSurface />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[hsl(168,76%,90%)]/40 blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[hsl(168,76%,85%)]/30 blur-[120px]" />
@@ -891,50 +888,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════ FINAL CTA WITH NEON FLOW ═══════════════ */}
-      <section className="relative overflow-hidden">
-        <TubesBackground className="min-h-[600px]" enableClickInteraction={true}>
-          <div className="max-w-4xl mx-auto text-center py-32 px-4 flex flex-col items-center justify-center h-full">
-            <Reveal effect="zoom">
-              <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-full px-5 py-2.5 text-sm text-white font-medium mb-8 border border-white/20 pointer-events-auto">
-                <Award className="h-4 w-4 text-white" /> +500 clínicas já confiam no EloLab
-              </div>
-              <h2 className="text-3xl sm:text-[3rem] font-extrabold font-display text-white leading-tight mb-5 drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
-                Comece a transformar{' '}
-                <span className="text-white/90 underline decoration-white/30 underline-offset-4">sua clínica</span>{' '}
-                hoje
-              </h2>
-              <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed drop-shadow-[0_1px_10px_rgba(0,0,0,0.4)]">
-                Junte-se a milhares de profissionais de saúde que já simplificaram a gestão do consultório.
-              </p>
-              <div className="flex justify-center gap-3 mb-12 pointer-events-auto">
-                {[dashboardPreview, carouselClinic1, carouselDoctor2, carouselTeam3].map((img, i) => (
-                  <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/30 hover:ring-white/60 transition-all duration-300 hover:scale-110">
-                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pointer-events-auto">
-                <Button
-                  size="lg"
-                  className="bg-white text-[hsl(168,76%,30%)] hover:bg-white/90 rounded-xl text-base px-8 h-14 shadow-2xl font-bold group"
-                  onClick={() => scrollTo('pricing')}
-                >
-                  Testar grátis 3 dias <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 rounded-xl text-base px-8 h-14 font-medium"
-                  onClick={() => navigate('/auth')}
-                >
-                  <LogIn className="mr-2 h-5 w-5" /> Já tenho conta
-                </Button>
-              </div>
-              <p className="text-white/40 text-xs mt-6 pointer-events-auto">Clique para mudar as cores · Mova o cursor para interagir</p>
-            </Reveal>
-          </div>
-        </TubesBackground>
+      {/* ═══════════════ FINAL CTA ═══════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[hsl(168,76%,30%)] via-[hsl(168,60%,25%)] to-[hsl(215,28%,17%)] min-h-[500px] flex items-center justify-center">
+        <div className="max-w-4xl mx-auto text-center py-24 px-4">
+          <Reveal effect="zoom">
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-full px-5 py-2.5 text-sm text-white font-medium mb-8 border border-white/20">
+              <Award className="h-4 w-4 text-white" /> +500 clínicas já confiam no EloLab
+            </div>
+            <h2 className="text-3xl sm:text-[3rem] font-extrabold font-display text-white leading-tight mb-5">
+              Comece a transformar{' '}
+              <span className="text-white/90 underline decoration-white/30 underline-offset-4">sua clínica</span>{' '}
+              hoje
+            </h2>
+            <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+              Junte-se a milhares de profissionais de saúde que já simplificaram a gestão do consultório.
+            </p>
+            <div className="flex justify-center gap-3 mb-12">
+              {[dashboardPreview, carouselClinic1, carouselDoctor2, carouselTeam3].map((img, i) => (
+                <div key={i} className="h-16 w-16 rounded-xl overflow-hidden ring-2 ring-white/30 hover:ring-white/60 transition-all duration-300 hover:scale-110">
+                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-white text-[hsl(168,76%,30%)] hover:bg-white/90 rounded-xl text-base px-8 h-14 shadow-2xl font-bold group"
+                onClick={() => scrollTo('pricing')}
+              >
+                Testar grátis 3 dias <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white/30 text-white hover:bg-white/10 rounded-xl text-base px-8 h-14 font-medium"
+                onClick={() => navigate('/auth')}
+              >
+                <LogIn className="mr-2 h-5 w-5" /> Já tenho conta
+              </Button>
+            </div>
+          </Reveal>
+        </div>
       </section>
       <footer className="bg-[hsl(168,76%,97%)] text-[hsl(215,28%,17%)] py-16 px-4 relative">
         <div className="max-w-6xl mx-auto">
