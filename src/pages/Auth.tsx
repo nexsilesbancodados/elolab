@@ -13,7 +13,7 @@ import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, Arro
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import logoInovalab from '@/assets/logo-icon.png';
-import heroInstitutional from '@/assets/hero-institutional.webp';
+import heroInstitutional from '@/assets/hero-institutional.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
