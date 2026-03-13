@@ -21,20 +21,20 @@ import {
   Activity, Layers, Lock, Award,
   MousePointerClick, Rocket, Settings2, Phone, Globe, TrendingUp
 } from 'lucide-react';
-import heroInstitutional from '@/assets/hero-institutional.webp';
-import doctorTablet from '@/assets/doctor-tablet.webp';
-import clinicReception from '@/assets/clinic-reception.webp';
-import whatsappAi from '@/assets/whatsapp-ai.webp';
+import heroInstitutional from '@/assets/hero-institutional.png';
+import doctorTablet from '@/assets/doctor-tablet.png';
+import clinicReception from '@/assets/clinic-reception.png';
+import whatsappAi from '@/assets/whatsapp-ai.png';
 import logoInovalab from '@/assets/logo-icon.png';
-import dashboardPreview from '@/assets/dashboard-preview.webp';
-import doctorUsingTablet from '@/assets/doctor-using-tablet.webp';
-import clinicWaitingRoom from '@/assets/clinic-waiting-room.webp';
-import medicalTeam from '@/assets/medical-team.webp';
-import whatsappPhone from '@/assets/whatsapp-phone.webp';
-import bannerWideClinic from '@/assets/banner-wide-clinic.webp';
-import carouselClinic1 from '@/assets/carousel-clinic-1.webp';
-import carouselDoctor2 from '@/assets/carousel-doctor-2.webp';
-import carouselTeam3 from '@/assets/carousel-team-3.webp';
+import dashboardPreview from '@/assets/dashboard-preview.png';
+import doctorUsingTablet from '@/assets/doctor-using-tablet.png';
+import clinicWaitingRoom from '@/assets/clinic-waiting-room.png';
+import medicalTeam from '@/assets/medical-team.png';
+import whatsappPhone from '@/assets/whatsapp-phone.png';
+import bannerWideClinic from '@/assets/banner-wide-clinic.png';
+import carouselClinic1 from '@/assets/carousel-clinic-1.png';
+import carouselDoctor2 from '@/assets/carousel-doctor-2.png';
+import carouselTeam3 from '@/assets/carousel-team-3.png';
 
 /* ─── Animated counter hook ─── */
 function useCounter(target: number, duration = 2000) {
