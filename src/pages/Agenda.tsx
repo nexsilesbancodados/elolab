@@ -96,6 +96,10 @@ export default function Agenda() {
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
+  const { data: bloqueios = [] } = useSupabaseQuery<{
+    id: string; medico_id: string; data_inicio: string; data_fim: string;
+    hora_inicio: string | null; hora_fim: string | null; dia_inteiro: boolean; motivo: string | null; tipo: string;
+  }>('bloqueios_agenda');
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
