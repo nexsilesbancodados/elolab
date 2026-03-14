@@ -30,6 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyAgendamentos } from '@/components/EmptyState';
 import { Database } from '@/integrations/supabase/types';
+import { BloqueioAgenda } from '@/components/agenda/BloqueioAgenda';
 
 type StatusAgendamento = Database['public']['Enums']['status_agendamento'];
 
