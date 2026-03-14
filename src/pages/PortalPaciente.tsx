@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, FlaskConical, CreditCard, User, ExternalLink, Lock } from 'lucide-react';
+import { Calendar, FlaskConical, CreditCard, User, ExternalLink, Lock , Star, ThumbsUp, MessageSquare, CheckCircle2, HeartHandshake} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -32,6 +33,9 @@ export default function PortalPaciente() {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [exames, setExames] = useState<any[]>([]);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const [npsNota, setNpsNota] = useState<number | null>(null);
+  const [npsComentario, setNpsComentario] = useState('');
+  const [npsSent, setNpsSent] = useState(false);
 
   const fetchData = async (accessToken: string, action: string) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
