@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2, LayoutList, LayoutGrid, Users, CalendarCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -92,6 +93,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const queryClient = useQueryClient();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
@@ -114,6 +116,17 @@ export default function Agenda() {
       return true;
     });
   }, [agendamentos, selectedMedico]);
+
+  // Stats do dia atual
+  const hoje = format(new Date(), 'yyyy-MM-dd');
+  const agendamentosHoje = filteredAgendamentos.filter(a => a.data === hoje);
+  const statsHoje = {
+    total: agendamentosHoje.length,
+    confirmados: agendamentosHoje.filter(a => a.status === 'confirmado').length,
+    finalizados: agendamentosHoje.filter(a => a.status === 'finalizado').length,
+    cancelados: agendamentosHoje.filter(a => a.status === 'cancelado').length,
+    aguardando: agendamentosHoje.filter(a => a.status === 'aguardando' || a.status === 'agendado').length,
+  };
 
   const isSlotBlocked = (data: Date, hora: string) => {
     const dataStr = format(data, 'yyyy-MM-dd');
@@ -320,6 +333,24 @@ export default function Agenda() {
         }} />
       ) : (
         <>
+          {/* Stats do dia */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Consultas hoje', value: statsHoje.total, color: 'text-primary', bg: 'bg-primary/10' },
+              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-success', bg: 'bg-success/10' },
+              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-warning', bg: 'bg-warning/10' },
+              { label: 'Finalizados', value: statsHoje.finalizados, color: 'text-muted-foreground', bg: 'bg-muted' },
+            ].map(s => (
+              <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${s.bg}`}>
+                  <span className={`text-lg font-bold ${s.color}`}>{s.value}</span>
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -335,12 +366,73 @@ export default function Agenda() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
-                  Hoje
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
+                    Hoje
+                  </Button>
+                  <div className="flex rounded-lg border overflow-hidden">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0 border-l"
+                      onClick={() => setViewMode('list')}
+                    >
+                      <LayoutList className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              {viewMode === 'list' ? (
+                <div className="divide-y">
+                  {filteredAgendamentos
+                    .filter(a => a.data >= format(weekDays[0], 'yyyy-MM-dd') && a.data <= format(weekDays[6], 'yyyy-MM-dd'))
+                    .sort((a, b) => `${a.data}${a.hora_inicio}`.localeCompare(`${b.data}${b.hora_inicio}`))
+                    .map(ag => (
+                      <motion.div key={ag.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-4 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer"
+                        onClick={() => handleSlotClick(parseISO(ag.data), ag.hora_inicio || '08:00')}
+                      >
+                        <div className="w-16 text-center shrink-0">
+                          <p className="text-xs text-muted-foreground">{format(parseISO(ag.data), 'EEE', { locale: ptBR })}</p>
+                          <p className="font-bold text-sm">{format(parseISO(ag.data), 'dd/MM')}</p>
+                        </div>
+                        <div className={`w-2 h-10 rounded-full shrink-0 ${
+                          ag.status === 'confirmado' ? 'bg-success' :
+                          ag.status === 'cancelado' ? 'bg-destructive' :
+                          ag.status === 'finalizado' ? 'bg-muted-foreground' :
+                          ag.status === 'em_atendimento' ? 'bg-purple-500' : 'bg-info'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{getPacienteNome(ag.paciente_id)}</p>
+                          <p className="text-xs text-muted-foreground truncate">{getMedicoNome(ag.medico_id)}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-medium">{ag.hora_inicio?.slice(0,5)}</p>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${STATUS_COLORS[ag.status as StatusAgendamento || 'agendado']}`}>
+                            {STATUS_LABELS[ag.status as StatusAgendamento || 'agendado']}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))
+                  }
+                  {filteredAgendamentos.filter(a => a.data >= format(weekDays[0], 'yyyy-MM-dd') && a.data <= format(weekDays[6], 'yyyy-MM-dd')).length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <CalendarCheck className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground">Nenhum agendamento esta semana</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <div className="min-w-[800px]">
                   {/* Header with days */}
@@ -419,6 +511,7 @@ export default function Agenda() {
                   </div>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
 
