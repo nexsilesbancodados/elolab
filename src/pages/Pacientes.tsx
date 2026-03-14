@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Tag, Link, Copy, Loader2 } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Edit, Trash2, Eye, Tag, Link, Copy, Loader2, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -58,6 +59,28 @@ export default function Pacientes() {
   const [formData, setFormData] = useState<PacienteFormData>(initialFormData);
   const [isEtiquetaOpen, setIsEtiquetaOpen] = useState(false);
   const [viewTab, setViewTab] = useState('dados');
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const buscarCep = useCallback(async (cep: string) => {
+    const cleaned = cep.replace(/\D/g, '');
+    if (cleaned.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setFormData(prev => ({
+          ...prev,
+          logradouro: data.logradouro || prev.logradouro,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          estado: data.uf || prev.estado,
+        }));
+      }
+    } catch { /* silently fail */ } finally {
+      setCepLoading(false);
+    }
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
@@ -396,11 +419,21 @@ export default function Pacientes() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>CEP</Label>
-                  <Input
-                    value={formData.cep}
-                    onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                    placeholder="00000-000"
-                  />
+                  <div className="relative">
+                    <Input
+                      value={formData.cep}
+                      onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                      onBlur={(e) => buscarCep(e.target.value)}
+                      placeholder="00000-000"
+                      className="pr-8"
+                    />
+                    {cepLoading ? (
+                      <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Sai do campo para preencher endereço</p>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Logradouro</Label>
