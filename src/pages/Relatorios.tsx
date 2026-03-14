@@ -31,7 +31,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { usePacientes, useAgendamentos, useLancamentos, useMedicos, useEstoque } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
-import { exportarFinanceiro } from '@/lib/excelExporter';
+import { exportarFinanceiro, exportarPacientes, exportarAgendamentos, exportarEstoque } from '@/lib/excelExporter';
 import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF } from '@/lib/pdfGenerator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
