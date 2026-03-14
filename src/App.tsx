@@ -53,6 +53,8 @@ const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
 const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
 const Tarefas = lazy(() => import("@/pages/Tarefas"));
 const Retornos = lazy(() => import("@/pages/Retornos"));
+const MapaColeta = lazy(() => import("@/pages/MapaColeta"));
+const LaudosLab = lazy(() => import("@/pages/LaudosLab"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Loading fallback component
@@ -157,6 +159,8 @@ function App() {
                           <Route path="/precos-exames" element={<PrecosExames />} />
                           <Route path="/tarefas" element={<Tarefas />} />
                           <Route path="/retornos" element={<Retornos />} />
+                          <Route path="/mapa-coleta" element={<MapaColeta />} />
+                          <Route path="/laudos-lab" element={<LaudosLab />} />
                         </Route>
                         
                         <Route path="*" element={<NotFound />} />
