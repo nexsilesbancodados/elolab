@@ -352,7 +352,7 @@ export default function LandingPage() {
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative min-h-[100vh] flex items-center overflow-hidden">
+      <section aria-label="Apresentação principal" className="relative min-h-[100vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/50 to-[hsl(168,76%,97%)]/80" />
 
         {/* Animated rings */}
