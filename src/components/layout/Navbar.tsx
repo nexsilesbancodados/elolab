@@ -34,6 +34,7 @@ import { usePacientes, useMedicos, useAgendamentos } from '@/hooks/useSupabaseDa
 import { cn } from '@/lib/utils';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Users } from 'lucide-react';
