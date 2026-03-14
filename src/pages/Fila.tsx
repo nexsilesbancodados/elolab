@@ -1,57 +1,165 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Play, Check, Volume2, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  UserPlus, Play, Check, Loader2, Clock, ArrowUp, ArrowDown,
+  Users, CheckCircle2, Bell, XCircle, Stethoscope, AlertTriangle,
+  RefreshCw, Timer,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { useFilaAtendimento, useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { useFilaAtendimento, useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
+import { useQueryClient } from '@tanstack/react-query';
+import { format, formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-const STATUS_COLORS: Record<string, string> = {
-  aguardando: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  chamado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  em_atendimento: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  finalizado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+// ─── Helpers ───────────────────────────────────────────────
+function calcularEspera(horarioChegada: string | null): string {
+  if (!horarioChegada) return '—';
+  const mins = Math.floor((Date.now() - new Date(horarioChegada).getTime()) / 60000);
+  if (mins < 1) return 'agora';
+  if (mins < 60) return `${mins}min`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}min`;
+}
+
+function corEspera(horarioChegada: string | null): string {
+  if (!horarioChegada) return 'text-muted-foreground';
+  const mins = Math.floor((Date.now() - new Date(horarioChegada).getTime()) / 60000);
+  if (mins < 15) return 'text-success';
+  if (mins < 30) return 'text-warning';
+  return 'text-destructive font-semibold';
+}
+
+const STATUS_CONFIG = {
+  aguardando: { label: 'Aguardando', color: 'bg-warning/10 text-warning border-warning/20' },
+  em_atendimento: { label: 'Em Atendimento', color: 'bg-primary/10 text-primary border-primary/20' },
+  finalizado: { label: 'Finalizado', color: 'bg-success/10 text-success border-success/20' },
+  chamado: { label: 'Chamado', color: 'bg-info/10 text-info border-info/20' },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  aguardando: 'Aguardando',
-  chamado: 'Chamado',
-  em_atendimento: 'Em Atendimento',
-  finalizado: 'Finalizado',
+const PRIORIDADE_CONFIG = {
+  normal: { label: 'Normal', dot: 'bg-muted-foreground' },
+  preferencial: { label: 'Preferencial', dot: 'bg-warning' },
+  urgente: { label: 'Urgente', dot: 'bg-destructive animate-pulse' },
 };
 
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
+const cardAnim = {
+  hidden: { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, x: 16, transition: { duration: 0.2 } },
+};
+
+// ─── Queue Card ────────────────────────────────────────────
+function FilaCard({ item, pos, pacienteNome, medicoNome, salaNome, onIniciar, onFinalizar, onChamar, onRemover, now }: {
+  item: any; pos: number; pacienteNome: string; medicoNome: string; salaNome: string;
+  onIniciar: () => void; onFinalizar: () => void; onChamar: () => void; onRemover: () => void;
+  now: number;
+}) {
+  const status = item.status as keyof typeof STATUS_CONFIG;
+  const prioridade = (item.prioridade || 'normal') as keyof typeof PRIORIDADE_CONFIG;
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.aguardando;
+  const prioCfg = PRIORIDADE_CONFIG[prioridade] ?? PRIORIDADE_CONFIG.normal;
+
+  return (
+    <motion.div variants={cardAnim} layout>
+      <div className={cn(
+        'rounded-2xl border bg-card transition-all duration-200',
+        status === 'em_atendimento' && 'border-primary/40 shadow-lg shadow-primary/10 ring-1 ring-primary/20',
+        status === 'finalizado' && 'opacity-60',
+      )}>
+        <div className="flex items-center gap-4 p-4">
+          {/* Position badge */}
+          <div className={cn(
+            'h-12 w-12 rounded-xl flex items-center justify-center shrink-0 text-xl font-bold',
+            status === 'em_atendimento' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+          )}>
+            {pos}
+          </div>
+
+          {/* Patient info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-base truncate">{pacienteNome}</p>
+              {prioridade !== 'normal' && (
+                <div className="flex items-center gap-1">
+                  <span className={cn('h-2 w-2 rounded-full', prioCfg.dot)} />
+                  <span className="text-[11px] text-muted-foreground">{prioCfg.label}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 mt-0.5 flex-wrap text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Stethoscope className="h-3.5 w-3.5" />
+                {medicoNome}
+              </span>
+              {salaNome !== '-' && (
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{salaNome}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Timer */}
+          <div className="text-right shrink-0 mr-2">
+            <p className={cn('text-sm font-medium tabular-nums', corEspera(item.horario_chegada))}>
+              <Timer className="h-3.5 w-3.5 inline mr-1" />
+              {calcularEspera(item.horario_chegada)}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {item.horario_chegada ? format(new Date(item.horario_chegada), 'HH:mm', { locale: ptBR }) : '—'}
+            </p>
+          </div>
+
+          {/* Status badge */}
+          <Badge className={cn('text-xs shrink-0 border', cfg.color)}>{cfg.label}</Badge>
+        </div>
+
+        {/* Actions */}
+        {status !== 'finalizado' && (
+          <div className="flex items-center gap-2 px-4 pb-3 pt-1 border-t border-border/50">
+            {status === 'aguardando' && (
+              <>
+                <Button size="sm" className="gap-1.5 h-7 text-xs" onClick={onChamar}>
+                  <Bell className="h-3.5 w-3.5" /> Chamar
+                </Button>
+                <Button size="sm" variant="default" className="gap-1.5 h-7 text-xs bg-primary" onClick={onIniciar}>
+                  <Play className="h-3.5 w-3.5" /> Iniciar
+                </Button>
+              </>
+            )}
+            {status === 'chamado' && (
+              <Button size="sm" className="gap-1.5 h-7 text-xs" onClick={onIniciar}>
+                <Play className="h-3.5 w-3.5" /> Iniciar Atendimento
+              </Button>
+            )}
+            {status === 'em_atendimento' && (
+              <Button size="sm" variant="default" className="gap-1.5 h-7 text-xs bg-success text-white hover:bg-success/90" onClick={onFinalizar}>
+                <CheckCircle2 className="h-3.5 w-3.5" /> Finalizar
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="gap-1.5 h-7 text-xs text-destructive ml-auto" onClick={onRemover}>
+              <XCircle className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────
 export default function Fila() {
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [selectedAgendamento, setSelectedAgendamento] = useState<string>('');
+  const [selectedAgendamento, setSelectedAgendamento] = useState('');
+  const [selectedPrioridade, setSelectedPrioridade] = useState('normal');
   const [isSaving, setIsSaving] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -64,369 +172,247 @@ export default function Fila() {
 
   const isLoading = loadingFila || loadingAgendamentos;
 
-  // Atualizar a cada 30 segundos
+  // Atualizar timer a cada 30s
   useEffect(() => {
     const interval = setInterval(() => {
+      setNow(Date.now());
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
     }, 30000);
     return () => clearInterval(interval);
   }, [queryClient]);
 
-  const agendamentosDisponiveis = agendamentos.filter(
-    (ag) => 
-      ['confirmado', 'agendado'].includes(ag.status || '') && 
-      !fila.some((f) => f.agendamento_id === ag.id)
+  const agendamentosDisponiveis = agendamentos.filter(ag =>
+    ['confirmado', 'agendado', 'aguardando'].includes(ag.status || '') &&
+    !fila.some(f => f.agendamento_id === ag.id)
   );
 
   const filaAtiva = fila
-    .filter((f) => f.status !== 'finalizado')
+    .filter(f => f.status !== 'finalizado')
     .sort((a, b) => a.posicao - b.posicao);
 
-  const getPacienteNome = (agendamentoId: string) => {
-    const ag = agendamentos.find((a) => a.id === agendamentoId);
-    if (!ag) return 'Desconhecido';
-    return pacientes.find((p) => p.id === (ag as any).paciente_id)?.nome || 'Desconhecido';
+  const filaFinalizada = fila
+    .filter(f => f.status === 'finalizado')
+    .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
+    .slice(0, 5);
+
+  const getPacienteNome = (agId: string) => {
+    const ag = agendamentos.find(a => a.id === agId) as any;
+    return ag?.pacientes?.nome ?? pacientes.find(p => p.id === ag?.paciente_id)?.nome ?? 'Desconhecido';
   };
 
-  const getMedicoNome = (agendamentoId: string) => {
-    const ag = agendamentos.find((a) => a.id === agendamentoId);
-    if (!ag) return 'Desconhecido';
-    const medico = medicos.find((m) => m.id === (ag as any).medico_id);
-    return medico ? `Dr(a). ${medico.crm}` : 'Desconhecido';
+  const getMedicoNome = (agId: string) => {
+    const ag = agendamentos.find(a => a.id === agId) as any;
+    const med = ag?.medicos ?? medicos.find(m => m.id === ag?.medico_id);
+    return med ? `Dr(a). ${med.crm}` : '—';
   };
 
-  const getSalaNome = (salaId: string | null) => {
-    if (!salaId) return '-';
-    return salas.find(s => s.id === salaId)?.nome || '-';
+  const getSalaNome = (salaId: string | null) =>
+    salaId ? (salas.find(s => s.id === salaId)?.nome ?? '-') : '-';
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+    queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
   };
 
   const handleAddToFila = async () => {
-    if (!selectedAgendamento) {
-      toast.error('Selecione um agendamento.');
-      return;
-    }
-
+    if (!selectedAgendamento) { toast.error('Selecione um agendamento.'); return; }
     setIsSaving(true);
     try {
-      const maxPosicao = Math.max(0, ...fila.map((f) => f.posicao));
-
+      const maxPos = Math.max(0, ...fila.map(f => f.posicao));
       const { error } = await supabase.from('fila_atendimento').insert({
         agendamento_id: selectedAgendamento,
-        posicao: maxPosicao + 1,
+        posicao: maxPos + 1,
         status: 'aguardando',
+        prioridade: selectedPrioridade,
         horario_chegada: new Date().toISOString(),
       });
-
       if (error) throw error;
-
-      // Atualizar status do agendamento
-      await supabase
-        .from('agendamentos')
-        .update({ status: 'aguardando' })
-        .eq('id', selectedAgendamento);
-
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      
+      await supabase.from('agendamentos').update({ status: 'aguardando' }).eq('id', selectedAgendamento);
+      refresh();
       setIsAddOpen(false);
       setSelectedAgendamento('');
-      toast.success('Paciente adicionado à fila de atendimento.');
-    } catch (error) {
-      console.error('Error adding to queue:', error);
-      toast.error('Erro ao adicionar à fila.');
+      setSelectedPrioridade('normal');
+      toast.success('Paciente adicionado à fila!');
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const chamarPorVoz = (nome: string, sala?: string | null) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const msg = new SpeechSynthesisUtterance(
-        sala ? `Paciente ${nome}, por favor, dirija-se à ${sala}.` : `Paciente ${nome}, por favor, dirija-se à recepção.`
-      );
-      msg.lang = 'pt-BR';
-      msg.rate = 0.9;
-      msg.pitch = 1;
-      window.speechSynthesis.speak(msg);
+  const updateStatus = async (id: string, status: string, agendamentoId?: string) => {
+    await supabase.from('fila_atendimento').update({ status }).eq('id', id);
+    if (agendamentoId) {
+      const agStatus = status === 'em_atendimento' ? 'em_atendimento' : status === 'finalizado' ? 'finalizado' : 'aguardando';
+      await supabase.from('agendamentos').update({ status: agStatus }).eq('id', agendamentoId);
     }
+    refresh();
+    const msgs: Record<string, string> = {
+      chamado: '📢 Paciente chamado!',
+      em_atendimento: '▶ Atendimento iniciado',
+      finalizado: '✅ Atendimento finalizado',
+    };
+    if (msgs[status]) toast.success(msgs[status]);
   };
 
-  const handleChamar = async (item: typeof fila[0]) => {
-    try {
-      const { error } = await supabase
-        .from('fila_atendimento')
-        .update({ status: 'chamado' })
-        .eq('id', item.id);
-
-      if (error) throw error;
-      
-      const nomePaciente = getPacienteNome(item.agendamento_id);
-      const salaNome = getSalaNome(item.sala_id);
-      chamarPorVoz(nomePaciente, salaNome !== '-' ? salaNome : null);
-      
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success(`${nomePaciente} foi chamado.`);
-    } catch (error) {
-      console.error('Error calling patient:', error);
-      toast.error('Erro ao chamar paciente.');
-    }
+  const handleRemover = async (id: string) => {
+    if (!confirm('Remover paciente da fila?')) return;
+    await supabase.from('fila_atendimento').delete().eq('id', id);
+    refresh();
+    toast.info('Paciente removido da fila');
   };
 
-  const handleIniciarAtendimento = async (item: typeof fila[0], salaId: string) => {
-    try {
-      const { error: filaError } = await supabase
-        .from('fila_atendimento')
-        .update({ status: 'em_atendimento', sala_id: salaId })
-        .eq('id', item.id);
-
-      if (filaError) throw filaError;
-
-      const { error: agError } = await supabase
-        .from('agendamentos')
-        .update({ status: 'em_atendimento' })
-        .eq('id', item.agendamento_id);
-
-      if (agError) throw agError;
-
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      toast.success('Atendimento iniciado.');
-    } catch (error) {
-      console.error('Error starting consultation:', error);
-      toast.error('Erro ao iniciar atendimento.');
-    }
+  // Stats
+  const stats = {
+    aguardando: filaAtiva.filter(f => f.status === 'aguardando').length,
+    emAtendimento: filaAtiva.filter(f => f.status === 'em_atendimento' || f.status === 'chamado').length,
+    finalizadosHoje: filaFinalizada.length,
+    urgentes: filaAtiva.filter(f => f.prioridade === 'urgente').length,
   };
-
-  const handleFinalizar = async (item: typeof fila[0]) => {
-    try {
-      const { error: filaError } = await supabase
-        .from('fila_atendimento')
-        .update({ status: 'finalizado' })
-        .eq('id', item.id);
-
-      if (filaError) throw filaError;
-
-      const { error: agError } = await supabase
-        .from('agendamentos')
-        .update({ status: 'finalizado' })
-        .eq('id', item.agendamento_id);
-
-      if (agError) throw agError;
-
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      toast.success('Atendimento finalizado.');
-    } catch (error) {
-      console.error('Error finishing consultation:', error);
-      toast.error('Erro ao finalizar atendimento.');
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
-        </div>
-        <Skeleton className="h-96" />
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 pb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Fila de Atendimento</h1>
-          <p className="text-muted-foreground">Gerencie a fila de pacientes aguardando</p>
+          <h1 className="text-2xl font-bold font-display tracking-tight">Fila de Atendimento</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })} • Atualiza automaticamente
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <a href="/painel-tv" target="_blank">
-              <Volume2 className="h-4 w-4 mr-2" />
-              Abrir Painel TV
-            </a>
+          <Button variant="outline" size="sm" className="gap-2" onClick={refresh}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setIsAddOpen(true)} className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            Registrar Chegada
+          <Button className="gap-2" onClick={() => setIsAddOpen(true)}>
+            <UserPlus className="h-4 w-4" /> Adicionar à Fila
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-primary">
-                {filaAtiva.filter((f) => f.status === 'aguardando').length}
-              </p>
-              <p className="text-sm text-muted-foreground">Aguardando</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'Aguardando', value: stats.aguardando, icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
+          { label: 'Em Atendimento', value: stats.emAtendimento, icon: Play, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Finalizados Hoje', value: stats.finalizadosHoje, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Urgentes', value: stats.urgentes, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+        ].map(s => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
+            <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>
+              <s.icon className={cn('h-5 w-5', s.color)} />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-blue-600">
-                {filaAtiva.filter((f) => f.status === 'chamado').length}
-              </p>
-              <p className="text-sm text-muted-foreground">Chamados</p>
+            <div>
+              <p className={cn('text-2xl font-bold tabular-nums', s.color)}>{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-purple-600">
-                {filaAtiva.filter((f) => f.status === 'em_atendimento').length}
-              </p>
-              <p className="text-sm text-muted-foreground">Em Atendimento</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-green-600">
-                {fila.filter((f) => f.status === 'finalizado').length}
-              </p>
-              <p className="text-sm text-muted-foreground">Finalizados Hoje</p>
-            </div>
-          </CardContent>
-        </Card>
+          </motion.div>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Fila Atual</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">#</TableHead>
-                  <TableHead>Paciente</TableHead>
-                  <TableHead className="hidden md:table-cell">Médico</TableHead>
-                  <TableHead className="hidden sm:table-cell">Chegada</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Sala</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filaAtiva.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      Nenhum paciente na fila
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filaAtiva.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-bold text-lg">{item.posicao}</TableCell>
-                      <TableCell className="font-medium">
-                        {getPacienteNome(item.agendamento_id)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {getMedicoNome(item.agendamento_id)}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {item.horario_chegada ? format(new Date(item.horario_chegada), 'HH:mm') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cn(STATUS_COLORS[item.status || 'aguardando'])}>
-                          {STATUS_LABELS[item.status || 'aguardando']}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{getSalaNome(item.sala_id)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          {item.status === 'aguardando' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleChamar(item)}
-                            >
-                              <Volume2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {(item.status === 'aguardando' || item.status === 'chamado') && salas.length > 0 && (
-                            <Select onValueChange={(salaId) => handleIniciarAtendimento(item, salaId)}>
-                              <SelectTrigger className="w-auto">
-                                <Play className="h-4 w-4" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {salas.filter(s => s.status === 'disponivel').map(sala => (
-                                  <SelectItem key={sala.id} value={sala.id}>{sala.nome}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                          {item.status === 'em_atendimento' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleFinalizar(item)}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+      {/* Queue */}
+      {isLoading ? (
+        <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : filaAtiva.length === 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <Users className="h-14 w-14 text-muted-foreground/20 mb-4" />
+              <p className="font-semibold text-lg">Fila vazia</p>
+              <p className="text-sm text-muted-foreground mt-1 mb-6">Nenhum paciente aguardando atendimento</p>
+              <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+                <UserPlus className="h-4 w-4" /> Adicionar Paciente
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ) : (
+        <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {filaAtiva.map((item, idx) => (
+              <FilaCard
+                key={item.id}
+                item={item}
+                pos={idx + 1}
+                pacienteNome={getPacienteNome(item.agendamento_id)}
+                medicoNome={getMedicoNome(item.agendamento_id)}
+                salaNome={getSalaNome(item.sala_id)}
+                now={now}
+                onChamar={() => updateStatus(item.id, 'chamado', item.agendamento_id)}
+                onIniciar={() => updateStatus(item.id, 'em_atendimento', item.agendamento_id)}
+                onFinalizar={() => updateStatus(item.id, 'finalizado', item.agendamento_id)}
+                onRemover={() => handleRemover(item.id)}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Finalizados do dia */}
+      {filaFinalizada.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Finalizados hoje
+          </p>
+          <div className="space-y-1.5">
+            {filaFinalizada.map(item => (
+              <div key={item.id} className="flex items-center gap-3 rounded-xl border px-4 py-2.5 opacity-60 bg-card">
+                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                <p className="text-sm font-medium flex-1">{getPacienteNome(item.agendamento_id)}</p>
+                <p className="text-xs text-muted-foreground">{getMedicoNome(item.agendamento_id)}</p>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
       {/* Add to Queue Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Registrar Chegada</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" /> Adicionar à Fila
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Selecione o Agendamento</Label>
+              <Label>Agendamento</Label>
               <Select value={selectedAgendamento} onValueChange={setSelectedAgendamento}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Escolha um agendamento de hoje" />
+                  <SelectValue placeholder="Selecionar agendamento..." />
                 </SelectTrigger>
                 <SelectContent>
                   {agendamentosDisponiveis.length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      Nenhum agendamento disponível
-                    </SelectItem>
-                  ) : (
-                    agendamentosDisponiveis.map((ag) => {
-                      const agData = ag as any;
-                      const paciente = pacientes.find((p) => p.id === agData.paciente_id);
-                      const medico = medicos.find((m) => m.id === agData.medico_id);
-                      return (
-                        <SelectItem key={ag.id} value={ag.id}>
-                          {ag.hora_inicio} - {paciente?.nome || 'Paciente'} ({medico?.crm || 'Médico'})
-                        </SelectItem>
-                      );
-                    })
-                  )}
+                    <SelectItem value="none" disabled>Nenhum agendamento disponível</SelectItem>
+                  ) : agendamentosDisponiveis.map(ag => {
+                    const pac = pacientes.find(p => p.id === (ag as any).paciente_id);
+                    return (
+                      <SelectItem key={ag.id} value={ag.id}>
+                        {pac?.nome ?? 'Paciente'} — {ag.hora_inicio?.slice(0, 5)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridade</Label>
+              <Select value={selectedPrioridade} onValueChange={setSelectedPrioridade}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="preferencial">Preferencial (idoso/gestante)</SelectItem>
+                  <SelectItem value="urgente">Urgente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={isSaving}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddToFila} disabled={!selectedAgendamento || isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Adicionar à Fila
+            <Button variant="outline" onClick={() => setIsAddOpen(false)}>Cancelar</Button>
+            <Button onClick={handleAddToFila} disabled={isSaving || !selectedAgendamento} className="gap-2">
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Adicionar
             </Button>
           </DialogFooter>
         </DialogContent>
