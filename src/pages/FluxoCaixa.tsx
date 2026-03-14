@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLancamentos } from '@/hooks/useSupabaseData';
@@ -13,7 +14,7 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
+, ArrowUpRight, ArrowDownRight} from 'lucide-react';
 import {
   AreaChart,
   Area,
