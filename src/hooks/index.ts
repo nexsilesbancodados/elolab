@@ -8,6 +8,7 @@ export { usePushNotifications, getNotificationContent } from './usePushNotificat
 export { useOfflineCache, useCriticalDataCache } from './useOfflineCache';
 export { useRealtimeNotifications } from './useRealtimeNotifications';
 export { useRealtimeSubscription } from './useRealtimeSubscription';
+export { useRealtimePushNotifications } from './useRealtimePushNotifications';
 export { useUnsavedChanges } from './useUnsavedChanges';
 export {
   useSupabaseQuery,
