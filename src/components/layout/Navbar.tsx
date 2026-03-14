@@ -84,13 +84,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     navigate('/auth');
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
 
-  const getNotificationColor = (type: Notification['type']) => {
+  const getNotificationColor = (type: AppNotification['type']) => {
     const colors = { info: 'bg-info', success: 'bg-success', warning: 'bg-warning', error: 'bg-destructive' };
     return colors[type];
   };
