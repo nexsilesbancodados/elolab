@@ -31,7 +31,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { usePacientes, useAgendamentos, useLancamentos, useMedicos, useEstoque } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
-import { exportarFinanceiro } from '@/lib/excelExporter';
+import { exportarFinanceiro, exportarPacientes, exportarAgendamentos, exportarEstoque } from '@/lib/excelExporter';
 import { gerarRelatorioFinanceiro, gerarRelatorioAtendimentos, openPDF } from '@/lib/pdfGenerator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -273,6 +273,42 @@ export default function Relatorios() {
     openPDF(doc);
   };
 
+  const handleExportPacientesExcel = () => {
+    exportarPacientes(pacientes.map(p => ({
+      nome: p.nome,
+      cpf: p.cpf || '',
+      dataNascimento: p.data_nascimento || '',
+      telefone: p.telefone || '',
+      email: p.email || '',
+      sexo: p.sexo || '',
+    })));
+  };
+
+  const handleExportAgendamentosExcel = () => {
+    exportarAgendamentos(agendamentosFiltrados.map(a => ({
+      data: a.data,
+      horaInicio: a.hora_inicio || '',
+      horaFim: a.hora_fim || '',
+      paciente: a.paciente_id,
+      medico: a.medico_id,
+      tipo: a.tipo || 'consulta',
+      status: a.status || 'agendado',
+    })));
+  };
+
+  const handleExportEstoqueExcel = () => {
+    exportarEstoque(estoque.map(e => ({
+      nome: e.nome,
+      categoria: e.categoria,
+      quantidade: e.quantidade,
+      quantidadeMinima: e.quantidade_minima || 0,
+      unidade: e.unidade || 'un',
+      valorUnitario: Number(e.valor_unitario) || 0,
+      fornecedor: e.fornecedor || '',
+      validade: e.validade || '',
+    })));
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -304,13 +340,25 @@ export default function Relatorios() {
               <SelectItem value="ultimos_6_meses">Últimos 6 Meses</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+          <Button variant="outline" onClick={handleExportExcel} className="gap-2" aria-label="Exportar financeiro para Excel">
             <FileSpreadsheet className="h-4 w-4" />
             Excel
           </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2" aria-label="Exportar financeiro para PDF">
             <FileText className="h-4 w-4" />
             PDF
+          </Button>
+          <Button variant="outline" onClick={handleExportPacientesExcel} className="gap-2" aria-label="Exportar pacientes para Excel">
+            <Users className="h-4 w-4" />
+            Pacientes
+          </Button>
+          <Button variant="outline" onClick={handleExportAgendamentosExcel} className="gap-2" aria-label="Exportar agendamentos para Excel">
+            <Calendar className="h-4 w-4" />
+            Agenda
+          </Button>
+          <Button variant="outline" onClick={handleExportEstoqueExcel} className="gap-2" aria-label="Exportar estoque para Excel">
+            <FileSpreadsheet className="h-4 w-4" />
+            Estoque
           </Button>
         </div>
       </div>
