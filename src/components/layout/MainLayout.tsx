@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useSessionTimeout();
+  useRealtimeSubscription();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
