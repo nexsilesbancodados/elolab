@@ -78,6 +78,7 @@ export default function Estoque() {
   const [isSaving, setIsSaving] = useState(false);
 
   const queryClient = useQueryClient();
+  const [showAlerts, setShowAlerts] = useState(false);
   const { data: estoque = [], isLoading } = useEstoque();
 
   const filteredProdutos = useMemo(() => {
