@@ -273,6 +273,42 @@ export default function Relatorios() {
     openPDF(doc);
   };
 
+  const handleExportPacientesExcel = () => {
+    exportarPacientes(pacientes.map(p => ({
+      nome: p.nome,
+      cpf: p.cpf || '',
+      dataNascimento: p.data_nascimento || '',
+      telefone: p.telefone || '',
+      email: p.email || '',
+      sexo: p.sexo || '',
+    })));
+  };
+
+  const handleExportAgendamentosExcel = () => {
+    exportarAgendamentos(agendamentosFiltrados.map(a => ({
+      data: a.data,
+      horaInicio: a.hora_inicio || '',
+      horaFim: a.hora_fim || '',
+      paciente: a.paciente_id,
+      medico: a.medico_id,
+      tipo: a.tipo || 'consulta',
+      status: a.status || 'agendado',
+    })));
+  };
+
+  const handleExportEstoqueExcel = () => {
+    exportarEstoque(estoque.map(e => ({
+      nome: e.nome,
+      categoria: e.categoria,
+      quantidade: e.quantidade,
+      quantidadeMinima: e.quantidade_minima || 0,
+      unidade: e.unidade || 'un',
+      valorUnitario: Number(e.valor_unitario) || 0,
+      fornecedor: e.fornecedor || '',
+      validade: e.validade || '',
+    })));
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
