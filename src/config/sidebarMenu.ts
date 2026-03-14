@@ -78,6 +78,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Salas', icon: DoorOpen, href: '/salas' },
       { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
       { label: 'Encaminhamentos', icon: ArrowRightLeft, href: '/encaminhamentos', roles: ['admin', 'medico'] },
+      { label: 'Retornos', icon: Clock, href: '/retornos' },
     ],
   },
   {

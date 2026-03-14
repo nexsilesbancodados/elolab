@@ -450,6 +450,59 @@ export type Database = {
         }
         Relationships: []
       }
+      bloqueios_agenda: {
+        Row: {
+          created_at: string | null
+          data_fim: string
+          data_inicio: string
+          dia_inteiro: boolean | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          medico_id: string
+          motivo: string | null
+          recorrente: boolean | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim: string
+          data_inicio: string
+          dia_inteiro?: boolean | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          medico_id: string
+          motivo?: string | null
+          recorrente?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_fim?: string
+          data_inicio?: string
+          dia_inteiro?: boolean | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          medico_id?: string
+          motivo?: string | null
+          recorrente?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bloqueios_agenda_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cid10: {
         Row: {
           categoria: string | null

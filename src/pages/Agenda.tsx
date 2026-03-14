@@ -25,11 +25,12 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useAgendamentos, usePacientes, useMedicos } from '@/hooks/useSupabaseData';
+import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useQueryClient } from '@tanstack/react-query';
 import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyAgendamentos } from '@/components/EmptyState';
 import { Database } from '@/integrations/supabase/types';
+import { BloqueioAgenda } from '@/components/agenda/BloqueioAgenda';
 
 type StatusAgendamento = Database['public']['Enums']['status_agendamento'];
 
@@ -95,6 +96,10 @@ export default function Agenda() {
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
+  const { data: bloqueios = [] } = useSupabaseQuery<{
+    id: string; medico_id: string; data_inicio: string; data_fim: string;
+    hora_inicio: string | null; hora_fim: string | null; dia_inteiro: boolean; motivo: string | null; tipo: string;
+  }>('bloqueios_agenda');
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
@@ -110,6 +115,17 @@ export default function Agenda() {
     });
   }, [agendamentos, selectedMedico]);
 
+  const isSlotBlocked = (data: Date, hora: string) => {
+    const dataStr = format(data, 'yyyy-MM-dd');
+    return bloqueios.some(b => {
+      if (selectedMedico !== 'todos' && b.medico_id !== selectedMedico) return false;
+      if (dataStr < b.data_inicio || dataStr > b.data_fim) return false;
+      if (b.dia_inteiro) return true;
+      if (b.hora_inicio && b.hora_fim) return hora >= b.hora_inicio && hora < b.hora_fim;
+      return false;
+    });
+  };
+
   const getAgendamentoForSlot = (data: Date, hora: string) => {
     const dataStr = format(data, 'yyyy-MM-dd');
     return filteredAgendamentos.find(
@@ -118,6 +134,10 @@ export default function Agenda() {
   };
 
   const handleSlotClick = (data: Date, hora: string) => {
+    if (isSlotBlocked(data, hora)) {
+      toast.error('Este horário está bloqueado');
+      return;
+    }
     const existing = getAgendamentoForSlot(data, hora);
     if (existing) {
       setFormData({
@@ -358,15 +378,24 @@ export default function Agenda() {
                         </div>
                         {weekDays.map((day) => {
                           const agendamento = getAgendamentoForSlot(day, hora);
+                          const blocked = isSlotBlocked(day, hora);
                           return (
                             <div
                               key={`${day.toISOString()}-${hora}`}
                               className={cn(
-                                'p-1 border-r last:border-r-0 min-h-[60px] cursor-pointer hover:bg-muted/30 transition-colors',
-                                isSameDay(day, new Date()) && 'bg-primary/5'
+                                'p-1 border-r last:border-r-0 min-h-[60px] transition-colors',
+                                blocked 
+                                  ? 'bg-muted/60 cursor-not-allowed' 
+                                  : 'cursor-pointer hover:bg-muted/30',
+                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5'
                               )}
                               onClick={() => handleSlotClick(day, hora)}
                             >
+                              {blocked && !agendamento && (
+                                <div className="rounded p-1.5 text-xs bg-muted text-muted-foreground/60 border border-dashed border-muted-foreground/20 h-full flex items-center justify-center">
+                                  <span className="text-[10px]">Bloqueado</span>
+                                </div>
+                              )}
                               {agendamento && (
                                 <div
                                   className={cn(
@@ -401,6 +430,8 @@ export default function Agenda() {
               </Badge>
             ))}
           </div>
+          {/* Bloqueios de Horário */}
+          <BloqueioAgenda medicoIdFilter={selectedMedico !== 'todos' ? selectedMedico : undefined} />
         </>
       )}
 
