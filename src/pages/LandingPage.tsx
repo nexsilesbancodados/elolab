@@ -863,7 +863,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}
-      <section id="faq" className="py-28 px-4 relative">
+      <section id="faq" aria-label="Perguntas frequentes" className="py-28 px-4 relative">
         <div className="absolute inset-0 bg-white/95" />
         <div className="max-w-3xl mx-auto relative z-10">
           <Reveal effect="up">
