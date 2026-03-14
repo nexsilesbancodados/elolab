@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Package, AlertTriangle, ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Search, Edit, Package, AlertTriangle, ArrowDown, ArrowUp, Loader2 , TrendingDown, RefreshCw} from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
