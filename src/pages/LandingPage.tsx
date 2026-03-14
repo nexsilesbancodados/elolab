@@ -152,12 +152,14 @@ function ImageCarousel() {
       </div>
       {/* Controls */}
       <button
+        aria-label="Slide anterior"
         onClick={() => setCurrent((c) => (c - 1 + slides.length) % slides.length)}
         className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-colors"
       >
         <ChevronLeft className="h-5 w-5 text-white" />
       </button>
       <button
+        aria-label="Próximo slide"
         onClick={() => setCurrent((c) => (c + 1) % slides.length)}
         className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-colors"
       >
