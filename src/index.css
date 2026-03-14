@@ -168,6 +168,31 @@
     scroll-behavior: smooth;
   }
 
+  /* Accessibility: Focus visible styles */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring rounded-sm;
+  }
+
+  /* Smooth theme transition */
+  body, .dark body {
+    transition: background-color 0.3s ease, color 0.2s ease;
+  }
+
+  .dark .card-elevated,
+  .dark .glass-card,
+  .dark [class*="Card"] {
+    transition: background-color 0.3s ease, border-color 0.2s ease;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;

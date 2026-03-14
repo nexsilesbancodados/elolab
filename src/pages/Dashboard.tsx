@@ -352,12 +352,12 @@ export default function Dashboard() {
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Pacientes" value={pacientes.length}
-              subtitle={`${medicos.filter(m => m.ativo).length} médicos ativos`}
+              subtitle={novosPacientesMes > 0 ? `+${novosPacientesMes} este mês` : `${medicos.filter(m => m.ativo).length} médicos ativos`}
               icon={Users} color="primary" href="/pacientes" delay={150}
             />
             <MetricCard
               title="Consultas Hoje" value={totalHoje}
-              subtitle={`${consultasConfirmadas} confirmada${consultasConfirmadas !== 1 ? 's' : ''}`}
+              subtitle={`${taxaOcupacao}% de ocupação`}
               icon={Calendar} color="success" href="/agenda" delay={200}
             />
             <MetricCard
@@ -366,9 +366,33 @@ export default function Dashboard() {
               icon={TrendingUp} color="info" href="/financeiro" delay={250}
             />
             <MetricCard
+              title="Ticket Médio" value={formatCurrencyShort(ticketMedio)}
+              subtitle={`${atendimentosFinalizadosMes} atendimento${atendimentosFinalizadosMes !== 1 ? 's' : ''} no mês`}
+              icon={Activity} color={estoqueBaixo > 0 ? 'warning' : 'primary'} href="/financeiro" delay={300}
+            />
+          </div>
+
+          {/* ─── Secondary KPIs ─── */}
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              title="Médicos Ativos" value={medicos.filter(m => m.ativo).length}
+              subtitle={`${medicos.length} total cadastrados`}
+              icon={Stethoscope} color="info" href="/medicos" delay={320}
+            />
+            <MetricCard
+              title="Na Fila" value={filaAguardando}
+              subtitle={filaAguardando > 0 ? 'Aguardando atendimento' : 'Fila vazia'}
+              icon={Clock} color={filaAguardando > 3 ? 'warning' : 'success'} href="/fila" delay={340}
+            />
+            <MetricCard
               title="Estoque" value={estoque.length}
               subtitle={estoqueBaixo > 0 ? `⚠️ ${estoqueBaixo} item(ns) crítico(s)` : '✓ Níveis normais'}
-              icon={Package} color={estoqueBaixo > 0 ? 'warning' : 'primary'} href="/estoque" delay={300}
+              icon={Package} color={estoqueBaixo > 0 ? 'warning' : 'primary'} href="/estoque" delay={360}
+            />
+            <MetricCard
+              title="Novos Pacientes" value={novosPacientesMes}
+              subtitle="Cadastrados este mês"
+              icon={UserPlus} color="success" href="/pacientes" delay={380}
             />
           </div>
 
