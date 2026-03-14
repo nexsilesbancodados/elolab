@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -15,7 +16,7 @@ import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ListTodo, Plus, CheckCircle2, Clock, AlertTriangle, Circle, Search, Trash2,
-} from 'lucide-react';
+, Flag, AlertCircle} from 'lucide-react';
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   pendente: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Circle },
@@ -29,6 +30,19 @@ const prioridadeConfig: Record<string, { label: string; color: string }> = {
   media: { label: 'Média', color: 'bg-blue-100 text-blue-700' },
   alta: { label: 'Alta', color: 'bg-orange-100 text-orange-700' },
   urgente: { label: 'Urgente', color: 'bg-red-100 text-red-700' },
+};
+
+
+const PRIORIDADE_COLORS: Record<string, string> = {
+  alta: 'text-destructive',
+  media: 'text-warning', 
+  baixa: 'text-success',
+};
+
+const PRIORIDADE_ICONS: Record<string, string> = {
+  alta: '🔴',
+  media: '🟡',
+  baixa: '🟢',
 };
 
 export default function Tarefas() {
