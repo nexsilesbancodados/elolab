@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import {
   TrendingUp,
@@ -7,7 +8,7 @@ import {
   Edit,
   Trash2,
   Loader2,
-} from 'lucide-react';
+, BarChart3, PieChart} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,6 +76,9 @@ interface FormData {
   status: StatusPagamento;
   forma_pagamento?: string;
 }
+
+
+const formatBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 export default function Financeiro() {
   const [isFormOpen, setIsFormOpen] = useState(false);
