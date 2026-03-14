@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { checkRateLimit, getRemainingAttempts } from '@/lib/rateLimiter';
 import logoInovalab from '@/assets/logo-icon.png';
 import heroInstitutional from '@/assets/hero-institutional.png';
 
@@ -59,6 +60,12 @@ export default function Auth() {
   });
 
   const onLogin = async (data: LoginForm) => {
+    const { allowed, retryAfterMs } = checkRateLimit('login', 'auth');
+    if (!allowed) {
+      const seconds = Math.ceil(retryAfterMs / 1000);
+      toast.error(`Muitas tentativas. Tente novamente em ${seconds}s.`);
+      return;
+    }
     setIsLoading(true);
     try {
       const { error } = await signIn(data.email, data.password);
@@ -82,6 +89,12 @@ export default function Auth() {
   };
 
   const onSignup = async (data: SignupForm) => {
+    const { allowed, retryAfterMs } = checkRateLimit('signup', 'auth');
+    if (!allowed) {
+      const seconds = Math.ceil(retryAfterMs / 1000);
+      toast.error(`Muitas tentativas. Tente novamente em ${seconds}s.`);
+      return;
+    }
     setIsLoading(true);
     try {
       const { error } = await signUp(data.email, data.password, data.nome);

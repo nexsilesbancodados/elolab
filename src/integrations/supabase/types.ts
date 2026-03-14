@@ -2772,6 +2772,8 @@ export type Database = {
       is_financeiro: { Args: { _user_id: string }; Returns: boolean }
       is_medico: { Args: { _user_id: string }; Returns: boolean }
       is_recepcao: { Args: { _user_id: string }; Returns: boolean }
+      mask_cpf: { Args: { cpf_value: string }; Returns: string }
+      normalize_cpf: { Args: { cpf_value: string }; Returns: string }
       start_free_trial: {
         Args: { _plano_slug: string; _user_id: string }
         Returns: Json
