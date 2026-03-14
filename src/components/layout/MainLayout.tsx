@@ -8,12 +8,14 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useRealtimePushNotifications } from '@/hooks/useRealtimePushNotifications';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useSessionTimeout();
   useRealtimeSubscription();
+  useRealtimePushNotifications();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
