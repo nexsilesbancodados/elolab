@@ -1,9 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Sparkles, Zap, Clock, Gift, ArrowRight, Shield, Headphones } from 'lucide-react';
 import { useUserPlan, usePlanos, useStartTrial } from '@/hooks/useSubscriptionPlan';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -64,6 +67,31 @@ export default function Planos() {
   const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
   const startTrial = useStartTrial();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const upgradeMutation = useMutation({
+    mutationFn: async (plano: any) => {
+      const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
+        body: {
+          action: 'create_subscription',
+          nome_plano: plano.nome,
+          descricao: plano.descricao || `Plano ${plano.nome} EloLab`,
+          valor: plano.valor,
+          frequencia: 'mensal',
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      if (data?.checkout_url) {
+        toast.success('Redirecionando para o Mercado Pago...', { duration: 4000 });
+        window.open(data.checkout_url, '_blank');
+      }
+      queryClient.invalidateQueries({ queryKey: ['user_plan'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Erro ao processar upgrade'),
+  });
 
   if (isLoading) {
     return (
@@ -114,8 +142,15 @@ export default function Planos() {
               </p>
             </div>
           </div>
-          <Button onClick={() => navigate(`/pagamentos?plano=${planSlug}`)} className="gap-2 shrink-0">
-            Assinar Agora
+          <Button
+            onClick={() => {
+              const currentPlano = planos?.find(p => p.slug === planSlug);
+              if (currentPlano) upgradeMutation.mutate(currentPlano);
+            }}
+            disabled={upgradeMutation.isPending}
+            className="gap-2 shrink-0"
+          >
+            {upgradeMutation.isPending ? 'Processando...' : 'Assinar Agora'}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -230,9 +265,10 @@ export default function Planos() {
                     <Button
                       className="w-full h-12 text-base"
                       variant={hasActivePlan && isHighlighted ? 'default' : 'ghost'}
-                      onClick={() => navigate(`/pagamentos?plano=${plano.slug}`)}
+                      onClick={() => upgradeMutation.mutate(plano)}
+                      disabled={upgradeMutation.isPending}
                     >
-                      {hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
+                      {upgradeMutation.isPending ? 'Processando...' : hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </>

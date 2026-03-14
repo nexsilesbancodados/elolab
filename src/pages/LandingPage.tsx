@@ -291,6 +291,24 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle return from Mercado Pago checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const id = params.get('id');
+    if (status === 'success') {
+      toast.success('🎉 Pagamento confirmado! Verifique seu e-mail para o código de ativação.', { duration: 10000 });
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+    } else if (status === 'error' || status === 'failure') {
+      toast.error('Pagamento não aprovado. Tente novamente ou escolha outro método.', { duration: 8000 });
+      window.history.replaceState({}, '', '/');
+    } else if (status === 'pending') {
+      toast.info('Pagamento em processamento. Você receberá o código por e-mail após a aprovação.', { duration: 8000 });
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   const { data: planos } = useQuery({
     queryKey: ['planos_public'],
     queryFn: async () => {
@@ -309,8 +327,12 @@ export default function LandingPage() {
     onSuccess: (data: any) => {
       setCheckoutDialog(false);
       if (data?.checkout_url) {
-        toast.success('Redirecionando para o pagamento.', { duration: 6000 });
+        toast.success('Redirecionando para o pagamento...', { duration: 6000 });
         window.location.href = data.checkout_url;
+      } else if (data?.invite_code) {
+        toast.success(`✅ Código de ativação: ${data.invite_code}. Também enviamos por e-mail!`, { duration: 12000 });
+        // Redirect to auth with the code pre-filled
+        navigate(`/auth?codigo=${data.invite_code}&email=${encodeURIComponent(form.email)}&plano=${selectedPlan?.slug || ''}`);
       } else {
         toast.success('✅ Verifique seu e-mail! Enviamos o código de ativação.', { duration: 8000 });
       }
