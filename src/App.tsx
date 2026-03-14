@@ -52,6 +52,7 @@ const PortalPaciente = lazy(() => import("@/pages/PortalPaciente"));
 const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
 const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
 const Tarefas = lazy(() => import("@/pages/Tarefas"));
+const Retornos = lazy(() => import("@/pages/Retornos"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Loading fallback component
