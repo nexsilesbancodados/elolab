@@ -15,6 +15,7 @@ export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useSessionTimeout();
   useRealtimeSubscription();
+  useRealtimePushNotifications();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
