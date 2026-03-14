@@ -183,6 +183,22 @@ export default function Dashboard() {
   const estoqueBaixo = estoque.filter(e => e.quantidade <= (e.quantidade_minima || 0)).length;
   const filaAguardando = fila.filter(f => f.status === 'aguardando').length;
 
+  // New KPIs
+  const novosPacientesMes = pacientes.filter(p => {
+    if (!p.created_at) return false;
+    const d = new Date(p.created_at);
+    return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+  }).length;
+
+  const atendimentosFinalizadosMes = agendamentos.filter(a => {
+    const d = new Date(a.data);
+    return a.status === 'finalizado' && d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+  }).length;
+
+  const ticketMedio = atendimentosFinalizadosMes > 0 ? receitasMes / atendimentosFinalizadosMes : 0;
+  
+  const taxaOcupacao = totalHoje > 0 ? Math.round((consultasFinalizadas + consultasConfirmadas) / totalHoje * 100) : 0;
+
   // Chart data (last 6 months)
   const monthlyChartData = Array.from({ length: 6 }, (_, i) => {
     const date = new Date(anoAtual, mesAtual - 5 + i, 1);
