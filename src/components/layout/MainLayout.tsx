@@ -7,6 +7,7 @@ import { SkipLink } from '@/components/ui/skip-link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
