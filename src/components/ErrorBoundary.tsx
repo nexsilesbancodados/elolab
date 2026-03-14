@@ -1,5 +1,5 @@
 import { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,6 +14,28 @@ interface State {
   errorInfo?: React.ErrorInfo;
 }
 
+// Simple error reporter — stores recent errors for debugging
+const errorLog: Array<{ message: string; stack?: string; timestamp: string; componentStack?: string }> = [];
+
+function reportError(error: Error, errorInfo?: React.ErrorInfo) {
+  const entry = {
+    message: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString(),
+    componentStack: errorInfo?.componentStack || undefined,
+  };
+  errorLog.push(entry);
+  // Keep only last 20
+  if (errorLog.length > 20) errorLog.shift();
+  
+  // Log to console with structured format for easier debugging
+  console.error('[ErrorBoundary]', entry);
+}
+
+export function getErrorLog() {
+  return [...errorLog];
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -25,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    reportError(error, errorInfo);
     this.setState({ error, errorInfo });
   }
 
@@ -39,6 +61,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   handleGoHome = () => {
     window.location.href = '/dashboard';
+  };
+
+  handleCopyError = () => {
+    const errorText = [
+      `Erro: ${this.state.error?.message}`,
+      `Data: ${new Date().toISOString()}`,
+      `URL: ${window.location.href}`,
+      this.state.error?.stack ? `\nStack:\n${this.state.error.stack}` : '',
+    ].join('\n');
+    navigator.clipboard.writeText(errorText);
   };
 
   render() {
@@ -60,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {this.state.error && (
                 <div className="p-3 bg-muted rounded-lg overflow-auto max-h-32">
                   <p className="text-xs font-mono text-muted-foreground">
                     {this.state.error.message}
@@ -77,6 +109,15 @@ export class ErrorBoundary extends Component<Props, State> {
                   Ir para Início
                 </Button>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={this.handleCopyError}
+                className="w-full text-xs text-muted-foreground"
+              >
+                <Copy className="mr-2 h-3 w-3" />
+                Copiar detalhes do erro
+              </Button>
             </CardContent>
           </Card>
         </div>
