@@ -1,4 +1,5 @@
 import { Bot, Smartphone, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useWhatsAppAgents,
