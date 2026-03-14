@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Activity, Heart, Scale, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +68,21 @@ const CLASSIFICACAO_LABELS: Record<string, string> = {
   amarelo: 'Pouco Urgente',
   laranja: 'Urgente',
   vermelho: 'Emergência',
+};
+
+
+const RISCO_COLORS = {
+  vermelho: 'bg-red-500 text-white border-red-600',
+  laranja: 'bg-orange-500 text-white border-orange-600',
+  amarelo: 'bg-yellow-400 text-yellow-900 border-yellow-500',
+  verde: 'bg-green-500 text-white border-green-600',
+};
+
+const RISCO_LABELS = {
+  vermelho: 'Emergência',
+  laranja: 'Muito Urgente',
+  amarelo: 'Urgente',
+  verde: 'Pouco Urgente',
 };
 
 export default function TriagemPage() {
