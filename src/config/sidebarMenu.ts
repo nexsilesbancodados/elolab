@@ -28,6 +28,8 @@ import {
   Activity,
   ListTodo,
   TestTube,
+  Microscope,
+  FlaskRound,
   LucideIcon,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
@@ -79,6 +81,8 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Lista de Espera', icon: Clock, href: '/lista-espera' },
       { label: 'Encaminhamentos', icon: ArrowRightLeft, href: '/encaminhamentos', roles: ['admin', 'medico'] },
       { label: 'Retornos', icon: Clock, href: '/retornos' },
+      { label: 'Mapa de Coleta', icon: Microscope, href: '/mapa-coleta', roles: ['admin', 'enfermagem'] },
+      { label: 'Laudos Lab', icon: FlaskRound, href: '/laudos-lab', roles: ['admin', 'medico', 'enfermagem'] },
     ],
   },
   {
