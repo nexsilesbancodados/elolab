@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, ArrowRightLeft, Filter, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ArrowRightLeft, Filter, FileText , Clock, CheckCircle2, AlertTriangle, Plus} from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,13 @@ interface Paciente {
   id: string;
   nome: string;
 }
+
+
+const URGENCIA_CONFIG = {
+  eletiva: { label: 'Eletiva', color: 'bg-muted text-muted-foreground' },
+  prioritaria: { label: 'Prioritária', color: 'bg-warning/10 text-warning border-warning/20' },
+  urgente: { label: 'Urgente', color: 'bg-destructive/10 text-destructive border-destructive/20' },
+};
 
 export default function Encaminhamentos() {
   const [encaminhamentos, setEncaminhamentos] = useState<EncaminhamentoData[]>([]);
