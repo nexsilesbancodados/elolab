@@ -378,15 +378,24 @@ export default function Agenda() {
                         </div>
                         {weekDays.map((day) => {
                           const agendamento = getAgendamentoForSlot(day, hora);
+                          const blocked = isSlotBlocked(day, hora);
                           return (
                             <div
                               key={`${day.toISOString()}-${hora}`}
                               className={cn(
-                                'p-1 border-r last:border-r-0 min-h-[60px] cursor-pointer hover:bg-muted/30 transition-colors',
-                                isSameDay(day, new Date()) && 'bg-primary/5'
+                                'p-1 border-r last:border-r-0 min-h-[60px] transition-colors',
+                                blocked 
+                                  ? 'bg-muted/60 cursor-not-allowed' 
+                                  : 'cursor-pointer hover:bg-muted/30',
+                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5'
                               )}
                               onClick={() => handleSlotClick(day, hora)}
                             >
+                              {blocked && !agendamento && (
+                                <div className="rounded p-1.5 text-xs bg-muted text-muted-foreground/60 border border-dashed border-muted-foreground/20 h-full flex items-center justify-center">
+                                  <span className="text-[10px]">Bloqueado</span>
+                                </div>
+                              )}
                               {agendamento && (
                                 <div
                                   className={cn(
