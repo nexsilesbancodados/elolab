@@ -64,7 +64,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { data: pacientes = [] } = usePacientes();
   const { data: medicos = [] } = useMedicos();
   const { data: agendamentos = [] } = useAgendamentos();
-  const [notifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { notifications, unreadCount } = useRealtimeNotifications();
   
   useKeyboardShortcuts();
 
