@@ -9,6 +9,7 @@ import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useRealtimePushNotifications } from '@/hooks/useRealtimePushNotifications';
+import { ChatPanel } from '@/components/chat/ChatPanel';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
@@ -60,6 +61,9 @@ export function MainLayout() {
           </div>
         </main>
       </div>
+
+      {/* Chat Interno */}
+      <ChatPanel />
 
       {/* Offline indicator */}
       <OfflineIndicator />
