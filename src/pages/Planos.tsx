@@ -142,8 +142,15 @@ export default function Planos() {
               </p>
             </div>
           </div>
-          <Button onClick={() => navigate(`/pagamentos?plano=${planSlug}`)} className="gap-2 shrink-0">
-            Assinar Agora
+          <Button
+            onClick={() => {
+              const currentPlano = planos?.find(p => p.slug === planSlug);
+              if (currentPlano) upgradeMutation.mutate(currentPlano);
+            }}
+            disabled={upgradeMutation.isPending}
+            className="gap-2 shrink-0"
+          >
+            {upgradeMutation.isPending ? 'Processando...' : 'Assinar Agora'}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
