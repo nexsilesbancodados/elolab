@@ -265,9 +265,10 @@ export default function Planos() {
                     <Button
                       className="w-full h-12 text-base"
                       variant={hasActivePlan && isHighlighted ? 'default' : 'ghost'}
-                      onClick={() => navigate(`/pagamentos?plano=${plano.slug}`)}
+                      onClick={() => upgradeMutation.mutate(plano)}
+                      disabled={upgradeMutation.isPending}
                     >
-                      {hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
+                      {upgradeMutation.isPending ? 'Processando...' : hasActivePlan ? 'Fazer Upgrade' : 'Assinar Direto'}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </>
