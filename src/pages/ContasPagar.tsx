@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Check, DollarSign, AlertCircle, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
