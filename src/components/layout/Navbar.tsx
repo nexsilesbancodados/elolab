@@ -34,6 +34,7 @@ import { usePacientes, useMedicos, useAgendamentos } from '@/hooks/useSupabaseDa
 import { cn } from '@/lib/utils';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Users } from 'lucide-react';
@@ -41,22 +42,6 @@ import { Users } from 'lucide-react';
 interface NavbarProps {
   onMenuClick?: () => void;
 }
-
-interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', type: 'info', title: 'Novo agendamento', message: 'Maria Silva agendou consulta para amanhã às 14h', time: 'Há 5 minutos', read: false },
-  { id: '2', type: 'success', title: 'Paciente na fila', message: 'João Santos chegou e está aguardando atendimento', time: 'Há 15 minutos', read: false },
-  { id: '3', type: 'success', title: 'Pagamento confirmado', message: 'Consulta de Ana Paula foi paga via PIX', time: 'Há 1 hora', read: true },
-  { id: '4', type: 'warning', title: 'Estoque baixo', message: 'Dipirona 500mg está abaixo do nível mínimo', time: 'Há 2 horas', read: true },
-];
 
 const quickNavigation = [
   { id: 'dashboard', title: 'Dashboard', icon: Command, url: '/dashboard' },
@@ -79,7 +64,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { data: pacientes = [] } = usePacientes();
   const { data: medicos = [] } = useMedicos();
   const { data: agendamentos = [] } = useAgendamentos();
-  const [notifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { notifications, unreadCount } = useRealtimeNotifications();
   
   useKeyboardShortcuts();
 
@@ -99,13 +84,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     navigate('/auth');
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
 
-  const getNotificationColor = (type: Notification['type']) => {
+  const getNotificationColor = (type: AppNotification['type']) => {
     const colors = { info: 'bg-info', success: 'bg-success', warning: 'bg-warning', error: 'bg-destructive' };
     return colors[type];
   };
