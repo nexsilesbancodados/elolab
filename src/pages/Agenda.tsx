@@ -134,6 +134,10 @@ export default function Agenda() {
   };
 
   const handleSlotClick = (data: Date, hora: string) => {
+    if (isSlotBlocked(data, hora)) {
+      toast.error('Este horário está bloqueado');
+      return;
+    }
     const existing = getAgendamentoForSlot(data, hora);
     if (existing) {
       setFormData({
