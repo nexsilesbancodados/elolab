@@ -152,12 +152,14 @@ function ImageCarousel() {
       </div>
       {/* Controls */}
       <button
+        aria-label="Slide anterior"
         onClick={() => setCurrent((c) => (c - 1 + slides.length) % slides.length)}
         className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-colors"
       >
         <ChevronLeft className="h-5 w-5 text-white" />
       </button>
       <button
+        aria-label="Próximo slide"
         onClick={() => setCurrent((c) => (c + 1) % slides.length)}
         className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-colors"
       >
@@ -352,7 +354,7 @@ export default function LandingPage() {
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative min-h-[100vh] flex items-center overflow-hidden">
+      <section aria-label="Apresentação principal" className="relative min-h-[100vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/50 to-[hsl(168,76%,97%)]/80" />
 
         {/* Animated rings */}
@@ -537,7 +539,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FEATURES GRID WITH PHOTO CARDS ═══════════════ */}
-      <section id="features" className="relative py-28 px-4">
+      <section id="features" aria-label="Funcionalidades" className="relative py-28 px-4">
         <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/90" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal effect="up">
@@ -748,7 +750,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ WHATSAPP AI ═══════════════ */}
-      <section id="whatsapp-ai" className="py-28 px-4 relative">
+      <section id="whatsapp-ai" aria-label="WhatsApp com Inteligência Artificial" className="py-28 px-4 relative">
         <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal effect="left">
@@ -861,7 +863,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}
-      <section id="faq" className="py-28 px-4 relative">
+      <section id="faq" aria-label="Perguntas frequentes" className="py-28 px-4 relative">
         <div className="absolute inset-0 bg-white/95" />
         <div className="max-w-3xl mx-auto relative z-10">
           <Reveal effect="up">
