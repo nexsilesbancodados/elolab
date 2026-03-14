@@ -11,31 +11,14 @@ import {
 } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 import {
-  Users,
-  Calendar,
-  FileText,
-  DollarSign,
-  Stethoscope,
-  Package,
-  LayoutDashboard,
-  ClipboardList,
-  BarChart3,
-  Settings,
-  FlaskConical,
-  Wallet,
-  Search,
-  UserCheck,
-  Bot,
-  Zap,
-  ListTodo,
-  TestTube,
+  Users, Calendar, FileText, DollarSign, Stethoscope, Package,
+  LayoutDashboard, ClipboardList, BarChart3, Settings, FlaskConical,
+  Wallet, Search, UserCheck, Bot, Zap, ListTodo, TestTube,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-// ─── Static pages list ─────────────────────────────────────
 const PAGES = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, group: 'Navegação' },
   { label: 'Agenda', href: '/agenda', icon: Calendar, group: 'Navegação' },
@@ -64,32 +47,30 @@ const PAGES = [
   { label: 'Configurações', href: '/configuracoes', icon: Settings, group: 'Admin' },
 ];
 
-interface Paciente {
+interface PacienteResult {
   id: string;
   nome: string;
-  cpf?: string;
-  data_nascimento?: string;
+  cpf: string | null;
+  data_nascimento: string | null;
+  telefone: string | null;
 }
 
-interface Medico {
+interface MedicoResult {
   id: string;
-  nome: string;
-  especialidade?: string;
-  crm?: string;
+  crm: string;
+  especialidade: string | null;
+  telefone: string | null;
 }
 
-// ─── Global Search Component ───────────────────────────────
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [medicos, setMedicos] = useState<Medico[]>([]);
+  const [pacientes, setPacientes] = useState<PacienteResult[]>([]);
+  const [medicos, setMedicos] = useState<MedicoResult[]>([]);
   const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
-  const { profile } = useSupabaseAuth();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ⌘K / Ctrl+K listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -101,7 +82,6 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Debounced search in Supabase
   const searchSupabase = useCallback(async (q: string) => {
     if (!q.trim() || q.length < 2) {
       setPacientes([]);
@@ -113,17 +93,17 @@ export function GlobalSearch() {
       const [pacResult, medResult] = await Promise.all([
         supabase
           .from('pacientes')
-          .select('id, nome, cpf, data_nascimento')
+          .select('id, nome, cpf, data_nascimento, telefone')
           .or(`nome.ilike.%${q}%,cpf.ilike.%${q}%`)
           .limit(5),
         supabase
           .from('medicos')
-          .select('id, especialidade, crm')
-          .ilike('crm', `%${q}%`)
+          .select('id, crm, especialidade, telefone')
+          .or(`crm.ilike.%${q}%,especialidade.ilike.%${q}%`)
           .limit(3),
       ]);
-      setPacientes((pacResult.data as Paciente[]) ?? []);
-      setMedicos((medResult.data as unknown as Medico[]) ?? []);
+      setPacientes((pacResult.data ?? []) as PacienteResult[]);
+      setMedicos((medResult.data ?? []) as MedicoResult[]);
     } catch {
       // silently fail
     } finally {
@@ -143,7 +123,6 @@ export function GlobalSearch() {
     navigate(href);
   };
 
-  // Filter static pages
   const filteredPages = query.trim().length > 0
     ? PAGES.filter(p => p.label.toLowerCase().includes(query.toLowerCase()))
     : PAGES.slice(0, 8);
@@ -153,11 +132,10 @@ export function GlobalSearch() {
 
   return (
     <>
-      {/* Trigger button (visible in Navbar) */}
       <button
         onClick={() => setOpen(true)}
         className="group flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring md:w-52 lg:w-64"
-        aria-label="Abrir busca global"
+        aria-label="Abrir busca global (⌘K)"
       >
         <Search className="h-4 w-4 shrink-0" />
         <span className="hidden sm:inline flex-1 text-left">Buscar...</span>
@@ -179,12 +157,8 @@ export function GlobalSearch() {
               Buscando...
             </div>
           )}
+          {!hasAnyResult && !searching && <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>}
 
-          {!hasAnyResult && !searching && (
-            <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-          )}
-
-          {/* Pacientes */}
           {showResults && pacientes.length > 0 && (
             <CommandGroup heading="Pacientes">
               {pacientes.map((p) => (
@@ -201,7 +175,7 @@ export function GlobalSearch() {
                     <p className="font-medium text-sm truncate">{p.nome}</p>
                     <p className="text-xs text-muted-foreground">
                       {p.cpf ? `CPF: ${p.cpf}` : ''}
-                      {p.data_nascimento ? ` • Nasc: ${format(new Date(p.data_nascimento), 'dd/MM/yyyy', { locale: ptBR })}` : ''}
+                      {p.data_nascimento ? ` • ${format(new Date(p.data_nascimento), 'dd/MM/yyyy', { locale: ptBR })}` : ''}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-[10px] shrink-0">Paciente</Badge>
@@ -212,13 +186,12 @@ export function GlobalSearch() {
 
           {showResults && pacientes.length > 0 && medicos.length > 0 && <CommandSeparator />}
 
-          {/* Médicos */}
           {showResults && medicos.length > 0 && (
             <CommandGroup heading="Médicos">
               {medicos.map((m) => (
                 <CommandItem
                   key={m.id}
-                  value={`medico-${m.id}-${m.nome}`}
+                  value={`medico-${m.id}-${m.crm}`}
                   onSelect={() => handleSelect('/medicos')}
                   className="flex items-center gap-3 py-2.5"
                 >
@@ -226,11 +199,8 @@ export function GlobalSearch() {
                     <Stethoscope className="h-4 w-4 text-info" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{m.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {m.especialidade || 'Sem especialidade'}
-                      {m.crm ? ` • CRM: ${m.crm}` : ''}
-                    </p>
+                    <p className="font-medium text-sm truncate">CRM: {m.crm}</p>
+                    <p className="text-xs text-muted-foreground">{m.especialidade ?? 'Sem especialidade'}</p>
                   </div>
                   <Badge variant="secondary" className="text-[10px] shrink-0">Médico</Badge>
                 </CommandItem>
@@ -238,11 +208,8 @@ export function GlobalSearch() {
             </CommandGroup>
           )}
 
-          {(showResults && (pacientes.length > 0 || medicos.length > 0)) && filteredPages.length > 0 && (
-            <CommandSeparator />
-          )}
+          {(showResults && (pacientes.length > 0 || medicos.length > 0)) && filteredPages.length > 0 && <CommandSeparator />}
 
-          {/* Pages */}
           {filteredPages.length > 0 && (
             <CommandGroup heading="Páginas">
               {filteredPages.map((page) => {
@@ -265,7 +232,6 @@ export function GlobalSearch() {
             </CommandGroup>
           )}
         </CommandList>
-
         <div className="border-t px-3 py-2 flex items-center gap-3 text-[11px] text-muted-foreground">
           <span><kbd className="font-mono">↑↓</kbd> navegar</span>
           <span><kbd className="font-mono">↵</kbd> abrir</span>
