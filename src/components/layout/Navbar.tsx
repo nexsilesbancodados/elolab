@@ -43,22 +43,6 @@ interface NavbarProps {
   onMenuClick?: () => void;
 }
 
-interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', type: 'info', title: 'Novo agendamento', message: 'Maria Silva agendou consulta para amanhã às 14h', time: 'Há 5 minutos', read: false },
-  { id: '2', type: 'success', title: 'Paciente na fila', message: 'João Santos chegou e está aguardando atendimento', time: 'Há 15 minutos', read: false },
-  { id: '3', type: 'success', title: 'Pagamento confirmado', message: 'Consulta de Ana Paula foi paga via PIX', time: 'Há 1 hora', read: true },
-  { id: '4', type: 'warning', title: 'Estoque baixo', message: 'Dipirona 500mg está abaixo do nível mínimo', time: 'Há 2 horas', read: true },
-];
-
 const quickNavigation = [
   { id: 'dashboard', title: 'Dashboard', icon: Command, url: '/dashboard' },
   { id: 'pacientes', title: 'Pacientes', icon: Users, url: '/pacientes' },
