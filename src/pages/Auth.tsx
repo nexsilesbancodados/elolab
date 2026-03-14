@@ -213,17 +213,18 @@ export default function Auth() {
         return;
       }
 
-      const { data: authData, error } = await signUp(data.email, data.password, data.nome);
-      if (error) {
-        if (error.message.includes('User already registered')) {
+      const result = await signUp(data.email, data.password, data.nome);
+      if (result.error) {
+        if (result.error.message.includes('User already registered')) {
           toast.error('Este email já está cadastrado');
         } else {
-          toast.error(error.message || 'Erro ao criar conta');
+          toast.error(result.error.message || 'Erro ao criar conta');
         }
       } else {
         // If user is immediately available (auto-confirm enabled), activate subscription
-        if (authData?.user?.id) {
-          await activateSubscription(authData.user.id, data.codigoConvite);
+        const userId = result.data?.user?.id;
+        if (userId) {
+          await activateSubscription(userId, data.codigoConvite);
         }
         setSignupSuccess(true);
         toast.success('Conta criada com sucesso!');
