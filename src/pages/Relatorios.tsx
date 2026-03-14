@@ -340,13 +340,25 @@ export default function Relatorios() {
               <SelectItem value="ultimos_6_meses">Últimos 6 Meses</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+          <Button variant="outline" onClick={handleExportExcel} className="gap-2" aria-label="Exportar financeiro para Excel">
             <FileSpreadsheet className="h-4 w-4" />
             Excel
           </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2" aria-label="Exportar financeiro para PDF">
             <FileText className="h-4 w-4" />
             PDF
+          </Button>
+          <Button variant="outline" onClick={handleExportPacientesExcel} className="gap-2" aria-label="Exportar pacientes para Excel">
+            <Users className="h-4 w-4" />
+            Pacientes
+          </Button>
+          <Button variant="outline" onClick={handleExportAgendamentosExcel} className="gap-2" aria-label="Exportar agendamentos para Excel">
+            <Calendar className="h-4 w-4" />
+            Agenda
+          </Button>
+          <Button variant="outline" onClick={handleExportEstoqueExcel} className="gap-2" aria-label="Exportar estoque para Excel">
+            <FileSpreadsheet className="h-4 w-4" />
+            Estoque
           </Button>
         </div>
       </div>
