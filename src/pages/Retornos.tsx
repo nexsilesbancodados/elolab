@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, isPast, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,7 +25,7 @@ import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { CalendarClock, AlertTriangle, CheckCircle2, Phone, Clock, Filter } from 'lucide-react';
+import { CalendarClock, AlertTriangle, CheckCircle2, Phone, Clock, Filter , Search, Bell} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Retorno {
@@ -42,6 +43,7 @@ interface Retorno {
 }
 
 export default function RetornosControl() {
+  const [searchTerm, setSearchTerm] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const queryClient = useQueryClient();
 
