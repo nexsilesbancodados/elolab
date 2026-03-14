@@ -430,6 +430,8 @@ export default function Agenda() {
               </Badge>
             ))}
           </div>
+          {/* Bloqueios de Horário */}
+          <BloqueioAgenda medicoIdFilter={selectedMedico !== 'todos' ? selectedMedico : undefined} />
         </>
       )}
 
