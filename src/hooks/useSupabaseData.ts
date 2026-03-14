@@ -344,3 +344,120 @@ export function useAuditLog() {
     orderBy: { column: 'timestamp', ascending: false },
   });
 }
+
+// ─── Additional hooks added for completeness ───────────────
+
+export function useProntuarios(pacienteId?: string) {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_id: string | null;
+    data: string;
+    queixa_principal: string | null;
+    historia_doenca_atual: string | null;
+    exames_fisicos: string | null;
+    hipotese_diagnostica: string | null;
+    conduta: string | null;
+    created_at: string;
+    updated_at: string;
+  }>('prontuarios', {
+    orderBy: { column: 'data', ascending: false },
+    filters: pacienteId ? [{ column: 'paciente_id', operator: 'eq', value: pacienteId }] : undefined,
+  });
+}
+
+export function usePrescricoes(pacienteId?: string) {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_id: string | null;
+    prontuario_id: string | null;
+    medicamento: string;
+    dosagem: string | null;
+    posologia: string | null;
+    duracao: string | null;
+    observacoes: string | null;
+    tipo: string;
+    data_emissao: string;
+    created_at: string;
+  }>('prescricoes', {
+    orderBy: { column: 'data_emissao', ascending: false },
+    filters: pacienteId ? [{ column: 'paciente_id', operator: 'eq', value: pacienteId }] : undefined,
+  });
+}
+
+export function useTriagens() {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    agendamento_id: string | null;
+    enfermeiro_id: string;
+    pressao_arterial: string | null;
+    frequencia_cardiaca: number | null;
+    temperatura: number | null;
+    saturacao: number | null;
+    peso: number | null;
+    altura: number | null;
+    classificacao_risco: string;
+    queixa_principal: string | null;
+    observacoes: string | null;
+    data_hora: string;
+  }>('triagens', {
+    orderBy: { column: 'data_hora', ascending: false },
+    staleTime: 1000 * 15,
+  });
+}
+
+export function useTarefas() {
+  return useSupabaseQuery<{
+    id: string;
+    titulo: string;
+    descricao: string | null;
+    status: string;
+    prioridade: string;
+    responsavel_id: string | null;
+    prazo: string | null;
+    tags: string[] | null;
+    created_at: string;
+    updated_at: string;
+  }>('tarefas', {
+    orderBy: { column: 'created_at', ascending: false },
+  });
+}
+
+export function useRetornos() {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_id: string | null;
+    agendamento_origem_id: string | null;
+    data_retorno: string;
+    motivo: string | null;
+    status: string;
+    observacoes: string | null;
+    created_at: string;
+    updated_at: string;
+  }>('retornos', {
+    orderBy: { column: 'data_retorno', ascending: true },
+  });
+}
+
+export function useFuncionarios() {
+  return useSupabaseQuery<{
+    id: string;
+    user_id: string | null;
+    nome: string;
+    cpf: string | null;
+    cargo: string | null;
+    departamento: string | null;
+    email: string | null;
+    telefone: string | null;
+    data_admissao: string | null;
+    salario: number | null;
+    ativo: boolean;
+    created_at: string;
+    updated_at: string;
+  }>('funcionarios', {
+    orderBy: { column: 'nome', ascending: true },
+  });
+}
