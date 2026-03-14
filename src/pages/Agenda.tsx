@@ -115,6 +115,17 @@ export default function Agenda() {
     });
   }, [agendamentos, selectedMedico]);
 
+  const isSlotBlocked = (data: Date, hora: string) => {
+    const dataStr = format(data, 'yyyy-MM-dd');
+    return bloqueios.some(b => {
+      if (selectedMedico !== 'todos' && b.medico_id !== selectedMedico) return false;
+      if (dataStr < b.data_inicio || dataStr > b.data_fim) return false;
+      if (b.dia_inteiro) return true;
+      if (b.hora_inicio && b.hora_fim) return hora >= b.hora_inicio && hora < b.hora_fim;
+      return false;
+    });
+  };
+
   const getAgendamentoForSlot = (data: Date, hora: string) => {
     const dataStr = format(data, 'yyyy-MM-dd');
     return filteredAgendamentos.find(
