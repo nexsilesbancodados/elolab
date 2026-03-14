@@ -89,6 +89,12 @@ export default function Auth() {
   };
 
   const onSignup = async (data: SignupForm) => {
+    const { allowed, retryAfterMs } = checkRateLimit('signup', 'auth');
+    if (!allowed) {
+      const seconds = Math.ceil(retryAfterMs / 1000);
+      toast.error(`Muitas tentativas. Tente novamente em ${seconds}s.`);
+      return;
+    }
     setIsLoading(true);
     try {
       const { error } = await signUp(data.email, data.password, data.nome);
