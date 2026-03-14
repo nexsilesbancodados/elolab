@@ -539,7 +539,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FEATURES GRID WITH PHOTO CARDS ═══════════════ */}
-      <section id="features" className="relative py-28 px-4">
+      <section id="features" aria-label="Funcionalidades" className="relative py-28 px-4">
         <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/90" />
         <div className="max-w-6xl mx-auto relative z-10">
           <Reveal effect="up">
