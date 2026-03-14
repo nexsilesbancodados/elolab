@@ -118,12 +118,12 @@ export function GlobalSearch() {
           .limit(5),
         supabase
           .from('medicos')
-          .select('id, nome, especialidade, crm')
-          .or(`nome.ilike.%${q}%,crm.ilike.%${q}%`)
+          .select('id, especialidade, crm')
+          .ilike('crm', `%${q}%`)
           .limit(3),
       ]);
       setPacientes((pacResult.data as Paciente[]) ?? []);
-      setMedicos((medResult.data as Medico[]) ?? []);
+      setMedicos((medResult.data as unknown as Medico[]) ?? []);
     } catch {
       // silently fail
     } finally {
