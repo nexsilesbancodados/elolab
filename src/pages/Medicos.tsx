@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, Stethoscope, Phone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Search, Pencil, Trash2, Stethoscope, Phone , Star, BadgeCheck, Award} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,21 @@ const initialFormData: FormData = {
   telefone: '',
   ativo: true,
 };
+
+
+const ESPECIALIDADE_COLORS: Record<string, string> = {
+  'Clínica Geral': 'bg-blue-100 text-blue-800',
+  'Cardiologia': 'bg-red-100 text-red-800',
+  'Dermatologia': 'bg-pink-100 text-pink-800',
+  'Ortopedia': 'bg-amber-100 text-amber-800',
+  'Pediatria': 'bg-green-100 text-green-800',
+  'Ginecologia': 'bg-purple-100 text-purple-800',
+  'Neurologia': 'bg-indigo-100 text-indigo-800',
+  'Psiquiatria': 'bg-violet-100 text-violet-800',
+};
+
+const getEspColor = (esp: string | null) =>
+  ESPECIALIDADE_COLORS[esp || ''] || 'bg-muted text-muted-foreground';
 
 export default function Medicos() {
   const [searchTerm, setSearchTerm] = useState('');
