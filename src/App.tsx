@@ -156,6 +156,7 @@ function App() {
                           <Route path="/laboratorio" element={<Laboratorio />} />
                           <Route path="/precos-exames" element={<PrecosExames />} />
                           <Route path="/tarefas" element={<Tarefas />} />
+                          <Route path="/retornos" element={<Retornos />} />
                         </Route>
                         
                         <Route path="*" element={<NotFound />} />
