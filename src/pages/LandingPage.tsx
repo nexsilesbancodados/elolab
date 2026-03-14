@@ -750,7 +750,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ WHATSAPP AI ═══════════════ */}
-      <section id="whatsapp-ai" className="py-28 px-4 relative">
+      <section id="whatsapp-ai" aria-label="WhatsApp com Inteligência Artificial" className="py-28 px-4 relative">
         <div className="absolute inset-0 bg-[hsl(168,76%,97%)]/95" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <Reveal effect="left">
