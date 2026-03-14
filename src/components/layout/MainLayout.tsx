@@ -4,10 +4,14 @@ import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { SkipLink } from '@/components/ui/skip-link';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useSessionTimeout();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -45,12 +49,16 @@ export function MainLayout() {
           tabIndex={-1}
         >
           <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+            <Breadcrumbs />
             <div className="animate-fade-in">
               <Outlet />
             </div>
           </div>
         </main>
       </div>
+
+      {/* Offline indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
