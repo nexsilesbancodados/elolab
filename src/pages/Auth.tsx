@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft, Gift, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { checkRateLimit, getRemainingAttempts } from '@/lib/rateLimiter';
@@ -26,6 +27,7 @@ const signupSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(1, 'Confirme a senha'),
+  codigoConvite: z.string().min(1, 'Código de convite é obrigatório'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não coincidem',
   path: ['confirmPassword'],
@@ -36,12 +38,25 @@ type SignupForm = z.infer<typeof signupSchema>;
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, signUp, user, profile, isLoading: authLoading } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [signupSuccess, setSignupSuccess] = useState(false);
+
+  // Read invite code params from URL
+  const urlCodigo = searchParams.get('codigo') || '';
+  const urlEmail = searchParams.get('email') || '';
+  const urlPlano = searchParams.get('plano') || '';
+
+  // If invite code is in URL, default to signup tab
+  useEffect(() => {
+    if (urlCodigo) {
+      setActiveTab('signup');
+    }
+  }, [urlCodigo]);
 
   useEffect(() => {
     if (!authLoading && user && profile) {
@@ -51,12 +66,18 @@ export default function Auth() {
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: urlEmail || '', password: '' },
   });
 
   const signupForm = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { nome: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: {
+      nome: '',
+      email: urlEmail || '',
+      password: '',
+      confirmPassword: '',
+      codigoConvite: urlCodigo || '',
+    },
   });
 
   const onLogin = async (data: LoginForm) => {
@@ -88,6 +109,80 @@ export default function Auth() {
     }
   };
 
+  const activateSubscription = async (userId: string, codigoConvite: string) => {
+    try {
+      // Find the pending registration by invite code
+      const { data: registro, error: regError } = await supabase
+        .from('registros_pendentes' as any)
+        .select('*')
+        .eq('codigo_convite', codigoConvite)
+        .in('status', ['pendente', 'pago'])
+        .single();
+
+      if (regError || !registro) {
+        console.error('Registro pendente não encontrado:', regError);
+        toast.error('Código de convite inválido ou expirado.');
+        return;
+      }
+
+      const reg = registro as any;
+
+      // Check expiration
+      if (new Date(reg.expires_at) < new Date()) {
+        toast.error('Código de convite expirado.');
+        return;
+      }
+
+      // Mark registro as activated
+      await supabase
+        .from('registros_pendentes' as any)
+        .update({
+          status: 'ativado',
+          user_id: userId,
+          activated_at: new Date().toISOString(),
+        })
+        .eq('id', reg.id);
+
+      // Start trial or activate subscription based on status
+      if (reg.status === 'pago') {
+        // Payment already confirmed - create active subscription
+        const { data: plano } = await supabase
+          .from('planos' as any)
+          .select('*')
+          .eq('slug', reg.plano_slug)
+          .single();
+
+        if (plano) {
+          const p = plano as any;
+          await supabase
+            .from('assinaturas_plano' as any)
+            .insert({
+              user_id: userId,
+              plano_id: p.id,
+              plano_slug: p.slug,
+              status: 'ativa',
+              em_trial: false,
+              data_inicio: new Date().toISOString(),
+            });
+          toast.success(`Plano ${p.nome} ativado com sucesso! 🎉`);
+        }
+      } else {
+        // Trial mode - start free trial via RPC
+        const { data: result } = await supabase.rpc('start_free_trial' as any, {
+          _user_id: userId,
+          _plano_slug: reg.plano_slug,
+        });
+
+        const res = result as any;
+        if (res?.success) {
+          toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao ativar assinatura:', err);
+    }
+  };
+
   const onSignup = async (data: SignupForm) => {
     const { allowed, retryAfterMs } = checkRateLimit('signup', 'auth');
     if (!allowed) {
@@ -97,7 +192,28 @@ export default function Auth() {
     }
     setIsLoading(true);
     try {
-      const { error } = await signUp(data.email, data.password, data.nome);
+      // Validate invite code first
+      const { data: registro, error: regError } = await supabase
+        .from('registros_pendentes' as any)
+        .select('id, status, expires_at, plano_slug')
+        .eq('codigo_convite', data.codigoConvite)
+        .in('status', ['pendente', 'pago'])
+        .single();
+
+      if (regError || !registro) {
+        toast.error('Código de convite inválido ou já utilizado.');
+        setIsLoading(false);
+        return;
+      }
+
+      const reg = registro as any;
+      if (new Date(reg.expires_at) < new Date()) {
+        toast.error('Código de convite expirado. Solicite um novo.');
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: authData, error } = await signUp(data.email, data.password, data.nome);
       if (error) {
         if (error.message.includes('User already registered')) {
           toast.error('Este email já está cadastrado');
@@ -105,8 +221,12 @@ export default function Auth() {
           toast.error(error.message || 'Erro ao criar conta');
         }
       } else {
+        // If user is immediately available (auto-confirm enabled), activate subscription
+        if (authData?.user?.id) {
+          await activateSubscription(authData.user.id, data.codigoConvite);
+        }
         setSignupSuccess(true);
-        toast.success('Conta criada! Verifique seu email para confirmar.');
+        toast.success('Conta criada com sucesso!');
         signupForm.reset();
       }
     } catch {
@@ -193,6 +313,17 @@ export default function Auth() {
             </div>
             <p className="text-[hsl(215,15%,50%)] text-sm">Sistema de Gestão Clínica</p>
           </div>
+
+          {/* Invite code banner */}
+          {urlCodigo && (
+            <div className="mb-6 p-4 bg-[hsl(168,76%,95%)] border border-[hsl(168,76%,36%)]/20 rounded-xl flex items-center gap-3">
+              <Gift className="h-5 w-5 text-[hsl(168,76%,36%)] shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-[hsl(168,76%,25%)]">Código de ativação detectado!</p>
+                <p className="text-xs text-[hsl(168,76%,35%)]">Preencha seus dados para ativar sua conta.</p>
+              </div>
+            </div>
+          )}
 
           {/* Heading */}
           <div className="mb-8">
@@ -283,14 +414,36 @@ export default function Auth() {
             <TabsContent value="signup" className="space-y-4">
               {signupSuccess ? (
                 <Alert className="border-[hsl(168,76%,36%)]/30 bg-[hsl(168,76%,95%)]">
-                  <Sparkles className="h-4 w-4 text-[hsl(168,76%,36%)]" />
+                  <CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" />
                   <AlertDescription className="text-[hsl(168,76%,30%)]">
-                    Conta criada com sucesso! Verifique seu email para confirmar o cadastro.
+                    Conta criada e plano ativado com sucesso! Faça login para acessar o sistema.
                   </AlertDescription>
                 </Alert>
               ) : (
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
+                    {/* Invite code field - highlighted */}
+                    <FormField
+                      control={signupForm.control}
+                      name="codigoConvite"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-[hsl(168,76%,30%)] flex items-center gap-1.5">
+                            <Gift className="h-3.5 w-3.5" /> Código de Convite
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Ex: A1B2C3D4"
+                              autoComplete="off"
+                              className="h-12 bg-[hsl(168,76%,97%)] border-[hsl(168,76%,36%)]/30 focus:border-[hsl(168,76%,36%)] rounded-xl font-mono text-center text-lg tracking-widest uppercase"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={signupForm.control}
                       name="nome"
@@ -358,7 +511,7 @@ export default function Auth() {
                       className="w-full h-12 bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl shadow-lg shadow-[hsl(168,76%,36%)]/20 text-base"
                       disabled={isLoading}
                     >
-                      {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando conta...</> : 'Criar conta'}
+                      {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando conta...</> : 'Criar conta e ativar plano'}
                     </Button>
                   </form>
                 </Form>
@@ -366,16 +519,9 @@ export default function Auth() {
             </TabsContent>
           </Tabs>
 
-          {/* Footer info */}
-          <div className="mt-6 p-4 bg-[hsl(210,40%,98%)] rounded-xl border border-[hsl(220,13%,91%)]">
-            <p className="text-xs text-[hsl(215,15%,50%)] text-center leading-relaxed">
-              Após criar sua conta, um administrador precisará atribuir uma função para você acessar o sistema.
-            </p>
-          </div>
-
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 mt-4 text-sm font-medium text-[hsl(168,76%,36%)] hover:text-[hsl(168,76%,28%)] transition-colors"
+            className="flex items-center justify-center gap-2 mt-6 text-sm font-medium text-[hsl(168,76%,36%)] hover:text-[hsl(168,76%,28%)] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar ao site
