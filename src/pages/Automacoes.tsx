@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bot, 
   Clock, 
@@ -9,7 +10,7 @@ import {
   Settings,
   Play,
   Pause
-} from 'lucide-react';
+, Zap} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
