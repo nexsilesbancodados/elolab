@@ -67,6 +67,31 @@ export default function Planos() {
   const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
   const startTrial = useStartTrial();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const upgradeMutation = useMutation({
+    mutationFn: async (plano: any) => {
+      const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
+        body: {
+          action: 'create_subscription',
+          nome_plano: plano.nome,
+          descricao: plano.descricao || `Plano ${plano.nome} EloLab`,
+          valor: plano.valor,
+          frequencia: 'mensal',
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      if (data?.checkout_url) {
+        toast.success('Redirecionando para o Mercado Pago...', { duration: 4000 });
+        window.open(data.checkout_url, '_blank');
+      }
+      queryClient.invalidateQueries({ queryKey: ['user_plan'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Erro ao processar upgrade'),
+  });
 
   if (isLoading) {
     return (
