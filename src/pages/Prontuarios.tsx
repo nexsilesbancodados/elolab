@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, FileText, Plus, Save, CalendarCheck, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,21 @@ export default function Prontuarios() {
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [] } = useMedicos();
+  const [historicoEvolucoes, setHistoricoEvolucoes] = useState<any[]>([]);
+  const [loadingHistorico, setLoadingHistorico] = useState(false);
+  const [expandedEvol, setExpandedEvol] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedPacienteId) { setHistoricoEvolucoes([]); return; }
+    setLoadingHistorico(true);
+    supabase
+      .from('prontuarios')
+      .select('id, data, queixa_principal, historia_doenca_atual, exames_fisicos, hipotese_diagnostica, conduta, medicos(crm, especialidade)')
+      .eq('paciente_id', selectedPacienteId)
+      .order('data', { ascending: false })
+      .limit(20)
+      .then(({ data }) => { setHistoricoEvolucoes(data ?? []); setLoadingHistorico(false); });
+  }, [selectedPacienteId]);
   const { data: agendamentos = [] } = useAgendamentos(format(new Date(), 'yyyy-MM-dd'));
   const { data: prontuarios = [], isLoading: loadingProntuarios, refetch: refetchProntuarios } = useSupabaseQuery<Record<string, any>>('prontuarios', {
     orderBy: { column: 'data', ascending: false }
@@ -347,10 +363,14 @@ export default function Prontuarios() {
           {selectedPaciente?.alergias?.length > 0 && <AllergyAlert alergias={selectedPaciente.alergias} className="mb-4" />}
 
           <Tabs defaultValue="anamnese" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="anamnese">Anamnese</TabsTrigger>
               <TabsTrigger value="exames">Exame Físico</TabsTrigger>
               <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
+              <TabsTrigger value="historico" className="gap-1.5">
+                <History className="h-3.5 w-3.5" />
+                Histórico
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="anamnese" className="space-y-4 pt-4">
