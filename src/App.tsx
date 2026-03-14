@@ -90,15 +90,7 @@ function isAppSubdomain() {
 function App() {
   const isApp = isAppSubdomain();
 
-  // Global unhandled promise rejection handler
-  React.useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      console.error("Unhandled rejection:", event.reason);
-      event.preventDefault();
-    };
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
-  }, []);
+  // Global error handling is now initialized in main.tsx via errorTracking.ts
 
   return (
     <ErrorBoundary>
