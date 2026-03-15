@@ -41,6 +41,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface FormData {
+  nome: string;
+  email: string;
   crm: string;
   especialidade: string;
   telefone: string;
@@ -48,6 +50,8 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
+  nome: '',
+  email: '',
   crm: '',
   especialidade: '',
   telefone: '',
