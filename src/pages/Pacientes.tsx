@@ -32,6 +32,9 @@ interface PacienteFormData {
   estado: string;
   alergias: string[];
   observacoes: string;
+  nome_responsavel: string;
+  cpf_responsavel: string;
+  parentesco_responsavel: string;
 }
 
 const initialFormData: PacienteFormData = {
@@ -48,6 +51,19 @@ const initialFormData: PacienteFormData = {
   estado: '',
   alergias: [],
   observacoes: '',
+  nome_responsavel: '',
+  cpf_responsavel: '',
+  parentesco_responsavel: '',
+};
+
+const isMinor = (dataNascimento: string): boolean => {
+  if (!dataNascimento) return false;
+  const birth = new Date(dataNascimento);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age < 18;
 };
 
 export default function Pacientes() {
