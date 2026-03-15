@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, Heart, Thermometer, Scale, TrendingUp } from 'lucide-react';
