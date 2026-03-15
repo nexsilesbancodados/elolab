@@ -88,8 +88,10 @@ export default function Medicos() {
 
   const filteredMedicos = useMemo(() => 
     medicos.filter(m =>
+      (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.crm.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase())
+      m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     ),
     [medicos, searchTerm]
   );
