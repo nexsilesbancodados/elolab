@@ -409,11 +409,22 @@ export default function Exames() {
 
     setIsSubmitting(true);
     try {
+      // Build detailed description with all clinical info
+      const detalhes = [
+        formData.indicacao_clinica && `Indicação Clínica: ${formData.indicacao_clinica}`,
+        formData.hipotese_diagnostica && `Hipótese Diagnóstica: ${formData.hipotese_diagnostica}`,
+        formData.lateralidade && formData.lateralidade !== 'nao_aplica' && `Lateralidade: ${formData.lateralidade}`,
+        formData.regiao_anatomica && `Região: ${formData.regiao_anatomica}`,
+        formData.urgencia !== 'normal' && `Urgência: ${formData.urgencia.toUpperCase()}`,
+        formData.jejum && formData.jejum !== 'nao' && `Jejum: ${formData.jejum}`,
+        formData.descricao,
+      ].filter(Boolean).join('\n');
+
       const { error } = await supabase.from('exames').insert({
         paciente_id: formData.paciente_id,
         medico_solicitante_id: formData.medico_solicitante_id,
         tipo_exame: formData.tipo_exame,
-        descricao: formData.descricao || null,
+        descricao: detalhes || null,
         observacoes: formData.observacoes || null,
         status: 'solicitado' as StatusExame,
         data_solicitacao: new Date().toISOString().split('T')[0],
