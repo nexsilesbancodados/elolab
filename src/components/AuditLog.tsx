@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History, Filter, Trash2, RefreshCw, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
