@@ -203,6 +203,17 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
   );
 }
 
+// ─── Anexos Wrapper (self-loading) ─────────────────────────
+function AnexosWrapper({ pacienteId, prontuarioId }: { pacienteId: string; prontuarioId: string }) {
+  const [anexos, setAnexos] = useState<any[]>([]);
+  const loadAnexos = useCallback(async () => {
+    const { data } = await supabase.from('anexos_prontuario').select('*').eq('prontuario_id', prontuarioId).order('created_at', { ascending: false });
+    setAnexos(data || []);
+  }, [prontuarioId]);
+  useEffect(() => { loadAnexos(); }, [loadAnexos]);
+  return <AnexosProntuario pacienteId={pacienteId} prontuarioId={prontuarioId} anexos={anexos} onAnexoAdicionado={loadAnexos} onAnexoRemovido={loadAnexos} />;
+}
+
 // ─── Main Component ────────────────────────────────────────
 export default function Prontuarios() {
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null);
