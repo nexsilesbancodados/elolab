@@ -418,7 +418,7 @@ export default function TriagemPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Agendamento</Label>
-                <Select value={formData.agendamento_id} onValueChange={setField('agendamento_id')}>
+                <Select value={formData.agendamento_id || '__none__'} onValueChange={v => setFormData(prev => ({ ...prev, agendamento_id: v === '__none__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Opcional..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">Nenhum</SelectItem>
