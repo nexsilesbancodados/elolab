@@ -175,7 +175,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white text-foreground font-sans overflow-x-hidden">
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══ HERO — Bold blue like 4Medic ═══ */}
