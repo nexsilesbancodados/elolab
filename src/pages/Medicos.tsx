@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Pencil, Trash2, Stethoscope, Phone , Star, BadgeCheck, Award} from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Stethoscope, Phone, Star, BadgeCheck, Award, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
