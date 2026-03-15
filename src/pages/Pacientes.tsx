@@ -1,6 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, Edit, Trash2, Eye, Tag, Link, Copy, Loader2, MapPin } from 'lucide-react';
+import {
+  Plus, Search, Edit, Trash2, Eye, Tag, Link, Loader2, MapPin,
+  Phone, Mail, Calendar, Filter, Users, UserCheck, Baby, Heart,
+  FileText, ChevronDown, ChevronUp, User2, Building2, CreditCard,
+  Droplets, Briefcase, X,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,13 +14,19 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/loading-button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { usePacientes } from '@/hooks/useSupabaseData';
+import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
 import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert } from '@/components/clinical';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { Paciente } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface PacienteFormData {
   nome: string;
@@ -24,12 +34,20 @@ interface PacienteFormData {
   data_nascimento: string;
   telefone: string;
   email: string;
+  sexo: string;
+  estado_civil: string;
+  profissao: string;
+  tipo_sanguineo: string;
   cep: string;
   logradouro: string;
   numero: string;
+  complemento: string;
   bairro: string;
   cidade: string;
   estado: string;
+  convenio_id: string;
+  numero_carteira: string;
+  validade_carteira: string;
   alergias: string[];
   observacoes: string;
   nome_responsavel: string;
@@ -38,23 +56,34 @@ interface PacienteFormData {
 }
 
 const initialFormData: PacienteFormData = {
-  nome: '',
-  cpf: '',
-  data_nascimento: '',
-  telefone: '',
-  email: '',
-  cep: '',
-  logradouro: '',
-  numero: '',
-  bairro: '',
-  cidade: '',
-  estado: '',
-  alergias: [],
-  observacoes: '',
-  nome_responsavel: '',
-  cpf_responsavel: '',
-  parentesco_responsavel: '',
+  nome: '', cpf: '', data_nascimento: '', telefone: '', email: '',
+  sexo: '', estado_civil: '', profissao: '', tipo_sanguineo: '',
+  cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '',
+  convenio_id: '', numero_carteira: '', validade_carteira: '',
+  alergias: [], observacoes: '',
+  nome_responsavel: '', cpf_responsavel: '', parentesco_responsavel: '',
 };
+
+const SEXO_OPTIONS = [
+  { value: 'masculino', label: 'Masculino' },
+  { value: 'feminino', label: 'Feminino' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const ESTADO_CIVIL_OPTIONS = [
+  { value: 'solteiro', label: 'Solteiro(a)' },
+  { value: 'casado', label: 'Casado(a)' },
+  { value: 'divorciado', label: 'Divorciado(a)' },
+  { value: 'viuvo', label: 'Viúvo(a)' },
+  { value: 'uniao_estavel', label: 'União Estável' },
+];
+
+const TIPO_SANGUINEO_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+const ESTADOS_BR = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
+  'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+];
 
 const isMinor = (dataNascimento: string): boolean => {
   if (!dataNascimento) return false;
@@ -64,6 +93,16 @@ const isMinor = (dataNascimento: string): boolean => {
   const m = today.getMonth() - birth.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
   return age < 18;
+};
+
+const calcularIdade = (dataNascimento: string | null) => {
+  if (!dataNascimento) return 0;
+  const hoje = new Date();
+  const nascimento = new Date(dataNascimento);
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const m = hoje.getMonth() - nascimento.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
+  return idade;
 };
 
 export default function Pacientes() {
@@ -76,6 +115,17 @@ export default function Pacientes() {
   const [isEtiquetaOpen, setIsEtiquetaOpen] = useState(false);
   const [viewTab, setViewTab] = useState('dados');
   const [cepLoading, setCepLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterSexo, setFilterSexo] = useState<string>('todos');
+  const [filterConvenio, setFilterConvenio] = useState<string>('todos');
+  const [filterIdade, setFilterIdade] = useState<string>('todos');
+  const [formSection, setFormSection] = useState<string>('pessoal');
+
+  const { toast } = useToast();
+  const { data: pacientes = [], isLoading, refetch } = usePacientes();
+  const { data: convenios = [] } = useSupabaseQuery<any>('convenios', { orderBy: { column: 'nome', ascending: true } });
 
   const buscarCep = useCallback(async (cep: string) => {
     const cleaned = cep.replace(/\D/g, '');
@@ -97,35 +147,71 @@ export default function Pacientes() {
       setCepLoading(false);
     }
   }, []);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
-
-  const { data: pacientes = [], isLoading, refetch } = usePacientes();
 
   const selectedPaciente = useMemo(
     () => pacientes.find((p) => p.id === selectedPacienteId),
     [pacientes, selectedPacienteId]
   );
 
-  const filteredPacientes = useMemo(
-    () =>
-      pacientes.filter(
-        (p) =>
-          p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (p.cpf && p.cpf.includes(searchTerm)) ||
-          (p.telefone && p.telefone.includes(searchTerm))
-      ),
-    [pacientes, searchTerm]
-  );
+  const filteredPacientes = useMemo(() => {
+    let result = pacientes;
+
+    // Text search
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(p =>
+        p.nome.toLowerCase().includes(q) ||
+        (p.cpf && p.cpf.includes(searchTerm)) ||
+        (p.telefone && p.telefone.includes(searchTerm)) ||
+        (p.email && p.email.toLowerCase().includes(q))
+      );
+    }
+
+    // Sexo filter
+    if (filterSexo !== 'todos') {
+      result = result.filter(p => p.sexo === filterSexo);
+    }
+
+    // Convenio filter
+    if (filterConvenio === 'particular') {
+      result = result.filter(p => !p.convenio_id);
+    } else if (filterConvenio !== 'todos') {
+      result = result.filter(p => p.convenio_id === filterConvenio);
+    }
+
+    // Age filter
+    if (filterIdade === 'crianca') {
+      result = result.filter(p => calcularIdade(p.data_nascimento) < 12);
+    } else if (filterIdade === 'adolescente') {
+      result = result.filter(p => { const a = calcularIdade(p.data_nascimento); return a >= 12 && a < 18; });
+    } else if (filterIdade === 'adulto') {
+      result = result.filter(p => { const a = calcularIdade(p.data_nascimento); return a >= 18 && a < 60; });
+    } else if (filterIdade === 'idoso') {
+      result = result.filter(p => calcularIdade(p.data_nascimento) >= 60);
+    }
+
+    return result;
+  }, [pacientes, searchTerm, filterSexo, filterConvenio, filterIdade]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = pacientes.length;
+    const comConvenio = pacientes.filter(p => p.convenio_id).length;
+    const menores = pacientes.filter(p => calcularIdade(p.data_nascimento) < 18).length;
+    const comAlergias = pacientes.filter(p => p.alergias && p.alergias.length > 0).length;
+    return { total, comConvenio, menores, comAlergias };
+  }, [pacientes]);
+
+  const activeFilters = [filterSexo !== 'todos', filterConvenio !== 'todos', filterIdade !== 'todos'].filter(Boolean).length;
 
   const handleNew = () => {
     setSelectedPacienteId(null);
     setFormData(initialFormData);
+    setFormSection('pessoal');
     setIsFormOpen(true);
   };
 
-  const handleEdit = (paciente: typeof pacientes[0]) => {
+  const handleEdit = (paciente: any) => {
     setSelectedPacienteId(paciente.id);
     setFormData({
       nome: paciente.nome,
@@ -133,35 +219,43 @@ export default function Pacientes() {
       data_nascimento: paciente.data_nascimento || '',
       telefone: paciente.telefone || '',
       email: paciente.email || '',
+      sexo: paciente.sexo || '',
+      estado_civil: '',
+      profissao: '',
+      tipo_sanguineo: '',
       cep: paciente.cep || '',
       logradouro: paciente.logradouro || '',
       numero: paciente.numero || '',
+      complemento: (paciente as any).complemento || '',
       bairro: paciente.bairro || '',
       cidade: paciente.cidade || '',
       estado: paciente.estado || '',
+      convenio_id: paciente.convenio_id || '',
+      numero_carteira: (paciente as any).numero_carteira || '',
+      validade_carteira: (paciente as any).validade_carteira || '',
       alergias: paciente.alergias || [],
       observacoes: paciente.observacoes || '',
       nome_responsavel: (paciente as any).nome_responsavel || '',
       cpf_responsavel: (paciente as any).cpf_responsavel || '',
       parentesco_responsavel: (paciente as any).parentesco_responsavel || '',
     });
+    setFormSection('pessoal');
     setIsFormOpen(true);
   };
 
-  const handleView = (paciente: typeof pacientes[0]) => {
+  const handleView = (paciente: any) => {
     setSelectedPacienteId(paciente.id);
     setViewTab('dados');
     setIsViewOpen(true);
   };
 
-  const handleDeleteClick = (paciente: typeof pacientes[0]) => {
+  const handleDeleteClick = (paciente: any) => {
     setSelectedPacienteId(paciente.id);
     setIsDeleteOpen(true);
   };
 
   const handleDelete = async () => {
     if (!selectedPacienteId) return;
-    
     setIsDeleting(true);
     try {
       const { error } = await supabase.from('pacientes').delete().eq('id', selectedPacienteId);
@@ -179,21 +273,30 @@ export default function Pacientes() {
 
   const handleSave = async () => {
     if (!formData.nome || !formData.cpf || !formData.telefone || !formData.data_nascimento) {
-      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios (Nome, CPF, Nascimento, Telefone).', variant: 'destructive' });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const dataToSave = {
-        ...formData,
+      const dataToSave: any = {
+        nome: formData.nome,
+        cpf: formData.cpf,
+        data_nascimento: formData.data_nascimento,
+        telefone: formData.telefone,
         email: formData.email || null,
+        sexo: formData.sexo || null,
         cep: formData.cep || null,
         logradouro: formData.logradouro || null,
         numero: formData.numero || null,
+        complemento: formData.complemento || null,
         bairro: formData.bairro || null,
         cidade: formData.cidade || null,
         estado: formData.estado || null,
+        convenio_id: formData.convenio_id || null,
+        numero_carteira: formData.numero_carteira || null,
+        validade_carteira: formData.validade_carteira || null,
+        alergias: formData.alergias,
         observacoes: formData.observacoes || null,
         nome_responsavel: formData.nome_responsavel || null,
         cpf_responsavel: formData.cpf_responsavel || null,
@@ -226,57 +329,35 @@ export default function Pacientes() {
         .insert({ paciente_id: pacienteId })
         .select('token')
         .single();
-
       if (error) throw error;
-
       const portalUrl = `${window.location.origin}/portal-paciente?token=${data.token}`;
       await navigator.clipboard.writeText(portalUrl);
-      toast({
-        title: 'Link copiado!',
-        description: `Link do portal de ${pacienteNome} copiado para a área de transferência.`,
-      });
-    } catch (error) {
-      console.error('Erro ao gerar link:', error);
+      toast({ title: 'Link copiado!', description: `Link do portal de ${pacienteNome} copiado.` });
+    } catch {
       toast({ title: 'Erro ao gerar link do portal', variant: 'destructive' });
     }
   };
 
-  const calcularIdade = (dataNascimento: string | null) => {
-    if (!dataNascimento) return 0;
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const m = hoje.getMonth() - nascimento.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
-    return idade;
+  const getConvenioNome = (convenioId: string | null) => {
+    if (!convenioId) return 'Particular';
+    const c = convenios.find((cv: any) => cv.id === convenioId);
+    return c?.nome || 'Particular';
   };
 
-  // Convert to Paciente type for EtiquetaPaciente
   const pacientesForEtiqueta: Paciente[] = filteredPacientes.map((p) => ({
-    id: p.id,
-    nome: p.nome,
-    cpf: p.cpf || '',
-    dataNascimento: p.data_nascimento || '',
-    telefone: p.telefone || '',
-    email: p.email || '',
-    convenio: null,
-    endereco: {
-      cep: p.cep || '',
-      logradouro: p.logradouro || '',
-      numero: p.numero || '',
-      bairro: p.bairro || '',
-      cidade: p.cidade || '',
-      estado: p.estado || '',
-    },
-    alergias: p.alergias || [],
-    observacoes: p.observacoes || '',
-    criadoEm: p.created_at,
+    id: p.id, nome: p.nome, cpf: p.cpf || '', dataNascimento: p.data_nascimento || '',
+    telefone: p.telefone || '', email: p.email || '', convenio: null,
+    endereco: { cep: p.cep || '', logradouro: p.logradouro || '', numero: p.numero || '', bairro: p.bairro || '', cidade: p.cidade || '', estado: p.estado || '' },
+    alergias: p.alergias || [], observacoes: p.observacoes || '', criadoEm: p.created_at,
   }));
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
         <Skeleton className="h-96" />
       </div>
     );
@@ -288,7 +369,7 @@ export default function Pacientes() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
-          <p className="text-muted-foreground">Gerencie o cadastro de pacientes</p>
+          <p className="text-muted-foreground">Gestão completa do cadastro de pacientes</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setIsEtiquetaOpen(true)} className="gap-2">
@@ -302,83 +383,227 @@ export default function Pacientes() {
         </div>
       </div>
 
-      {/* Table Card */}
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10"><Users className="h-5 w-5 text-primary" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="text-xl font-bold tabular-nums">{stats.total}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10"><Building2 className="h-5 w-5 text-blue-600" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Com Convênio</p>
+                <p className="text-xl font-bold tabular-nums">{stats.comConvenio}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10"><Baby className="h-5 w-5 text-amber-600" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Menores</p>
+                <p className="text-xl font-bold tabular-nums">{stats.menores}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-destructive/10"><Heart className="h-5 w-5 text-destructive" /></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Com Alergias</p>
+                <p className="text-xl font-bold tabular-nums">{stats.comAlergias}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search & Filters */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Lista de Pacientes ({filteredPacientes.length})</CardTitle>
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, CPF ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <CardTitle className="flex items-center gap-2">
+              Lista de Pacientes
+              <Badge variant="secondary" className="text-xs">{filteredPacientes.length}</Badge>
+            </CardTitle>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar nome, CPF, telefone, email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Button
+                variant={showFilters ? 'default' : 'outline'}
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+                className="relative"
+              >
+                <Filter className="h-4 w-4" />
+                {activeFilters > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
+                    {activeFilters}
+                  </span>
+                )}
+              </Button>
             </div>
           </div>
+
+          {showFilters && (
+            <div className="flex flex-wrap gap-3 pt-3 border-t mt-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Sexo</Label>
+                <Select value={filterSexo} onValueChange={setFilterSexo}>
+                  <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {SEXO_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Convênio</Label>
+                <Select value={filterConvenio} onValueChange={setFilterConvenio}>
+                  <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="particular">Particular</SelectItem>
+                    {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Faixa Etária</Label>
+                <Select value={filterIdade} onValueChange={setFilterIdade}>
+                  <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas</SelectItem>
+                    <SelectItem value="crianca">Criança (0-11)</SelectItem>
+                    <SelectItem value="adolescente">Adolescente (12-17)</SelectItem>
+                    <SelectItem value="adulto">Adulto (18-59)</SelectItem>
+                    <SelectItem value="idoso">Idoso (60+)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeFilters > 0 && (
+                <div className="flex items-end">
+                  <Button variant="ghost" size="sm" className="text-xs h-8 gap-1" onClick={() => { setFilterSexo('todos'); setFilterConvenio('todos'); setFilterIdade('todos'); }}>
+                    <X className="h-3 w-3" /> Limpar
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Paciente</TableHead>
                   <TableHead className="hidden md:table-cell">CPF</TableHead>
-                  <TableHead className="hidden sm:table-cell">Telefone</TableHead>
+                  <TableHead className="hidden sm:table-cell">Contato</TableHead>
+                  <TableHead className="hidden lg:table-cell">Convênio</TableHead>
+                  <TableHead className="hidden lg:table-cell">Idade</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPacientes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
                       Nenhum paciente encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPacientes.map((paciente) => (
-                    <TableRow key={paciente.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <PatientPhoto
-                            pacienteId={paciente.id}
-                            pacienteNome={paciente.nome}
-                            currentPhotoUrl={paciente.foto_url}
-                            size="sm"
-                            editable={false}
-                          />
-                          <div>
-                            <p className="font-medium">{paciente.nome}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {calcularIdade(paciente.data_nascimento)} anos
-                            </p>
-                            {paciente.alergias && paciente.alergias.length > 0 && (
-                              <AllergyAlert alergias={paciente.alergias} compact className="mt-1" />
+                  filteredPacientes.map((paciente) => {
+                    const idade = calcularIdade(paciente.data_nascimento);
+                    return (
+                      <TableRow key={paciente.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleView(paciente)}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <PatientPhoto
+                              pacienteId={paciente.id}
+                              pacienteNome={paciente.nome}
+                              currentPhotoUrl={paciente.foto_url}
+                              size="sm"
+                              editable={false}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{paciente.nome}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {paciente.sexo && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                    {paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'feminino' ? 'F' : 'O'}
+                                  </Badge>
+                                )}
+                                {idade < 18 && <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] px-1.5 py-0">Menor</Badge>}
+                              </div>
+                              {paciente.alergias && paciente.alergias.length > 0 && (
+                                <AllergyAlert alergias={paciente.alergias} compact className="mt-1" />
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">{paciente.cpf || '—'}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="space-y-0.5 text-sm">
+                            {paciente.telefone && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Phone className="h-3 w-3" />{paciente.telefone}
+                              </div>
+                            )}
+                            {paciente.email && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground truncate max-w-[180px]">
+                                <Mail className="h-3 w-3" />{paciente.email}
+                              </div>
                             )}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{paciente.cpf || '-'}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{paciente.telefone || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleView(paciente)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleGeneratePortalLink(paciente.id, paciente.nome)} title="Gerar link do portal">
-                            <Link className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(paciente)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(paciente)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge variant="outline" className="text-xs">
+                            {getConvenioNome(paciente.convenio_id)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <span className="text-sm tabular-nums">{idade} anos</span>
+                        </TableCell>
+                        <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleView(paciente)} title="Ver detalhes">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleGeneratePortalLink(paciente.id, paciente.nome)} title="Link do portal">
+                              <Link className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(paciente)} title="Editar">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(paciente)} title="Excluir">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -386,66 +611,128 @@ export default function Pacientes() {
         </CardContent>
       </Card>
 
-      {/* Form Dialog */}
+      {/* ─── Form Dialog ─── */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedPacienteId ? 'Editar Paciente' : 'Novo Paciente'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome *</Label>
-                <Input
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Nome completo"
-                />
+
+          {/* Section nav */}
+          <div className="flex gap-1 flex-wrap border-b pb-2">
+            {[
+              { key: 'pessoal', label: 'Dados Pessoais', icon: User2 },
+              { key: 'endereco', label: 'Endereço', icon: MapPin },
+              { key: 'convenio', label: 'Convênio', icon: Building2 },
+              { key: 'clinico', label: 'Dados Clínicos', icon: Heart },
+            ].map(s => (
+              <Button
+                key={s.key}
+                variant={formSection === s.key ? 'default' : 'ghost'}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setFormSection(s.key)}
+              >
+                <s.icon className="h-3.5 w-3.5" />
+                {s.label}
+              </Button>
+            ))}
+          </div>
+
+          <div className="py-2 space-y-4">
+            {/* Dados Pessoais */}
+            {formSection === 'pessoal' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome Completo *</Label>
+                    <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Nome completo" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CPF *</Label>
+                    <Input value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de Nascimento *</Label>
+                    <Input type="date" value={formData.data_nascimento} onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sexo</Label>
+                    <Select value={formData.sexo} onValueChange={v => setFormData({ ...formData, sexo: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {SEXO_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telefone *</Label>
+                    <Input value={formData.telefone} onChange={e => setFormData({ ...formData, telefone: e.target.value })} placeholder="(00) 00000-0000" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="email@exemplo.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Estado Civil</Label>
+                    <Select value={formData.estado_civil} onValueChange={v => setFormData({ ...formData, estado_civil: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {ESTADO_CIVIL_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Profissão</Label>
+                    <Input value={formData.profissao} onChange={e => setFormData({ ...formData, profissao: e.target.value })} placeholder="Profissão do paciente" />
+                  </div>
+                </div>
+
+                {isMinor(formData.data_nascimento) && (
+                  <div className="border rounded-lg p-4 bg-amber-500/5 border-amber-500/20">
+                    <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                      <Baby className="h-4 w-4" />
+                      Responsável Legal (menor de idade)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nome do Responsável *</Label>
+                        <Input value={formData.nome_responsavel} onChange={e => setFormData({ ...formData, nome_responsavel: e.target.value })} placeholder="Nome completo" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CPF do Responsável</Label>
+                        <Input value={formData.cpf_responsavel} onChange={e => setFormData({ ...formData, cpf_responsavel: e.target.value })} placeholder="000.000.000-00" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Parentesco</Label>
+                        <Select value={formData.parentesco_responsavel} onValueChange={v => setFormData({ ...formData, parentesco_responsavel: v })}>
+                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mae">Mãe</SelectItem>
+                            <SelectItem value="pai">Pai</SelectItem>
+                            <SelectItem value="avo">Avó/Avô</SelectItem>
+                            <SelectItem value="tio">Tio(a)</SelectItem>
+                            <SelectItem value="tutor">Tutor Legal</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label>CPF *</Label>
-                <Input
-                  value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                  placeholder="000.000.000-00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Data de Nascimento *</Label>
-                <Input
-                  type="date"
-                  value={formData.data_nascimento}
-                  onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefone *</Label>
-                <Input
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-            </div>
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Endereço</h4>
+            )}
+
+            {/* Endereço */}
+            {formSection === 'endereco' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>CEP</Label>
                   <div className="relative">
                     <Input
                       value={formData.cep}
-                      onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                      onBlur={(e) => buscarCep(e.target.value)}
+                      onChange={e => setFormData({ ...formData, cep: e.target.value })}
+                      onBlur={e => buscarCep(e.target.value)}
                       placeholder="00000-000"
                       className="pr-8"
                     />
@@ -455,103 +742,111 @@ export default function Pacientes() {
                       <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Sai do campo para preencher endereço</p>
+                  <p className="text-[10px] text-muted-foreground">Sai do campo para preencher automaticamente</p>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Logradouro</Label>
-                  <Input
-                    value={formData.logradouro}
-                    onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
-                  />
+                  <Input value={formData.logradouro} onChange={e => setFormData({ ...formData, logradouro: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>Número</Label>
-                  <Input
-                    value={formData.numero}
-                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                  />
+                  <Input value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Complemento</Label>
+                  <Input value={formData.complemento} onChange={e => setFormData({ ...formData, complemento: e.target.value })} placeholder="Apto, Bloco, etc." />
                 </div>
                 <div className="space-y-2">
                   <Label>Bairro</Label>
-                  <Input
-                    value={formData.bairro}
-                    onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
-                  />
+                  <Input value={formData.bairro} onChange={e => setFormData({ ...formData, bairro: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>Cidade</Label>
-                  <Input
-                    value={formData.cidade}
-                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                  />
+                  <Input value={formData.cidade} onChange={e => setFormData({ ...formData, cidade: e.target.value })} />
                 </div>
-              </div>
-            </div>
-            {isMinor(formData.data_nascimento) && (
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" />
-                  Responsável (menor de idade)
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome do Responsável *</Label>
-                    <Input
-                      value={formData.nome_responsavel}
-                      onChange={(e) => setFormData({ ...formData, nome_responsavel: e.target.value })}
-                      placeholder="Nome completo do responsável"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CPF do Responsável</Label>
-                    <Input
-                      value={formData.cpf_responsavel}
-                      onChange={(e) => setFormData({ ...formData, cpf_responsavel: e.target.value })}
-                      placeholder="000.000.000-00"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Parentesco</Label>
-                    <Input
-                      value={formData.parentesco_responsavel}
-                      onChange={(e) => setFormData({ ...formData, parentesco_responsavel: e.target.value })}
-                      placeholder="Mãe, Pai, Avó, etc."
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Estado</Label>
+                  <Select value={formData.estado} onValueChange={v => setFormData({ ...formData, estado: v })}>
+                    <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                    <SelectContent>
+                      {ESTADOS_BR.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
-            <div className="border-t pt-4">
-              <div className="space-y-2">
-                <Label>Alergias (separadas por vírgula)</Label>
-                <Input
-                  value={formData.alergias.join(', ')}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      alergias: e.target.value
-                        .split(',')
-                        .map((a) => a.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                  placeholder="Penicilina, Dipirona, etc."
-                />
+
+            {/* Convênio */}
+            {formSection === 'convenio' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Convênio</Label>
+                  <Select value={formData.convenio_id} onValueChange={v => setFormData({ ...formData, convenio_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Particular (sem convênio)" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Particular</SelectItem>
+                      {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.convenio_id && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Número da Carteira</Label>
+                      <Input value={formData.numero_carteira} onChange={e => setFormData({ ...formData, numero_carteira: e.target.value })} placeholder="Número da carteirinha" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Validade da Carteira</Label>
+                      <Input type="date" value={formData.validade_carteira} onChange={e => setFormData({ ...formData, validade_carteira: e.target.value })} />
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Dados Clínicos */}
+            {formSection === 'clinico' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo Sanguíneo</Label>
+                    <Select value={formData.tipo_sanguineo} onValueChange={v => setFormData({ ...formData, tipo_sanguineo: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {TIPO_SANGUINEO_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Alergias (separadas por vírgula)</Label>
+                  <Input
+                    value={formData.alergias.join(', ')}
+                    onChange={e => setFormData({ ...formData, alergias: e.target.value.split(',').map(a => a.trim()).filter(Boolean) })}
+                    placeholder="Penicilina, Dipirona, Ibuprofeno, etc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Observações Gerais</Label>
+                  <Textarea
+                    value={formData.observacoes}
+                    onChange={e => setFormData({ ...formData, observacoes: e.target.value })}
+                    placeholder="Informações adicionais relevantes sobre o paciente..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>
-              Cancelar
-            </Button>
-            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
-              Salvar
-            </LoadingButton>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>Cancelar</Button>
+            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">Salvar</LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* View Dialog */}
+      {/* ─── View Dialog ─── */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -559,12 +854,15 @@ export default function Pacientes() {
           </DialogHeader>
           {selectedPaciente && (
             <Tabs value={viewTab} onValueChange={setViewTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="dados">Dados</TabsTrigger>
+                <TabsTrigger value="endereco">Endereço</TabsTrigger>
                 <TabsTrigger value="historico">Histórico</TabsTrigger>
                 <TabsTrigger value="sinais">Sinais Vitais</TabsTrigger>
               </TabsList>
-              <TabsContent value="dados" className="space-y-4 pt-4">
+
+              {/* Tab: Dados */}
+              <TabsContent value="dados" className="space-y-6 pt-4">
                 <div className="flex items-start gap-6">
                   <PatientPhoto
                     pacienteId={selectedPaciente.id}
@@ -573,33 +871,69 @@ export default function Pacientes() {
                     size="xl"
                     editable={true}
                   />
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-3">
                     <div>
                       <h3 className="text-xl font-bold">{selectedPaciente.nome}</h3>
                       <p className="text-muted-foreground">
                         {calcularIdade(selectedPaciente.data_nascimento)} anos
+                        {selectedPaciente.sexo && ` • ${selectedPaciente.sexo === 'masculino' ? 'Masculino' : selectedPaciente.sexo === 'feminino' ? 'Feminino' : 'Outro'}`}
                       </p>
                     </div>
                     {selectedPaciente.alergias && selectedPaciente.alergias.length > 0 && (
                       <AllergyAlert alergias={selectedPaciente.alergias} />
                     )}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">CPF:</span>
-                        <p>{selectedPaciente.cpf || '-'}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Telefone:</span>
-                        <p>{selectedPaciente.telefone || '-'}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Email:</span>
-                        <p>{selectedPaciente.email || '-'}</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf} />
+                  <InfoField icon={Calendar} label="Nascimento" value={selectedPaciente.data_nascimento ? new Date(selectedPaciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR') : null} />
+                  <InfoField icon={Phone} label="Telefone" value={selectedPaciente.telefone} />
+                  <InfoField icon={Mail} label="Email" value={selectedPaciente.email} />
+                  <InfoField icon={Building2} label="Convênio" value={getConvenioNome(selectedPaciente.convenio_id)} />
+                  <InfoField icon={CreditCard} label="Carteira" value={(selectedPaciente as any).numero_carteira} />
+                </div>
+
+                {(selectedPaciente as any).nome_responsavel && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <InfoField icon={User2} label="Nome" value={(selectedPaciente as any).nome_responsavel} />
+                        <InfoField icon={FileText} label="CPF" value={(selectedPaciente as any).cpf_responsavel} />
+                        <InfoField icon={Users} label="Parentesco" value={(selectedPaciente as any).parentesco_responsavel} />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {selectedPaciente.observacoes && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="font-medium text-sm mb-1">Observações</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedPaciente.observacoes}</p>
+                    </div>
+                  </>
+                )}
               </TabsContent>
+
+              {/* Tab: Endereço */}
+              <TabsContent value="endereco" className="pt-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <InfoField icon={MapPin} label="CEP" value={selectedPaciente.cep} />
+                  <InfoField icon={MapPin} label="Logradouro" value={selectedPaciente.logradouro} />
+                  <InfoField icon={MapPin} label="Número" value={selectedPaciente.numero} />
+                  <InfoField icon={MapPin} label="Complemento" value={(selectedPaciente as any).complemento} />
+                  <InfoField icon={MapPin} label="Bairro" value={selectedPaciente.bairro} />
+                  <InfoField icon={MapPin} label="Cidade" value={selectedPaciente.cidade} />
+                  <InfoField icon={MapPin} label="Estado" value={selectedPaciente.estado} />
+                </div>
+              </TabsContent>
+
               <TabsContent value="historico" className="pt-4">
                 <PatientTimeline pacienteId={selectedPaciente.id} />
               </TabsContent>
@@ -611,36 +945,39 @@ export default function Pacientes() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o paciente "{selectedPaciente?.nome}"? Esta ação não
-              pode ser desfeita.
+              Tem certeza que deseja excluir o paciente "{selectedPaciente?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <LoadingButton
-              onClick={handleDelete}
-              isLoading={isDeleting}
-              loadingText="Excluindo..."
-              variant="destructive"
-            >
+            <LoadingButton onClick={handleDelete} isLoading={isDeleting} loadingText="Excluindo..." variant="destructive">
               Excluir
             </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Etiquetas Dialog */}
-      <EtiquetaPaciente
-        pacientes={pacientesForEtiqueta}
-        open={isEtiquetaOpen}
-        onOpenChange={setIsEtiquetaOpen}
-      />
+      {/* Etiquetas */}
+      <EtiquetaPaciente pacientes={pacientesForEtiqueta} open={isEtiquetaOpen} onOpenChange={setIsEtiquetaOpen} />
+    </div>
+  );
+}
+
+// Helper component for info display
+function InfoField({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) {
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        <span className="text-xs">{label}</span>
+      </div>
+      <p className="font-medium">{value || '—'}</p>
     </div>
   );
 }
