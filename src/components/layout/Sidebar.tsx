@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { Activity, ChevronLeft, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import logoIcon from '@/assets/logo-elolab-icon.png';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -79,8 +80,8 @@ export function Sidebar() {
       )}>
         {!collapsed ? (
           <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20 shrink-0">
-              <Activity className="h-5 w-5 text-primary-foreground" />
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl shrink-0">
+              <img src={logoIcon} alt="EloLab" className="h-10 w-10 object-contain drop-shadow-md" />
               <div className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
             </div>
             <div className="flex flex-col">
@@ -93,8 +94,8 @@ export function Sidebar() {
             </div>
           </div>
         ) : (
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-            <Activity className="h-5 w-5 text-primary-foreground" />
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl">
+            <img src={logoIcon} alt="EloLab" className="h-10 w-10 object-contain drop-shadow-md" />
             <div className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
           </div>
         )}
