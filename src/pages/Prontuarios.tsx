@@ -318,7 +318,7 @@ export default function Prontuarios() {
         revisao_sistemas: currentProntuario.revisao_sistemas,
         alergias_relatadas: currentProntuario.alergias_relatadas,
         medicamentos_em_uso: currentProntuario.medicamentos_em_uso,
-        sinais_vitais: sinaisVitais as unknown as Record<string, unknown>,
+        sinais_vitais: JSON.parse(JSON.stringify(sinaisVitais)),
         exames_fisicos: currentProntuario.exames_fisicos,
         exame_cabeca_pescoco: currentProntuario.exame_cabeca_pescoco,
         exame_torax: currentProntuario.exame_torax,
