@@ -692,6 +692,75 @@ export default function Exames() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Manage Custom Types Dialog */}
+      <Dialog open={isManageTypesOpen} onOpenChange={setIsManageTypesOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Meus Tipos de Exame</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Input
+                value={newTypeInput}
+                onChange={e => setNewTypeInput(e.target.value)}
+                placeholder="Nome do tipo de exame..."
+                className="flex-1"
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && newTypeInput.trim() && user) {
+                    await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
+                    queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                    setNewTypeInput('');
+                    toast.success('Tipo de exame cadastrado!');
+                  }
+                }}
+              />
+              <Button
+                disabled={!newTypeInput.trim()}
+                onClick={async () => {
+                  if (!newTypeInput.trim() || !user) return;
+                  await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
+                  queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                  setNewTypeInput('');
+                  toast.success('Tipo de exame cadastrado!');
+                }}
+                className="gap-1"
+              >
+                <Plus className="h-4 w-4" /> Adicionar
+              </Button>
+            </div>
+            {customTypesFromDB.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum tipo personalizado cadastrado ainda</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {customTypesFromDB.map((tipo: any) => (
+                  <div key={tipo.id} className="flex items-center justify-between border rounded-lg px-3 py-2">
+                    <div>
+                      <p className="font-medium text-sm">{tipo.nome}</p>
+                      <p className="text-xs text-muted-foreground">{tipo.categoria}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive h-7"
+                      onClick={async () => {
+                        await supabase.from('tipos_exame_custom' as any).delete().eq('id', tipo.id);
+                        queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                        toast.success('Tipo removido');
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsManageTypesOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
