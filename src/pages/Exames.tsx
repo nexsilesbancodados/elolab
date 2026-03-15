@@ -294,6 +294,12 @@ interface FormData {
   tipo_exame: string;
   descricao: string;
   observacoes: string;
+  indicacao_clinica: string;
+  hipotese_diagnostica: string;
+  urgencia: string;
+  jejum: string;
+  lateralidade: string;
+  regiao_anatomica: string;
 }
 
 const initialFormData: FormData = {
@@ -302,6 +308,12 @@ const initialFormData: FormData = {
   tipo_exame: '',
   descricao: '',
   observacoes: '',
+  indicacao_clinica: '',
+  hipotese_diagnostica: '',
+  urgencia: 'normal',
+  jejum: '',
+  lateralidade: '',
+  regiao_anatomica: '',
 };
 
 export default function Exames() {
