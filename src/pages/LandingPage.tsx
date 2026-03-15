@@ -433,7 +433,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ DIFFERENTIALS ═══ */}
-      <section id="differentials" className="py-24 px-4 bg-accent">
+      <section id="differentials" className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto">
           <SectionHeading badge="DIFERENCIAIS" title="Por que clínicas escolhem o EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
