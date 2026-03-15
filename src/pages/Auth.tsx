@@ -3,19 +3,23 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Eye, EyeOff, Sparkles, Shield, Clock, Users, Stethoscope, ArrowLeft, Gift, CheckCircle2 } from 'lucide-react';
+import {
+  Loader2, Eye, EyeOff, Shield, Clock, Users, ArrowLeft,
+  Gift, CheckCircle2, Stethoscope, HeartPulse, BarChart3, Lock, Mail, User,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { checkRateLimit, getRemainingAttempts } from '@/lib/rateLimiter';
-import logoInovalab from '@/assets/logo-icon.png';
-import heroInstitutional from '@/assets/hero-institutional.png';
+import { checkRateLimit } from '@/lib/rateLimiter';
+import { cn } from '@/lib/utils';
+import logoIcon from '@/assets/logo-elolab-icon.png';
+import logoFull from '@/assets/logo-elolab-full.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -36,6 +40,21 @@ const signupSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 type SignupForm = z.infer<typeof signupSchema>;
 
+const fadeIn = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  }),
+};
+
+const features = [
+  { icon: Stethoscope, title: 'Prontuário Eletrônico', desc: 'Registros clínicos completos e seguros' },
+  { icon: HeartPulse, title: 'Agenda Inteligente', desc: 'Gestão de consultas e bloqueios' },
+  { icon: BarChart3, title: 'Financeiro Integrado', desc: 'Fluxo de caixa e faturamento' },
+  { icon: Shield, title: 'LGPD Compliant', desc: 'Dados protegidos por padrão' },
+];
+
 export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -46,22 +65,15 @@ export default function Auth() {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [signupSuccess, setSignupSuccess] = useState(false);
 
-  // Read invite code params from URL
   const urlCodigo = searchParams.get('codigo') || '';
   const urlEmail = searchParams.get('email') || '';
-  const urlPlano = searchParams.get('plano') || '';
 
-  // If invite code is in URL, default to signup tab
   useEffect(() => {
-    if (urlCodigo) {
-      setActiveTab('signup');
-    }
+    if (urlCodigo) setActiveTab('signup');
   }, [urlCodigo]);
 
   useEffect(() => {
-    if (!authLoading && user && profile) {
-      navigate('/dashboard');
-    }
+    if (!authLoading && user && profile) navigate('/dashboard');
   }, [user, profile, authLoading, navigate]);
 
   const loginForm = useForm<LoginForm>({
@@ -72,10 +84,7 @@ export default function Auth() {
   const signupForm = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      nome: '',
-      email: urlEmail || '',
-      password: '',
-      confirmPassword: '',
+      nome: '', email: urlEmail || '', password: '', confirmPassword: '',
       codigoConvite: urlCodigo || '',
     },
   });
@@ -83,21 +92,16 @@ export default function Auth() {
   const onLogin = async (data: LoginForm) => {
     const { allowed, retryAfterMs } = checkRateLimit('login', 'auth');
     if (!allowed) {
-      const seconds = Math.ceil(retryAfterMs / 1000);
-      toast.error(`Muitas tentativas. Tente novamente em ${seconds}s.`);
+      toast.error(`Muitas tentativas. Tente novamente em ${Math.ceil(retryAfterMs / 1000)}s.`);
       return;
     }
     setIsLoading(true);
     try {
       const { error } = await signIn(data.email, data.password);
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Email ou senha incorretos');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Por favor, confirme seu email antes de fazer login');
-        } else {
-          toast.error(error.message || 'Erro ao fazer login');
-        }
+        if (error.message.includes('Invalid login credentials')) toast.error('Email ou senha incorretos');
+        else if (error.message.includes('Email not confirmed')) toast.error('Confirme seu email antes de fazer login');
+        else toast.error(error.message || 'Erro ao fazer login');
       } else {
         toast.success('Login realizado com sucesso!');
         navigate('/dashboard');
@@ -111,7 +115,6 @@ export default function Auth() {
 
   const activateSubscription = async (userId: string, codigoConvite: string) => {
     try {
-      // Find the pending registration by invite code
       const { data: registro, error: regError } = await supabase
         .from('registros_pendentes' as any)
         .select('*')
@@ -120,32 +123,22 @@ export default function Auth() {
         .single();
 
       if (regError || !registro) {
-        console.error('Registro pendente não encontrado:', regError);
         toast.error('Código de convite inválido ou expirado.');
         return;
       }
 
       const reg = registro as any;
-
-      // Check expiration
       if (new Date(reg.expires_at) < new Date()) {
         toast.error('Código de convite expirado.');
         return;
       }
 
-      // Mark registro as activated
       await supabase
         .from('registros_pendentes' as any)
-        .update({
-          status: 'ativado',
-          user_id: userId,
-          activated_at: new Date().toISOString(),
-        })
+        .update({ status: 'ativado', user_id: userId, activated_at: new Date().toISOString() })
         .eq('id', reg.id);
 
-      // Start trial or activate subscription based on status
       if (reg.status === 'pago') {
-        // Payment already confirmed - create active subscription
         const { data: plano } = await supabase
           .from('planos' as any)
           .select('*')
@@ -157,26 +150,17 @@ export default function Auth() {
           await supabase
             .from('assinaturas_plano' as any)
             .insert({
-              user_id: userId,
-              plano_id: p.id,
-              plano_slug: p.slug,
-              status: 'ativa',
-              em_trial: false,
-              data_inicio: new Date().toISOString(),
+              user_id: userId, plano_id: p.id, plano_slug: p.slug,
+              status: 'ativa', em_trial: false, data_inicio: new Date().toISOString(),
             });
           toast.success(`Plano ${p.nome} ativado com sucesso! 🎉`);
         }
       } else {
-        // Trial mode - start free trial via RPC
         const { data: result } = await supabase.rpc('start_free_trial' as any, {
-          _user_id: userId,
-          _plano_slug: reg.plano_slug,
+          _user_id: userId, _plano_slug: reg.plano_slug,
         });
-
         const res = result as any;
-        if (res?.success) {
-          toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
-        }
+        if (res?.success) toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
       }
     } catch (err) {
       console.error('Erro ao ativar assinatura:', err);
@@ -186,13 +170,11 @@ export default function Auth() {
   const onSignup = async (data: SignupForm) => {
     const { allowed, retryAfterMs } = checkRateLimit('signup', 'auth');
     if (!allowed) {
-      const seconds = Math.ceil(retryAfterMs / 1000);
-      toast.error(`Muitas tentativas. Tente novamente em ${seconds}s.`);
+      toast.error(`Muitas tentativas. Tente novamente em ${Math.ceil(retryAfterMs / 1000)}s.`);
       return;
     }
     setIsLoading(true);
     try {
-      // Validate invite code first
       const { data: registro, error: regError } = await supabase
         .from('registros_pendentes' as any)
         .select('id, status, expires_at, plano_slug')
@@ -208,24 +190,18 @@ export default function Auth() {
 
       const reg = registro as any;
       if (new Date(reg.expires_at) < new Date()) {
-        toast.error('Código de convite expirado. Solicite um novo.');
+        toast.error('Código de convite expirado.');
         setIsLoading(false);
         return;
       }
 
       const result = await signUp(data.email, data.password, data.nome);
       if (result.error) {
-        if (result.error.message.includes('User already registered')) {
-          toast.error('Este email já está cadastrado');
-        } else {
-          toast.error(result.error.message || 'Erro ao criar conta');
-        }
+        if (result.error.message.includes('User already registered')) toast.error('Este email já está cadastrado');
+        else toast.error(result.error.message || 'Erro ao criar conta');
       } else {
-        // If user is immediately available (auto-confirm enabled), activate subscription
         const userId = result.data?.user?.id;
-        if (userId) {
-          await activateSubscription(userId, data.codigoConvite);
-        }
+        if (userId) await activateSubscription(userId, data.codigoConvite);
         setSignupSuccess(true);
         toast.success('Conta criada com sucesso!');
         signupForm.reset();
@@ -239,99 +215,144 @@ export default function Auth() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(215,28%,12%)]">
-        <div className="flex flex-col items-center gap-4">
-          <img src={logoInovalab} alt="EloLab" className="h-14 w-14 rounded-xl" />
-          <Loader2 className="h-6 w-6 animate-spin text-[hsl(168,76%,50%)]" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <img src={logoIcon} alt="EloLab" className="h-16 w-16 drop-shadow-lg" />
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
-        <img
-          src={heroInstitutional}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+    <div className="min-h-screen flex bg-background">
+      {/* ─── Left Panel: Branding ─── */}
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-foreground">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-foreground via-foreground/95 to-primary/20" />
+
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[100px]" />
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,28%,10%)]/85 via-[hsl(215,28%,12%)]/80 to-[hsl(168,76%,25%)]/60" />
-        
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+
+        <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <img src={logoInovalab} alt="EloLab" className="h-9 w-9 rounded-lg object-contain" />
-            <span className="text-xl font-extrabold font-display tracking-tight text-white">
-              ELO<span className="text-[hsl(168,76%,50%)]">LAB</span>
-            </span>
-          </div>
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="flex items-center gap-3">
+              <img src={logoIcon} alt="EloLab" className="h-10 w-10 drop-shadow-lg" />
+              <span className="text-xl font-extrabold font-display tracking-tight text-background">
+                Elo<span className="text-primary">Lab</span>
+              </span>
+            </div>
+          </motion.div>
 
           {/* Center content */}
-          <div className="max-w-lg">
-            <h1 className="text-4xl font-extrabold font-display text-white leading-tight mb-4">
-              Gestão clínica completa,{' '}
-              <span className="text-[hsl(168,76%,50%)]">segura e inteligente</span>
-            </h1>
-            <p className="text-white/60 text-lg leading-relaxed mb-10">
-              Agenda, prontuário eletrônico, financeiro e IA integrada para transformar a gestão do seu consultório.
-            </p>
+          <motion.div
+            initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+            className="max-w-lg"
+          >
+            <motion.h1 variants={fadeIn} className="text-4xl xl:text-5xl font-extrabold font-display text-background leading-[1.1] mb-5">
+              Gestão clínica{' '}
+              <span className="text-primary">completa</span>{' '}
+              e inteligente
+            </motion.h1>
+            <motion.p variants={fadeIn} custom={1} className="text-background/50 text-lg leading-relaxed mb-10">
+              Agenda, prontuário eletrônico, financeiro e laboratório integrados para transformar a gestão do seu consultório.
+            </motion.p>
 
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { icon: Shield, label: 'LGPD', desc: 'Dados protegidos' },
-                { icon: Clock, label: 'Rápido', desc: 'Interface ágil' },
-                { icon: Users, label: 'Equipe', desc: 'Multiusuário' },
-              ].map((f, i) => (
-                <div key={i} className="bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                  <f.icon className="h-5 w-5 text-[hsl(168,76%,50%)] mb-3" />
-                  <p className="font-bold text-white text-sm">{f.label}</p>
-                  <p className="text-white/40 text-xs">{f.desc}</p>
-                </div>
+            <motion.div variants={fadeIn} custom={2} className="grid grid-cols-2 gap-3">
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeIn}
+                  custom={3 + i}
+                  className="group bg-background/[0.04] backdrop-blur-sm border border-background/[0.08] rounded-xl p-4 hover:bg-background/[0.08] transition-colors duration-300"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <f.icon className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                  <p className="font-bold text-background text-sm mb-0.5">{f.title}</p>
+                  <p className="text-background/35 text-xs leading-relaxed">{f.desc}</p>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Bottom */}
-          <div className="flex items-center gap-2 text-white/30 text-xs">
-            <Shield className="h-3.5 w-3.5" />
-            <span>Em conformidade com a LGPD</span>
-          </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
+            className="flex items-center gap-6 text-background/25 text-xs"
+          >
+            <div className="flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5" />
+              <span>LGPD Compliant</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Criptografia end-to-end</span>
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Right Panel - Auth Form */}
-      <div className="flex-1 flex items-center justify-center bg-white p-6 md:p-12">
-        <div className="w-full max-w-md">
+      {/* ─── Right Panel: Auth Form ─── */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/3 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-56 h-56 bg-primary/3 rounded-full blur-3xl" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-[420px] relative z-10"
+        >
           {/* Mobile Logo */}
           <div className="text-center mb-8 lg:hidden">
             <div className="flex items-center justify-center gap-2.5 mb-2">
-              <img src={logoInovalab} alt="EloLab" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-extrabold font-display tracking-tight">
-                ELO<span className="text-[hsl(168,76%,36%)]">LAB</span>
+              <img src={logoIcon} alt="EloLab" className="h-11 w-11 drop-shadow-md" />
+              <span className="text-2xl font-extrabold font-display tracking-tight text-foreground">
+                Elo<span className="text-primary">Lab</span>
               </span>
             </div>
-            <p className="text-[hsl(215,15%,50%)] text-sm">Sistema de Gestão Clínica</p>
+            <p className="text-muted-foreground text-sm">Sistema de Gestão Clínica</p>
           </div>
 
           {/* Invite code banner */}
-          {urlCodigo && (
-            <div className="mb-6 p-4 bg-[hsl(168,76%,95%)] border border-[hsl(168,76%,36%)]/20 rounded-xl flex items-center gap-3">
-              <Gift className="h-5 w-5 text-[hsl(168,76%,36%)] shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-[hsl(168,76%,25%)]">Código de ativação detectado!</p>
-                <p className="text-xs text-[hsl(168,76%,35%)]">Preencha seus dados para ativar sua conta.</p>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {urlCodigo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="mb-6 p-4 bg-primary/5 border border-primary/15 rounded-xl flex items-center gap-3"
+              >
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Gift className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Código de ativação detectado!</p>
+                  <p className="text-xs text-muted-foreground">Preencha seus dados para ativar sua conta.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Heading */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold font-display text-[hsl(215,28%,17%)]">
+          <div className="mb-7">
+            <h2 className="text-2xl font-bold font-display text-foreground">
               {activeTab === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
             </h2>
-            <p className="text-[hsl(215,15%,50%)] mt-1">
+            <p className="text-muted-foreground text-sm mt-1.5">
               {activeTab === 'login'
                 ? 'Entre com suas credenciais para acessar o sistema'
                 : 'Preencha os dados para começar a usar o EloLab'}
@@ -340,16 +361,16 @@ export default function Auth() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'signup')}>
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[hsl(210,40%,96%)] rounded-lg h-11">
-              <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-semibold">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/60 rounded-xl h-11 p-1">
+              <TabsTrigger value="login" className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-lg font-semibold text-sm">
                 Entrar
               </TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-semibold">
+              <TabsTrigger value="signup" className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-lg font-semibold text-sm">
                 Criar Conta
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login" className="space-y-4">
+            <TabsContent value="login" className="space-y-4 mt-0">
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <FormField
@@ -357,15 +378,18 @@ export default function Auth() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Email</FormLabel>
+                        <FormLabel className="text-sm font-medium text-foreground">Email</FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="seu@email.com"
-                            autoComplete="email"
-                            className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                            <Input
+                              type="email"
+                              placeholder="seu@email.com"
+                              autoComplete="email"
+                              className="h-12 pl-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors"
+                              {...field}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -376,14 +400,15 @@ export default function Auth() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Senha</FormLabel>
+                        <FormLabel className="text-sm font-medium text-foreground">Senha</FormLabel>
                         <FormControl>
                           <div className="relative">
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                             <Input
                               type={showPassword ? 'text' : 'password'}
                               placeholder="••••••••"
                               autoComplete="current-password"
-                              className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl pr-10"
+                              className="h-12 pl-10 pr-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors"
                               {...field}
                             />
                             <Button
@@ -391,9 +416,12 @@ export default function Auth() {
                               variant="ghost"
                               size="icon"
                               className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                               onClick={() => setShowPassword(!showPassword)}
                             >
-                              {showPassword ? <EyeOff className="h-4 w-4 text-[hsl(215,15%,50%)]" /> : <Eye className="h-4 w-4 text-[hsl(215,15%,50%)]" />}
+                              {showPassword
+                                ? <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                : <Eye className="h-4 w-4 text-muted-foreground" />}
                             </Button>
                           </div>
                         </FormControl>
@@ -403,7 +431,7 @@ export default function Auth() {
                   />
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl shadow-lg shadow-[hsl(168,76%,36%)]/20 text-base"
+                    className="w-full h-12 font-bold rounded-xl text-base shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
                     disabled={isLoading}
                   >
                     {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Entrando...</> : 'Entrar'}
@@ -412,31 +440,33 @@ export default function Auth() {
               </Form>
             </TabsContent>
 
-            <TabsContent value="signup" className="space-y-4">
+            <TabsContent value="signup" className="space-y-4 mt-0">
               {signupSuccess ? (
-                <Alert className="border-[hsl(168,76%,36%)]/30 bg-[hsl(168,76%,95%)]">
-                  <CheckCircle2 className="h-4 w-4 text-[hsl(168,76%,36%)]" />
-                  <AlertDescription className="text-[hsl(168,76%,30%)]">
-                    Conta criada e plano ativado com sucesso! Faça login para acessar o sistema.
-                  </AlertDescription>
-                </Alert>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-foreground">
+                      Conta criada e plano ativado com sucesso! Faça login para acessar o sistema.
+                    </AlertDescription>
+                  </Alert>
+                </motion.div>
               ) : (
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
-                    {/* Invite code field - highlighted */}
+                    {/* Invite code */}
                     <FormField
                       control={signupForm.control}
                       name="codigoConvite"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-[hsl(168,76%,30%)] flex items-center gap-1.5">
+                          <FormLabel className="text-sm font-medium text-primary flex items-center gap-1.5">
                             <Gift className="h-3.5 w-3.5" /> Código de Convite
                           </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Ex: A1B2C3D4"
                               autoComplete="off"
-                              className="h-12 bg-[hsl(168,76%,97%)] border-[hsl(168,76%,36%)]/30 focus:border-[hsl(168,76%,36%)] rounded-xl font-mono text-center text-lg tracking-widest uppercase"
+                              className="h-12 bg-primary/5 border-primary/20 focus:border-primary rounded-xl font-mono text-center text-lg tracking-widest uppercase"
                               {...field}
                               onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                             />
@@ -450,9 +480,12 @@ export default function Auth() {
                       name="nome"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Nome completo</FormLabel>
+                          <FormLabel className="text-sm font-medium text-foreground">Nome completo</FormLabel>
                           <FormControl>
-                            <Input placeholder="Dr. João Silva" autoComplete="name" className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl" {...field} />
+                            <div className="relative">
+                              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                              <Input placeholder="Dr. João Silva" autoComplete="name" className="h-12 pl-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -463,9 +496,12 @@ export default function Auth() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Email</FormLabel>
+                          <FormLabel className="text-sm font-medium text-foreground">Email</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="seu@email.com" autoComplete="email" className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl" {...field} />
+                            <div className="relative">
+                              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                              <Input type="email" placeholder="seu@email.com" autoComplete="email" className="h-12 pl-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -476,12 +512,13 @@ export default function Auth() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Senha</FormLabel>
+                          <FormLabel className="text-sm font-medium text-foreground">Senha</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="new-password" className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl pr-10" {...field} />
-                              <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                                {showPassword ? <EyeOff className="h-4 w-4 text-[hsl(215,15%,50%)]" /> : <Eye className="h-4 w-4 text-[hsl(215,15%,50%)]" />}
+                              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                              <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="new-password" className="h-12 pl-10 pr-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors" {...field} />
+                              <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setShowPassword(!showPassword)}>
+                                {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                               </Button>
                             </div>
                           </FormControl>
@@ -494,12 +531,13 @@ export default function Auth() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-[hsl(215,28%,17%)]">Confirmar senha</FormLabel>
+                          <FormLabel className="text-sm font-medium text-foreground">Confirmar senha</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="new-password" className="h-12 bg-[hsl(210,40%,98%)] border-[hsl(220,13%,91%)] focus:border-[hsl(168,76%,36%)] rounded-xl pr-10" {...field} />
-                              <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                {showConfirmPassword ? <EyeOff className="h-4 w-4 text-[hsl(215,15%,50%)]" /> : <Eye className="h-4 w-4 text-[hsl(215,15%,50%)]" />}
+                              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                              <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="new-password" className="h-12 pl-10 pr-10 bg-muted/30 border-border/60 focus:border-primary focus:bg-card rounded-xl transition-colors" {...field} />
+                              <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                               </Button>
                             </div>
                           </FormControl>
@@ -509,7 +547,7 @@ export default function Auth() {
                     />
                     <Button
                       type="submit"
-                      className="w-full h-12 bg-[hsl(168,76%,36%)] hover:bg-[hsl(168,76%,30%)] text-white font-bold rounded-xl shadow-lg shadow-[hsl(168,76%,36%)]/20 text-base"
+                      className="w-full h-12 font-bold rounded-xl text-base shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
                       disabled={isLoading}
                     >
                       {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando conta...</> : 'Criar conta e ativar plano'}
@@ -520,18 +558,20 @@ export default function Auth() {
             </TabsContent>
           </Tabs>
 
-          <Link
-            to="/"
-            className="flex items-center justify-center gap-2 mt-6 text-sm font-medium text-[hsl(168,76%,36%)] hover:text-[hsl(168,76%,28%)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao site
-          </Link>
-
-          <p className="text-center text-xs text-[hsl(215,15%,60%)] mt-4">
-            © {new Date().getFullYear()} EloLab. Todos os direitos reservados.
-          </p>
-        </div>
+          {/* Footer links */}
+          <div className="mt-8 space-y-4">
+            <Link
+              to="/"
+              className="flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar ao site
+            </Link>
+            <p className="text-center text-xs text-muted-foreground">
+              © {new Date().getFullYear()} EloLab. Todos os direitos reservados.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
