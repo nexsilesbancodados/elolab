@@ -13,34 +13,35 @@ import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Lazy loaded pages for better initial load performance
+// Eagerly loaded core pages — instant navigation
+import Dashboard from "@/pages/Dashboard";
+import Pacientes from "@/pages/Pacientes";
+import Agenda from "@/pages/Agenda";
+import Fila from "@/pages/Fila";
+import Prontuarios from "@/pages/Prontuarios";
+import Financeiro from "@/pages/Financeiro";
+import Medicos from "@/pages/Medicos";
+import Estoque from "@/pages/Estoque";
+
+// Lazy loaded secondary pages
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Pacientes = lazy(() => import("@/pages/Pacientes"));
-const Agenda = lazy(() => import("@/pages/Agenda"));
-const Fila = lazy(() => import("@/pages/Fila"));
 const PainelTV = lazy(() => import("@/pages/PainelTV"));
-const Prontuarios = lazy(() => import("@/pages/Prontuarios"));
-const Financeiro = lazy(() => import("@/pages/Financeiro"));
 const Relatorios = lazy(() => import("@/pages/Relatorios"));
 const Usuarios = lazy(() => import("@/pages/Usuarios"));
 const Configuracoes = lazy(() => import("@/pages/Configuracoes"));
 const Prescricoes = lazy(() => import("@/pages/Prescricoes"));
 const Atestados = lazy(() => import("@/pages/Atestados"));
-const Estoque = lazy(() => import("@/pages/Estoque"));
 const Convenios = lazy(() => import("@/pages/Convenios"));
 const ContasReceber = lazy(() => import("@/pages/ContasReceber"));
 const ContasPagar = lazy(() => import("@/pages/ContasPagar"));
-const Medicos = lazy(() => import("@/pages/Medicos"));
 const Funcionarios = lazy(() => import("@/pages/Funcionarios"));
 const Exames = lazy(() => import("@/pages/Exames"));
 const Triagem = lazy(() => import("@/pages/Triagem"));
 const Salas = lazy(() => import("@/pages/Salas"));
 const ListaEspera = lazy(() => import("@/pages/ListaEspera"));
 const FluxoCaixa = lazy(() => import("@/pages/FluxoCaixa"));
-// Telemedicina removida do escopo
 const Templates = lazy(() => import("@/pages/Templates"));
 const Encaminhamentos = lazy(() => import("@/pages/Encaminhamentos"));
 const Automacoes = lazy(() => import("@/pages/Automacoes"));
