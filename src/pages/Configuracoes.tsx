@@ -79,45 +79,6 @@ function SettingRow({ icon: Icon, title, description, children }: {
 
 function IntegrationCard({ icon: Icon, name, description, configured, active, onConfigure }: {
   icon: React.ElementType;
-  name: string;
-  description: string;
-  configured: boolean;
-  active: boolean;
-  onConfigure: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl border bg-card transition-colors hover:bg-accent/30">
-      <div className={`p-3 rounded-xl ${configured && active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-sm">{name}</p>
-          {configured && active ? (
-            <Badge variant="outline" className="text-xs border-primary/30 text-primary bg-primary/5">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Ativo
-            </Badge>
-          ) : configured ? (
-            <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-600 bg-yellow-500/5">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Inativo
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-xs">
-              Não configurado
-            </Badge>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-      <Button variant="outline" size="sm" onClick={onConfigure} className="shrink-0 gap-1.5">
-        <Settings2 className="h-3.5 w-3.5" />
-        {configured ? 'Editar' : 'Configurar'}
-      </Button>
-    </div>
-  );
-}
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
