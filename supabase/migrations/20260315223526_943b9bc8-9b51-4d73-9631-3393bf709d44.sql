@@ -1,0 +1,9 @@
+
+ALTER TABLE public.medicos
+  ADD COLUMN IF NOT EXISTS cpf text NULL,
+  ADD COLUMN IF NOT EXISTS crm_uf text NULL DEFAULT 'SP',
+  ADD COLUMN IF NOT EXISTS rqe text NULL,
+  ADD COLUMN IF NOT EXISTS cns text NULL,
+  ADD COLUMN IF NOT EXISTS intervalo_consulta integer NULL DEFAULT 30,
+  ADD COLUMN IF NOT EXISTS foto_url text NULL,
+  ADD COLUMN IF NOT EXISTS carimbo_url text NULL;
