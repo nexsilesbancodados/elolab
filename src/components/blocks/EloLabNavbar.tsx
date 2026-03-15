@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import {
   Calendar, FileText, DollarSign, Bot, Shield, BarChart3,
   Stethoscope, Users, Heart, ClipboardList, Menu, LogIn,
