@@ -411,7 +411,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <section id="how-it-works" className="py-24 px-4 bg-background">
+      <section id="how-it-works" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading
             badge="COMO FUNCIONA"
