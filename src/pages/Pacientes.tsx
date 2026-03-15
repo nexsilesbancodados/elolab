@@ -195,6 +195,9 @@ export default function Pacientes() {
         cidade: formData.cidade || null,
         estado: formData.estado || null,
         observacoes: formData.observacoes || null,
+        nome_responsavel: formData.nome_responsavel || null,
+        cpf_responsavel: formData.cpf_responsavel || null,
+        parentesco_responsavel: formData.parentesco_responsavel || null,
       };
 
       if (selectedPacienteId) {
