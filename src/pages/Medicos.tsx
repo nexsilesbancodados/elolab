@@ -361,6 +361,29 @@ export default function Medicos() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label>Nome Completo *</Label>
+              <Input
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Dr. João Silva"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="medico@email.com"
+              />
+              {!editingId && formData.email && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Mail className="h-3 w-3" />
+                  Um convite de acesso será enviado automaticamente para este e-mail
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label>CRM *</Label>
               <Input
                 value={formData.crm}
