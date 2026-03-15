@@ -886,51 +886,75 @@ export type Database = {
       estoque: {
         Row: {
           categoria: string
+          codigo_ean: string | null
           created_at: string | null
           descricao: string | null
+          dosagem: string | null
+          fabricante: string | null
           fornecedor: string | null
+          foto_url: string | null
           id: string
           localizacao: string | null
           lote: string | null
           nome: string
+          ponto_pedido: number | null
+          principio_ativo: string | null
           quantidade: number
+          quantidade_maxima: number | null
           quantidade_minima: number | null
           unidade: string | null
           updated_at: string | null
           validade: string | null
           valor_unitario: number | null
+          valor_venda: number | null
         }
         Insert: {
           categoria: string
+          codigo_ean?: string | null
           created_at?: string | null
           descricao?: string | null
+          dosagem?: string | null
+          fabricante?: string | null
           fornecedor?: string | null
+          foto_url?: string | null
           id?: string
           localizacao?: string | null
           lote?: string | null
           nome: string
+          ponto_pedido?: number | null
+          principio_ativo?: string | null
           quantidade?: number
+          quantidade_maxima?: number | null
           quantidade_minima?: number | null
           unidade?: string | null
           updated_at?: string | null
           validade?: string | null
           valor_unitario?: number | null
+          valor_venda?: number | null
         }
         Update: {
           categoria?: string
+          codigo_ean?: string | null
           created_at?: string | null
           descricao?: string | null
+          dosagem?: string | null
+          fabricante?: string | null
           fornecedor?: string | null
+          foto_url?: string | null
           id?: string
           localizacao?: string | null
           lote?: string | null
           nome?: string
+          ponto_pedido?: number | null
+          principio_ativo?: string | null
           quantidade?: number
+          quantidade_maxima?: number | null
           quantidade_minima?: number | null
           unidade?: string | null
           updated_at?: string | null
           validade?: string | null
           valor_unitario?: number | null
+          valor_venda?: number | null
         }
         Relationships: []
       }
