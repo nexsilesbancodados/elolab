@@ -521,6 +521,9 @@ export default function Pacientes() {
                 </div>
               </div>
             )}
+            <div className="border-t pt-4">
+              <div className="space-y-2">
+                <Label>Alergias (separadas por vírgula)</Label>
                 <Input
                   value={formData.alergias.join(', ')}
                   onChange={(e) =>
@@ -536,7 +539,6 @@ export default function Pacientes() {
                 />
               </div>
             </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>
               Cancelar
