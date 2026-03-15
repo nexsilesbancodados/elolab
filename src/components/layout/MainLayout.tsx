@@ -10,7 +10,6 @@ import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useRealtimePushNotifications } from '@/hooks/useRealtimePushNotifications';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import { cn } from '@/lib/utils';
 
 export function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -20,14 +19,7 @@ export function MainLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Skip Link for accessibility */}
       <SkipLink targetId="main-content" />
-
-      {/* Decorative background elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-brand/3 blur-3xl" />
-        <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
-      </div>
 
       {/* Desktop Sidebar */}
       <nav className="hidden md:block" aria-label="Menu principal">
@@ -36,7 +28,7 @@ export function MainLayout() {
 
       {/* Mobile Sidebar */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-64 border-r-0">
+        <SheetContent side="left" className="p-0 w-[260px] border-r-0">
           <nav aria-label="Menu principal mobile">
             <Sidebar />
           </nav>
@@ -61,10 +53,7 @@ export function MainLayout() {
         </main>
       </div>
 
-      {/* Chat Interno */}
       <ChatPanel />
-
-      {/* Offline indicator */}
       <OfflineIndicator />
     </div>
   );
