@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
+# EloLab — Sistema de Gestão Clínica Premium
 
-## Project info
+Sistema completo de gestão para clínicas médicas. Stack: React 18 + TypeScript + Tailwind + shadcn/ui + Supabase + Framer Motion.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Módulos
 
-## How can I edit this code?
+### Clínica
+| Módulo | Rota | Descrição |
+|---|---|---|
+| Dashboard | `/dashboard` | KPIs com sparklines, welcome banner, hoje em foco |
+| Agenda | `/agenda` | Grade semanal + lista, stats do dia, recorrência |
+| Pacientes | `/pacientes` | CRUD completo, CEP auto-fill, timeline, alergias |
+| Fila de Atendimento | `/fila` | Cards animados, timer de espera, prioridade |
+| Triagem | `/triagem` | Protocolo Manchester, sinais vitais, IMC calculado |
+| Prontuários | `/prontuarios` | SOAP, prescrições, histórico de evoluções |
+| Prescrições | `/prescricoes` | Templates, geração de PDF |
+| Atestados | `/atestados` | Templates, geração de PDF |
+| Exames | `/exames` | Catálogo de exames, preços por convênio |
+| Laboratório | `/laboratorio` | Worklist, resultados, validação |
+| Mapa de Coleta | `/mapa-coleta` | Tubos coloridos, FIFO, realtime |
+| Laudos Lab | `/laudos-lab` | Liberação por exame, visualização de resultados |
+| Encaminhamentos | `/encaminhamentos` | Classificação urgência, PDF |
+| Retornos | `/retornos` | Controle de retornos, alertas de atraso |
+| Triagem | `/triagem` | Manchester, vitais, IMC |
+| Fila de Espera | `/lista-espera` | Lista de espera por procedimento |
 
-There are several ways of editing your application.
+### Financeiro
+| Módulo | Rota | Descrição |
+|---|---|---|
+| Financeiro | `/financeiro` | CRUD lançamentos, gráficos, KPIs, export Excel |
+| Contas a Receber | `/contas-receber` | Gestão de recebimentos |
+| Contas a Pagar | `/contas-pagar` | Gestão de pagamentos |
+| Fluxo de Caixa | `/fluxo-caixa` | Visão diária/mensal |
+| Pagamentos MP | `/pagamentos` | Integração MercadoPago |
+| Relatórios | `/relatorios` | Relatórios completos com gráficos e export |
 
-**Use Lovable**
+### Operacional
+| Módulo | Rota | Descrição |
+|---|---|---|
+| Médicos | `/medicos` | Cadastro com especialidade colorida |
+| Funcionários | `/funcionarios` | CRUD, convites por email |
+| Estoque | `/estoque` | Controle com alerta de estoque baixo |
+| Convênios | `/convenios` | Cadastro de planos e valores |
+| Salas | `/salas` | Gerenciamento de salas |
+| Templates | `/templates` | Templates de documentos |
+| Tarefas | `/tarefas` | Gestão de tarefas internas com prioridade |
+| Preços Exames | `/precos-exames` | Tabela de preços por convênio |
+| Painel TV | `/painel-tv` | Painel para sala de espera |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Admin
+| Módulo | Rota | Descrição |
+|---|---|---|
+| Analytics | `/analytics` | Métricas avançadas e tendências |
+| Agente IA | `/agente-ia` | WhatsApp AI + sessões + conversas |
+| Automações | `/automacoes` | Regras de automação |
+| Planos | `/planos` | Gestão de planos/assinaturas |
+| Configurações | `/configuracoes` | Configurações do sistema |
+| Usuários | `/usuarios` | Gestão de usuários e permissões |
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🆕 Novas Funcionalidades (integradas de Innfinitlab + GestãoPlan)
 
-**Use your preferred IDE**
+### Do Innfinitlab
+- **Mapa de Coleta** — tubos coloridos por material biológico, ordem FIFO, realtime
+- **Laudos Laboratoriais** — liberação por exame, modal de resultados detalhados
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Do GestãoPlan  
+- **Chat Interno** — botão flutuante, conversas em tempo real entre funcionários, flag urgente
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🔧 Setup
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🗄️ Banco de Dados (Migrações pendentes)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Execute no Supabase SQL Editor:
+1. `supabase/migrations/20260314220000_chat_interno_elolab.sql` — tabelas de chat
+2. `supabase/migrations/20260314230001_feedbacks_nps.sql` — NPS pós-consulta
 
-**Use GitHub Codespaces**
+## ⚠️ Segurança
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `.env` contém chaves do Supabase — **NUNCA commitar** (já no .gitignore)
+- Se o `.env` foi exposto: rotacionar chaves em Supabase Dashboard → Settings → API
+- RLS habilitado em todas as tabelas
 
-## What technologies are used for this project?
+## 📱 PWA
 
-This project is built with:
+App instalável com cache offline para dados do Supabase (5 min), storage (30 dias) e assets estáticos.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🎨 Design System
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Cores**: primária azul-teal, sucesso verde esmeralda, warning âmbar, destructivo coral
+- **Tipografia**: Inter (corpo) + Plus Jakarta Sans (títulos)
+- **Animações**: Framer Motion em todas as páginas e componentes
+- **Temas**: Light/Dark mode completo
