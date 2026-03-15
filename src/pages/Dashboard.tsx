@@ -279,14 +279,18 @@ export default function Dashboard() {
     };
   }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje]);
 
+  const setupSteps = useMemo(() => [
+    { label: 'Cadastrar médicos', done: medicos.length > 0, icon: Stethoscope, href: '/medicos', color: 'text-info' },
+    { label: 'Cadastrar pacientes', done: pacientes.length > 0, icon: Users, href: '/pacientes', color: 'text-primary' },
+    { label: 'Agendar consulta', done: agendamentos.length > 0, icon: Calendar, href: '/agenda', color: 'text-success' },
+    { label: 'Registrar financeiro', done: lancamentos.length > 0, icon: Wallet, href: '/financeiro', color: 'text-warning' },
+  ], [medicos, pacientes, agendamentos, lancamentos]);
+
+  const setupProgress = Math.round((setupSteps.filter(s => s.done).length / setupSteps.length) * 100);
+
   if (isLoading) return <DashboardSkeleton />;
 
   const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
-
-  const bgClass = horaAtual < 12
-    ? 'from-amber-500/10 to-orange-500/5'
-    : horaAtual < 18 ? 'from-sky-500/10 to-blue-500/5'
-    : 'from-indigo-500/10 to-violet-500/5';
 
   return (
     <div className="space-y-6 pb-10">
@@ -296,31 +300,38 @@ export default function Dashboard() {
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}
         <motion.div variants={fadeUp}>
-          <Card className={cn('border-0 bg-gradient-to-br overflow-hidden relative', bgClass)}>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--primary)/0.05),transparent_70%)]" />
-            <CardContent className="pt-6 pb-6 relative">
+          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card">
+            {/* Decorative background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-success/5" />
+            <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-success/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+            
+            <div className="relative p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="h-14 w-14 rounded-2xl bg-background/80 backdrop-blur-sm flex items-center justify-center ring-1 ring-border/50 shadow-lg">
-                      <SaudacaoIcon className="h-7 w-7 text-primary" />
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-lg shadow-primary/10">
+                      <SaudacaoIcon className="h-8 w-8 text-primary" />
                     </div>
-                    <div className="absolute -right-1 -bottom-1 h-5 w-5 rounded-full bg-success flex items-center justify-center shadow-md ring-2 ring-background">
-                      <Star className="h-2.5 w-2.5 text-success-foreground fill-success-foreground" />
-                    </div>
+                    <motion.div 
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring' }}
+                      className="absolute -right-1.5 -bottom-1.5 h-6 w-6 rounded-full bg-success flex items-center justify-center shadow-md ring-2 ring-card"
+                    >
+                      <Zap className="h-3 w-3 text-success-foreground" />
+                    </motion.div>
                   </div>
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold font-display tracking-tight">
-                      {saudacao}, {user?.nome?.split(' ')[0] || 'Usuário'}!
+                    <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight">
+                      {saudacao}, <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{user?.nome?.split(' ')[0] || 'Usuário'}</span>!
                     </h1>
-                    <p className="text-sm text-muted-foreground capitalize mt-0.5">{hojeFormatado}</p>
+                    <p className="text-sm text-muted-foreground capitalize mt-1">{hojeFormatado}</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild size="sm" className="shadow-md gap-2 rounded-full">
+                <div className="flex flex-wrap gap-2.5">
+                  <Button asChild size="default" className="shadow-lg shadow-primary/20 gap-2 rounded-full">
                     <Link to="/agenda"><CalendarPlus className="h-4 w-4" />Nova Consulta</Link>
                   </Button>
-                  <Button variant="outline" size="sm" asChild className="gap-2 rounded-full bg-background/60 backdrop-blur-sm">
+                  <Button variant="outline" size="default" asChild className="gap-2 rounded-full">
                     <Link to="/pacientes"><UserPlus className="h-4 w-4" />Novo Paciente</Link>
                   </Button>
                 </div>
@@ -328,50 +339,153 @@ export default function Dashboard() {
 
               {/* Mini Stats Strip */}
               {hasData && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 pt-5 border-t border-border/30">
+                <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border/30">
                   {[
-                    { label: 'Consultas Hoje', value: stats.totalHoje, icon: Calendar, color: 'text-primary' },
-                    { label: 'Na Fila', value: stats.filaAguardando, icon: Timer, color: stats.filaAguardando > 0 ? 'text-warning' : 'text-success' },
-                    { label: 'Receita Hoje', value: formatCurrencyShort(stats.receitaDia), icon: Wallet, color: 'text-success' },
-                    { label: 'Estoque Crítico', value: stats.estoqueBaixo, icon: Package, color: stats.estoqueBaixo > 0 ? 'text-destructive' : 'text-success' },
+                    { label: 'Consultas Hoje', value: stats.totalHoje, icon: Calendar, color: 'text-primary', bg: 'bg-primary/8' },
+                    { label: 'Na Fila', value: stats.filaAguardando, icon: Timer, color: stats.filaAguardando > 0 ? 'text-warning' : 'text-success', bg: stats.filaAguardando > 0 ? 'bg-warning/8' : 'bg-success/8' },
+                    { label: 'Receita Hoje', value: formatCurrencyShort(stats.receitaDia), icon: Wallet, color: 'text-success', bg: 'bg-success/8' },
+                    { label: 'Estoque Crítico', value: stats.estoqueBaixo, icon: Package, color: stats.estoqueBaixo > 0 ? 'text-destructive' : 'text-success', bg: stats.estoqueBaixo > 0 ? 'bg-destructive/8' : 'bg-success/8' },
                   ].map((s, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <s.icon className={cn('h-4 w-4 shrink-0', s.color)} />
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors">
+                      <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center shrink-0', s.bg)}>
+                        <s.icon className={cn('h-4 w-4', s.color)} />
+                      </div>
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</p>
                         <p className="text-sm font-bold">{s.value}</p>
                       </div>
                     </div>
                   ))}
-                </div>
+                </motion.div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
 
         {!hasData ? (
-          <motion.div variants={fadeUp}>
-            <Card className="p-10 md:p-16 text-center">
-              <div className="flex flex-col items-center justify-center space-y-6">
-                <div className="relative">
-                  <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-inner">
-                    <Database className="h-12 w-12 text-primary" />
+          <>
+            {/* ─── Setup Progress Card ─── */}
+            <motion.div variants={fadeUp}>
+              <Card className="overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/5 to-transparent p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="secondary" className="text-xs font-semibold gap-1">
+                          <Sparkles className="h-3 w-3" /> Configuração Inicial
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{setupProgress}% completo</span>
+                      </div>
+                      <h2 className="text-xl font-bold font-display mb-1">Configure seu EloLab</h2>
+                      <p className="text-sm text-muted-foreground">Complete os passos abaixo para desbloquear todo o potencial do sistema.</p>
+                      <div className="mt-4">
+                        <Progress value={setupProgress} className="h-2" />
+                      </div>
+                    </div>
+                    <div className="relative shrink-0 hidden md:block">
+                      <div className="h-28 w-28 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                        <ProgressRing value={setupProgress} size={90} strokeWidth={6} color="hsl(var(--primary))" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold">{setupProgress}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-success flex items-center justify-center shadow-lg">
-                    <Sparkles className="h-4 w-4 text-success-foreground" />
+                </div>
+                <CardContent className="p-6 pt-0 md:p-8 md:pt-0 mt-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {setupSteps.map((step, i) => (
+                      <Link key={i} to={step.href}>
+                        <motion.div
+                          variants={fadeUp} custom={i}
+                          className={cn(
+                            'group flex items-center gap-3.5 p-4 rounded-xl border transition-all duration-200',
+                            step.done
+                              ? 'bg-success/5 border-success/20'
+                              : 'hover:bg-muted/50 hover:border-border hover:-translate-y-0.5 hover:shadow-md',
+                          )}
+                        >
+                          <div className={cn(
+                            'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110',
+                            step.done ? 'bg-success/15' : 'bg-muted',
+                          )}>
+                            {step.done ? (
+                              <CheckCircle2 className="h-5 w-5 text-success" />
+                            ) : (
+                              <step.icon className={cn('h-5 w-5', step.color)} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={cn('font-medium text-sm', step.done && 'line-through text-muted-foreground')}>
+                              {step.label}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {step.done ? 'Concluído ✓' : 'Clique para começar'}
+                            </p>
+                          </div>
+                          {!step.done && (
+                            <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-1 transition-all shrink-0" />
+                          )}
+                        </motion.div>
+                      </Link>
+                    ))}
                   </div>
-                </div>
-                <div className="max-w-md">
-                  <h2 className="text-2xl font-bold font-display mb-2">Sistema Conectado!</h2>
-                  <p className="text-muted-foreground">Seu EloLab está pronto. Cadastre pacientes e médicos para começar.</p>
-                </div>
-                <div className="flex flex-wrap justify-center gap-3 mt-2">
-                  <Button asChild size="lg" className="rounded-full"><Link to="/pacientes"><UserPlus className="mr-2 h-4 w-4" />Cadastrar Paciente</Link></Button>
-                  <Button variant="outline" size="lg" asChild className="rounded-full"><Link to="/medicos"><Stethoscope className="mr-2 h-4 w-4" />Cadastrar Médico</Link></Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* ─── Feature Highlights ─── */}
+            <motion.div variants={stagger} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: Calendar, title: 'Agenda Inteligente', desc: 'Gerencie agendamentos, bloqueios e salas com visão completa.', href: '/agenda', color: 'bg-primary/10 text-primary' },
+                { icon: FileText, title: 'Prontuário Eletrônico', desc: 'Registros clínicos completos com timeline e anexos.', href: '/prontuarios', color: 'bg-info/10 text-info' },
+                { icon: Wallet, title: 'Gestão Financeira', desc: 'Controle receitas, despesas e fluxo de caixa.', href: '/financeiro', color: 'bg-success/10 text-success' },
+                { icon: HeartPulse, title: 'Laboratório', desc: 'Coletas, resultados e laudos laboratoriais.', href: '/laboratorio', color: 'bg-destructive/10 text-destructive' },
+                { icon: BarChart3, title: 'Relatórios & Analytics', desc: 'KPIs clínicos e financeiros com exportação PDF/Excel.', href: '/relatorios', color: 'bg-warning/10 text-warning' },
+                { icon: Bell, title: 'Notificações', desc: 'WhatsApp, e-mail e lembretes automáticos.', href: '/automacoes', color: 'bg-accent text-accent-foreground' },
+              ].map((feat, i) => (
+                <motion.div key={i} variants={fadeUp} custom={i}>
+                  <Link to={feat.href}>
+                    <Card className="group h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                      <CardContent className="pt-6">
+                        <div className={cn('h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 group-hover:rotate-3', feat.color)}>
+                          <feat.icon className="h-6 w-6" />
+                        </div>
+                        <h3 className="font-semibold font-display mb-1 group-hover:text-primary transition-colors">{feat.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{feat.desc}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* ─── Quick Access Grid ─── */}
+            <motion.div variants={fadeUp}>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Acesso Rápido</CardTitle>
+                  <CardDescription>Navegue pelos módulos do sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                    <QuickActionBtn icon={Calendar} label="Agenda" href="/agenda" color="bg-primary/10 text-primary" />
+                    <QuickActionBtn icon={Users} label="Pacientes" href="/pacientes" color="bg-primary/10 text-primary" />
+                    <QuickActionBtn icon={Stethoscope} label="Médicos" href="/medicos" color="bg-info/10 text-info" />
+                    <QuickActionBtn icon={ClipboardList} label="Fila" href="/fila" color="bg-success/10 text-success" />
+                    <QuickActionBtn icon={FileText} label="Prontuários" href="/prontuarios" color="bg-info/10 text-info" />
+                    <QuickActionBtn icon={Wallet} label="Financeiro" href="/financeiro" color="bg-warning/10 text-warning" />
+                    <QuickActionBtn icon={HeartPulse} label="Laboratório" href="/laboratorio" color="bg-destructive/10 text-destructive" />
+                    <QuickActionBtn icon={Package} label="Estoque" href="/estoque" color="bg-muted text-muted-foreground" />
+                    <QuickActionBtn icon={BarChart3} label="Relatórios" href="/relatorios" color="bg-accent text-accent-foreground" />
+                    <QuickActionBtn icon={Bell} label="Automações" href="/automacoes" color="bg-warning/10 text-warning" />
+                    <QuickActionBtn icon={ShieldCheck} label="Configurações" href="/configuracoes" color="bg-muted text-muted-foreground" />
+                    <QuickActionBtn icon={Eye} label="Painel TV" href="/painel-tv" color="bg-primary/10 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </>
         ) : (
           <>
             {/* ─── KPI Cards ─── */}
