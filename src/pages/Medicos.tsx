@@ -308,11 +308,11 @@ export default function Medicos() {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarFallback className="bg-primary/10 text-primary">
-                              {getInitials(medico.crm)}
+                              {(medico.nome || medico.crm).slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">Dr(a). {medico.crm}</p>
+                            <p className="font-medium">Dr(a). {medico.nome || medico.crm}</p>
                             <p className="text-sm text-muted-foreground">{medico.especialidade || 'Clínico Geral'}</p>
                           </div>
                         </div>
