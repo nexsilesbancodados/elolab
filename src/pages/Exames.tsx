@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Eye, FileText, Loader2 } from 'lucide-react';
+import { Plus, Search, Eye, FileText, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,21 +58,157 @@ const STATUS_LABELS: Record<StatusExame, string> = {
   cancelado: 'Cancelado',
 };
 
-const TIPOS_EXAME = [
+const TIPOS_EXAME_DEFAULT = [
+  // Hematologia
   'Hemograma Completo',
+  'Coagulograma',
+  'VHS',
+  'Reticulócitos',
+  'Tipagem Sanguínea (ABO/Rh)',
+  // Bioquímica
   'Glicemia em Jejum',
+  'Glicemia Pós-Prandial',
+  'Hemoglobina Glicada (HbA1c)',
+  'Curva Glicêmica',
   'Colesterol Total e Frações',
   'Triglicerídeos',
-  'Ureia e Creatinina',
-  'TGO e TGP',
-  'TSH e T4 Livre',
-  'Eletrocardiograma',
+  'Ureia',
+  'Creatinina',
+  'Ácido Úrico',
+  'TGO (AST)',
+  'TGP (ALT)',
+  'Gama GT',
+  'Fosfatase Alcalina',
+  'Bilirrubinas (Total e Frações)',
+  'Proteínas Totais e Frações',
+  'Albumina',
+  'Amilase',
+  'Lipase',
+  'LDH (Desidrogenase Láctica)',
+  'CPK (Creatinoquinase)',
+  'Ferro Sérico',
+  'Ferritina',
+  'Transferrina',
+  'Cálcio Total',
+  'Cálcio Iônico',
+  'Fósforo',
+  'Magnésio',
+  'Sódio',
+  'Potássio',
+  'Cloro',
+  // Hormônios
+  'TSH',
+  'T4 Livre',
+  'T3 Total',
+  'T3 Livre',
+  'Anti-TPO',
+  'Anti-Tireoglobulina',
+  'FSH',
+  'LH',
+  'Estradiol',
+  'Progesterona',
+  'Testosterona Total',
+  'Testosterona Livre',
+  'Prolactina',
+  'Cortisol',
+  'DHEA-S',
+  'Insulina',
+  'PTH (Paratormônio)',
+  'GH (Hormônio do Crescimento)',
+  'IGF-1',
+  'Beta-HCG',
+  // Urinálise
+  'EAS (Urina Tipo I)',
+  'Urina 24h (Proteínas)',
+  'Urina 24h (Creatinina)',
+  'Urocultura',
+  'Microalbuminúria',
+  // Parasitologia e Fezes
+  'Parasitológico de Fezes (EPF)',
+  'Pesquisa de Sangue Oculto',
+  'Coprocultura',
+  // Sorologia e Imunologia
+  'Anti-HIV',
+  'VDRL',
+  'FTA-Abs',
+  'HBsAg (Hepatite B)',
+  'Anti-HBs',
+  'Anti-HBc Total',
+  'Anti-HCV (Hepatite C)',
+  'Toxoplasmose (IgG e IgM)',
+  'Rubéola (IgG e IgM)',
+  'Citomegalovírus (IgG e IgM)',
+  'Dengue (IgG e IgM)',
+  'PCR (Proteína C Reativa)',
+  'Fator Reumatoide',
+  'FAN (Fator Antinuclear)',
+  'ASLO',
+  'Complemento C3',
+  'Complemento C4',
+  'Imunoglobulinas (IgA, IgG, IgM, IgE)',
+  'PSA Total',
+  'PSA Livre',
+  // Marcadores Tumorais
+  'CEA',
+  'CA 125',
+  'CA 19-9',
+  'CA 15-3',
+  'AFP (Alfafetoproteína)',
+  // Coagulação
+  'TAP (Tempo de Protrombina)',
+  'TTPA',
+  'INR',
+  'Fibrinogênio',
+  'D-Dímero',
+  // Vitaminas e Nutrientes
+  'Vitamina D (25-OH)',
+  'Vitamina B12',
+  'Ácido Fólico',
+  'Zinco',
+  // Gasometria
+  'Gasometria Arterial',
+  'Gasometria Venosa',
+  // Microbiologia
+  'Hemocultura',
+  'Cultura de Secreção',
+  'Antibiograma',
+  // Imagem
   'Raio-X Tórax',
-  'Ultrassom Abdominal',
-  'Tomografia',
+  'Raio-X Coluna',
+  'Raio-X Membros',
+  'Raio-X Seios da Face',
+  'Ultrassom Abdominal Total',
+  'Ultrassom Pélvico',
+  'Ultrassom Transvaginal',
+  'Ultrassom Obstétrico',
+  'Ultrassom de Tireoide',
+  'Ultrassom de Mama',
+  'Ultrassom de Próstata',
+  'Ultrassom Doppler Vascular',
+  'Ecocardiograma',
+  'Tomografia Computadorizada',
   'Ressonância Magnética',
-  'Endoscopia',
+  'Mamografia',
+  'Densitometria Óssea',
+  'Cintilografia',
+  // Cardiologia
+  'Eletrocardiograma (ECG)',
+  'Teste Ergométrico',
+  'Holter 24h',
+  'MAPA 24h',
+  // Endoscopia
+  'Endoscopia Digestiva Alta',
   'Colonoscopia',
+  'Retossigmoidoscopia',
+  // Outros
+  'Espirometria',
+  'Audiometria',
+  'Polissonografia',
+  'Eletroencefalograma (EEG)',
+  'Eletroneuromiografia',
+  'Biópsia',
+  'Citopatológico (Papanicolau)',
+  'Colposcopia',
 ];
 
 interface FormData {
@@ -99,6 +235,10 @@ export default function Exames() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customExames, setCustomExames] = useState<string[]>([]);
+  const [customExameInput, setCustomExameInput] = useState('');
+
+  const TIPOS_EXAME = [...TIPOS_EXAME_DEFAULT, ...customExames].sort();
 
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
@@ -395,12 +535,36 @@ export default function Exames() {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o exame" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {TIPOS_EXAME.map((tipo) => (
                     <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex gap-2">
+                <Input
+                  value={customExameInput}
+                  onChange={(e) => setCustomExameInput(e.target.value)}
+                  placeholder="Ou digite um tipo personalizado..."
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={!customExameInput.trim()}
+                  onClick={() => {
+                    const name = customExameInput.trim();
+                    if (name && !TIPOS_EXAME.includes(name)) {
+                      setCustomExames(prev => [...prev, name]);
+                    }
+                    setFormData({ ...formData, tipo_exame: name });
+                    setCustomExameInput('');
+                  }}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
