@@ -1879,44 +1879,98 @@ export type Database = {
       prontuarios: {
         Row: {
           agendamento_id: string | null
+          alergias_relatadas: string | null
           conduta: string | null
           created_at: string | null
           data: string
+          diagnostico_principal: string | null
+          diagnosticos_secundarios: string[] | null
+          exame_abdomen: string | null
+          exame_cabeca_pescoco: string | null
+          exame_membros: string | null
+          exame_neurologico: string | null
+          exame_pele: string | null
+          exame_torax: string | null
           exames_fisicos: string | null
           hipotese_diagnostica: string | null
           historia_doenca_atual: string | null
+          historia_familiar: string | null
+          historia_patologica_pregressa: string | null
+          historia_social: string | null
           id: string
+          medicamentos_em_uso: string | null
           medico_id: string
+          observacoes_internas: string | null
+          orientacoes_paciente: string | null
           paciente_id: string
+          plano_terapeutico: string | null
           queixa_principal: string | null
+          revisao_sistemas: string | null
+          sinais_vitais: Json | null
           updated_at: string | null
         }
         Insert: {
           agendamento_id?: string | null
+          alergias_relatadas?: string | null
           conduta?: string | null
           created_at?: string | null
           data?: string
+          diagnostico_principal?: string | null
+          diagnosticos_secundarios?: string[] | null
+          exame_abdomen?: string | null
+          exame_cabeca_pescoco?: string | null
+          exame_membros?: string | null
+          exame_neurologico?: string | null
+          exame_pele?: string | null
+          exame_torax?: string | null
           exames_fisicos?: string | null
           hipotese_diagnostica?: string | null
           historia_doenca_atual?: string | null
+          historia_familiar?: string | null
+          historia_patologica_pregressa?: string | null
+          historia_social?: string | null
           id?: string
+          medicamentos_em_uso?: string | null
           medico_id: string
+          observacoes_internas?: string | null
+          orientacoes_paciente?: string | null
           paciente_id: string
+          plano_terapeutico?: string | null
           queixa_principal?: string | null
+          revisao_sistemas?: string | null
+          sinais_vitais?: Json | null
           updated_at?: string | null
         }
         Update: {
           agendamento_id?: string | null
+          alergias_relatadas?: string | null
           conduta?: string | null
           created_at?: string | null
           data?: string
+          diagnostico_principal?: string | null
+          diagnosticos_secundarios?: string[] | null
+          exame_abdomen?: string | null
+          exame_cabeca_pescoco?: string | null
+          exame_membros?: string | null
+          exame_neurologico?: string | null
+          exame_pele?: string | null
+          exame_torax?: string | null
           exames_fisicos?: string | null
           hipotese_diagnostica?: string | null
           historia_doenca_atual?: string | null
+          historia_familiar?: string | null
+          historia_patologica_pregressa?: string | null
+          historia_social?: string | null
           id?: string
+          medicamentos_em_uso?: string | null
           medico_id?: string
+          observacoes_internas?: string | null
+          orientacoes_paciente?: string | null
           paciente_id?: string
+          plano_terapeutico?: string | null
           queixa_principal?: string | null
+          revisao_sistemas?: string | null
+          sinais_vitais?: Json | null
           updated_at?: string | null
         }
         Relationships: [
