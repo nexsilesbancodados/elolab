@@ -2333,34 +2333,58 @@ export type Database = {
       }
       salas: {
         Row: {
+          andar: string | null
           capacidade: number | null
+          cor: string | null
           created_at: string | null
           equipamentos: string[] | null
+          genero: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
           id: string
           medico_responsavel: string | null
           nome: string
+          numero_cama: string | null
+          observacoes: string | null
+          setor: string | null
           status: Database["public"]["Enums"]["status_sala"] | null
           tipo: string | null
           updated_at: string | null
         }
         Insert: {
+          andar?: string | null
           capacidade?: number | null
+          cor?: string | null
           created_at?: string | null
           equipamentos?: string[] | null
+          genero?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
           medico_responsavel?: string | null
           nome: string
+          numero_cama?: string | null
+          observacoes?: string | null
+          setor?: string | null
           status?: Database["public"]["Enums"]["status_sala"] | null
           tipo?: string | null
           updated_at?: string | null
         }
         Update: {
+          andar?: string | null
           capacidade?: number | null
+          cor?: string | null
           created_at?: string | null
           equipamentos?: string[] | null
+          genero?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
           medico_responsavel?: string | null
           nome?: string
+          numero_cama?: string | null
+          observacoes?: string | null
+          setor?: string | null
           status?: Database["public"]["Enums"]["status_sala"] | null
           tipo?: string | null
           updated_at?: string | null

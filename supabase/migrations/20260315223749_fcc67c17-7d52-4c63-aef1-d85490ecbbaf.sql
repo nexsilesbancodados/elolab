@@ -1,0 +1,10 @@
+
+ALTER TABLE public.salas
+  ADD COLUMN IF NOT EXISTS setor text NULL,
+  ADD COLUMN IF NOT EXISTS andar text NULL,
+  ADD COLUMN IF NOT EXISTS horario_inicio time NULL DEFAULT '07:00',
+  ADD COLUMN IF NOT EXISTS horario_fim time NULL DEFAULT '19:00',
+  ADD COLUMN IF NOT EXISTS cor text NULL DEFAULT '#3b82f6',
+  ADD COLUMN IF NOT EXISTS genero text NULL,
+  ADD COLUMN IF NOT EXISTS numero_cama text NULL,
+  ADD COLUMN IF NOT EXISTS observacoes text NULL;
