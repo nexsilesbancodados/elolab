@@ -233,7 +233,7 @@ export default function MapaColeta() {
         {/* Paciente */}
         <td className="px-3 py-2">
           <div className="flex items-center gap-1.5">
-            {isUrgent && <Zap className="h-3.5 w-3.5 text-destructive flex-shrink-0" title="Urgente" />}
+            {isUrgent && <span title="Urgente"><Zap className="h-3.5 w-3.5 text-destructive flex-shrink-0" /></span>}
             <div>
               <p className={cn('font-medium text-sm', isUrgent && 'text-destructive')}>{item.pacientes?.nome ?? '—'}</p>
               <p className="text-[11px] text-muted-foreground">
