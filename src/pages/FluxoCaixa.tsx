@@ -14,7 +14,7 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
-, ArrowUpRight, ArrowDownRight} from 'lucide-react';
+ArrowUpRight, ArrowDownRight} from 'lucide-react';
 import {
   AreaChart,
   Area,
