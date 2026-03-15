@@ -49,6 +49,7 @@ import Tarefas from "@/pages/Tarefas";
 import Retornos from "@/pages/Retornos";
 import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
+import Documentacao from "@/pages/Documentacao";
 
 // Only lazy load rarely-accessed pages
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
@@ -162,6 +163,7 @@ function App() {
                           <Route path="/retornos" element={<Retornos />} />
                           <Route path="/mapa-coleta" element={<MapaColeta />} />
                           <Route path="/laudos-lab" element={<LaudosLab />} />
+                          <Route path="/documentacao" element={<Documentacao />} />
                         </Route>
                         
                         <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />

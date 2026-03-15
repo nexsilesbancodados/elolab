@@ -27,6 +27,7 @@ import {
   Activity,
   ListTodo,
   TestTube,
+  BookOpen,
   LucideIcon,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
@@ -126,6 +127,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Agente IA', icon: Bot, href: '/agente-ia' },
       { label: 'Automações', icon: Zap, href: '/automacoes' },
       { label: 'Planos', icon: CreditCard, href: '/planos' },
+      { label: 'Documentação', icon: BookOpen, href: '/documentacao' },
       { label: 'Configurações', icon: Settings, href: '/configuracoes' },
     ],
   },
