@@ -1153,14 +1153,23 @@ export type Database = {
       lancamentos: {
         Row: {
           agendamento_id: string | null
+          anexo_url: string | null
           categoria: string
+          centro_custo: string | null
+          competencia: string | null
           created_at: string | null
           data: string
+          data_emissao: string | null
           data_vencimento: string | null
           descricao: string
           forma_pagamento: string | null
+          fornecedor: string | null
+          frequencia_recorrencia: string | null
           id: string
+          numero_documento: string | null
+          observacoes: string | null
           paciente_id: string | null
+          recorrente: boolean | null
           status: Database["public"]["Enums"]["status_pagamento"] | null
           tipo: string
           updated_at: string | null
@@ -1168,14 +1177,23 @@ export type Database = {
         }
         Insert: {
           agendamento_id?: string | null
+          anexo_url?: string | null
           categoria: string
+          centro_custo?: string | null
+          competencia?: string | null
           created_at?: string | null
           data?: string
+          data_emissao?: string | null
           data_vencimento?: string | null
           descricao: string
           forma_pagamento?: string | null
+          fornecedor?: string | null
+          frequencia_recorrencia?: string | null
           id?: string
+          numero_documento?: string | null
+          observacoes?: string | null
           paciente_id?: string | null
+          recorrente?: boolean | null
           status?: Database["public"]["Enums"]["status_pagamento"] | null
           tipo: string
           updated_at?: string | null
@@ -1183,14 +1201,23 @@ export type Database = {
         }
         Update: {
           agendamento_id?: string | null
+          anexo_url?: string | null
           categoria?: string
+          centro_custo?: string | null
+          competencia?: string | null
           created_at?: string | null
           data?: string
+          data_emissao?: string | null
           data_vencimento?: string | null
           descricao?: string
           forma_pagamento?: string | null
+          fornecedor?: string | null
+          frequencia_recorrencia?: string | null
           id?: string
+          numero_documento?: string | null
+          observacoes?: string | null
           paciente_id?: string | null
+          recorrente?: boolean | null
           status?: Database["public"]["Enums"]["status_pagamento"] | null
           tipo?: string
           updated_at?: string | null
