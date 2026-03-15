@@ -233,13 +233,13 @@ export default function Exames() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isManageTypesOpen, setIsManageTypesOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customExames, setCustomExames] = useState<string[]>([]);
   const [customExameInput, setCustomExameInput] = useState('');
-
-  const TIPOS_EXAME = [...TIPOS_EXAME_DEFAULT, ...customExames].sort();
+  const [newTypeInput, setNewTypeInput] = useState('');
+  const [newTypeCat, setNewTypeCat] = useState('Personalizado');
 
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
