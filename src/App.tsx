@@ -163,6 +163,7 @@ function App() {
                           <Route path="/retornos" element={<Retornos />} />
                           <Route path="/mapa-coleta" element={<MapaColeta />} />
                           <Route path="/laudos-lab" element={<LaudosLab />} />
+                          <Route path="/documentacao" element={<Documentacao />} />
                         </Route>
                         
                         <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
