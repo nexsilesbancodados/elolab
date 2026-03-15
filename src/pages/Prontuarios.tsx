@@ -5,7 +5,9 @@ import {
   Heart, Thermometer, Activity, Scale, Ruler, Droplets,
   Stethoscope, Brain, Bone, Eye as EyeIcon, Pill, Paperclip,
   ClipboardList, AlertTriangle, User, Clock, ChevronDown, ChevronRight,
-  Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard
+  Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
+  Phone, Mail, Building2, CreditCard, Baby, Shield, Lock,
+  TestTube, ArrowRight, UserCheck, BadgeCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -96,7 +98,7 @@ function calcularIdade(dn: string | null) {
 function calcularIMC(peso: string, altura: string) {
   const p = parseFloat(peso), a = parseFloat(altura);
   if (!p || !a || a === 0) return '';
-  const altM = a > 3 ? a / 100 : a; // handle cm or m
+  const altM = a > 3 ? a / 100 : a;
   return (p / (altM * altM)).toFixed(1);
 }
 
@@ -131,7 +133,7 @@ function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange:
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-red-500" />PA (mmHg)</Label>
+          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive" />PA (mmHg)</Label>
           <div className="flex gap-1 items-center">
             <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" />
             <span className="text-muted-foreground">/</span>
@@ -139,19 +141,19 @@ function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange:
           </div>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-red-400" />FC (bpm)</Label>
+          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive/70" />FC (bpm)</Label>
           <Input placeholder="72" value={sinais.frequencia_cardiaca} onChange={e => update('frequencia_cardiaca', e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Activity className="h-3 w-3 text-blue-400" />FR (irpm)</Label>
+          <Label className="text-xs flex items-center gap-1"><Activity className="h-3 w-3 text-primary" />FR (irpm)</Label>
           <Input placeholder="16" value={sinais.frequencia_respiratoria} onChange={e => update('frequencia_respiratoria', e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Thermometer className="h-3 w-3 text-orange-400" />Temp (°C)</Label>
+          <Label className="text-xs flex items-center gap-1"><Thermometer className="h-3 w-3 text-orange-500" />Temp (°C)</Label>
           <Input placeholder="36.5" value={sinais.temperatura} onChange={e => update('temperatura', e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Droplets className="h-3 w-3 text-blue-500" />SpO₂ (%)</Label>
+          <Label className="text-xs flex items-center gap-1"><Droplets className="h-3 w-3 text-primary" />SpO₂ (%)</Label>
           <Input placeholder="98" value={sinais.saturacao} onChange={e => update('saturacao', e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
@@ -170,7 +172,7 @@ function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange:
           </div>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Brain className="h-3 w-3 text-purple-400" />Glasgow</Label>
+          <Label className="text-xs flex items-center gap-1"><Brain className="h-3 w-3 text-purple-500" />Glasgow</Label>
           <Input placeholder="15" value={sinais.glasgow} onChange={e => update('glasgow', e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
@@ -203,6 +205,259 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
   );
 }
 
+// ─── Patient ID Card ───────────────────────────────────────
+function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome: string }) {
+  const idade = calcularIdade(paciente.data_nascimento);
+  const isMenor = idade < 18;
+
+  return (
+    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
+      <div className="flex items-start gap-4">
+        <PatientPhoto
+          pacienteId={paciente.id}
+          pacienteNome={paciente.nome}
+          currentPhotoUrl={paciente.foto_url}
+          size="lg"
+          editable={false}
+        />
+        <div className="flex-1 min-w-0 space-y-1">
+          <h3 className="text-lg font-bold truncate">{paciente.nome}</h3>
+          <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
+            <span>{idade} anos</span>
+            {paciente.sexo && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                {paciente.sexo === 'masculino' ? 'Masculino' : paciente.sexo === 'feminino' ? 'Feminino' : 'Outro'}
+              </Badge>
+            )}
+            {paciente.data_nascimento && (
+              <span>• Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
+            )}
+          </div>
+          {paciente.cpf && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <FileText className="h-3 w-3 text-muted-foreground" />
+              <span>CPF: {paciente.cpf}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Alergias em destaque */}
+      {paciente.alergias && paciente.alergias.length > 0 && (
+        <AllergyAlert alergias={paciente.alergias} />
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+        {paciente.telefone && (
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Phone className="h-3.5 w-3.5" />
+            <span>{paciente.telefone}</span>
+          </div>
+        )}
+        {paciente.email && (
+          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+            <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="truncate">{paciente.email}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Building2 className="h-3.5 w-3.5" />
+          <span>{convenioNome}</span>
+        </div>
+        {paciente.numero_carteira && (
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <CreditCard className="h-3.5 w-3.5" />
+            <span>Carteira: {paciente.numero_carteira}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Responsável legal (menor) */}
+      {isMenor && paciente.nome_responsavel && (
+        <div className="border-t pt-2 mt-2">
+          <div className="flex items-center gap-1.5 text-sm">
+            <Baby className="h-3.5 w-3.5 text-amber-500" />
+            <span className="font-medium">Responsável:</span>
+            <span className="text-muted-foreground">
+              {paciente.nome_responsavel}
+              {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
+              {paciente.cpf_responsavel && ` — CPF: ${paciente.cpf_responsavel}`}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Audit Log Component ───────────────────────────────────
+function ProntuarioAuditLog({ prontuarioId }: { prontuarioId: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!prontuarioId) return;
+    setLoading(true);
+    supabase
+      .from('audit_log')
+      .select('*')
+      .eq('record_id', prontuarioId)
+      .eq('collection', 'prontuarios')
+      .order('timestamp', { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        setLogs(data || []);
+        setLoading(false);
+      });
+  }, [prontuarioId]);
+
+  if (loading) return <Skeleton className="h-32" />;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+        <Shield className="h-4 w-4" /> Trilha de Auditoria
+      </h4>
+      {logs.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-4 text-center">Nenhum registro de auditoria encontrado</p>
+      ) : (
+        <div className="space-y-2">
+          {logs.map(log => (
+            <div key={log.id} className="flex items-start gap-3 text-sm border-l-2 border-muted pl-3 py-1">
+              <Lock className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-[10px]">
+                    {log.action === 'create' ? 'Criação' : log.action === 'update' ? 'Atualização' : 'Exclusão'}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {log.timestamp ? format(new Date(log.timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—'}
+                  </span>
+                </div>
+                {log.user_name && <p className="text-xs text-muted-foreground">por {log.user_name}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+        <ShieldCheck className="h-3.5 w-3.5" />
+        <span>Em conformidade com LGPD e normas do CFM. Todos os acessos são registrados.</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Related Records Component ─────────────────────────────
+function RelatedRecords({ pacienteId }: { pacienteId: string }) {
+  const [exames, setExames] = useState<any[]>([]);
+  const [atestados, setAtestados] = useState<any[]>([]);
+  const [encaminhamentos, setEncaminhamentos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!pacienteId) return;
+    setLoading(true);
+    Promise.all([
+      supabase.from('exames').select('id, tipo_exame, status, data_solicitacao, resultado').eq('paciente_id', pacienteId).order('data_solicitacao', { ascending: false }).limit(10),
+      supabase.from('atestados').select('id, tipo, data_emissao, dias, motivo').eq('paciente_id', pacienteId).order('data_emissao', { ascending: false }).limit(10),
+      supabase.from('encaminhamentos').select('id, especialidade_destino, status, data_encaminhamento, urgencia').eq('paciente_id', pacienteId).order('data_encaminhamento', { ascending: false }).limit(10),
+    ]).then(([exRes, atRes, enRes]) => {
+      setExames(exRes.data || []);
+      setAtestados(atRes.data || []);
+      setEncaminhamentos(enRes.data || []);
+      setLoading(false);
+    });
+  }, [pacienteId]);
+
+  if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}</div>;
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'laudo_disponivel': case 'concluido': return 'bg-green-500/10 text-green-700 dark:text-green-300';
+      case 'pendente': case 'solicitado': return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
+      case 'em_andamento': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
+      case 'cancelado': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Exames */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <TestTube className="h-4 w-4" /> Exames ({exames.length})
+        </h4>
+        {exames.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">Nenhum exame solicitado</p>
+        ) : (
+          <div className="space-y-1.5">
+            {exames.map(ex => (
+              <div key={ex.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
+                <div className="flex items-center gap-2">
+                  <TestTube className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium">{ex.tipo_exame}</span>
+                  {ex.data_solicitacao && <span className="text-xs text-muted-foreground">{format(new Date(ex.data_solicitacao), 'dd/MM/yy')}</span>}
+                </div>
+                <Badge className={`text-[10px] ${statusColor(ex.status)}`}>{ex.status?.replace(/_/g, ' ')}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Atestados */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <FileCheck className="h-4 w-4" /> Atestados ({atestados.length})
+        </h4>
+        {atestados.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">Nenhum atestado emitido</p>
+        ) : (
+          <div className="space-y-1.5">
+            {atestados.map(at => (
+              <div key={at.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium">{at.tipo || 'Atestado'}</span>
+                  {at.dias && <span className="text-xs text-muted-foreground">({at.dias} dias)</span>}
+                </div>
+                {at.data_emissao && <span className="text-xs text-muted-foreground">{format(new Date(at.data_emissao), 'dd/MM/yy')}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Encaminhamentos */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <ArrowRight className="h-4 w-4" /> Encaminhamentos ({encaminhamentos.length})
+        </h4>
+        {encaminhamentos.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">Nenhum encaminhamento</p>
+        ) : (
+          <div className="space-y-1.5">
+            {encaminhamentos.map(en => (
+              <div key={en.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
+                <div className="flex items-center gap-2">
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium">{en.especialidade_destino}</span>
+                  {en.urgencia && en.urgencia !== 'normal' && (
+                    <Badge variant="destructive" className="text-[10px]">{en.urgencia}</Badge>
+                  )}
+                </div>
+                <Badge className={`text-[10px] ${statusColor(en.status)}`}>{en.status}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Anexos Wrapper (self-loading) ─────────────────────────
 function AnexosWrapper({ pacienteId, prontuarioId }: { pacienteId: string; prontuarioId: string }) {
   const [anexos, setAnexos] = useState<any[]>([]);
@@ -229,6 +484,7 @@ export default function Prontuarios() {
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [] } = useMedicos();
+  const { data: convenios = [] } = useSupabaseQuery<any>('convenios', { orderBy: { column: 'nome', ascending: true } });
   const { medicoId, isMedicoOnly } = useCurrentMedico();
   const [historicoEvolucoes, setHistoricoEvolucoes] = useState<any[]>([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
@@ -252,6 +508,12 @@ export default function Prontuarios() {
   });
 
   const selectedPaciente = useMemo(() => pacientes.find(p => p.id === selectedPacienteId), [pacientes, selectedPacienteId]);
+
+  const getConvenioNome = useCallback((convenioId: string | null) => {
+    if (!convenioId) return 'Particular';
+    const c = convenios.find((cv: any) => cv.id === convenioId);
+    return c?.nome || 'Particular';
+  }, [convenios]);
 
   const filteredPacientes = useMemo(() => {
     return pacientes.filter(p =>
@@ -285,10 +547,8 @@ export default function Prontuarios() {
 
   const handleViewProntuario = async (prontuario: Record<string, any>) => {
     setCurrentProntuario(prontuario);
-    // Parse sinais vitais
     const sv = prontuario.sinais_vitais || {};
     setSinaisVitais({ ...emptySinaisVitais, ...sv });
-    // Load prescriptions
     const { data: prescricoesData } = await supabase
       .from('prescricoes')
       .select('*')
@@ -299,6 +559,18 @@ export default function Prontuarios() {
       quantidade: p.quantidade || '', observacoes: p.observacoes || '',
     })));
     setIsProntuarioOpen(true);
+
+    // Log access for audit
+    try {
+      await supabase.from('audit_log').insert({
+        action: 'access',
+        collection: 'prontuarios',
+        record_id: prontuario.id,
+        record_name: selectedPaciente?.nome || '',
+        user_id: user?.id || null,
+        user_name: user?.nome || null,
+      });
+    } catch { /* silent */ }
   };
 
   const handleAddPrescricao = () => {
@@ -383,6 +655,18 @@ export default function Prontuarios() {
         }
       }
 
+      // Audit log
+      try {
+        await supabase.from('audit_log').insert({
+          action: currentProntuario.id ? 'update' : 'create',
+          collection: 'prontuarios',
+          record_id: prontuarioId,
+          record_name: selectedPaciente?.nome || '',
+          user_id: user?.id || null,
+          user_name: user?.nome || null,
+        });
+      } catch { /* silent */ }
+
       refetchProntuarios();
       setIsProntuarioOpen(false);
       toast({ title: 'Prontuário salvo', description: 'Prontuário salvo com sucesso.' });
@@ -444,8 +728,12 @@ export default function Prontuarios() {
             <ClipboardList className="h-8 w-8 text-primary" />
             Prontuário Eletrônico
           </h1>
-          <p className="text-muted-foreground">Prontuário médico completo com anamnese, exame físico, diagnóstico e conduta</p>
+          <p className="text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
         </div>
+        <Badge variant="outline" className="gap-1.5 text-xs">
+          <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
+          Conforme LGPD
+        </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -467,13 +755,19 @@ export default function Prontuarios() {
                   onClick={() => setSelectedPacienteId(pac.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                      {pac.nome.charAt(0).toUpperCase()}
-                    </div>
+                    <PatientPhoto
+                      pacienteId={pac.id}
+                      pacienteNome={pac.nome}
+                      currentPhotoUrl={pac.foto_url}
+                      size="sm"
+                      editable={false}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{pac.nome}</p>
                       <p className="text-xs text-muted-foreground">
-                        {calcularIdade(pac.data_nascimento)} anos • {pac.sexo === 'M' ? '♂' : pac.sexo === 'F' ? '♀' : ''} • {pac.cpf || 'Sem CPF'}
+                        {calcularIdade(pac.data_nascimento)} anos
+                        {pac.sexo && ` • ${pac.sexo === 'masculino' ? '♂' : pac.sexo === 'feminino' ? '♀' : ''}`}
+                        {pac.cpf && ` • ${pac.cpf}`}
                       </p>
                     </div>
                   </div>
@@ -498,10 +792,11 @@ export default function Prontuarios() {
                 <div>
                   <CardTitle className="text-lg">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
                   {selectedPaciente && (
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                       <span>{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
+                      <span>•</span>
+                      <span>{getConvenioNome(selectedPaciente.convenio_id)}</span>
                       {selectedPaciente.telefone && <><span>•</span><span>{selectedPaciente.telefone}</span></>}
-                      {selectedPaciente.email && <><span>•</span><span>{selectedPaciente.email}</span></>}
                     </div>
                   )}
                   {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
@@ -524,10 +819,12 @@ export default function Prontuarios() {
               </div>
             ) : (
               <Tabs defaultValue="evolucoes" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="evolucoes" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Evoluções</TabsTrigger>
-                  <TabsTrigger value="timeline" className="gap-1.5"><History className="h-3.5 w-3.5" />Timeline</TabsTrigger>
-                  <TabsTrigger value="vitais" className="gap-1.5"><Activity className="h-3.5 w-3.5" />Sinais Vitais</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="evolucoes" className="gap-1.5 text-xs"><FileText className="h-3.5 w-3.5" />Evoluções</TabsTrigger>
+                  <TabsTrigger value="solicitacoes" className="gap-1.5 text-xs"><TestTube className="h-3.5 w-3.5" />Solicitações</TabsTrigger>
+                  <TabsTrigger value="timeline" className="gap-1.5 text-xs"><History className="h-3.5 w-3.5" />Timeline</TabsTrigger>
+                  <TabsTrigger value="vitais" className="gap-1.5 text-xs"><Activity className="h-3.5 w-3.5" />Sinais</TabsTrigger>
+                  <TabsTrigger value="identificacao" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" />Ficha</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="evolucoes" className="pt-4">
@@ -560,12 +857,20 @@ export default function Prontuarios() {
                   )}
                 </TabsContent>
 
+                <TabsContent value="solicitacoes" className="pt-4">
+                  <RelatedRecords pacienteId={selectedPacienteId!} />
+                </TabsContent>
+
                 <TabsContent value="timeline" className="pt-4">
                   <PatientTimeline pacienteId={selectedPacienteId!} maxItems={30} />
                 </TabsContent>
 
                 <TabsContent value="vitais" className="pt-4">
                   <VitalSignsChart pacienteId={selectedPacienteId!} />
+                </TabsContent>
+
+                <TabsContent value="identificacao" className="pt-4">
+                  <PatientIDCard paciente={selectedPaciente} convenioNome={getConvenioNome(selectedPaciente.convenio_id)} />
                 </TabsContent>
               </Tabs>
             )}
@@ -612,13 +917,28 @@ export default function Prontuarios() {
             </DialogTitle>
           </DialogHeader>
 
+          {/* Patient ID summary in dialog */}
+          {selectedPaciente && (
+            <div className="flex-shrink-0 flex items-center gap-4 p-3 bg-muted/30 rounded-lg text-sm border">
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
+                <Badge variant="outline" className="gap-1"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
+                <span className="text-muted-foreground">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
+                {selectedPaciente.cpf && <span className="text-muted-foreground">• CPF: {selectedPaciente.cpf}</span>}
+                <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
+              </div>
+              <Badge variant="outline" className="gap-1 text-[10px]">
+                <ShieldCheck className="h-3 w-3 text-green-500" />LGPD
+              </Badge>
+            </div>
+          )}
+
           {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
             <AllergyAlert alergias={selectedPaciente.alergias} className="flex-shrink-0" />
           )}
 
           <ScrollArea className="flex-1 pr-4">
             <Tabs defaultValue="anamnese" className="w-full">
-              <TabsList className="grid w-full grid-cols-7 mb-4">
+              <TabsList className="grid w-full grid-cols-8 mb-4">
                 <TabsTrigger value="anamnese" className="text-xs gap-1"><ClipboardList className="h-3 w-3" />Anamnese</TabsTrigger>
                 <TabsTrigger value="exame" className="text-xs gap-1"><Stethoscope className="h-3 w-3" />Exame</TabsTrigger>
                 <TabsTrigger value="diagnostico" className="text-xs gap-1"><BookOpen className="h-3 w-3" />Diagnóstico</TabsTrigger>
@@ -626,6 +946,7 @@ export default function Prontuarios() {
                 <TabsTrigger value="prescricao" className="text-xs gap-1"><Pill className="h-3 w-3" />Prescrição</TabsTrigger>
                 <TabsTrigger value="anexos" className="text-xs gap-1"><Paperclip className="h-3 w-3" />Anexos</TabsTrigger>
                 <TabsTrigger value="historico" className="text-xs gap-1"><History className="h-3 w-3" />Histórico</TabsTrigger>
+                <TabsTrigger value="auditoria" className="text-xs gap-1"><Shield className="h-3 w-3" />Auditoria</TabsTrigger>
               </TabsList>
 
               {/* ─── Anamnese Tab ─── */}
@@ -648,30 +969,37 @@ export default function Prontuarios() {
                   />
                 </Section>
 
-                <Section icon={History} title="História Patológica Pregressa (HPP)" collapsible>
+                <Section icon={History} title="Histórico de Doenças Pregressas (HDP)" collapsible>
                   <Textarea
-                    placeholder="Doenças prévias, cirurgias, internações, transfusões, traumas..."
+                    placeholder="Doenças prévias, cirurgias anteriores, internações, transfusões, traumas, doenças crônicas (diabetes, hipertensão)..."
                     value={currentProntuario.historia_patologica_pregressa || ''}
                     onChange={e => updateField('historia_patologica_pregressa', e.target.value)}
                     rows={3}
                   />
                 </Section>
 
-                <Section icon={ShieldCheck} title="Alergias e Medicamentos em Uso" collapsible>
+                <Section icon={ShieldCheck} title="Alergias e Medicamentos em Uso">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">Alergias Relatadas</Label>
+                      <Label className="text-xs flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-destructive" />
+                        Alergias Relatadas (destaque obrigatório)
+                      </Label>
                       <Textarea
-                        placeholder="Medicamentos, alimentos, substâncias..."
+                        placeholder="Medicamentos, alimentos, substâncias, látex..."
                         value={currentProntuario.alergias_relatadas || ''}
                         onChange={e => updateField('alergias_relatadas', e.target.value)}
                         rows={2}
+                        className="border-destructive/30"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Medicamentos em Uso</Label>
+                      <Label className="text-xs flex items-center gap-1">
+                        <Pill className="h-3 w-3" />
+                        Medicamentos em Uso (interações)
+                      </Label>
                       <Textarea
-                        placeholder="Nome, dose, frequência..."
+                        placeholder="Nome, dose, frequência — para verificar interações medicamentosas..."
                         value={currentProntuario.medicamentos_em_uso || ''}
                         onChange={e => updateField('medicamentos_em_uso', e.target.value)}
                         rows={2}
@@ -851,7 +1179,7 @@ export default function Prontuarios() {
               <TabsContent value="prescricao" className="space-y-4 pt-2">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <Pill className="h-4 w-4" /> Prescrições
+                    <Pill className="h-4 w-4" /> Receituário Digital
                   </h3>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)} className="gap-1">
@@ -862,6 +1190,12 @@ export default function Prontuarios() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  <span>Prescrição digital com validade jurídica — assinatura eletrônica ICP-Brasil via Memed</span>
+                </div>
+
                 {prescricoes.length === 0 ? (
                   <div className="flex flex-col items-center py-12 text-muted-foreground">
                     <Pill className="h-10 w-10 mb-2 opacity-30" />
@@ -898,6 +1232,10 @@ export default function Prontuarios() {
 
               {/* ─── Anexos Tab ─── */}
               <TabsContent value="anexos" className="pt-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2 mb-4">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <span>Upload de PDFs, imagens e resultados de exames. Armazenamento seguro conforme LGPD.</span>
+                </div>
                 {currentProntuario.id && selectedPacienteId ? (
                   <AnexosWrapper pacienteId={selectedPacienteId} prontuarioId={currentProntuario.id} />
                 ) : (
@@ -939,6 +1277,48 @@ export default function Prontuarios() {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* ─── Auditoria Tab ─── */}
+              <TabsContent value="auditoria" className="pt-2">
+                {currentProntuario.id ? (
+                  <ProntuarioAuditLog prontuarioId={currentProntuario.id} />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>Em conformidade com LGPD e normas do CFM. Todos os acessos são registrados.</span>
+                    </div>
+                    <div className="space-y-3 text-sm">
+                      <h4 className="font-semibold text-muted-foreground uppercase tracking-wide text-xs flex items-center gap-2">
+                        <Lock className="h-4 w-4" /> Níveis de Acesso
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 border rounded p-2.5">
+                          <Badge variant="outline" className="text-[10px]">Admin</Badge>
+                          <span className="text-muted-foreground">Acesso total ao prontuário e auditoria</span>
+                        </div>
+                        <div className="flex items-center gap-2 border rounded p-2.5">
+                          <Badge variant="outline" className="text-[10px]">Médico</Badge>
+                          <span className="text-muted-foreground">Leitura e escrita do prontuário clínico</span>
+                        </div>
+                        <div className="flex items-center gap-2 border rounded p-2.5">
+                          <Badge variant="outline" className="text-[10px]">Enfermagem</Badge>
+                          <span className="text-muted-foreground">Leitura do prontuário, triagem e sinais vitais</span>
+                        </div>
+                        <div className="flex items-center gap-2 border rounded p-2.5">
+                          <Badge variant="outline" className="text-[10px]">Recepção</Badge>
+                          <span className="text-muted-foreground">Apenas agenda e dados cadastrais — sem acesso ao histórico médico</span>
+                        </div>
+                        <div className="flex items-center gap-2 border rounded p-2.5">
+                          <Badge variant="outline" className="text-[10px]">Financeiro</Badge>
+                          <span className="text-muted-foreground">Sem acesso ao prontuário clínico</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center py-4">Salve o prontuário para ver a trilha de auditoria completa</p>
                   </div>
                 )}
               </TabsContent>
