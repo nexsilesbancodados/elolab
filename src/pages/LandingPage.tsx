@@ -499,7 +499,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FAQ ═══ */}
-      <section id="faq" className="py-24 px-4 bg-secondary">
+      <section id="faq" className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-3xl mx-auto">
           <SectionHeading badge="PERGUNTAS FREQUENTES" title="Tire suas dúvidas" description="Tudo que você precisa saber antes de começar." />
           <Accordion type="single" collapsible className="space-y-3">
