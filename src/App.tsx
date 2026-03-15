@@ -150,7 +150,7 @@ function App() {
                           <Route path="/estoque" element={<Estoque />} />
                           <Route path="/convenios" element={<Convenios />} />
                           <Route path="/usuarios" element={<Usuarios />} />
-                          <Route path="/seguranca" element={<Configuracoes />} />
+                          
                           <Route path="/configuracoes" element={<Configuracoes />} />
                           <Route path="/automacoes" element={<Automacoes />} />
                           <Route path="/agente-ia" element={<AgenteIA />} />
