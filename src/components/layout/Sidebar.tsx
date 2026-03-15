@@ -68,7 +68,7 @@ export function Sidebar() {
     <aside
       className={cn(
         'flex h-screen flex-col border-r border-sidebar-border transition-all duration-200 ease-out',
-        'bg-gradient-to-b from-sidebar to-sidebar/95 backdrop-blur-xl',
+        'bg-sidebar',
         collapsed ? 'w-[72px]' : 'w-64'
       )}
     >

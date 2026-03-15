@@ -81,18 +81,18 @@
     --gradient-primary: linear-gradient(135deg, hsl(240 100% 30%), hsl(240 100% 24%));
     --gradient-hero: linear-gradient(135deg, hsl(240 100% 32%) 0%, hsl(240 100% 26%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 25% 98%) 100%);
-    --gradient-sidebar: linear-gradient(180deg, hsl(240 50% 14%) 0%, hsl(240 55% 10%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 14% 96%) 100%);
     
-    /* Sidebar */
-    --sidebar-background: 240 50% 13%;
-    --sidebar-foreground: 220 14% 90%;
-    --sidebar-primary: 240 80% 55%;
+    /* Sidebar — matches current theme */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--brand);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 35% 18%;
-    --sidebar-accent-foreground: 220 14% 95%;
-    --sidebar-border: 240 35% 18%;
-    --sidebar-ring: 240 80% 55%;
-    --sidebar-muted: 240 20% 30%;
+    --sidebar-accent: 240 60% 96%;
+    --sidebar-accent-foreground: 240 80% 30%;
+    --sidebar-border: 220 14% 90%;
+    --sidebar-ring: var(--ring);
+    --sidebar-muted: 220 14% 92%;
     
     /* Chart colors */
     --chart-1: 240 100% 30%;
