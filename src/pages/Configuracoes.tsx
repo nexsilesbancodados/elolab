@@ -193,12 +193,10 @@ export default function Configuracoes() {
     { value: 'clinica', icon: Building, label: 'Clínica' },
     { value: 'horarios', icon: Clock, label: 'Horários' },
     { value: 'notificacoes', icon: Bell, label: 'Notificações' },
-    { value: 'integracoes', icon: Zap, label: 'Integrações' },
     { value: 'aparencia', icon: Palette, label: 'Aparência' },
     { value: 'seguranca', icon: Shield, label: 'Segurança' },
     { value: 'backup', icon: Download, label: 'Backup' },
     { value: 'historico', icon: History, label: 'Auditoria' },
-    { value: 'sistema', icon: Server, label: 'Sistema' },
   ];
 
   return (
