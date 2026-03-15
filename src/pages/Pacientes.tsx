@@ -32,6 +32,9 @@ interface PacienteFormData {
   estado: string;
   alergias: string[];
   observacoes: string;
+  nome_responsavel: string;
+  cpf_responsavel: string;
+  parentesco_responsavel: string;
 }
 
 const initialFormData: PacienteFormData = {
@@ -48,6 +51,19 @@ const initialFormData: PacienteFormData = {
   estado: '',
   alergias: [],
   observacoes: '',
+  nome_responsavel: '',
+  cpf_responsavel: '',
+  parentesco_responsavel: '',
+};
+
+const isMinor = (dataNascimento: string): boolean => {
+  if (!dataNascimento) return false;
+  const birth = new Date(dataNascimento);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age < 18;
 };
 
 export default function Pacientes() {
@@ -125,6 +141,9 @@ export default function Pacientes() {
       estado: paciente.estado || '',
       alergias: paciente.alergias || [],
       observacoes: paciente.observacoes || '',
+      nome_responsavel: (paciente as any).nome_responsavel || '',
+      cpf_responsavel: (paciente as any).cpf_responsavel || '',
+      parentesco_responsavel: (paciente as any).parentesco_responsavel || '',
     });
     setIsFormOpen(true);
   };
@@ -176,6 +195,9 @@ export default function Pacientes() {
         cidade: formData.cidade || null,
         estado: formData.estado || null,
         observacoes: formData.observacoes || null,
+        nome_responsavel: formData.nome_responsavel || null,
+        cpf_responsavel: formData.cpf_responsavel || null,
+        parentesco_responsavel: formData.parentesco_responsavel || null,
       };
 
       if (selectedPacienteId) {
@@ -465,6 +487,40 @@ export default function Pacientes() {
                 </div>
               </div>
             </div>
+            {isMinor(formData.data_nascimento) && (
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  Responsável (menor de idade)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Responsável *</Label>
+                    <Input
+                      value={formData.nome_responsavel}
+                      onChange={(e) => setFormData({ ...formData, nome_responsavel: e.target.value })}
+                      placeholder="Nome completo do responsável"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CPF do Responsável</Label>
+                    <Input
+                      value={formData.cpf_responsavel}
+                      onChange={(e) => setFormData({ ...formData, cpf_responsavel: e.target.value })}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Parentesco</Label>
+                    <Input
+                      value={formData.parentesco_responsavel}
+                      onChange={(e) => setFormData({ ...formData, parentesco_responsavel: e.target.value })}
+                      placeholder="Mãe, Pai, Avó, etc."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="border-t pt-4">
               <div className="space-y-2">
                 <Label>Alergias (separadas por vírgula)</Label>

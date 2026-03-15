@@ -1471,6 +1471,7 @@ export type Database = {
           complemento: string | null
           convenio_id: string | null
           cpf: string | null
+          cpf_responsavel: string | null
           created_at: string | null
           data_nascimento: string | null
           email: string | null
@@ -1479,9 +1480,11 @@ export type Database = {
           id: string
           logradouro: string | null
           nome: string
+          nome_responsavel: string | null
           numero: string | null
           numero_carteira: string | null
           observacoes: string | null
+          parentesco_responsavel: string | null
           sexo: string | null
           telefone: string | null
           updated_at: string | null
@@ -1495,6 +1498,7 @@ export type Database = {
           complemento?: string | null
           convenio_id?: string | null
           cpf?: string | null
+          cpf_responsavel?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email?: string | null
@@ -1503,9 +1507,11 @@ export type Database = {
           id?: string
           logradouro?: string | null
           nome: string
+          nome_responsavel?: string | null
           numero?: string | null
           numero_carteira?: string | null
           observacoes?: string | null
+          parentesco_responsavel?: string | null
           sexo?: string | null
           telefone?: string | null
           updated_at?: string | null
@@ -1519,6 +1525,7 @@ export type Database = {
           complemento?: string | null
           convenio_id?: string | null
           cpf?: string | null
+          cpf_responsavel?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email?: string | null
@@ -1527,9 +1534,11 @@ export type Database = {
           id?: string
           logradouro?: string | null
           nome?: string
+          nome_responsavel?: string | null
           numero?: string | null
           numero_carteira?: string | null
           observacoes?: string | null
+          parentesco_responsavel?: string | null
           sexo?: string | null
           telefone?: string | null
           updated_at?: string | null
