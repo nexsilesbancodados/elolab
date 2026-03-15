@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Shield, Check, X, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
