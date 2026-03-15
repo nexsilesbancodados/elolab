@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Smartphone, MessageSquare, Users, Activity } from 'lucide-react';
 import { WhatsAppStats, WhatsAppSession } from './types';
 
