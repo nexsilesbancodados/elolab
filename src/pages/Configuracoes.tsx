@@ -54,11 +54,6 @@ interface ConfiguracaoNotificacoes {
   notificarAniversario: boolean;
 }
 
-interface IntegrationStatus {
-  whatsapp: { configured: boolean; active: boolean };
-  email: { configured: boolean; active: boolean };
-  payments: { configured: boolean; active: boolean };
-}
 
 function SettingRow({ icon: Icon, title, description, children }: {
   icon: React.ElementType;
