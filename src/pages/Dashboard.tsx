@@ -343,7 +343,7 @@ export default function Dashboard() {
       medicosAtivos: medicos.filter(m => m.ativo).length,
       recentActivities,
     };
-  }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje]);
+  }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje, isMedicoOnly, medicoId]);
 
   const setupSteps = useMemo(() => [
     { label: 'Cadastrar médicos', done: medicos.length > 0, icon: Stethoscope, href: '/medicos', color: 'text-info' },
