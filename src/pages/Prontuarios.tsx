@@ -482,7 +482,7 @@ export default function Prontuarios() {
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
                 {selectedPaciente && (
-                  <PatientPhoto pacienteId={selectedPaciente.id} fotoUrl={selectedPaciente.foto_url} nome={selectedPaciente.nome} size="md" />
+                  <PatientPhoto pacienteId={selectedPaciente.id} pacienteNome={selectedPaciente.nome} currentPhotoUrl={selectedPaciente.foto_url} size="md" />
                 )}
                 <div>
                   <CardTitle className="text-lg">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
