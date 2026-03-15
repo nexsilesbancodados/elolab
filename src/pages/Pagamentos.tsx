@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,8 +15,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
-  CreditCard, DollarSign, Repeat, Ban, ExternalLink, Check, Search,
-  FileText, Loader2, Receipt, Banknote, Building2, Clock, AlertCircle,
+  CreditCard, DollarSign, Check, Search,
+  FileText, Loader2, Banknote, Building2, Clock, AlertCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,17 +29,13 @@ const statusColors: Record<string, string> = {
   cancelado: 'bg-muted text-muted-foreground',
   reembolsado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   em_processo: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  ativa: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   parcial: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  pausada: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  finalizada: 'bg-muted text-muted-foreground',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pendente: 'Pendente', aprovado: 'Aprovado', pago: 'Pago',
+  pendente: 'Pendente', aprovado: 'Recebido', pago: 'Pago',
   rejeitado: 'Rejeitado', cancelado: 'Cancelado', reembolsado: 'Reembolsado',
   em_processo: 'Em Processo', parcial: 'Parcialmente Pago',
-  ativa: 'Ativa', pausada: 'Pausada', finalizada: 'Finalizada',
 };
 
 const FORMAS_PAGAMENTO = [
@@ -62,28 +57,16 @@ const CONTAS_DESTINO = [
 export default function Pagamentos() {
   const queryClient = useQueryClient();
   const [showNewPayment, setShowNewPayment] = useState(false);
-  const [showNewSubscription, setShowNewSubscription] = useState(false);
   const [showBaixar, setShowBaixar] = useState(false);
   const [selectedCobranca, setSelectedCobranca] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('todos');
 
-  const { data: pagamentos, isLoading: loadingPagamentos } = useQuery({
+  const { data: pagamentos, isLoading } = useQuery({
     queryKey: ['pagamentos_mercadopago'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pagamentos_mercadopago' as any)
-        .select('*, pacientes(nome)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-
-  const { data: assinaturas, isLoading: loadingAssinaturas } = useQuery({
-    queryKey: ['assinaturas_mercadopago'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('assinaturas_mercadopago' as any)
         .select('*, pacientes(nome)')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -100,36 +83,22 @@ export default function Pagamentos() {
     },
   });
 
-  const cancelSubscriptionMutation = useMutation({
-    mutationFn: async ({ assinatura_id, mp_preapproval_id }: any) => {
-      const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
-        body: { action: 'cancel_subscription', assinatura_id, mp_preapproval_id },
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assinaturas_mercadopago'] });
-      toast.success('Assinatura cancelada');
-    },
-    onError: (err: any) => toast.error(`Erro: ${err.message}`),
-  });
-
   const filteredPagamentos = useMemo(() => {
     if (!pagamentos) return [];
     const term = searchTerm.toLowerCase();
-    return pagamentos.filter((p: any) =>
-      (p.descricao || '').toLowerCase().includes(term) ||
-      (p.pacientes?.nome || '').toLowerCase().includes(term)
-    );
-  }, [pagamentos, searchTerm]);
+    return pagamentos.filter((p: any) => {
+      const matchSearch = (p.descricao || '').toLowerCase().includes(term) ||
+        (p.pacientes?.nome || '').toLowerCase().includes(term);
+      const matchStatus = filterStatus === 'todos' || p.status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [pagamentos, searchTerm, filterStatus]);
 
   const totalRecebido = pagamentos?.filter((p: any) => p.status === 'aprovado' || p.status === 'pago')
     .reduce((acc: number, p: any) => acc + Number(p.valor_pago || p.valor), 0) || 0;
   const totalPendente = pagamentos?.filter((p: any) => p.status === 'pendente' || p.status === 'parcial')
     .reduce((acc: number, p: any) => acc + Number(p.valor), 0) || 0;
-  const assinaturasAtivas = assinaturas?.filter((a: any) => a.status === 'ativa').length || 0;
-  const cobrancasDiretas = pagamentos?.filter((p: any) => p.cobranca_direta).length || 0;
+  const totalCobr = pagamentos?.length || 0;
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
@@ -143,8 +112,11 @@ export default function Pagamentos() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Pagamentos</h1>
-          <p className="text-muted-foreground">Cobranças diretas, recebimentos e assinaturas</p>
+          <p className="text-muted-foreground">Cobranças diretas, recebimentos e controle de caixa</p>
         </div>
+        <Button onClick={() => setShowNewPayment(true)} className="gap-2">
+          <Banknote className="h-4 w-4" /> Nova Cobrança
+        </Button>
       </div>
 
       {/* KPIs */}
@@ -159,143 +131,94 @@ export default function Pagamentos() {
         </CardContent></Card>
         <Card><CardContent className="pt-4 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10"><Banknote className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{cobrancasDiretas}</p><p className="text-xs text-muted-foreground">Cobranças Diretas</p></div>
+          <div><p className="text-2xl font-bold">{totalCobr}</p><p className="text-xs text-muted-foreground">Total Cobranças</p></div>
         </CardContent></Card>
         <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><Repeat className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{assinaturasAtivas}</p><p className="text-xs text-muted-foreground">Assinaturas Ativas</p></div>
+          <div className="p-2 rounded-lg bg-destructive/10"><AlertCircle className="h-5 w-5 text-destructive" /></div>
+          <div><p className="text-2xl font-bold">{pagamentos?.filter((p: any) => p.status === 'pendente').length || 0}</p><p className="text-xs text-muted-foreground">A Receber</p></div>
         </CardContent></Card>
       </div>
 
-      <Tabs defaultValue="cobrancas" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="cobrancas"><CreditCard className="h-4 w-4 mr-2" />Cobranças</TabsTrigger>
-          <TabsTrigger value="assinaturas"><Repeat className="h-4 w-4 mr-2" />Assinaturas</TabsTrigger>
-        </TabsList>
-
-        {/* Cobranças Tab */}
-        <TabsContent value="cobrancas" className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between gap-3">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar descrição ou paciente..." value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+      {/* Filters + List */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+            <CardTitle>Cobranças ({filteredPagamentos.length})</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {Object.entries(STATUS_LABELS).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar descrição ou paciente..." value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+              </div>
             </div>
-            <Button onClick={() => setShowNewPayment(true)} className="gap-2">
-              <Banknote className="h-4 w-4" /> Nova Cobrança
-            </Button>
           </div>
-
-          {loadingPagamentos ? (
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
             <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /></div>
-          ) : !filteredPagamentos?.length ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">
+          ) : !filteredPagamentos.length ? (
+            <div className="text-center py-8 text-muted-foreground">
               <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhuma cobrança encontrada</p>
-            </CardContent></Card>
+            </div>
           ) : (
             <div className="grid gap-3">
               {filteredPagamentos.map((p: any) => (
-                <Card key={p.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{p.descricao}</p>
-                        {p.cobranca_direta && (
-                          <Badge variant="outline" className="text-[9px]">Direta</Badge>
-                        )}
-                        {p.numero_parcelas > 1 && (
-                          <Badge variant="secondary" className="text-[9px]">
-                            {p.parcela_atual || 1}/{p.numero_parcelas}x
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {p.pacientes?.nome || 'Sem paciente'}
-                        {p.metodo_pagamento && ` • ${FORMAS_PAGAMENTO.find(f => f.value === p.metodo_pagamento)?.label || p.metodo_pagamento}`}
-                        {p.conta_destino && ` • ${CONTAS_DESTINO.find(c => c.value === p.conta_destino)?.label || p.conta_destino}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {p.created_at ? format(new Date(p.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : ''}
-                        {p.data_recebimento && ` • Recebido em ${format(new Date(p.data_recebimento), 'dd/MM/yyyy')}`}
-                      </p>
-                      {p.observacoes_caixa && (
-                        <p className="text-xs text-muted-foreground italic">💬 {p.observacoes_caixa}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="font-semibold tabular-nums">{formatCurrency(p.valor)}</p>
-                        {(p.desconto > 0 || p.acrescimo > 0) && (
-                          <p className="text-xs text-muted-foreground tabular-nums">
-                            {p.desconto > 0 && <span className="text-green-600">-{formatCurrency(p.desconto)}</span>}
-                            {p.acrescimo > 0 && <span className="text-destructive"> +{formatCurrency(p.acrescimo)}</span>}
-                          </p>
-                        )}
-                        <Badge className={cn(statusColors[p.status] || '')}>
-                          {STATUS_LABELS[p.status] || p.status}
+                <div key={p.id} className="flex items-center justify-between p-4 rounded-lg border">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{p.descricao}</p>
+                      {p.numero_parcelas > 1 && (
+                        <Badge variant="secondary" className="text-[9px]">
+                          {p.parcela_atual || 1}/{p.numero_parcelas}x
                         </Badge>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {(p.status === 'pendente' || p.status === 'parcial') && (
-                          <Button size="sm" variant="outline" onClick={() => handleBaixar(p)} title="Dar baixa">
-                            <Check className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {p.checkout_url && p.status === 'pendente' && !p.cobranca_direta && (
-                          <Button size="sm" variant="ghost" onClick={() => window.open(p.checkout_url, '_blank')}>
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm text-muted-foreground">
+                      {p.pacientes?.nome || 'Sem paciente'}
+                      {p.metodo_pagamento && ` • ${FORMAS_PAGAMENTO.find(f => f.value === p.metodo_pagamento)?.label || p.metodo_pagamento}`}
+                      {p.conta_destino && ` • ${CONTAS_DESTINO.find(c => c.value === p.conta_destino)?.label || p.conta_destino}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.created_at ? format(new Date(p.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : ''}
+                      {p.data_recebimento && ` • Recebido em ${format(new Date(p.data_recebimento), 'dd/MM/yyyy')}`}
+                    </p>
+                    {p.observacoes_caixa && (
+                      <p className="text-xs text-muted-foreground italic">💬 {p.observacoes_caixa}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="font-semibold tabular-nums">{formatCurrency(p.valor)}</p>
+                      {(p.desconto > 0 || p.acrescimo > 0) && (
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          {p.desconto > 0 && <span className="text-green-600">-{formatCurrency(p.desconto)}</span>}
+                          {p.acrescimo > 0 && <span className="text-destructive"> +{formatCurrency(p.acrescimo)}</span>}
+                        </p>
+                      )}
+                      <Badge className={cn(statusColors[p.status] || '')}>
+                        {STATUS_LABELS[p.status] || p.status}
+                      </Badge>
+                    </div>
+                    {(p.status === 'pendente' || p.status === 'parcial') && (
+                      <Button size="sm" variant="outline" onClick={() => handleBaixar(p)} title="Dar baixa">
+                        <Check className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </TabsContent>
-
-        {/* Assinaturas Tab */}
-        <TabsContent value="assinaturas" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setShowNewSubscription(true)} className="gap-2">
-              <Repeat className="h-4 w-4" /> Nova Assinatura
-            </Button>
-          </div>
-          {loadingAssinaturas ? (
-            <Skeleton className="h-40" />
-          ) : !assinaturas?.length ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Nenhuma assinatura</CardContent></Card>
-          ) : (
-            <div className="grid gap-3">
-              {assinaturas.map((a: any) => (
-                <Card key={a.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="space-y-1">
-                      <p className="font-medium">{a.nome_plano}</p>
-                      <p className="text-sm text-muted-foreground">{a.pacientes?.nome || 'Sem paciente'} • {a.frequencia}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="font-semibold tabular-nums">{formatCurrency(a.valor)}<span className="text-xs text-muted-foreground">/{a.frequencia === 'mensal' ? 'mês' : a.frequencia}</span></p>
-                        <Badge className={cn(statusColors[a.status] || '')}>{STATUS_LABELS[a.status] || a.status}</Badge>
-                      </div>
-                      {a.status === 'ativa' && (
-                        <Button size="sm" variant="destructive" onClick={() => cancelSubscriptionMutation.mutate({ assinatura_id: a.id, mp_preapproval_id: a.mp_preapproval_id })}
-                          disabled={cancelSubscriptionMutation.isPending}><Ban className="h-3 w-3" /></Button>
-                      )}
-                      {a.checkout_url && a.status === 'pendente' && (
-                        <Button size="sm" variant="outline" onClick={() => window.open(a.checkout_url, '_blank')}><ExternalLink className="h-3 w-3" /></Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Nova Cobrança Direta */}
       <Dialog open={showNewPayment} onOpenChange={setShowNewPayment}>
@@ -306,6 +229,7 @@ export default function Pagamentos() {
               queryClient.invalidateQueries({ queryKey: ['pagamentos_mercadopago'] });
               setShowNewPayment(false);
             }}
+            onCancel={() => setShowNewPayment(false)}
           />
         </DialogContent>
       </Dialog>
@@ -319,19 +243,7 @@ export default function Pagamentos() {
               queryClient.invalidateQueries({ queryKey: ['pagamentos_mercadopago'] });
               setShowBaixar(false);
             }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Nova Assinatura (mantém MP) */}
-      <Dialog open={showNewSubscription} onOpenChange={setShowNewSubscription}>
-        <DialogContent>
-          <NewSubscriptionForm
-            pacientes={pacientes || []}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['assinaturas_mercadopago'] });
-              setShowNewSubscription(false);
-            }}
+            onCancel={() => setShowBaixar(false)}
           />
         </DialogContent>
       </Dialog>
@@ -340,7 +252,7 @@ export default function Pagamentos() {
 }
 
 /* ── Nova Cobrança Direta ── */
-function NewDirectBillingForm({ pacientes, onSuccess }: { pacientes: any[]; onSuccess: () => void }) {
+function NewDirectBillingForm({ pacientes, onSuccess, onCancel }: { pacientes: any[]; onSuccess: () => void; onCancel: () => void }) {
   const [form, setForm] = useState({
     paciente_id: '', descricao: '', valor: '', metodo_pagamento: 'dinheiro',
     numero_parcelas: '1', intervalo_parcelas: '30', conta_destino: 'caixa_interno',
@@ -401,11 +313,10 @@ function NewDirectBillingForm({ pacientes, onSuccess }: { pacientes: any[]; onSu
     <>
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <Banknote className="h-5 w-5 text-primary" /> Nova Cobrança Direta
+          <Banknote className="h-5 w-5 text-primary" /> Nova Cobrança
         </DialogTitle>
       </DialogHeader>
       <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-        {/* Paciente e Descrição */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs">Paciente</Label>
@@ -494,16 +405,14 @@ function NewDirectBillingForm({ pacientes, onSuccess }: { pacientes: any[]; onSu
           <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
             <Building2 className="h-4 w-4" /> Destino e Observações
           </h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Conta Bancária de Destino</Label>
-              <Select value={form.conta_destino} onValueChange={v => setForm({ ...form, conta_destino: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CONTAS_DESTINO.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Conta Bancária de Destino</Label>
+            <Select value={form.conta_destino} onValueChange={v => setForm({ ...form, conta_destino: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONTAS_DESTINO.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5 mt-3">
             <Label className="text-xs">Observações do Caixa</Label>
@@ -528,7 +437,7 @@ function NewDirectBillingForm({ pacientes, onSuccess }: { pacientes: any[]; onSu
       </div>
 
       <DialogFooter className="flex-shrink-0 pt-4 border-t">
-        <Button variant="outline" onClick={() => {}} disabled={isSubmitting}>Cancelar</Button>
+        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
         <Button onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</> : 'Salvar Cobrança'}
         </Button>
@@ -538,7 +447,7 @@ function NewDirectBillingForm({ pacientes, onSuccess }: { pacientes: any[]; onSu
 }
 
 /* ── Dar Baixa (Confirmar Recebimento) ── */
-function BaixaForm({ cobranca, onSuccess }: { cobranca: any; onSuccess: () => void }) {
+function BaixaForm({ cobranca, onSuccess, onCancel }: { cobranca: any; onSuccess: () => void; onCancel: () => void }) {
   const [form, setForm] = useState({
     forma_pagamento: cobranca?.metodo_pagamento || 'pix',
     conta_destino: cobranca?.conta_destino || 'caixa_interno',
@@ -573,6 +482,8 @@ function BaixaForm({ cobranca, onSuccess }: { cobranca: any; onSuccess: () => vo
 
   if (!cobranca) return null;
 
+  const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
   return (
     <>
       <DialogHeader>
@@ -583,9 +494,7 @@ function BaixaForm({ cobranca, onSuccess }: { cobranca: any; onSuccess: () => vo
       <div className="space-y-4 py-2">
         <div className="p-3 rounded-lg bg-muted/50">
           <p className="font-medium">{cobranca.descricao}</p>
-          <p className="text-lg font-bold text-primary tabular-nums">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cobranca.valor)}
-          </p>
+          <p className="text-lg font-bold text-primary tabular-nums">{formatCurrency(cobranca.valor)}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -622,79 +531,9 @@ function BaixaForm({ cobranca, onSuccess }: { cobranca: any; onSuccess: () => vo
         </div>
       </div>
       <DialogFooter>
-        <Button variant="outline" disabled={isSubmitting}>Cancelar</Button>
+        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
         <Button onClick={handleConfirmar} disabled={isSubmitting}>
           {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Confirmando...</> : 'Confirmar Recebimento'}
-        </Button>
-      </DialogFooter>
-    </>
-  );
-}
-
-/* ── Nova Assinatura (Mercado Pago) ── */
-function NewSubscriptionForm({ pacientes, onSuccess }: { pacientes: any[]; onSuccess: () => void }) {
-  const [form, setForm] = useState({ paciente_id: '', nome_plano: '', descricao: '', valor: '', frequencia: 'mensal' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!form.valor || !form.nome_plano) { toast.error('Preencha nome e valor.'); return; }
-    setIsSubmitting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
-        body: { action: 'create_subscription', ...form },
-      });
-      if (error) throw error;
-      toast.success('Assinatura criada!');
-      if (data?.checkout_url) window.open(data.checkout_url, '_blank');
-      onSuccess();
-    } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
-    } finally { setIsSubmitting(false); }
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Nova Assinatura (Mercado Pago)</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Paciente</Label>
-          <Select value={form.paciente_id} onValueChange={v => setForm({ ...form, paciente_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-            <SelectContent>{pacientes.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Nome do Plano</Label>
-          <Input value={form.nome_plano} onChange={e => setForm({ ...form, nome_plano: e.target.value })} placeholder="Ex: Plano Mensal" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Descrição</Label>
-          <Textarea value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes..." />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Valor (R$)</Label>
-            <Input type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Frequência</Label>
-            <Select value={form.frequencia} onValueChange={v => setForm({ ...form, frequencia: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mensal">Mensal</SelectItem>
-                <SelectItem value="trimestral">Trimestral</SelectItem>
-                <SelectItem value="semestral">Semestral</SelectItem>
-                <SelectItem value="anual">Anual</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button onClick={handleSubmit} disabled={isSubmitting || !form.valor || !form.nome_plano}>
-          {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando...</> : 'Criar Assinatura'}
         </Button>
       </DialogFooter>
     </>
