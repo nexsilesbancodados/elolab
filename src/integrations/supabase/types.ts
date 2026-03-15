@@ -1676,17 +1676,24 @@ export type Database = {
       }
       pagamentos_mercadopago: {
         Row: {
+          acrescimo: number | null
           agendamento_id: string | null
           boleto_url: string | null
           checkout_url: string | null
+          cobranca_direta: boolean | null
+          conta_destino: string | null
+          contrato_url: string | null
           created_at: string | null
           data_aprovacao: string | null
           data_criacao: string | null
           data_expiracao: string | null
+          data_recebimento: string | null
           data_vencimento: string | null
+          desconto: number | null
           descricao: string | null
           detalhes_pagamento: Json | null
           id: string
+          intervalo_parcelas: number | null
           lancamento_id: string | null
           metodo_pagamento: string | null
           moeda: string | null
@@ -1694,7 +1701,10 @@ export type Database = {
           mp_payment_id: string | null
           mp_preference_id: string | null
           notificacao_webhook: Json | null
+          numero_parcelas: number | null
+          observacoes_caixa: string | null
           paciente_id: string | null
+          parcela_atual: number | null
           parcelas: number | null
           qr_code_base64: string | null
           qr_code_pix: string | null
@@ -1705,17 +1715,24 @@ export type Database = {
           valor_pago: number | null
         }
         Insert: {
+          acrescimo?: number | null
           agendamento_id?: string | null
           boleto_url?: string | null
           checkout_url?: string | null
+          cobranca_direta?: boolean | null
+          conta_destino?: string | null
+          contrato_url?: string | null
           created_at?: string | null
           data_aprovacao?: string | null
           data_criacao?: string | null
           data_expiracao?: string | null
+          data_recebimento?: string | null
           data_vencimento?: string | null
+          desconto?: number | null
           descricao?: string | null
           detalhes_pagamento?: Json | null
           id?: string
+          intervalo_parcelas?: number | null
           lancamento_id?: string | null
           metodo_pagamento?: string | null
           moeda?: string | null
@@ -1723,7 +1740,10 @@ export type Database = {
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           notificacao_webhook?: Json | null
+          numero_parcelas?: number | null
+          observacoes_caixa?: string | null
           paciente_id?: string | null
+          parcela_atual?: number | null
           parcelas?: number | null
           qr_code_base64?: string | null
           qr_code_pix?: string | null
@@ -1734,17 +1754,24 @@ export type Database = {
           valor_pago?: number | null
         }
         Update: {
+          acrescimo?: number | null
           agendamento_id?: string | null
           boleto_url?: string | null
           checkout_url?: string | null
+          cobranca_direta?: boolean | null
+          conta_destino?: string | null
+          contrato_url?: string | null
           created_at?: string | null
           data_aprovacao?: string | null
           data_criacao?: string | null
           data_expiracao?: string | null
+          data_recebimento?: string | null
           data_vencimento?: string | null
+          desconto?: number | null
           descricao?: string | null
           detalhes_pagamento?: Json | null
           id?: string
+          intervalo_parcelas?: number | null
           lancamento_id?: string | null
           metodo_pagamento?: string | null
           moeda?: string | null
@@ -1752,7 +1779,10 @@ export type Database = {
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           notificacao_webhook?: Json | null
+          numero_parcelas?: number | null
+          observacoes_caixa?: string | null
           paciente_id?: string | null
+          parcela_atual?: number | null
           parcelas?: number | null
           qr_code_base64?: string | null
           qr_code_pix?: string | null
