@@ -11,14 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
-  Gift, CheckCircle2, Stethoscope, HeartPulse, BarChart3, Lock, Mail, User,
-  Sparkles,
+  Gift, CheckCircle2, Lock, Mail, User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { checkRateLimit } from '@/lib/rateLimiter';
 import { AuthSwitch } from '@/components/ui/auth-switch';
 import logoIcon from '@/assets/logo-elolab-icon.png';
+import authHero from '@/assets/auth-hero.webp';
 
 // ─── Schemas ───────────────────────────────────────────────
 const loginSchema = z.object({
@@ -46,13 +46,6 @@ const slideVariants = {
   center: { x: 0, opacity: 1 },
   exit: (direction: number) => ({ x: direction > 0 ? -30 : 30, opacity: 0 }),
 };
-
-const features = [
-  { icon: Stethoscope, title: 'Prontuário Eletrônico', desc: 'Registros clínicos completos' },
-  { icon: HeartPulse, title: 'Agenda Inteligente', desc: 'Gestão de consultas integrada' },
-  { icon: BarChart3, title: 'Financeiro', desc: 'Fluxo de caixa e faturamento' },
-  { icon: Shield, title: 'LGPD', desc: 'Dados protegidos por padrão' },
-];
 
 // ─── Component ─────────────────────────────────────────────
 export default function Auth() {
@@ -238,113 +231,66 @@ export default function Auth() {
   // ─── Render ──────────────────────────────────────────────
   return (
     <div className="min-h-screen flex bg-background">
-      {/* ─── Left: Branding ─── */}
-      <div className="hidden lg:flex lg:w-[50%] relative overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--primary)/0.3)_0%,_transparent_70%)]" />
-
-        {/* Dot grid */}
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'radial-gradient(circle, hsl(var(--primary-foreground)) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
+      {/* ─── Left: Hero Image ─── */}
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
+        {/* Image */}
+        <img
+          src={authHero}
+          alt="Médica usando tecnologia"
+          className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* Floating orbs */}
-        <motion.div
-          animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 right-20 w-64 h-64 rounded-full bg-primary-foreground/5 blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-32 left-10 w-48 h-48 rounded-full bg-primary-foreground/8 blur-2xl"
-        />
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
 
+        {/* Green accent glow */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-transparent" />
+
+        {/* Content overlay */}
         <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
-          {/* Logo */}
+          {/* Top logo */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-primary-foreground/15 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/10">
-                <img src={logoIcon} alt="EloLab" className="h-8 w-8 drop-shadow-lg" />
+              <div className="h-11 w-11 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <img src={logoIcon} alt="EloLab" className="h-7 w-7 drop-shadow-lg" />
               </div>
-              <span className="text-xl font-extrabold font-display tracking-tight text-primary-foreground">
+              <span className="text-xl font-extrabold font-display tracking-tight text-white drop-shadow-md">
                 EloLab
               </span>
             </div>
           </motion.div>
 
-          {/* Center */}
-          <div className="max-w-md">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10 text-primary-foreground/80 text-xs font-medium mb-6">
-                <Sparkles className="h-3.5 w-3.5" />
-                Sistema completo de gestão clínica
-              </div>
-
-              <h1 className="text-4xl xl:text-[2.75rem] font-extrabold font-display text-primary-foreground leading-[1.1] mb-4">
-                Simplifique sua
-                <br />
-                <span className="text-primary-foreground/70">rotina clínica</span>
-              </h1>
-
-              <p className="text-primary-foreground/50 text-base leading-relaxed mb-10">
-                Agenda, prontuário, financeiro e laboratório em uma única plataforma segura e intuitiva.
-              </p>
-            </motion.div>
-
-            {/* Features */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="grid grid-cols-2 gap-3"
-            >
-              {features.map((f, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                  className="group flex items-start gap-3 rounded-xl bg-primary-foreground/[0.06] backdrop-blur-sm border border-primary-foreground/[0.08] p-3.5 hover:bg-primary-foreground/[0.1] transition-all duration-300"
-                >
-                  <div className="h-8 w-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                    <f.icon className="h-4 w-4 text-primary-foreground/80" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-primary-foreground text-[13px] leading-tight">{f.title}</p>
-                    <p className="text-primary-foreground/40 text-[11px] mt-0.5">{f.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Bottom */}
+          {/* Bottom content */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="flex items-center gap-6 text-primary-foreground/30 text-xs"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="max-w-lg"
           >
-            <div className="flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5" />
-              <span>LGPD Compliant</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5" />
-              <span>Criptografia end-to-end</span>
+            <h1 className="text-3xl xl:text-4xl font-extrabold font-display text-white leading-tight mb-3 drop-shadow-lg">
+              Gestão clínica
+              <br />
+              <span className="text-primary">inteligente e moderna</span>
+            </h1>
+            <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-md">
+              Prontuário eletrônico, agenda, financeiro e laboratório em uma única plataforma segura.
+            </p>
+
+            {/* Stats badges */}
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white text-xs font-medium flex items-center gap-2">
+                <Shield className="h-3.5 w-3.5 text-primary" />
+                LGPD Compliant
+              </div>
+              <div className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white text-xs font-medium flex items-center gap-2">
+                <Lock className="h-3.5 w-3.5 text-primary" />
+                Criptografia E2E
+              </div>
             </div>
           </motion.div>
         </div>
@@ -352,13 +298,15 @@ export default function Auth() {
 
       {/* ─── Right: Auth Form ─── */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/[0.03] rounded-full blur-3xl" />
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/[0.02] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[400px] relative z-10"
+          className="w-full max-w-[420px] relative z-10"
         >
           {/* Mobile Logo */}
           <div className="text-center mb-8 lg:hidden">
