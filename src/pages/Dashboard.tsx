@@ -209,13 +209,14 @@ function ActivityItem({ icon: Icon, title, subtitle, time, color }: {
 
 // ─── Main Dashboard ────────────────────────────────────────
 export default function Dashboard() {
-  const { profile: user } = useSupabaseAuth();
+  const { profile: user, isAdmin } = useSupabaseAuth();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: lancamentos = [], isLoading: loadingLancamentos } = useLancamentos();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
   const { data: estoque = [], isLoading: loadingEstoque } = useEstoque();
   const { data: fila = [] } = useFilaAtendimento();
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
 
   const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos || loadingEstoque;
 
