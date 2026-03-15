@@ -175,7 +175,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white text-foreground font-sans overflow-x-hidden">
+    <div className="min-h-screen text-foreground font-sans overflow-x-hidden relative">
+      {/* Fixed gradient background */}
+      <div className="fixed inset-0 -z-10" style={{ background: 'linear-gradient(160deg, hsl(220 30% 97%) 0%, hsl(240 40% 95%) 25%, hsl(0 0% 100%) 50%, hsl(220 25% 96%) 75%, hsl(240 30% 97%) 100%)' }} />
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══ HERO — Bold blue like 4Medic ═══ */}
