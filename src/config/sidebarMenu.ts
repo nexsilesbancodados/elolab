@@ -3,6 +3,7 @@ import {
   Users,
   Calendar,
   ClipboardList,
+  Shield,
   FileText,
   DollarSign,
   Package,

@@ -218,6 +218,11 @@ export default function PainelAdmin() {
     return new Date(d).toLocaleDateString('pt-BR');
   };
 
+  // Guard: only super admin
+  if (!isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (loadingProfiles) {
     return (
       <div className="space-y-6">
