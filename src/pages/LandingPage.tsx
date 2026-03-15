@@ -175,7 +175,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white text-foreground font-sans overflow-x-hidden">
       <EloLabNavbar scrolled={scrolled} onScrollTo={scrollTo} />
 
       {/* ═══ HERO — Bold blue like 4Medic ═══ */}
@@ -246,7 +246,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FEATURES — 3 cards on beige like 4Medic ═══ */}
-      <section id="features" className="py-24 px-4 bg-background">
+      <section id="features" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading
             badge="PRINCIPAIS RECURSOS"
@@ -271,7 +271,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ ORGANIZATION SECTION — Image + text like 4Medic ═══ */}
-      <section className="py-24 px-4 bg-secondary">
+      <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <img src={dashboardPreview} alt="Organização de ponta a ponta" className="w-full rounded-2xl shadow-lg" loading="lazy" width={600} height={400} />
@@ -298,7 +298,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ EASE OF USE — like 4Medic ═══ */}
-      <section className="py-24 px-4 bg-background">
+      <section className="py-24 px-4">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <span className="inline-block bg-brand/8 text-brand rounded-full px-5 py-1.5 text-xs font-bold uppercase tracking-widest mb-5 border border-brand/12">
@@ -353,7 +353,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ SECURITY — like 4Medic ═══ */}
-      <section className="py-24 px-4 bg-background">
+      <section className="py-24 px-4">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <span className="inline-block bg-brand/8 text-brand rounded-full px-5 py-1.5 text-xs font-bold uppercase tracking-widest mb-5 border border-brand/12">
@@ -394,7 +394,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ STATS ═══ */}
-      <section className="py-20 px-4 bg-secondary">
+      <section className="py-20 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
             {stats.map((s, i) => (
@@ -411,7 +411,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <section id="how-it-works" className="py-24 px-4 bg-background">
+      <section id="how-it-works" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading
             badge="COMO FUNCIONA"
@@ -433,7 +433,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ DIFFERENTIALS ═══ */}
-      <section id="differentials" className="py-24 px-4 bg-accent">
+      <section id="differentials" className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto">
           <SectionHeading badge="DIFERENCIAIS" title="Por que clínicas escolhem o EloLab" description="Tecnologia médica de ponta com segurança, praticidade e suporte humano dedicado." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -451,7 +451,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      <section id="testimonials" className="py-24 px-4 bg-background">
+      <section id="testimonials" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading badge="NOSSOS CLIENTES" title="Histórias de quem faz acontecer com o EloLab" description="Veja o que profissionais de saúde dizem sobre nossa plataforma." />
           <div className="grid gap-6 md:grid-cols-3">
@@ -499,7 +499,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FAQ ═══ */}
-      <section id="faq" className="py-24 px-4 bg-secondary">
+      <section id="faq" className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-3xl mx-auto">
           <SectionHeading badge="PERGUNTAS FREQUENTES" title="Tire suas dúvidas" description="Tudo que você precisa saber antes de começar." />
           <Accordion type="single" collapsible className="space-y-3">
