@@ -595,7 +595,7 @@ export default function Configuracoes() {
             <AuditLog />
           </motion.div>
         </TabsContent>
-
+      </Tabs>
     </div>
   );
 }
