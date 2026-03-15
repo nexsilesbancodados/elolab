@@ -216,7 +216,7 @@ export default function Financeiro() {
         if (error) throw error;
         toast.success('Lançamento atualizado!');
       } else {
-        const { error } = await supabase.from('lancamentos').insert(payload);
+        const { error } = await supabase.from('lancamentos').insert([payload]);
         if (error) throw error;
         toast.success('Lançamento criado!');
       }
