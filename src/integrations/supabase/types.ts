@@ -693,15 +693,25 @@ export type Database = {
           carencia: number | null
           cnpj: string | null
           codigo: string
+          codigo_operadora: string | null
           created_at: string | null
           email: string | null
           id: string
+          logo_url: string | null
           nome: string
+          portal_url: string | null
+          prazo_retorno: number | null
+          registro_ans: string | null
+          responsavel_cargo: string | null
+          responsavel_nome: string | null
+          responsavel_telefone: string | null
+          taxa_glosa: number | null
           telefone: string | null
           tipo_planos: string[] | null
           updated_at: string | null
           valor_consulta: number | null
           valor_retorno: number | null
+          versao_tiss: string | null
           website: string | null
         }
         Insert: {
@@ -709,15 +719,25 @@ export type Database = {
           carencia?: number | null
           cnpj?: string | null
           codigo: string
+          codigo_operadora?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           nome: string
+          portal_url?: string | null
+          prazo_retorno?: number | null
+          registro_ans?: string | null
+          responsavel_cargo?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+          taxa_glosa?: number | null
           telefone?: string | null
           tipo_planos?: string[] | null
           updated_at?: string | null
           valor_consulta?: number | null
           valor_retorno?: number | null
+          versao_tiss?: string | null
           website?: string | null
         }
         Update: {
@@ -725,15 +745,25 @@ export type Database = {
           carencia?: number | null
           cnpj?: string | null
           codigo?: string
+          codigo_operadora?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           nome?: string
+          portal_url?: string | null
+          prazo_retorno?: number | null
+          registro_ans?: string | null
+          responsavel_cargo?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+          taxa_glosa?: number | null
           telefone?: string | null
           tipo_planos?: string[] | null
           updated_at?: string | null
           valor_consulta?: number | null
           valor_retorno?: number | null
+          versao_tiss?: string | null
           website?: string | null
         }
         Relationships: []
