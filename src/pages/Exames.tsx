@@ -579,10 +579,11 @@ export default function Exames() {
                   variant="outline"
                   size="icon"
                   disabled={!customExameInput.trim()}
-                  onClick={() => {
+                  onClick={async () => {
                     const name = customExameInput.trim();
-                    if (name && !TIPOS_EXAME.includes(name)) {
-                      setCustomExames(prev => [...prev, name]);
+                    if (name && !TIPOS_EXAME.includes(name) && user) {
+                      await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: name } as any);
+                      queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
                     }
                     setFormData({ ...formData, tipo_exame: name });
                     setCustomExameInput('');
