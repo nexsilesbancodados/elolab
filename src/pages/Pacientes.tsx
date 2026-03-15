@@ -487,9 +487,40 @@ export default function Pacientes() {
                 </div>
               </div>
             </div>
-            <div className="border-t pt-4">
-              <div className="space-y-2">
-                <Label>Alergias (separadas por vírgula)</Label>
+            {isMinor(formData.data_nascimento) && (
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  Responsável (menor de idade)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Responsável *</Label>
+                    <Input
+                      value={formData.nome_responsavel}
+                      onChange={(e) => setFormData({ ...formData, nome_responsavel: e.target.value })}
+                      placeholder="Nome completo do responsável"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CPF do Responsável</Label>
+                    <Input
+                      value={formData.cpf_responsavel}
+                      onChange={(e) => setFormData({ ...formData, cpf_responsavel: e.target.value })}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Parentesco</Label>
+                    <Input
+                      value={formData.parentesco_responsavel}
+                      onChange={(e) => setFormData({ ...formData, parentesco_responsavel: e.target.value })}
+                      placeholder="Mãe, Pai, Avó, etc."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
                 <Input
                   value={formData.alergias.join(', ')}
                   onChange={(e) =>
