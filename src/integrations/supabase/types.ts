@@ -2471,6 +2471,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tipos_exame_custom: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       triagens: {
         Row: {
           agendamento_id: string
