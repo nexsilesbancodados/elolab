@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ServiceStatusBanner } from '@/components/ServiceStatusBanner';
+
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -357,7 +357,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 pb-10">
       <OnboardingWizard />
-      <ServiceStatusBanner />
+      
 
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}

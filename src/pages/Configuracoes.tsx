@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Save, Building, Clock, Bell, Database, Download, History,
-  Shield, Palette, Globe, MessageSquare, CreditCard, Mail,
-  Smartphone, Key, RefreshCw, Server, HardDrive, CheckCircle2,
-  AlertTriangle, ExternalLink, Zap, Settings2
+  Save, Building, Clock, Bell, Download, History,
+  Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
+  Key, RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,11 +53,6 @@ interface ConfiguracaoNotificacoes {
   notificarAniversario: boolean;
 }
 
-interface IntegrationStatus {
-  whatsapp: { configured: boolean; active: boolean };
-  email: { configured: boolean; active: boolean };
-  payments: { configured: boolean; active: boolean };
-}
 
 function SettingRow({ icon: Icon, title, description, children }: {
   icon: React.ElementType;
@@ -82,47 +76,7 @@ function SettingRow({ icon: Icon, title, description, children }: {
   );
 }
 
-function IntegrationCard({ icon: Icon, name, description, configured, active, onConfigure }: {
-  icon: React.ElementType;
-  name: string;
-  description: string;
-  configured: boolean;
-  active: boolean;
-  onConfigure: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl border bg-card transition-colors hover:bg-accent/30">
-      <div className={`p-3 rounded-xl ${configured && active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-sm">{name}</p>
-          {configured && active ? (
-            <Badge variant="outline" className="text-xs border-primary/30 text-primary bg-primary/5">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Ativo
-            </Badge>
-          ) : configured ? (
-            <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-600 bg-yellow-500/5">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Inativo
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-xs">
-              Não configurado
-            </Badge>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-      <Button variant="outline" size="sm" onClick={onConfigure} className="shrink-0 gap-1.5">
-        <Settings2 className="h-3.5 w-3.5" />
-        {configured ? 'Editar' : 'Configurar'}
-      </Button>
-    </div>
-  );
-}
+
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
@@ -156,39 +110,8 @@ export default function Configuracoes() {
     }
   );
 
-  const [integrations, setIntegrations] = useState<IntegrationStatus>({
-    whatsapp: { configured: false, active: false },
-    email: { configured: false, active: false },
-    payments: { configured: false, active: false },
-  });
-
   const [savingClinica, setSavingClinica] = useState(false);
   const [savingNotif, setSavingNotif] = useState(false);
-
-  useEffect(() => {
-    checkIntegrations();
-  }, []);
-
-  const checkIntegrations = async () => {
-    try {
-      const { data: settings } = await supabase
-        .from('automation_settings')
-        .select('chave, valor, ativo')
-        .in('chave', ['evolution_api_url', 'brevo_api_key', 'mercadopago_access_token']);
-
-      const whatsappSetting = settings?.find(s => s.chave === 'evolution_api_url');
-      const emailSetting = settings?.find(s => s.chave === 'brevo_api_key');
-      const paymentSetting = settings?.find(s => s.chave === 'mercadopago_access_token');
-
-      setIntegrations({
-        whatsapp: { configured: !!whatsappSetting, active: whatsappSetting?.ativo ?? false },
-        email: { configured: !!emailSetting, active: emailSetting?.ativo ?? false },
-        payments: { configured: !!paymentSetting, active: paymentSetting?.ativo ?? false },
-      });
-    } catch {
-      // Settings not available
-    }
-  };
 
   const handleSaveClinica = async () => {
     setSavingClinica(true);
@@ -229,12 +152,10 @@ export default function Configuracoes() {
     { value: 'clinica', icon: Building, label: 'Clínica' },
     { value: 'horarios', icon: Clock, label: 'Horários' },
     { value: 'notificacoes', icon: Bell, label: 'Notificações' },
-    { value: 'integracoes', icon: Zap, label: 'Integrações' },
     { value: 'aparencia', icon: Palette, label: 'Aparência' },
     { value: 'seguranca', icon: Shield, label: 'Segurança' },
     { value: 'backup', icon: Download, label: 'Backup' },
     { value: 'historico', icon: History, label: 'Auditoria' },
-    { value: 'sistema', icon: Server, label: 'Sistema' },
   ];
 
   return (
@@ -507,77 +428,6 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Integrações ─── */}
-        <TabsContent value="integracoes">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  Integrações
-                </CardTitle>
-                <CardDescription>Conecte serviços externos para automações e pagamentos</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <IntegrationCard
-                  icon={MessageSquare}
-                  name="WhatsApp (Evolution API)"
-                  description="Envie notificações e lembretes automáticos via WhatsApp"
-                  configured={integrations.whatsapp.configured}
-                  active={integrations.whatsapp.active}
-                  onConfigure={() => toast.info('Acesse Automações > WhatsApp para configurar a Evolution API.')}
-                />
-                <IntegrationCard
-                  icon={Mail}
-                  name="Email (Brevo)"
-                  description="Envie emails transacionais e lembretes por email"
-                  configured={integrations.email.configured}
-                  active={integrations.email.active}
-                  onConfigure={() => toast.info('Configure a chave da API Brevo nas configurações de automação.')}
-                />
-                <IntegrationCard
-                  icon={CreditCard}
-                  name="Pagamentos (Mercado Pago)"
-                  description="Receba pagamentos via Pix, boleto e cartão de crédito"
-                  configured={integrations.payments.configured}
-                  active={integrations.payments.active}
-                  onConfigure={() => toast.info('Configure o Access Token do Mercado Pago nas configurações de automação.')}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Status Geral das Integrações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  {[
-                    { label: 'WhatsApp', ok: integrations.whatsapp.active },
-                    { label: 'Email', ok: integrations.email.active },
-                    { label: 'Pagamentos', ok: integrations.payments.active },
-                  ].map(item => (
-                    <div key={item.label} className="p-3 rounded-lg border bg-card">
-                      <div className={`inline-flex p-2 rounded-full mb-2 ${item.ok ? 'bg-primary/10' : 'bg-muted'}`}>
-                        {item.ok ? (
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <p className="text-xs font-medium">{item.label}</p>
-                      <p className={`text-xs mt-0.5 ${item.ok ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {item.ok ? 'Operacional' : 'Pendente'}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </TabsContent>
-
-        {/* ─── Aparência ─── */}
         <TabsContent value="aparencia">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
@@ -702,67 +552,6 @@ export default function Configuracoes() {
         <TabsContent value="historico">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <AuditLog />
-          </motion.div>
-        </TabsContent>
-
-        {/* ─── Sistema ─── */}
-        <TabsContent value="sistema">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Server className="h-5 w-5 text-primary" />
-                  Informações do Sistema
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { label: 'Versão', value: 'EloLab v2.0.0', icon: Server },
-                    { label: 'Backend', value: 'Supabase (PostgreSQL)', icon: Database },
-                    { label: 'Armazenamento', value: 'Cloud + Local Cache', icon: HardDrive },
-                  ].map(item => (
-                    <div key={item.label} className="p-4 rounded-xl border bg-card">
-                      <div className="flex items-center gap-2 mb-2">
-                        <item.icon className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground font-medium">{item.label}</p>
-                      </div>
-                      <p className="font-semibold text-sm">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <div className="p-4 rounded-xl border bg-muted/30">
-                  <h4 className="font-medium text-sm mb-3">Stack Tecnológico</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {['React 18', 'TypeScript', 'Tailwind CSS', 'Supabase', 'Vite', 'PWA', 'Recharts', 'Framer Motion'].map(tech => (
-                      <Badge key={tech} variant="secondary" className="text-xs">{tech}</Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl border">
-                  <h4 className="font-medium text-sm mb-2">Recursos Ativos</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {[
-                      'Autenticação (Supabase Auth)',
-                      'Row Level Security (RLS)',
-                      'Edge Functions',
-                      'Realtime Subscriptions',
-                      'Storage (Arquivos)',
-                      'PWA / Offline',
-                    ].map(feat => (
-                      <div key={feat} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
         </TabsContent>
       </Tabs>
