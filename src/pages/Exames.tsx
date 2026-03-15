@@ -801,22 +801,6 @@ export default function Exames() {
               Solicitar
             </LoadingButton>
           </DialogFooter>
-              <Textarea
-                value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                placeholder="Observações para o laboratório..."
-                rows={2}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
-              Cancelar
-            </Button>
-            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
-              Solicitar
-            </LoadingButton>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
