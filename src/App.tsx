@@ -52,7 +52,6 @@ import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
 
 // Only lazy load rarely-accessed pages
-const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
 const PainelTV = lazy(() => import("@/pages/PainelTV"));
