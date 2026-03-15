@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePacientes, useAgendamentos, useLancamentos, useEstoque, useMedicos, useFilaAtendimento } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import {
   Users, Calendar, Clock, UserPlus, CalendarPlus, ArrowRight, ArrowUpRight,
   Activity, Stethoscope, Package, FileText, TrendingUp, TrendingDown,
