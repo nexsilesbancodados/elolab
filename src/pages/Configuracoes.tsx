@@ -596,67 +596,6 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Sistema ─── */}
-        <TabsContent value="sistema">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Server className="h-5 w-5 text-primary" />
-                  Informações do Sistema
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { label: 'Versão', value: 'EloLab v2.0.0', icon: Server },
-                    { label: 'Backend', value: 'Supabase (PostgreSQL)', icon: Database },
-                    { label: 'Armazenamento', value: 'Cloud + Local Cache', icon: HardDrive },
-                  ].map(item => (
-                    <div key={item.label} className="p-4 rounded-xl border bg-card">
-                      <div className="flex items-center gap-2 mb-2">
-                        <item.icon className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground font-medium">{item.label}</p>
-                      </div>
-                      <p className="font-semibold text-sm">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <div className="p-4 rounded-xl border bg-muted/30">
-                  <h4 className="font-medium text-sm mb-3">Stack Tecnológico</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {['React 18', 'TypeScript', 'Tailwind CSS', 'Supabase', 'Vite', 'PWA', 'Recharts', 'Framer Motion'].map(tech => (
-                      <Badge key={tech} variant="secondary" className="text-xs">{tech}</Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl border">
-                  <h4 className="font-medium text-sm mb-2">Recursos Ativos</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {[
-                      'Autenticação (Supabase Auth)',
-                      'Row Level Security (RLS)',
-                      'Edge Functions',
-                      'Realtime Subscriptions',
-                      'Storage (Arquivos)',
-                      'PWA / Offline',
-                    ].map(feat => (
-                      <div key={feat} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
