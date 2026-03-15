@@ -95,44 +95,69 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const syncSession = async (currentSession: Session | null) => {
+      if (!isMounted) return;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        // Defer profile fetch with setTimeout to avoid deadlock
-        if (currentSession?.user) {
-          setTimeout(() => {
-            fetchProfile(currentSession.user.id).then(setProfile);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-        }
+      (_event, currentSession) => {
+        void syncSession(currentSession);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
-      
-      if (existingSession?.user) {
-        fetchProfile(existingSession.user.id).then((userProfile) => {
-          setProfile(userProfile);
-          setIsLoading(false);
-        });
-      } else {
-        setIsLoading(false);
-      }
+      void syncSession(existingSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const syncProfileFromUser = async () => {
+      if (!user) {
+        if (!isActive) return;
+        setProfile(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Ensure session is fully available before running RLS-protected queries
+      const { data: { session: latestSession } } = await supabase.auth.getSession();
+
+      if (!isActive) return;
+
+      if (!latestSession?.user || latestSession.user.id !== user.id) {
+        setProfile(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const userProfile = await fetchProfile(user.id);
+
+      if (!isActive) return;
+      setProfile(userProfile);
+      setIsLoading(false);
+    };
+
+    void syncProfileFromUser();
+
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
