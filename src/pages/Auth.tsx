@@ -176,7 +176,7 @@ export default function Auth() {
     setIsLoading(true);
     try {
       const { data: registro, error: regError } = await supabase
-        .from('registros_pendentes' as string & keyof Database['public']['Tables'])
+        .from('registros_pendentes' as any)
         .select('id, status, expires_at, plano_slug')
         .eq('codigo_convite', data.codigoConvite)
         .in('status', ['pendente', 'pago'])
@@ -188,8 +188,8 @@ export default function Auth() {
         return;
       }
 
-      const reg = registro as Record<string, unknown>;
-      if (new Date(reg.expires_at as string) < new Date()) {
+      const reg = registro as any;
+      if (new Date(reg.expires_at) < new Date()) {
         toast.error('Código de convite expirado.');
         setIsLoading(false);
         return;
