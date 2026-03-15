@@ -592,11 +592,10 @@ export default function Configuracoes() {
                 <div className="space-y-3">
                   <Label>Tema</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {[
+                    {([
                       { value: 'light' as const, label: 'Claro', desc: 'Fundo branco e cores suaves' },
                       { value: 'dark' as const, label: 'Escuro', desc: 'Fundo escuro, ideal para baixa luz' },
-                      { value: 'system' as const, label: 'Sistema', desc: 'Segue a preferência do dispositivo' },
-                    ].map(opt => (
+                    ] satisfies { value: 'light' | 'dark'; label: string; desc: string }[]).map(opt => (
                       <button
                         key={opt.value}
                         onClick={() => setTheme(opt.value)}
