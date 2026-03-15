@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { Activity, ChevronLeft, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import logoIcon from '@/assets/logo-elolab-icon.png';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
