@@ -233,19 +233,38 @@ export default function Exames() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isManageTypesOpen, setIsManageTypesOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customExames, setCustomExames] = useState<string[]>([]);
   const [customExameInput, setCustomExameInput] = useState('');
-
-  const TIPOS_EXAME = [...TIPOS_EXAME_DEFAULT, ...customExames].sort();
+  const [newTypeInput, setNewTypeInput] = useState('');
+  const [newTypeCat, setNewTypeCat] = useState('Personalizado');
 
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
+
+  // Custom exam types from DB
+  const { data: customTypesFromDB = [] } = useQuery({
+    queryKey: ['tipos_exame_custom'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tipos_exame_custom' as any)
+        .select('*')
+        .order('nome');
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!user,
+  });
+
+  const TIPOS_EXAME = useMemo(() => {
+    const customNames = customTypesFromDB.map((t: any) => t.nome);
+    return [...new Set([...TIPOS_EXAME_DEFAULT, ...customNames])].sort();
+  }, [customTypesFromDB]);
 
   const { data: exames = [], isLoading: loadingExames } = useQuery({
     queryKey: ['exames', isMedicoOnly, medicoId],
@@ -373,6 +392,10 @@ export default function Exames() {
           <h1 className="text-3xl font-bold text-foreground">Exames</h1>
           <p className="text-muted-foreground">Gerencie solicitações e resultados de exames</p>
         </div>
+        <Button variant="outline" onClick={() => setIsManageTypesOpen(true)} className="gap-2">
+          <FileText className="h-4 w-4" />
+          Meus Tipos de Exame
+        </Button>
         <Button onClick={handleOpenNew} className="gap-2">
           <Plus className="h-4 w-4" />
           Solicitar Exame
@@ -560,10 +583,11 @@ export default function Exames() {
                   variant="outline"
                   size="icon"
                   disabled={!customExameInput.trim()}
-                  onClick={() => {
+                  onClick={async () => {
                     const name = customExameInput.trim();
-                    if (name && !TIPOS_EXAME.includes(name)) {
-                      setCustomExames(prev => [...prev, name]);
+                    if (name && !TIPOS_EXAME.includes(name) && user) {
+                      await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: name } as any);
+                      queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
                     }
                     setFormData({ ...formData, tipo_exame: name });
                     setCustomExameInput('');
@@ -665,6 +689,75 @@ export default function Exames() {
             <Button variant="outline" onClick={() => setIsViewOpen(false)}>
               Fechar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Custom Types Dialog */}
+      <Dialog open={isManageTypesOpen} onOpenChange={setIsManageTypesOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Meus Tipos de Exame</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Input
+                value={newTypeInput}
+                onChange={e => setNewTypeInput(e.target.value)}
+                placeholder="Nome do tipo de exame..."
+                className="flex-1"
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && newTypeInput.trim() && user) {
+                    await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
+                    queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                    setNewTypeInput('');
+                    toast.success('Tipo de exame cadastrado!');
+                  }
+                }}
+              />
+              <Button
+                disabled={!newTypeInput.trim()}
+                onClick={async () => {
+                  if (!newTypeInput.trim() || !user) return;
+                  await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
+                  queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                  setNewTypeInput('');
+                  toast.success('Tipo de exame cadastrado!');
+                }}
+                className="gap-1"
+              >
+                <Plus className="h-4 w-4" /> Adicionar
+              </Button>
+            </div>
+            {customTypesFromDB.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum tipo personalizado cadastrado ainda</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {customTypesFromDB.map((tipo: any) => (
+                  <div key={tipo.id} className="flex items-center justify-between border rounded-lg px-3 py-2">
+                    <div>
+                      <p className="font-medium text-sm">{tipo.nome}</p>
+                      <p className="text-xs text-muted-foreground">{tipo.categoria}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive h-7"
+                      onClick={async () => {
+                        await supabase.from('tipos_exame_custom' as any).delete().eq('id', tipo.id);
+                        queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                        toast.success('Tipo removido');
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsManageTypesOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
