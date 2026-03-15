@@ -47,7 +47,7 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
   const handleLiberarLaudo = async (resultadoId: string) => {
     const { error } = await supabase
       .from('resultados_laboratorio')
-      .update({ status: 'liberado', liberado_em: new Date().toISOString() })
+      .update({ liberado: true, data_liberacao: new Date().toISOString() })
       .eq('id', resultadoId);
     if (error) toast.error('Erro ao liberar laudo');
     else {
@@ -175,10 +175,9 @@ export default function LaudosLab() {
     const { data, error } = await supabase
       .from('coletas_laboratorio')
       .select(`
-        id, codigo, status, created_at,
+        id, codigo_amostra, status, created_at,
         pacientes(nome, cpf),
-        convenios(nome),
-        resultados_laboratorio(id, status, exames(nome, setor))
+        resultados_laboratorio(id, liberado, exames(tipo_exame))
       `)
       .in('status', ['liberado', 'liberado_parcial', 'finalizado', 'coletado'])
       .order('created_at', { ascending: true });
