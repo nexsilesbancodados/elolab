@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LucideIcon, FileQuestion, Users, Calendar, FileText, Package, SearchX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
