@@ -201,6 +201,8 @@ export function useMedicos() {
   return useSupabaseQuery<{
     id: string;
     user_id: string | null;
+    nome: string | null;
+    email: string | null;
     crm: string;
     especialidade: string | null;
     telefone: string | null;
