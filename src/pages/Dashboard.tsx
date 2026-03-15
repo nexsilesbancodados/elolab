@@ -263,7 +263,7 @@ export default function Dashboard() {
       return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
     }).length;
 
-    const atendimentosFinalizadosMes = agendamentos.filter(a => {
+    const atendimentosFinalizadosMes = baseAgendamentos.filter(a => {
       const d = new Date(a.data);
       return a.status === 'finalizado' && d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
     }).length;
