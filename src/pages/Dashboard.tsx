@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ServiceStatusBanner } from '@/components/ServiceStatusBanner';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
@@ -10,19 +10,19 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePacientes, useAgendamentos, useLancamentos, useEstoque, useMedicos, useFilaAtendimento } from '@/hooks/useSupabaseData';
 import {
   Users, Calendar, Clock, UserPlus, CalendarPlus, ArrowRight, ArrowUpRight,
-  Activity, Stethoscope, Package, FileText, Database, TrendingUp, TrendingDown,
+  Activity, Stethoscope, Package, FileText, TrendingUp, TrendingDown,
   Sparkles, CheckCircle2, AlertTriangle, Wallet, Plus, Zap, BarChart3,
-  ClipboardList, HeartPulse, Bell, Sun, Sunset, Moon, Star, ChevronRight,
-  ShieldCheck, RefreshCw, Eye, Layers, Target, Award, Timer,
+  ClipboardList, HeartPulse, Bell, Sun, Sunset, Moon,
+  ShieldCheck, Target, Timer, Megaphone, Pill, Eye,
 } from 'lucide-react';
 import { DashboardSkeleton } from '@/components/ui/loading-skeleton';
 import { Link } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday, isTomorrow, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 
 const formatCurrency = (value: number) =>
@@ -36,13 +36,27 @@ const formatCurrencyShort = (value: number) => {
 
 // ─── Animations ────────────────────────────────────────────
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: (i = 0) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { delay: i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
+
+// ─── Live Clock ────────────────────────────────────────────
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <span className="tabular-nums font-semibold text-lg tracking-tight">
+      {format(time, 'HH:mm')}
+    </span>
+  );
+}
 
 // ─── SVG Progress Ring ─────────────────────────────────────
 function ProgressRing({ value, size = 80, strokeWidth = 6, color = 'hsl(var(--primary))' }: {
@@ -55,10 +69,14 @@ function ProgressRing({ value, size = 80, strokeWidth = 6, color = 'hsl(var(--pr
     <svg width={size} height={size} className="transform -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
         stroke="hsl(var(--muted))" strokeWidth={strokeWidth} />
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
+      <motion.circle
+        cx={size / 2} cy={size / 2} r={radius} fill="none"
         stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"
-        strokeDasharray={circumference} strokeDashoffset={offset}
-        className="transition-all duration-1000 ease-out" />
+        strokeDasharray={circumference}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: 1.2, ease: 'easeOut' }}
+      />
     </svg>
   );
 }
@@ -77,7 +95,7 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
 
 // ─── KPI Card ──────────────────────────────────────────────
 function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, sparkData, trend }: {
-  title: string; value: string | number; subtitle?: string; icon: any;
+  title: string; value: string | number; subtitle?: string; icon: React.ElementType;
   color: 'primary' | 'success' | 'warning' | 'info' | 'destructive';
   href?: string; delay?: number; sparkData?: number[]; trend?: number;
 }) {
@@ -92,13 +110,13 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, s
 
   const content = (
     <motion.div variants={fadeUp} custom={delay}>
-      <Card className="group relative overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer">
+      <Card className="group relative overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border-border/40">
         <CardContent className="pt-5 pb-4">
           <div className="flex items-start justify-between mb-2">
             <div className="space-y-1 flex-1 min-w-0">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{title}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold font-display tracking-tight truncate">{value}</p>
+                <p className="text-2xl font-bold font-display tracking-tight tabular-nums truncate">{value}</p>
                 {trend !== undefined && trend !== 0 && (
                   <span className={cn('text-[11px] font-semibold flex items-center gap-0.5',
                     trend > 0 ? 'text-success' : 'text-destructive'
@@ -115,13 +133,13 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, s
             </div>
           </div>
           {sparkData && sparkData.length > 1 && (
-            <div className="opacity-50 group-hover:opacity-100 transition-opacity -mx-1 mt-1">
+            <div className="opacity-40 group-hover:opacity-100 transition-opacity -mx-1 mt-1">
               <Sparkline data={sparkData} color={c.spark} />
             </div>
           )}
         </CardContent>
         {href && (
-          <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
             <ArrowUpRight className={cn('h-4 w-4', c.text)} />
           </div>
         )}
@@ -133,7 +151,7 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, s
 
 // ─── Finance Stat Row ──────────────────────────────────────
 function FinanceStat({ label, value, icon: Icon, variant }: {
-  label: string; value: string; icon: any;
+  label: string; value: string; icon: React.ElementType;
   variant: 'positive' | 'neutral' | 'negative';
 }) {
   const styles = {
@@ -142,27 +160,49 @@ function FinanceStat({ label, value, icon: Icon, variant }: {
     negative: 'text-destructive',
   };
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0">
+    <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-0">
       <div className="flex items-center gap-2.5">
-        <Icon className={cn('h-4 w-4', styles[variant])} />
+        <div className={cn('h-7 w-7 rounded-lg flex items-center justify-center', 
+          variant === 'positive' ? 'bg-success/8' : variant === 'neutral' ? 'bg-warning/8' : 'bg-destructive/8'
+        )}>
+          <Icon className={cn('h-3.5 w-3.5', styles[variant])} />
+        </div>
         <span className="text-sm text-muted-foreground">{label}</span>
       </div>
-      <span className={cn('text-sm font-bold', styles[variant])}>{value}</span>
+      <span className={cn('text-sm font-bold tabular-nums', styles[variant])}>{value}</span>
     </div>
   );
 }
 
 // ─── Quick Action Button ───────────────────────────────────
 function QuickActionBtn({ icon: Icon, label, href, color }: {
-  icon: any; label: string; href: string; color: string;
+  icon: React.ElementType; label: string; href: string; color: string;
 }) {
   return (
-    <Link to={href} className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/50 transition-all">
+    <Link to={href} className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-accent/50 transition-all duration-200">
       <div className={cn('h-11 w-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-md', color)}>
         <Icon className="h-5 w-5" />
       </div>
       <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">{label}</span>
     </Link>
+  );
+}
+
+// ─── Activity Item ─────────────────────────────────────────
+function ActivityItem({ icon: Icon, title, subtitle, time, color }: {
+  icon: React.ElementType; title: string; subtitle: string; time: string; color: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 py-2.5">
+      <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5', color)}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{title}</p>
+        <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+      </div>
+      <span className="text-[10px] text-muted-foreground shrink-0 mt-1">{time}</span>
+    </div>
   );
 }
 
@@ -179,7 +219,7 @@ export default function Dashboard() {
   const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos || loadingEstoque;
 
   const hoje = format(new Date(), 'yyyy-MM-dd');
-  const hojeFormatado = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const hojeFormatado = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
   const horaAtual = new Date().getHours();
   const saudacao = horaAtual < 12 ? 'Bom dia' : horaAtual < 18 ? 'Boa tarde' : 'Boa noite';
   const SaudacaoIcon = horaAtual < 12 ? Sun : horaAtual < 18 ? Sunset : Moon;
@@ -263,11 +303,31 @@ export default function Dashboard() {
     const proximosAgendamentos = agendamentos
       .filter(a => a.data >= hoje && (a.status === 'agendado' || a.status === 'confirmado'))
       .sort((a, b) => `${a.data}${a.hora_inicio}`.localeCompare(`${b.data}${b.hora_inicio}`))
-      .slice(0, 5);
+      .slice(0, 6);
 
     const receitaDia = lancamentos
       .filter(l => l.data === hoje && l.tipo === 'receita' && l.status === 'pago')
       .reduce((acc, l) => acc + Number(l.valor), 0);
+
+    // Recent activities from various sources
+    const recentActivities = [
+      ...pacientes.slice(-3).map(p => ({
+        icon: UserPlus,
+        title: `Paciente cadastrado: ${p.nome}`,
+        subtitle: 'Novo cadastro',
+        time: p.created_at ? format(new Date(p.created_at), 'HH:mm') : '',
+        color: 'bg-primary/10 text-primary',
+        date: p.created_at || '',
+      })),
+      ...agendamentos.filter(a => a.data === hoje).slice(-3).map(a => ({
+        icon: Calendar,
+        title: `Consulta ${a.status}`,
+        subtitle: `${a.hora_inicio?.slice(0, 5)} - ${a.tipo || 'Consulta'}`,
+        time: a.hora_inicio?.slice(0, 5) || '',
+        color: 'bg-success/10 text-success',
+        date: a.data,
+      })),
+    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
     return {
       consultasConfirmadas, consultasAgendadas, consultasFinalizadas, totalHoje,
@@ -276,6 +336,7 @@ export default function Dashboard() {
       ticketMedio, taxaOcupacao, monthlyChartData, sparkPacientes, sparkConsultas,
       sparkReceitas, statusDistribution, proximosAgendamentos, receitaDia,
       medicosAtivos: medicos.filter(m => m.ativo).length,
+      recentActivities,
     };
   }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje]);
 
@@ -291,6 +352,7 @@ export default function Dashboard() {
   if (isLoading) return <DashboardSkeleton />;
 
   const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
+  const firstName = user?.nome?.split(' ')[0] || 'Usuário';
 
   return (
     <div className="space-y-6 pb-10">
@@ -300,31 +362,43 @@ export default function Dashboard() {
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}
         <motion.div variants={fadeUp}>
-          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card">
-            {/* Decorative background */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card">
+            {/* Decorative elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-success/5" />
-            <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-success/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-            
+            <div className="absolute top-0 right-0 w-80 h-80 bg-primary/4 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-0 w-56 h-56 bg-success/4 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+
             <div className="relative p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-lg shadow-primary/10">
-                      <SaudacaoIcon className="h-8 w-8 text-primary" />
-                    </div>
-                    <motion.div 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring' }}
-                      className="absolute -right-1.5 -bottom-1.5 h-6 w-6 rounded-full bg-success flex items-center justify-center shadow-md ring-2 ring-card"
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                      className="h-14 w-14 md:h-16 md:w-16 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-lg shadow-primary/10"
                     >
-                      <Zap className="h-3 w-3 text-success-foreground" />
+                      <SaudacaoIcon className="h-7 w-7 md:h-8 md:w-8 text-primary" />
+                    </motion.div>
+                    <motion.div
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring' }}
+                      className="absolute -right-1 -bottom-1 h-5 w-5 rounded-full bg-success flex items-center justify-center shadow-md ring-2 ring-card"
+                    >
+                      <Zap className="h-2.5 w-2.5 text-success-foreground" />
                     </motion.div>
                   </div>
                   <div>
                     <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight">
-                      {saudacao}, <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{user?.nome?.split(' ')[0] || 'Usuário'}</span>!
+                      {saudacao},{' '}
+                      <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                        {firstName}
+                      </span>
                     </h1>
-                    <p className="text-sm text-muted-foreground capitalize mt-1">{hojeFormatado}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <p className="text-sm text-muted-foreground capitalize">{hojeFormatado}</p>
+                      <span className="text-border">•</span>
+                      <LiveClock />
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
@@ -339,22 +413,28 @@ export default function Dashboard() {
 
               {/* Mini Stats Strip */}
               {hasData && (
-                <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border/30">
+                <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-6 border-t border-border/20">
                   {[
                     { label: 'Consultas Hoje', value: stats.totalHoje, icon: Calendar, color: 'text-primary', bg: 'bg-primary/8' },
                     { label: 'Na Fila', value: stats.filaAguardando, icon: Timer, color: stats.filaAguardando > 0 ? 'text-warning' : 'text-success', bg: stats.filaAguardando > 0 ? 'bg-warning/8' : 'bg-success/8' },
                     { label: 'Receita Hoje', value: formatCurrencyShort(stats.receitaDia), icon: Wallet, color: 'text-success', bg: 'bg-success/8' },
                     { label: 'Estoque Crítico', value: stats.estoqueBaixo, icon: Package, color: stats.estoqueBaixo > 0 ? 'text-destructive' : 'text-success', bg: stats.estoqueBaixo > 0 ? 'bg-destructive/8' : 'bg-success/8' },
                   ].map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/30 transition-colors">
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 + i * 0.05 }}
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent/30 transition-colors"
+                    >
                       <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center shrink-0', s.bg)}>
                         <s.icon className={cn('h-4 w-4', s.color)} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</p>
-                        <p className="text-sm font-bold">{s.value}</p>
+                        <p className="text-sm font-bold tabular-nums">{s.value}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </motion.div>
               )}
@@ -366,15 +446,15 @@ export default function Dashboard() {
           <>
             {/* ─── Setup Progress Card ─── */}
             <motion.div variants={fadeUp}>
-              <Card className="overflow-hidden">
-                <div className="bg-gradient-to-r from-primary/5 to-transparent p-6 md:p-8">
+              <Card className="overflow-hidden border-border/40">
+                <div className="bg-gradient-to-r from-primary/5 via-primary/3 to-transparent p-6 md:p-8">
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-3">
-                        <Badge variant="secondary" className="text-xs font-semibold gap-1">
+                        <Badge variant="secondary" className="text-xs font-semibold gap-1 bg-primary/10 text-primary border-0">
                           <Sparkles className="h-3 w-3" /> Configuração Inicial
                         </Badge>
-                        <span className="text-xs text-muted-foreground">{setupProgress}% completo</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{setupProgress}% completo</span>
                       </div>
                       <h2 className="text-xl font-bold font-display mb-1">Configure seu EloLab</h2>
                       <p className="text-sm text-muted-foreground">Complete os passos abaixo para desbloquear todo o potencial do sistema.</p>
@@ -383,10 +463,10 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="relative shrink-0 hidden md:block">
-                      <div className="h-28 w-28 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                      <div className="h-28 w-28 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                         <ProgressRing value={setupProgress} size={90} strokeWidth={6} color="hsl(var(--primary))" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold">{setupProgress}%</span>
+                          <span className="text-lg font-bold tabular-nums">{setupProgress}%</span>
                         </div>
                       </div>
                     </div>
@@ -402,7 +482,7 @@ export default function Dashboard() {
                             'group flex items-center gap-3.5 p-4 rounded-xl border transition-all duration-200',
                             step.done
                               ? 'bg-success/5 border-success/20'
-                              : 'hover:bg-muted/50 hover:border-border hover:-translate-y-0.5 hover:shadow-md',
+                              : 'hover:bg-accent/30 hover:border-border hover:-translate-y-0.5 hover:shadow-md',
                           )}
                         >
                           <div className={cn(
@@ -446,7 +526,7 @@ export default function Dashboard() {
               ].map((feat, i) => (
                 <motion.div key={i} variants={fadeUp} custom={i}>
                   <Link to={feat.href}>
-                    <Card className="group h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <Card className="group h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer border-border/40">
                       <CardContent className="pt-6">
                         <div className={cn('h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 group-hover:rotate-3', feat.color)}>
                           <feat.icon className="h-6 w-6" />
@@ -462,7 +542,7 @@ export default function Dashboard() {
 
             {/* ─── Quick Access Grid ─── */}
             <motion.div variants={fadeUp}>
-              <Card>
+              <Card className="border-border/40">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Acesso Rápido</CardTitle>
                   <CardDescription>Navegue pelos módulos do sistema</CardDescription>
@@ -510,7 +590,7 @@ export default function Dashboard() {
             {/* ─── Main Grid: Charts + Finance ─── */}
             <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-3">
               {/* Fluxo de Caixa (2/3) */}
-              <Card className="lg:col-span-2">
+              <Card className="lg:col-span-2 border-border/40">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <div>
@@ -537,7 +617,7 @@ export default function Dashboard() {
                               <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                           <XAxis dataKey="name" className="text-xs fill-muted-foreground" axisLine={false} tickLine={false} />
                           <YAxis className="text-xs fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={v => formatCurrencyShort(v)} />
                           <Tooltip
@@ -559,7 +639,7 @@ export default function Dashboard() {
               </Card>
 
               {/* Resumo Financeiro (1/3) */}
-              <Card>
+              <Card className="border-border/40">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Resumo Financeiro</CardTitle>
                   <CardDescription>Mês atual</CardDescription>
@@ -569,10 +649,10 @@ export default function Dashboard() {
                   <FinanceStat label="A Receber" value={formatCurrency(stats.aReceber)} icon={Clock} variant="neutral" />
                   <FinanceStat label="Inadimplente" value={formatCurrency(stats.inadimplente)} icon={AlertTriangle} variant="negative" />
                   <FinanceStat label="Despesas" value={formatCurrency(stats.despesas)} icon={TrendingDown} variant="negative" />
-                  <div className="pt-3 mt-2 border-t">
+                  <div className="pt-3 mt-2 border-t border-border/40">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold">Saldo Líquido</span>
-                      <span className={cn('text-lg font-bold', stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive')}>
+                      <span className={cn('text-lg font-bold tabular-nums', stats.saldoLiquido >= 0 ? 'text-success' : 'text-destructive')}>
                         {formatCurrency(stats.saldoLiquido)}
                       </span>
                     </div>
@@ -581,10 +661,10 @@ export default function Dashboard() {
               </Card>
             </motion.div>
 
-            {/* ─── Secondary Row: Today + Appointments + Quick Actions ─── */}
+            {/* ─── Secondary Row: Today + Appointments + Activity ─── */}
             <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-12">
               {/* Consultas de Hoje (3/12) */}
-              <Card className="lg:col-span-3">
+              <Card className="lg:col-span-3 border-border/40">
                 <CardHeader className="pb-2 text-center">
                   <CardTitle className="text-base">Hoje</CardTitle>
                   <CardDescription>{stats.totalHoje} consulta{stats.totalHoje !== 1 ? 's' : ''}</CardDescription>
@@ -596,7 +676,7 @@ export default function Dashboard() {
                         <ProgressRing value={stats.taxaOcupacao} size={100} strokeWidth={8} color="hsl(var(--primary))" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
-                            <p className="text-xl font-bold">{stats.taxaOcupacao}%</p>
+                            <p className="text-xl font-bold tabular-nums">{stats.taxaOcupacao}%</p>
                             <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Ocupação</p>
                           </div>
                         </div>
@@ -608,7 +688,7 @@ export default function Dashboard() {
                               <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
                               <span className="text-muted-foreground text-xs">{s.name}</span>
                             </div>
-                            <span className="font-bold text-xs">{s.value}</span>
+                            <span className="font-bold text-xs tabular-nums">{s.value}</span>
                           </div>
                         ))}
                       </div>
@@ -626,7 +706,7 @@ export default function Dashboard() {
               </Card>
 
               {/* Próximos Agendamentos (5/12) */}
-              <Card className="lg:col-span-5">
+              <Card className="lg:col-span-5 border-border/40">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <div>
@@ -641,31 +721,38 @@ export default function Dashboard() {
                 <CardContent>
                   {stats.proximosAgendamentos.length > 0 ? (
                     <div className="space-y-2">
-                      {stats.proximosAgendamentos.map((ag, idx) => (
-                        <motion.div key={ag.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                          className="flex items-center justify-between rounded-xl border p-3 hover:bg-muted/30 transition-colors group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={cn(
-                              'h-10 w-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                              ag.status === 'confirmado' ? 'bg-success/10 text-success' : 'bg-info/10 text-info',
-                            )}>
-                              {ag.hora_inicio?.slice(0, 5)}
+                      {stats.proximosAgendamentos.map((ag, idx) => {
+                        const isHoje = ag.data === hoje;
+                        return (
+                          <motion.div key={ag.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.04 }}
+                            className="flex items-center justify-between rounded-xl border border-border/40 p-3 hover:bg-accent/30 transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                'h-10 w-10 rounded-lg flex items-center justify-center text-xs font-bold tabular-nums shrink-0',
+                                ag.status === 'confirmado' ? 'bg-success/10 text-success' : 'bg-info/10 text-info',
+                              )}>
+                                {ag.hora_inicio?.slice(0, 5)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate">{ag.observacoes || ag.tipo || 'Consulta'}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {isHoje ? (
+                                    <span className="text-primary font-medium">Hoje</span>
+                                  ) : (
+                                    format(parseISO(ag.data), "dd 'de' MMM", { locale: ptBR })
+                                  )}
+                                </p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{ag.observacoes || ag.tipo || 'Consulta'}</p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {ag.data === hoje ? 'Hoje' : format(parseISO(ag.data), "dd 'de' MMM", { locale: ptBR })}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant={ag.status === 'confirmado' ? 'default' : 'secondary'}
-                            className="text-[10px] shrink-0 opacity-80 group-hover:opacity-100">
-                            {ag.status}
-                          </Badge>
-                        </motion.div>
-                      ))}
+                            <Badge variant={ag.status === 'confirmado' ? 'default' : 'secondary'}
+                              className="text-[10px] shrink-0 opacity-80 group-hover:opacity-100 capitalize">
+                              {ag.status}
+                            </Badge>
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -679,8 +766,8 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Quick Access + System (4/12) */}
-              <Card className="lg:col-span-4">
+              {/* Quick Access + Activity (4/12) */}
+              <Card className="lg:col-span-4 border-border/40">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Acesso Rápido</CardTitle>
                 </CardHeader>
@@ -698,7 +785,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* System Status */}
-                  <div className="mt-4 pt-4 border-t space-y-2.5">
+                  <div className="mt-4 pt-4 border-t border-border/30 space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground flex items-center gap-1.5">
                         <ShieldCheck className="h-3.5 w-3.5" /> Sistema
@@ -709,9 +796,15 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Perfil</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {(user as any)?.roles?.[0] || 'admin'}
+                      <span className="text-muted-foreground">Médicos Ativos</span>
+                      <Badge variant="secondary" className="text-[10px] tabular-nums">
+                        {stats.medicosAtivos}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Pacientes</span>
+                      <Badge variant="secondary" className="text-[10px] tabular-nums">
+                        {pacientes.length}
                       </Badge>
                     </div>
                   </div>
@@ -725,7 +818,7 @@ export default function Dashboard() {
                 subtitle={`${medicos.length} cadastrados`}
                 icon={Stethoscope} color="info" href="/medicos" />
               <KPICard title="Na Fila" value={stats.filaAguardando}
-                subtitle={stats.filaAguardando > 0 ? 'Aguardando' : 'Fila vazia'}
+                subtitle={stats.filaAguardando > 0 ? 'Aguardando atendimento' : 'Fila vazia'}
                 icon={Clock} color={stats.filaAguardando > 3 ? 'warning' : 'success'} href="/fila" />
               <KPICard title="Itens Estoque" value={estoque.length}
                 subtitle={stats.estoqueBaixo > 0 ? `⚠️ ${stats.estoqueBaixo} crítico(s)` : '✓ Níveis normais'}
