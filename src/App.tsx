@@ -50,6 +50,7 @@ import Retornos from "@/pages/Retornos";
 import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
+import PainelAdmin from "@/pages/PainelAdmin";
 
 // Only lazy load rarely-accessed pages
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -149,6 +150,7 @@ function App() {
                       <Route path="/mapa-coleta" element={<MapaColeta />} />
                       <Route path="/laudos-lab" element={<LaudosLab />} />
                       <Route path="/documentacao" element={<Documentacao />} />
+                      <Route path="/painel-admin" element={<PainelAdmin />} />
                     </Route>
                     
                     <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />

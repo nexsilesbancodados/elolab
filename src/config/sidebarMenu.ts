@@ -3,6 +3,7 @@ import {
   Users,
   Calendar,
   ClipboardList,
+  Shield,
   FileText,
   DollarSign,
   Package,
@@ -123,6 +124,7 @@ export const menuGroups: MenuGroup[] = [
     color: '#8b5cf6',
     roles: ['admin'],
     items: [
+      { label: 'Painel Admin', icon: Shield, href: '/painel-admin', roles: ['admin'] },
       { label: 'Analytics', icon: Activity, href: '/analytics' },
       { label: 'Agente IA', icon: Bot, href: '/agente-ia' },
       { label: 'Automações', icon: Zap, href: '/automacoes' },
