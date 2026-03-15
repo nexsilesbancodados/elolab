@@ -134,12 +134,12 @@ export function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring md:w-52 lg:w-64"
+        className="group flex items-center gap-2.5 rounded-xl border border-border/50 bg-accent/30 px-3.5 py-2 text-sm text-muted-foreground/70 transition-all duration-200 hover:bg-accent/60 hover:text-muted-foreground hover:border-border/80 focus:outline-none focus:ring-2 focus:ring-ring md:w-56 lg:w-72"
         aria-label="Abrir busca global (⌘K)"
       >
-        <Search className="h-4 w-4 shrink-0" />
-        <span className="hidden sm:inline flex-1 text-left">Buscar...</span>
-        <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-60">
+        <Search className="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-80 transition-opacity" />
+        <span className="hidden sm:inline flex-1 text-left text-[13px]">Buscar...</span>
+        <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded-md border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] font-medium opacity-50 group-hover:opacity-80 transition-opacity">
           <span className="text-xs">⌘</span>K
         </kbd>
       </button>
@@ -166,19 +166,19 @@ export function GlobalSearch() {
                   key={p.id}
                   value={`paciente-${p.id}-${p.nome}`}
                   onSelect={() => handleSelect('/pacientes')}
-                  className="flex items-center gap-3 py-2.5"
+                  className="flex items-center gap-3 py-2.5 rounded-lg"
                 >
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <Users className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{p.nome}</p>
                     <p className="text-xs text-muted-foreground">
                       {p.cpf ? `CPF: ${p.cpf}` : ''}
-                      {p.data_nascimento ? ` • ${format(new Date(p.data_nascimento), 'dd/MM/yyyy', { locale: ptBR })}` : ''}
+                      {p.data_nascimento ? ` · ${format(new Date(p.data_nascimento), 'dd/MM/yyyy', { locale: ptBR })}` : ''}
                     </p>
                   </div>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">Paciente</Badge>
+                  <Badge variant="secondary" className="text-[10px] shrink-0 rounded-lg">Paciente</Badge>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -193,16 +193,16 @@ export function GlobalSearch() {
                   key={m.id}
                   value={`medico-${m.id}-${m.crm}`}
                   onSelect={() => handleSelect('/medicos')}
-                  className="flex items-center gap-3 py-2.5"
+                  className="flex items-center gap-3 py-2.5 rounded-lg"
                 >
-                  <div className="h-8 w-8 rounded-full bg-info/10 flex items-center justify-center shrink-0">
+                  <div className="h-8 w-8 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
                     <Stethoscope className="h-4 w-4 text-info" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">CRM: {m.crm}</p>
                     <p className="text-xs text-muted-foreground">{m.especialidade ?? 'Sem especialidade'}</p>
                   </div>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">Médico</Badge>
+                  <Badge variant="secondary" className="text-[10px] shrink-0 rounded-lg">Médico</Badge>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -219,23 +219,23 @@ export function GlobalSearch() {
                     key={page.href}
                     value={`page-${page.href}-${page.label}`}
                     onSelect={() => handleSelect(page.href)}
-                    className="flex items-center gap-3 py-2"
+                    className="flex items-center gap-3 py-2 rounded-lg"
                   >
-                    <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-accent/60 flex items-center justify-center shrink-0">
                       <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                     <span className="flex-1 text-sm">{page.label}</span>
-                    <span className="text-[10px] text-muted-foreground">{page.group}</span>
+                    <span className="text-[10px] text-muted-foreground/50">{page.group}</span>
                   </CommandItem>
                 );
               })}
             </CommandGroup>
           )}
         </CommandList>
-        <div className="border-t px-3 py-2 flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span><kbd className="font-mono">↑↓</kbd> navegar</span>
-          <span><kbd className="font-mono">↵</kbd> abrir</span>
-          <span><kbd className="font-mono">Esc</kbd> fechar</span>
+        <div className="border-t border-border/40 px-3 py-2 flex items-center gap-3 text-[11px] text-muted-foreground/60">
+          <span><kbd className="font-mono rounded border border-border/30 px-1">↑↓</kbd> navegar</span>
+          <span><kbd className="font-mono rounded border border-border/30 px-1">↵</kbd> abrir</span>
+          <span><kbd className="font-mono rounded border border-border/30 px-1">Esc</kbd> fechar</span>
         </div>
       </CommandDialog>
     </>

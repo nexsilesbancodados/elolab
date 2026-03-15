@@ -7,7 +7,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ChevronRight } from 'lucide-react';
 
 interface SidebarNavItemProps {
   item: MenuItem;
@@ -25,44 +24,46 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
       rel={item.external ? 'noopener noreferrer' : undefined}
       className={({ isActive }) =>
         cn(
-          'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-          'text-sidebar-foreground/70 hover:text-sidebar-foreground',
+          'group relative flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-all duration-200',
+          'text-sidebar-foreground/60 hover:text-sidebar-foreground',
           isActive && !item.external
-            ? 'text-white shadow-sm'
-            : 'hover:bg-sidebar-accent/50',
+            ? 'text-foreground bg-sidebar-accent shadow-sm font-semibold'
+            : 'hover:bg-sidebar-accent/40',
           collapsed && 'justify-center px-2',
-          !collapsed && 'ml-6'
+          !collapsed && 'ml-4'
         )
       }
-      style={({ isActive }) => isActive && !item.external && groupColor ? { backgroundColor: groupColor } : {}}
     >
       {({ isActive }) => (
         <>
-          {/* Icon container */}
+          {/* Active indicator line */}
+          {isActive && !item.external && !collapsed && (
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full transition-all"
+              style={{ backgroundColor: groupColor || 'hsl(var(--primary))' }}
+            />
+          )}
+          
+          {/* Icon */}
           <div
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200',
+              'flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-200',
               isActive && !item.external
-                ? 'text-white'
-                : 'text-sidebar-foreground/60 group-hover:text-sidebar-foreground'
+                ? 'text-foreground'
+                : 'text-sidebar-foreground/50 group-hover:text-sidebar-foreground/80'
             )}
           >
-            <Icon className="h-[18px] w-[18px]" />
+            <Icon className="h-4 w-4" />
           </div>
           
           {/* Label */}
           {!collapsed && (
             <span className="truncate flex-1">{item.label}</span>
           )}
-
-          {/* Active chevron */}
-          {isActive && !item.external && !collapsed && (
-            <ChevronRight className="h-3 w-3" />
-          )}
           
           {/* Badge */}
           {!collapsed && item.badge && item.badge > 0 && (
-            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[10px] font-bold text-sidebar-primary-foreground">
+            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-bold text-primary">
               {item.badge}
             </span>
           )}
@@ -78,11 +79,11 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
           <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
           <TooltipContent 
             side="right" 
-            className="flex items-center gap-2 bg-sidebar text-sidebar-foreground border-sidebar-border"
+            className="flex items-center gap-2 font-medium"
           >
             {item.label}
             {item.badge && item.badge > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[10px] font-bold text-sidebar-primary-foreground">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-bold text-primary">
                 {item.badge}
               </span>
             )}
