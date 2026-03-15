@@ -305,7 +305,7 @@ export default function Dashboard() {
       { name: 'Finalizado', value: consultasFinalizadas, color: 'hsl(var(--primary))' },
     ].filter(s => s.value > 0);
 
-    const proximosAgendamentos = agendamentos
+    const proximosAgendamentos = baseAgendamentos
       .filter(a => a.data >= hoje && (a.status === 'agendado' || a.status === 'confirmado'))
       .sort((a, b) => `${a.data}${a.hora_inicio}`.localeCompare(`${b.data}${b.hora_inicio}`))
       .slice(0, 6);
