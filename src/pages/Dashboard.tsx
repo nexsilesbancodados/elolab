@@ -227,7 +227,10 @@ export default function Dashboard() {
   const SaudacaoIcon = horaAtual < 12 ? Sun : horaAtual < 18 ? Sunset : Moon;
 
   const stats = useMemo(() => {
-    const consultasHoje = agendamentos.filter(a => a.data === hoje);
+    const baseAgendamentos = isMedicoOnly && medicoId 
+      ? agendamentos.filter(a => a.medico_id === medicoId) 
+      : agendamentos;
+    const consultasHoje = baseAgendamentos.filter(a => a.data === hoje);
     const consultasConfirmadas = consultasHoje.filter(a => a.status === 'confirmado').length;
     const consultasAgendadas = consultasHoje.filter(a => a.status === 'agendado').length;
     const consultasFinalizadas = consultasHoje.filter(a => a.status === 'finalizado').length;
