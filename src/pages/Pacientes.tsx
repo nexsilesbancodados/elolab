@@ -539,6 +539,7 @@ export default function Pacientes() {
                 />
               </div>
             </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>
               Cancelar
