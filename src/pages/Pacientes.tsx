@@ -781,13 +781,13 @@ export default function Pacientes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 md:col-span-2">
                   <Label>Convênio</Label>
-                  <Select value={formData.convenio_id} onValueChange={v => setFormData({ ...formData, convenio_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Particular (sem convênio)" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Particular</SelectItem>
-                      {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                   <Select value={formData.convenio_id || '__particular__'} onValueChange={v => setFormData({ ...formData, convenio_id: v === '__particular__' ? '' : v })}>
+                     <SelectTrigger><SelectValue placeholder="Particular (sem convênio)" /></SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="__particular__">Particular</SelectItem>
+                       {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
                 </div>
                 {formData.convenio_id && (
                   <>
