@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, Eye, CheckCircle2, AlertCircle, Loader2, RefreshCw,
-  Search, AlertTriangle, ShieldCheck, Download, Clock,
+  Search, AlertTriangle, Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -31,13 +31,11 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
     supabase
       .from('coletas_laboratorio')
       .select(`
-        id, codigo, status, created_at, observacoes,
+        id, codigo_amostra, status, created_at, observacoes,
         pacientes(nome, cpf, data_nascimento),
-        convenios(nome),
-        medicos(crm, especialidade),
-        resultados_laboratorio(id, exame_id, status, setor, resultado, valores_referencia,
-          unidade, interpretacao, liberado_em, coletado_em,
-          exames(nome, setor))
+        resultados_laboratorio(id, parametro, resultado, unidade,
+          valor_referencia_min, valor_referencia_max, valor_referencia_texto,
+          liberado, data_liberacao, exames(tipo_exame))
       `)
       .eq('id', coletaId)
       .maybeSingle()
@@ -52,14 +50,16 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
     if (error) toast.error('Erro ao liberar laudo');
     else {
       toast.success('Laudo liberado!');
-      // Refresh
       if (coletaId) {
         const { data } = await supabase
           .from('coletas_laboratorio')
-          .select(`id, codigo, status, created_at, observacoes,
-            pacientes(nome, cpf, data_nascimento), convenios(nome), medicos(crm, especialidade),
-            resultados_laboratorio(id, exame_id, status, setor, resultado, valores_referencia,
-              unidade, interpretacao, liberado_em, coletado_em, exames(nome, setor))`)
+          .select(`
+            id, codigo_amostra, status, created_at, observacoes,
+            pacientes(nome, cpf, data_nascimento),
+            resultados_laboratorio(id, parametro, resultado, unidade,
+              valor_referencia_min, valor_referencia_max, valor_referencia_texto,
+              liberado, data_liberacao, exames(tipo_exame))
+          `)
           .eq('id', coletaId).maybeSingle();
         setColeta(data);
       }
@@ -72,7 +72,7 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Laudo — {coleta?.codigo ?? '...'}
+            Laudo — {coleta?.codigo_amostra ?? '...'}
           </DialogTitle>
         </DialogHeader>
         {loading ? (
@@ -90,8 +90,8 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
                 <p className="font-medium">{coleta.pacientes?.cpf ?? '—'}</p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Convênio</p>
-                <p className="font-medium">{coleta.convenios?.nome ?? 'Particular'}</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Código Amostra</p>
+                <p className="font-medium font-mono">{coleta.codigo_amostra ?? '—'}</p>
               </div>
               <div>
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Entrada</p>
@@ -106,15 +106,15 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
               {(coleta.resultados_laboratorio ?? []).map((res: any) => (
                 <div key={res.id} className={cn(
                   'rounded-xl border p-3 space-y-2',
-                  res.status === 'liberado' ? 'border-success/30 bg-success/5' : 'border-border',
+                  res.liberado ? 'border-success/30 bg-success/5' : 'border-border',
                 )}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-sm">{res.exames?.nome ?? '—'}</p>
-                      <p className="text-[11px] text-muted-foreground">{res.setor ?? res.exames?.setor ?? '—'}</p>
+                      <p className="font-semibold text-sm">{res.parametro ?? '—'}</p>
+                      <p className="text-[11px] text-muted-foreground">{res.exames?.tipo_exame ?? '—'}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {res.status === 'liberado' ? (
+                      {res.liberado ? (
                         <Badge className="bg-success/10 text-success border-success/20 gap-1">
                           <CheckCircle2 className="h-3 w-3" /> Liberado
                         </Badge>
@@ -131,24 +131,21 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
                         <p className="text-[11px] text-muted-foreground">Resultado</p>
                         <p className="font-bold text-primary">{res.resultado} {res.unidade ?? ''}</p>
                       </div>
-                      {res.valores_referencia && (
+                      {res.valor_referencia_texto && (
                         <div>
                           <p className="text-[11px] text-muted-foreground">Referência</p>
-                          <p className="font-medium">{res.valores_referencia}</p>
+                          <p className="font-medium">{res.valor_referencia_texto}</p>
                         </div>
                       )}
-                      {res.interpretacao && (
+                      {(res.valor_referencia_min != null || res.valor_referencia_max != null) && !res.valor_referencia_texto && (
                         <div>
-                          <p className="text-[11px] text-muted-foreground">Interpretação</p>
-                          <p className={cn('font-medium text-xs', {
-                            'text-destructive': res.interpretacao === 'alterado',
-                            'text-success': res.interpretacao === 'normal',
-                          })}>{res.interpretacao}</p>
+                          <p className="text-[11px] text-muted-foreground">Referência</p>
+                          <p className="font-medium">{res.valor_referencia_min ?? '—'} - {res.valor_referencia_max ?? '—'}</p>
                         </div>
                       )}
                     </div>
                   )}
-                  {res.status !== 'liberado' && (
+                  {!res.liberado && (
                     <Button size="sm" className="h-7 text-xs gap-1" onClick={() => handleLiberarLaudo(res.id)}>
                       <CheckCircle2 className="h-3 w-3" /> Liberar este exame
                     </Button>
@@ -177,15 +174,14 @@ export default function LaudosLab() {
       .select(`
         id, codigo_amostra, status, created_at,
         pacientes(nome, cpf),
-        resultados_laboratorio(id, liberado, exames(tipo_exame))
+        resultados_laboratorio(id, liberado, parametro, exames(tipo_exame))
       `)
-      .in('status', ['liberado', 'liberado_parcial', 'finalizado', 'coletado'])
+      .in('status', ['pendente', 'coletado', 'em_analise', 'finalizado'])
       .order('created_at', { ascending: true });
 
     if (error) toast.error('Erro ao carregar laudos');
     else {
-      // Só mostrar coletas que tenham pelo menos 1 resultado
-      const comResultados = (data ?? []).filter(c =>
+      const comResultados = (data ?? []).filter((c: any) =>
         (c.resultados_laboratorio ?? []).length > 0
       );
       setColetas(comResultados);
@@ -203,18 +199,18 @@ export default function LaudosLab() {
   }, []);
 
   const getExamesLiberados = (c: any) =>
-    (c.resultados_laboratorio ?? []).filter((r: any) => r.status === 'liberado');
+    (c.resultados_laboratorio ?? []).filter((r: any) => r.liberado === true);
   const getExamesPendentes = (c: any) =>
-    (c.resultados_laboratorio ?? []).filter((r: any) => r.status !== 'liberado');
+    (c.resultados_laboratorio ?? []).filter((r: any) => r.liberado !== true);
 
   const filtradas = coletas.filter(c => {
     if (!search.trim()) return true;
     const q = normalize(search.trim());
-    const nomes = (c.resultados_laboratorio ?? []).map((r: any) => normalize(r.exames?.nome ?? ''));
+    const nomes = (c.resultados_laboratorio ?? []).map((r: any) => normalize(r.parametro ?? ''));
     return (
       normalize(c.pacientes?.nome ?? '').includes(q) ||
       normalize(c.pacientes?.cpf ?? '').includes(q) ||
-      normalize(c.codigo ?? '').includes(q) ||
+      normalize(c.codigo_amostra ?? '').includes(q) ||
       nomes.some((n: string) => n.includes(q))
     );
   });
@@ -306,7 +302,6 @@ export default function LaudosLab() {
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">#</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Código</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Paciente</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Convênio</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Exames</th>
                   <th className="text-center px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Entrada</th>
@@ -329,16 +324,15 @@ export default function LaudosLab() {
                       )}
                     >
                       <td className="px-4 py-2.5 text-xs font-bold text-muted-foreground">{idx + 1}</td>
-                      <td className="px-4 py-2.5 font-mono text-xs text-primary font-semibold">{c.codigo ?? '—'}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs text-primary font-semibold">{c.codigo_amostra ?? '—'}</td>
                       <td className="px-4 py-2.5">
                         <p className="font-medium">{c.pacientes?.nome ?? '—'}</p>
                         <p className="text-[11px] text-muted-foreground">{c.pacientes?.cpf ?? ''}</p>
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{c.convenios?.nome ?? 'Particular'}</td>
                       <td className="px-4 py-2.5 hidden md:table-cell">
                         <div className="flex flex-wrap gap-1">
                           {liberados.slice(0, 3).map((r: any) => (
-                            <Badge key={r.id} variant="secondary" className="text-[10px]">{r.exames?.nome ?? '—'}</Badge>
+                            <Badge key={r.id} variant="secondary" className="text-[10px]">{r.parametro ?? '—'}</Badge>
                           ))}
                           {liberados.length > 3 && (
                             <span className="text-[10px] text-muted-foreground">+{liberados.length - 3}</span>
