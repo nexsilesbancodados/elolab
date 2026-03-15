@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
-  Shield, Palette, Globe,
+  Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
   Key, RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
