@@ -1,66 +1,95 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, RefreshCw, Loader2, RotateCcw, XCircle, Search, Printer, FlaskConical, AlertTriangle } from 'lucide-react';
+import {
+  CheckCircle2, RefreshCw, Loader2, RotateCcw, XCircle, Search, Printer, FlaskConical,
+  AlertTriangle, Clock, Zap, MapPin, User, Droplets,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 // ─── Tipos de tubos laboratoriais ──────────────────────────
 const TUBOS = [
-  { color: 'bg-purple-500', label: 'Sangue (EDTA)', nome: 'Roxo', volume: '4mL' },
-  { color: 'bg-yellow-400', label: 'Soro', nome: 'Amarelo', volume: '5mL' },
-  { color: 'bg-red-500', label: 'Sangue (Seco)', nome: 'Vermelho', volume: '5mL' },
-  { color: 'bg-blue-400', label: 'Sangue (Citrato)', nome: 'Azul', volume: '3.6mL' },
-  { color: 'bg-gray-400', label: 'Sangue (Fluoreto)', nome: 'Cinza', volume: '4mL' },
-  { color: 'bg-green-500', label: 'Sangue (Heparina)', nome: 'Verde', volume: '4mL' },
-  { color: 'bg-orange-400', label: 'Swab', nome: 'Laranja', volume: '—' },
-  { color: 'bg-pink-400', label: 'Líquor', nome: 'Rosa', volume: '—' },
-  { color: 'bg-amber-300', label: 'Urina', nome: 'Âmbar', volume: '—' },
-  { color: 'bg-amber-700', label: 'Fezes', nome: 'Marrom', volume: '—' },
+  { color: 'bg-purple-500', label: 'EDTA (Roxo)', nome: 'Roxo', volume: '4mL' },
+  { color: 'bg-yellow-400', label: 'Soro (Amarelo)', nome: 'Amarelo', volume: '5mL' },
+  { color: 'bg-red-500', label: 'Seco (Vermelho)', nome: 'Vermelho', volume: '5mL' },
+  { color: 'bg-blue-400', label: 'Citrato (Azul)', nome: 'Azul', volume: '3.6mL' },
+  { color: 'bg-gray-400', label: 'Fluoreto (Cinza)', nome: 'Cinza', volume: '4mL' },
+  { color: 'bg-green-500', label: 'Heparina (Verde)', nome: 'Verde', volume: '4mL' },
+  { color: 'bg-orange-400', label: 'Swab (Laranja)', nome: 'Laranja', volume: '—' },
+  { color: 'bg-amber-300', label: 'Coletor Urina', nome: 'Âmbar', volume: '—' },
+  { color: 'bg-amber-700', label: 'Coletor Fezes', nome: 'Marrom', volume: '—' },
 ];
 
-const tuboColor = (mat: string) => TUBOS.find(t => t.label === mat)?.color ?? 'bg-muted';
-const tuboNome = (mat: string) => TUBOS.find(t => t.label === mat)?.nome ?? mat;
-
-const SETORES = ['Todos', 'Hematologia', 'Bioquímica', 'Hormônios', 'Imunologia', 'Urinálise', 'Parasitologia', 'Microbiologia', 'Gasometria'];
-const MATERIAIS = ['Todos', 'Sangue (EDTA)', 'Soro', 'Sangue (Seco)', 'Sangue (Citrato)', 'Sangue (Fluoreto)', 'Sangue (Heparina)', 'Urina', 'Fezes', 'Swab', 'Líquor'];
+const tuboColor = (tubo: string | null) => TUBOS.find(t => t.label === tubo)?.color ?? 'bg-muted';
+const tuboNome = (tubo: string | null) => TUBOS.find(t => t.label === tubo)?.nome ?? tubo ?? '—';
 
 const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
-const fadeUp = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.25 } } };
+const calcAge = (dob: string | null) => {
+  if (!dob) return null;
+  const diff = Date.now() - new Date(dob).getTime();
+  return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+};
+
+const waitTimeLabel = (created: string) => {
+  const mins = differenceInMinutes(new Date(), new Date(created));
+  if (mins < 60) return `${mins}min`;
+  const h = Math.floor(mins / 60);
+  return `${h}h${mins % 60 > 0 ? `${mins % 60}m` : ''}`;
+};
+
+const waitTimeColor = (created: string) => {
+  const mins = differenceInMinutes(new Date(), new Date(created));
+  if (mins > 60) return 'text-destructive font-bold';
+  if (mins > 30) return 'text-warning font-semibold';
+  return 'text-muted-foreground';
+};
+
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.04 } } };
+const fadeUp = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.2 } } };
 
 // ─── Main Component ────────────────────────────────────────
 export default function MapaColeta() {
   const [itens, setItens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [setor, setSetor] = useState('Todos');
-  const [material, setMaterial] = useState('Todos');
+  const [tuboFiltro, setTuboFiltro] = useState('Todos');
   const [statusFiltro, setStatusFiltro] = useState('todos');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [now, setNow] = useState(new Date());
+
+  // Tick every 30s for wait time updates
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(t);
+  }, []);
 
   const fetchColetas = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('coletas_laboratorio')
       .select(`
-        id, codigo, status, created_at, observacoes,
-        pacientes(nome, cpf, data_nascimento),
-        convenios(nome),
-        resultados_laboratorio(id, exame_id, status, setor, material_biologico, coletado_em,
-          exames(nome, setor))
+        id, codigo_amostra, status, created_at, observacoes, tipo_amostra,
+        tubo, urgente, jejum_necessario, jejum_horas, volume_ml,
+        sitio_coleta, condicao_amostra, data_coleta,
+        pacientes(nome, cpf, data_nascimento, sexo, convenios(nome)),
+        medicos(nome, crm),
+        exames(tipo_exame)
       `)
       .in('status', ['pendente', 'coletado', 'recoleta'])
       .order('created_at', { ascending: true });
 
     if (error) {
+      console.error(error);
       toast.error('Erro ao carregar mapa de coleta');
     } else {
       setItens(data ?? []);
@@ -72,16 +101,15 @@ export default function MapaColeta() {
     fetchColetas();
     const channel = supabase.channel('mapa-coleta-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'coletas_laboratorio' }, fetchColetas)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resultados_laboratorio' }, fetchColetas)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // ─── Actions ─────────────────────────────────────────────
   const handleColetar = async (id: string) => {
-    const now = new Date().toISOString();
     const { error } = await supabase
       .from('coletas_laboratorio')
-      .update({ status: 'coletado', updated_at: now })
+      .update({ status: 'coletado', data_coleta: new Date().toISOString() })
       .eq('id', id);
     if (error) toast.error('Erro ao registrar coleta');
     else { toast.success('Coleta registrada!'); fetchColetas(); }
@@ -104,39 +132,195 @@ export default function MapaColeta() {
     if (error) toast.error('Erro'); else { toast.success('Coleta cancelada'); fetchColetas(); }
   };
 
-  const getMateriais = (item: any) =>
-    [...new Set((item.resultados_laboratorio ?? []).map((r: any) => r.material_biologico).filter(Boolean))];
-  const getSetores = (item: any) =>
-    [...new Set((item.resultados_laboratorio ?? []).map((r: any) => r.exames?.setor ?? r.setor).filter(Boolean))];
+  const handleBulkPrint = () => {
+    if (selected.size === 0) { toast.error('Selecione ao menos uma coleta'); return; }
+    const selectedItems = itens.filter(i => selected.has(i.id));
+    const labels = selectedItems.map(i =>
+      `${i.codigo_amostra} | ${i.pacientes?.nome} | ${i.tubo ?? i.tipo_amostra} | ${i.exames?.tipo_exame ?? ''}`
+    ).join('\n');
+    // Simple print preview
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write(`<html><head><title>Etiquetas</title><style>
+        body { font-family: monospace; font-size: 12px; }
+        .label { border: 1px dashed #999; padding: 8px; margin: 4px 0; page-break-inside: avoid; }
+        .code { font-size: 16px; font-weight: bold; letter-spacing: 2px; }
+        @media print { .no-print { display: none; } }
+      </style></head><body>
+        <button class="no-print" onclick="window.print()">🖨️ Imprimir</button>
+        <h3 class="no-print">${selected.size} etiqueta(s)</h3>
+        ${selectedItems.map(i => `
+          <div class="label">
+            <div class="code">${i.codigo_amostra}</div>
+            <div><strong>${i.pacientes?.nome}</strong></div>
+            <div>${calcAge(i.pacientes?.data_nascimento) ?? '?'}a — ${i.pacientes?.sexo === 'M' ? 'Masc' : i.pacientes?.sexo === 'F' ? 'Fem' : '?'}</div>
+            <div>Tubo: ${i.tubo ?? i.tipo_amostra} | Exame: ${i.exames?.tipo_exame ?? '—'}</div>
+            <div>${format(new Date(), 'dd/MM/yyyy HH:mm')}</div>
+          </div>
+        `).join('')}
+      </body></html>`);
+      w.document.close();
+    }
+    toast.success(`${selected.size} etiqueta(s) gerada(s)`);
+  };
 
-  const filtrado = itens.filter(item => {
-    const mats = getMateriais(item);
-    const sets = getSetores(item);
-    if (setor !== 'Todos' && !sets.includes(setor)) return false;
-    if (material !== 'Todos' && !mats.includes(material)) return false;
+  // ─── Filtering ───────────────────────────────────────────
+  const filtrado = useMemo(() => itens.filter(item => {
+    if (tuboFiltro !== 'Todos' && item.tubo !== tuboFiltro) return false;
     if (statusFiltro !== 'todos' && item.status !== statusFiltro) return false;
     if (search.trim()) {
       const q = normalize(search.trim());
-      const nomes = (item.resultados_laboratorio ?? []).map((r: any) => normalize(r.exames?.nome ?? ''));
       if (
         !normalize(item.pacientes?.nome ?? '').includes(q) &&
         !normalize(item.pacientes?.cpf ?? '').includes(q) &&
-        !normalize(item.codigo ?? '').includes(q) &&
-        !nomes.some((n: string) => n.includes(q))
+        !normalize(item.codigo_amostra ?? '').includes(q) &&
+        !normalize(item.exames?.tipo_exame ?? '').includes(q)
       ) return false;
     }
     return true;
-  });
+  }), [itens, tuboFiltro, statusFiltro, search]);
 
   const pendentes = filtrado.filter(i => i.status === 'pendente');
+  const recoletas = filtrado.filter(i => i.status === 'recoleta');
   const coletados = filtrado.filter(i => i.status === 'coletado');
-  const recoleta = filtrado.filter(i => i.status === 'recoleta');
+  const aguardando = [...recoletas, ...pendentes];
+
+  const toggleSelect = (id: string) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const toggleAll = (items: any[]) => {
+    const ids = items.map(i => i.id);
+    const allSelected = ids.every(id => selected.has(id));
+    setSelected(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => allSelected ? next.delete(id) : next.add(id));
+      return next;
+    });
+  };
 
   const StatusBadge = ({ status }: { status: string }) => {
     if (status === 'coletado') return <Badge className="bg-success/10 text-success border-success/20">Coletado</Badge>;
-    if (status === 'recoleta') return <Badge variant="destructive">Recoleta</Badge>;
+    if (status === 'recoleta') return <Badge variant="destructive" className="gap-1"><RotateCcw className="h-3 w-3" />Recoleta</Badge>;
     return <Badge variant="secondary">Pendente</Badge>;
   };
+
+  // ─── Row component ──────────────────────────────────────
+  const ColetaRow = ({ item, idx, showActions = true }: { item: any; idx: number; showActions?: boolean }) => {
+    const age = calcAge(item.pacientes?.data_nascimento);
+    const sexo = item.pacientes?.sexo === 'M' ? 'M' : item.pacientes?.sexo === 'F' ? 'F' : '—';
+    const convenio = (item.pacientes as any)?.convenios?.nome ?? 'Particular';
+    const isUrgent = item.urgente;
+
+    return (
+      <tr className={cn(
+        'border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors',
+        isUrgent && 'bg-destructive/5',
+        !showActions && 'opacity-70',
+      )}>
+        {/* Checkbox */}
+        <td className="px-3 py-2">
+          <Checkbox checked={selected.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+        </td>
+        {/* # */}
+        <td className="px-2 py-2 text-xs font-bold text-muted-foreground tabular-nums">{idx + 1}</td>
+        {/* Código */}
+        <td className="px-3 py-2">
+          <span className="font-mono text-xs text-primary font-semibold">{item.codigo_amostra}</span>
+        </td>
+        {/* Paciente */}
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            {isUrgent && <span title="Urgente"><Zap className="h-3.5 w-3.5 text-destructive flex-shrink-0" /></span>}
+            <div>
+              <p className={cn('font-medium text-sm', isUrgent && 'text-destructive')}>{item.pacientes?.nome ?? '—'}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {age !== null ? `${age}a` : '?'} · {sexo}
+                {item.pacientes?.cpf ? ` · ${item.pacientes.cpf}` : ''}
+              </p>
+            </div>
+          </div>
+        </td>
+        {/* Convênio */}
+        <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{convenio}</td>
+        {/* Tubo */}
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-1.5" title={item.tubo ?? item.tipo_amostra}>
+            <div className={cn('w-3 h-5 rounded-sm flex-shrink-0', tuboColor(item.tubo))} />
+            <span className="text-xs">{tuboNome(item.tubo)}</span>
+          </div>
+        </td>
+        {/* Exame */}
+        <td className="px-3 py-2 text-xs hidden lg:table-cell">
+          {item.exames?.tipo_exame ?? <span className="text-muted-foreground">—</span>}
+        </td>
+        {/* Jejum */}
+        <td className="px-3 py-2 text-center hidden md:table-cell">
+          {item.jejum_necessario ? (
+            <Badge variant="outline" className="text-[10px] gap-0.5">
+              <Droplets className="h-2.5 w-2.5" />{item.jejum_horas ?? '?'}h
+            </Badge>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">—</span>
+          )}
+        </td>
+        {/* Espera */}
+        <td className="px-3 py-2 text-center hidden sm:table-cell">
+          {item.created_at ? (
+            <span className={cn('text-xs tabular-nums flex items-center justify-center gap-1', waitTimeColor(item.created_at))}>
+              <Clock className="h-3 w-3" />
+              {waitTimeLabel(item.created_at)}
+            </span>
+          ) : '—'}
+        </td>
+        {/* Status */}
+        <td className="px-3 py-2 text-center"><StatusBadge status={item.status} /></td>
+        {/* Ações */}
+        <td className="px-3 py-2 text-right">
+          <div className="flex items-center justify-end gap-1">
+            {showActions && item.status !== 'coletado' && (
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleColetar(item.id)}>
+                <CheckCircle2 className="h-3 w-3" /> Coletar
+              </Button>
+            )}
+            {item.status === 'coletado' && (
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-warning" onClick={() => handleRecoleta(item.id)}>
+                <RotateCcw className="h-3 w-3" /> Recoleta
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => handleCancelar(item.id)}>
+              <XCircle className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const TableHead = ({ items, label }: { items: any[]; label: string }) => (
+    <thead>
+      <tr className="border-b border-border bg-muted/30">
+        <th className="px-3 py-2.5 w-8">
+          <Checkbox
+            checked={items.length > 0 && items.every(i => selected.has(i.id))}
+            onCheckedChange={() => toggleAll(items)}
+          />
+        </th>
+        <th className="px-2 py-2.5 text-xs font-medium text-muted-foreground w-8">#</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left">Código</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left">Paciente</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left hidden md:table-cell">Convênio</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left">Tubo</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left hidden lg:table-cell">Exame</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-center hidden md:table-cell">Jejum</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-center hidden sm:table-cell">Espera</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-center">Status</th>
+        <th className="px-3 py-2.5 text-xs font-medium text-muted-foreground text-right">Ações</th>
+      </tr>
+    </thead>
+  );
 
   return (
     <div className="space-y-6 pb-8">
@@ -148,12 +332,41 @@ export default function MapaColeta() {
             Mapa de Coleta
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {pendentes.length} aguardando · {recoleta.length} recoleta · {coletados.length} coletados · ordem FIFO
+            Central de comando — {pendentes.length} aguardando · {recoletas.length} recoleta · {coletados.length} coletados
           </p>
         </div>
-        <Button variant="outline" className="gap-2" onClick={fetchColetas}>
-          <RefreshCw className="h-4 w-4" /> Atualizar
-        </Button>
+        <div className="flex gap-2">
+          {selected.size > 0 && (
+            <Button variant="default" className="gap-2" onClick={handleBulkPrint}>
+              <Printer className="h-4 w-4" /> Imprimir {selected.size} Etiqueta(s)
+            </Button>
+          )}
+          <Button variant="outline" className="gap-2" onClick={fetchColetas}>
+            <RefreshCw className="h-4 w-4" /> Atualizar
+          </Button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Aguardando', value: pendentes.length, icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
+          { label: 'Recoleta', value: recoletas.length, icon: RotateCcw, color: 'text-destructive', bg: 'bg-destructive/10' },
+          { label: 'Coletados', value: coletados.length, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Urgentes', value: filtrado.filter(i => i.urgente).length, icon: Zap, color: 'text-destructive', bg: 'bg-destructive/10' },
+        ].map(s => (
+          <Card key={s.label} className="kpi-card">
+            <CardContent className="pt-4 flex items-center gap-3">
+              <div className={cn('p-2 rounded-lg', s.bg)}>
+                <s.icon className={cn('h-5 w-5', s.color)} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Legenda de Tubos */}
@@ -177,26 +390,28 @@ export default function MapaColeta() {
       </Card>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9 w-64"
-            placeholder="Nome, CPF, código ou exame..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <Input className="pl-9 w-64" placeholder="Nome, CPF, código ou exame..." value={search}
+            onChange={e => setSearch(e.target.value)} />
         </div>
-        <Select value={setor} onValueChange={setSetor}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Setor" /></SelectTrigger>
-          <SelectContent>{SETORES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={material} onValueChange={setMaterial}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Material" /></SelectTrigger>
-          <SelectContent>{MATERIAIS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+        <Select value={tuboFiltro} onValueChange={setTuboFiltro}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Tipo de Tubo" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos os tubos</SelectItem>
+            {TUBOS.map(t => (
+              <SelectItem key={t.label} value={t.label}>
+                <span className="flex items-center gap-2">
+                  <span className={cn('h-3 w-2 rounded-sm', t.color)} />
+                  {t.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
         <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-          <SelectTrigger className="w-32"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
             <SelectItem value="pendente">Pendente</SelectItem>
@@ -204,6 +419,12 @@ export default function MapaColeta() {
             <SelectItem value="recoleta">Recoleta</SelectItem>
           </SelectContent>
         </Select>
+        {selected.size > 0 && (
+          <Badge variant="outline" className="text-xs gap-1">
+            {selected.size} selecionado(s)
+            <button className="ml-1 hover:text-destructive" onClick={() => setSelected(new Set())}>✕</button>
+          </Badge>
+        )}
       </div>
 
       {loading ? (
@@ -213,84 +434,22 @@ export default function MapaColeta() {
       ) : (
         <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
           {/* Aguardando / Recoleta */}
-          {(pendentes.length > 0 || recoleta.length > 0) && (
+          {aguardando.length > 0 && (
             <motion.div variants={fadeUp}>
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-warning" />
-                    Aguardando Coleta ({pendentes.length + recoleta.length})
+                    Aguardando Coleta ({aguardando.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">#</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Código</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Paciente</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">Convênio</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Tubos</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">Setores</th>
-                        <th className="text-center px-4 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">Entrada</th>
-                        <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">Ações</th>
-                      </tr>
-                    </thead>
+                    <TableHead items={aguardando} label="Aguardando" />
                     <tbody>
-                      {[...recoleta, ...pendentes].map((item, idx) => {
-                        const mats = getMateriais(item) as string[];
-                        const sets = getSetores(item) as string[];
-                        return (
-                          <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors">
-                            <td className="px-4 py-2 text-xs font-bold text-muted-foreground">{idx + 1}</td>
-                            <td className="px-4 py-2 font-mono text-xs text-primary font-semibold">{item.codigo ?? '—'}</td>
-                            <td className="px-4 py-2">
-                              <p className="font-medium">{item.pacientes?.nome ?? '—'}</p>
-                              <p className="text-[11px] text-muted-foreground">{item.pacientes?.cpf ?? ''}</p>
-                            </td>
-                            <td className="px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">{item.convenios?.nome ?? 'Particular'}</td>
-                            <td className="px-4 py-2">
-                              <div className="flex gap-1 items-center">
-                                {mats.slice(0, 5).map(m => (
-                                  <div key={m} className="flex flex-col items-center" title={`${m} — ${tuboNome(m)}`}>
-                                    <div className={cn('w-3 h-5 rounded-sm', tuboColor(m))} />
-                                    <span className="text-[8px] text-muted-foreground mt-0.5">{tuboNome(m)}</span>
-                                  </div>
-                                ))}
-                                {mats.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2 hidden lg:table-cell">
-                              <div className="flex flex-wrap gap-1">
-                                {sets.slice(0, 2).map(s => (
-                                  <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>
-                                ))}
-                                {sets.length > 2 && <span className="text-[10px] text-muted-foreground">+{sets.length - 2}</span>}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2 text-center"><StatusBadge status={item.status} /></td>
-                            <td className="px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">
-                              {item.created_at ? format(new Date(item.created_at), "dd/MM HH:mm", { locale: ptBR }) : '—'}
-                            </td>
-                            <td className="px-4 py-2 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleColetar(item.id)}>
-                                  <CheckCircle2 className="h-3 w-3" /> Coletar
-                                </Button>
-                                {item.status === 'recoleta' && (
-                                  <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => handleColetar(item.id)}>
-                                    <RotateCcw className="h-3 w-3" />
-                                  </Button>
-                                )}
-                                <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => handleCancelar(item.id)}>
-                                  <XCircle className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {aguardando.map((item, idx) => (
+                        <ColetaRow key={item.id} item={item} idx={idx} showActions />
+                      ))}
                     </tbody>
                   </table>
                 </CardContent>
@@ -305,49 +464,16 @@ export default function MapaColeta() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-success" />
-                    Coletados Hoje ({coletados.length})
+                    Coletados ({coletados.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Código</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Paciente</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">Convênio</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Tubos</th>
-                        <th className="text-center px-4 py-2.5 text-xs font-medium text-muted-foreground">Exames</th>
-                        <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">Ações</th>
-                      </tr>
-                    </thead>
+                    <TableHead items={coletados} label="Coletados" />
                     <tbody>
-                      {coletados.map(item => {
-                        const mats = getMateriais(item) as string[];
-                        const exames = item.resultados_laboratorio ?? [];
-                        return (
-                          <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors opacity-70">
-                            <td className="px-4 py-2 font-mono text-xs text-primary font-semibold">{item.codigo ?? '—'}</td>
-                            <td className="px-4 py-2">
-                              <p className="font-medium">{item.pacientes?.nome ?? '—'}</p>
-                              <p className="text-[11px] text-muted-foreground">{item.pacientes?.cpf ?? ''}</p>
-                            </td>
-                            <td className="px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">{item.convenios?.nome ?? 'Particular'}</td>
-                            <td className="px-4 py-2">
-                              <div className="flex gap-1">
-                                {mats.slice(0, 4).map(m => (
-                                  <div key={m} className={cn('w-3 h-5 rounded-sm', tuboColor(m))} title={tuboNome(m)} />
-                                ))}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2 text-center text-muted-foreground">{exames.length}</td>
-                            <td className="px-4 py-2 text-right">
-                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-warning" onClick={() => handleRecoleta(item.id)}>
-                                <RotateCcw className="h-3 w-3" /> Recoleta
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {coletados.map((item, idx) => (
+                        <ColetaRow key={item.id} item={item} idx={idx} showActions={false} />
+                      ))}
                     </tbody>
                   </table>
                 </CardContent>
