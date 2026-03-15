@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Search, FileText, Plus, Save, CalendarCheck, FileDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, FileText, Plus, Save, CalendarCheck, FileDown , ChevronDown} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
