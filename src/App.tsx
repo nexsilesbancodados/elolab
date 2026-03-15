@@ -92,7 +92,7 @@ function isLandingOnly() {
 }
 
 function App() {
-  const isApp = isAppSubdomain();
+  const isApp = !isLandingOnly();
 
   // Global error handling is now initialized in main.tsx via errorTracking.ts
 
