@@ -49,6 +49,7 @@ import Tarefas from "@/pages/Tarefas";
 import Retornos from "@/pages/Retornos";
 import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
+import Documentacao from "@/pages/Documentacao";
 
 // Only lazy load rarely-accessed pages
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
