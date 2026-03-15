@@ -279,10 +279,6 @@ export default function Dashboard() {
     };
   }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje]);
 
-  if (isLoading) return <DashboardSkeleton />;
-
-  const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
-
   const setupSteps = useMemo(() => [
     { label: 'Cadastrar médicos', done: medicos.length > 0, icon: Stethoscope, href: '/medicos', color: 'text-info' },
     { label: 'Cadastrar pacientes', done: pacientes.length > 0, icon: Users, href: '/pacientes', color: 'text-primary' },
@@ -291,6 +287,10 @@ export default function Dashboard() {
   ], [medicos, pacientes, agendamentos, lancamentos]);
 
   const setupProgress = Math.round((setupSteps.filter(s => s.done).length / setupSteps.length) * 100);
+
+  if (isLoading) return <DashboardSkeleton />;
+
+  const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
 
   return (
     <div className="space-y-6 pb-10">
