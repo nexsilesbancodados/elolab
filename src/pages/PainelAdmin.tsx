@@ -82,10 +82,7 @@ export default function PainelAdmin() {
   const [deleteUser, setDeleteUser] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Only allow super admin
-  if (!user || user.email !== SUPER_ADMIN_EMAIL) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
   // Queries
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
