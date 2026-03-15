@@ -246,7 +246,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FEATURES — 3 cards on beige like 4Medic ═══ */}
-      <section id="features" className="py-24 px-4 bg-background">
+      <section id="features" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading
             badge="PRINCIPAIS RECURSOS"
