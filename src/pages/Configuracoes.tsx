@@ -76,8 +76,7 @@ function SettingRow({ icon: Icon, title, description, children }: {
   );
 }
 
-function IntegrationCard({ icon: Icon, name, description, configured, active, onConfigure }: {
-  icon: React.ElementType;
+
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
