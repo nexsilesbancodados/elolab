@@ -194,6 +194,7 @@ export default function TriagemPage() {
     try {
       const imc = calcularIMC(formData.peso, formData.altura);
       const { error } = await supabase.from('triagens').insert([{
+        paciente_id: formData.paciente_id,
         agendamento_id: formData.agendamento_id || '',
         enfermeiro_id: user?.id || '',
         pressao_arterial: formData.pressao_arterial,
