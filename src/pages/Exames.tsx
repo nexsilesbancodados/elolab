@@ -247,6 +247,25 @@ export default function Exames() {
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
 
+  // Custom exam types from DB
+  const { data: customTypesFromDB = [] } = useQuery({
+    queryKey: ['tipos_exame_custom'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tipos_exame_custom' as any)
+        .select('*')
+        .order('nome');
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!user,
+  });
+
+  const TIPOS_EXAME = useMemo(() => {
+    const customNames = customTypesFromDB.map((t: any) => t.nome);
+    return [...new Set([...TIPOS_EXAME_DEFAULT, ...customNames])].sort();
+  }, [customTypesFromDB]);
+
   const { data: exames = [], isLoading: loadingExames } = useQuery({
     queryKey: ['exames', isMedicoOnly, medicoId],
     queryFn: async () => {
