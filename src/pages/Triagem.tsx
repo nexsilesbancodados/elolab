@@ -421,7 +421,7 @@ export default function TriagemPage() {
                 <Select value={formData.agendamento_id} onValueChange={setField('agendamento_id')}>
                   <SelectTrigger><SelectValue placeholder="Opcional..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {agendamentos.map(ag => <SelectItem key={ag.id} value={ag.id}>
                       {ag.hora_inicio?.slice(0, 5)} — {ag.tipo}
                     </SelectItem>)}
