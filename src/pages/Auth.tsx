@@ -116,7 +116,7 @@ export default function Auth() {
   const activateSubscription = async (userId: string, codigoConvite: string) => {
     try {
       const { data: registro, error: regError } = await supabase
-        .from('registros_pendentes' as string & keyof Database['public']['Tables'])
+        .from('registros_pendentes' as any)
         .select('*')
         .eq('codigo_convite', codigoConvite)
         .in('status', ['pendente', 'pago'])
@@ -127,39 +127,39 @@ export default function Auth() {
         return;
       }
 
-      const reg = registro as Record<string, unknown>;
-      if (new Date(reg.expires_at as string) < new Date()) {
+      const reg = registro as any;
+      if (new Date(reg.expires_at) < new Date()) {
         toast.error('Código de convite expirado.');
         return;
       }
 
       await supabase
-        .from('registros_pendentes' as string & keyof Database['public']['Tables'])
+        .from('registros_pendentes' as any)
         .update({ status: 'ativado', user_id: userId, activated_at: new Date().toISOString() })
-        .eq('id', reg.id as string);
+        .eq('id', reg.id);
 
       if (reg.status === 'pago') {
         const { data: plano } = await supabase
-          .from('planos' as string & keyof Database['public']['Tables'])
+          .from('planos' as any)
           .select('*')
-          .eq('slug', reg.plano_slug as string)
+          .eq('slug', reg.plano_slug)
           .single();
 
         if (plano) {
-          const p = plano as Record<string, unknown>;
+          const p = plano as any;
           await supabase
-            .from('assinaturas_plano' as string & keyof Database['public']['Tables'])
+            .from('assinaturas_plano' as any)
             .insert({
               user_id: userId, plano_id: p.id, plano_slug: p.slug,
               status: 'ativa', em_trial: false, data_inicio: new Date().toISOString(),
-            } as Record<string, unknown>);
+            });
           toast.success(`Plano ${p.nome} ativado com sucesso! 🎉`);
         }
       } else {
-        const { data: result } = await supabase.rpc('start_free_trial' as string & keyof Database['public']['Functions'], {
+        const { data: result } = await supabase.rpc('start_free_trial' as any, {
           _user_id: userId, _plano_slug: reg.plano_slug,
-        } as Record<string, unknown>);
-        const res = result as Record<string, unknown> | null;
+        });
+        const res = result as any;
         if (res?.success) toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
       }
     } catch (err) {
