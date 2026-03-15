@@ -235,6 +235,10 @@ export default function Exames() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customExames, setCustomExames] = useState<string[]>([]);
+  const [customExameInput, setCustomExameInput] = useState('');
+
+  const TIPOS_EXAME = [...TIPOS_EXAME_DEFAULT, ...customExames].sort();
 
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
