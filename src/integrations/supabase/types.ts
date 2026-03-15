@@ -1222,36 +1222,57 @@ export type Database = {
       medicos: {
         Row: {
           ativo: boolean | null
+          carimbo_url: string | null
+          cns: string | null
+          cpf: string | null
           created_at: string | null
           crm: string
+          crm_uf: string | null
           email: string | null
           especialidade: string | null
+          foto_url: string | null
           id: string
+          intervalo_consulta: number | null
           nome: string | null
+          rqe: string | null
           telefone: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           ativo?: boolean | null
+          carimbo_url?: string | null
+          cns?: string | null
+          cpf?: string | null
           created_at?: string | null
           crm: string
+          crm_uf?: string | null
           email?: string | null
           especialidade?: string | null
+          foto_url?: string | null
           id?: string
+          intervalo_consulta?: number | null
           nome?: string | null
+          rqe?: string | null
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           ativo?: boolean | null
+          carimbo_url?: string | null
+          cns?: string | null
+          cpf?: string | null
           created_at?: string | null
           crm?: string
+          crm_uf?: string | null
           email?: string | null
           especialidade?: string | null
+          foto_url?: string | null
           id?: string
+          intervalo_consulta?: number | null
           nome?: string | null
+          rqe?: string | null
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
