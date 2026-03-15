@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Bell, Menu, LogOut, User, Settings, HelpCircle, Plus, Calendar, DollarSign, Stethoscope, FileText, FlaskConical, Package, ListTodo } from 'lucide-react';
+import { Bell, Menu, LogOut, User, Settings, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -16,7 +15,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
-import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { GlobalSearch } from '@/components/GlobalSearch';
@@ -47,7 +45,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 md:px-6">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
@@ -62,7 +60,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         {/* Quick Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="hidden sm:flex h-9 w-9 border-border/50 bg-muted/30 hover:bg-primary hover:text-primary-foreground hover:border-primary">
+            <Button variant="outline" size="icon" className="hidden sm:flex h-8 w-8 border-border/50 bg-muted/30 hover:bg-primary hover:text-primary-foreground hover:border-primary">
               <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -96,13 +94,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <KeyboardShortcutsHelp />
         <ThemeToggle variant="dropdown" />
 
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative h-9 w-9 hover:bg-muted/50">
+            <Button variant="ghost" size="icon" className="relative h-8 w-8 hover:bg-muted/50">
               <Bell className="h-[18px] w-[18px]" />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse">
@@ -136,41 +133,25 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 </div>
               )}
             </ScrollArea>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center text-primary text-sm font-medium">
-              Ver todas as notificações
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2.5 px-2 hover:bg-muted/50 h-auto py-1.5">
-              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-semibold">
+            <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-muted/50 h-auto py-1.5">
+              <Avatar className="h-7 w-7 ring-2 ring-primary/20">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-[10px] font-semibold">
                   {profile?.nome ? getInitials(profile.nome) : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium leading-tight">{profile?.nome?.split(' ')[0]}</p>
-                <p className="text-[10px] text-muted-foreground capitalize">{profile?.role || 'Sem função'}</p>
-              </div>
+              <span className="hidden md:block text-sm font-medium">{profile?.nome?.split(' ')[0]}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="pb-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-sm font-semibold">
-                    {profile?.nome ? getInitials(profile.nome) : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{profile?.nome}</p>
-                  <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
-                </div>
-              </div>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuLabel>
+              <p className="font-semibold truncate">{profile?.nome}</p>
+              <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -179,7 +160,6 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <DropdownMenuItem asChild>
               <Link to="/configuracoes" className="flex items-center gap-2"><Settings className="h-4 w-4" />Configurações</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2"><HelpCircle className="h-4 w-4" />Ajuda</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive focus:text-destructive">
               <LogOut className="h-4 w-4" />Sair
