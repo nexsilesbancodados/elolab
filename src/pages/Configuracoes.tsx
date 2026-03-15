@@ -151,39 +151,8 @@ export default function Configuracoes() {
     }
   );
 
-  const [integrations, setIntegrations] = useState<IntegrationStatus>({
-    whatsapp: { configured: false, active: false },
-    email: { configured: false, active: false },
-    payments: { configured: false, active: false },
-  });
-
   const [savingClinica, setSavingClinica] = useState(false);
   const [savingNotif, setSavingNotif] = useState(false);
-
-  useEffect(() => {
-    checkIntegrations();
-  }, []);
-
-  const checkIntegrations = async () => {
-    try {
-      const { data: settings } = await supabase
-        .from('automation_settings')
-        .select('chave, valor, ativo')
-        .in('chave', ['evolution_api_url', 'brevo_api_key', 'mercadopago_access_token']);
-
-      const whatsappSetting = settings?.find(s => s.chave === 'evolution_api_url');
-      const emailSetting = settings?.find(s => s.chave === 'brevo_api_key');
-      const paymentSetting = settings?.find(s => s.chave === 'mercadopago_access_token');
-
-      setIntegrations({
-        whatsapp: { configured: !!whatsappSetting, active: whatsappSetting?.ativo ?? false },
-        email: { configured: !!emailSetting, active: emailSetting?.ativo ?? false },
-        payments: { configured: !!paymentSetting, active: paymentSetting?.ativo ?? false },
-      });
-    } catch {
-      // Settings not available
-    }
-  };
 
   const handleSaveClinica = async () => {
     setSavingClinica(true);
