@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { useQueryClient } from '@tanstack/react-query';
 import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyAgendamentos } from '@/components/EmptyState';
@@ -102,8 +103,16 @@ export default function Agenda() {
     id: string; medico_id: string; data_inicio: string; data_fim: string;
     hora_inicio: string | null; hora_fim: string | null; dia_inteiro: boolean; motivo: string | null; tipo: string;
   }>('bloqueios_agenda');
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
+
+  // Auto-set filter to own doctor when logged in as medico-only
+  useState(() => {
+    if (isMedicoOnly && medicoId) {
+      setSelectedMedico(medicoId);
+    }
+  });
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
@@ -112,10 +121,12 @@ export default function Agenda() {
 
   const filteredAgendamentos = useMemo(() => {
     return agendamentos.filter((ag) => {
-      if (selectedMedico !== 'todos' && ag.medico_id !== selectedMedico) return false;
+      // If medico-only user, always filter by own medico_id
+      if (isMedicoOnly && medicoId && ag.medico_id !== medicoId) return false;
+      if (!isMedicoOnly && selectedMedico !== 'todos' && ag.medico_id !== selectedMedico) return false;
       return true;
     });
-  }, [agendamentos, selectedMedico]);
+  }, [agendamentos, selectedMedico, isMedicoOnly, medicoId]);
 
   // Stats do dia atual
   const hoje = format(new Date(), 'yyyy-MM-dd');

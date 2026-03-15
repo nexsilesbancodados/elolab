@@ -1212,8 +1212,10 @@ export type Database = {
           ativo: boolean | null
           created_at: string | null
           crm: string
+          email: string | null
           especialidade: string | null
           id: string
+          nome: string | null
           telefone: string | null
           updated_at: string | null
           user_id: string | null
@@ -1222,8 +1224,10 @@ export type Database = {
           ativo?: boolean | null
           created_at?: string | null
           crm: string
+          email?: string | null
           especialidade?: string | null
           id?: string
+          nome?: string | null
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1232,8 +1236,10 @@ export type Database = {
           ativo?: boolean | null
           created_at?: string | null
           crm?: string
+          email?: string | null
           especialidade?: string | null
           id?: string
+          nome?: string | null
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null

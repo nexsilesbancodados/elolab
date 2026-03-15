@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { gerarReceita, openPDF } from '@/lib/pdfGenerator';
 import { DrugInteractionChecker, AllergyAlert } from '@/components/clinical';
 import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -43,7 +44,11 @@ export default function Prescricoes() {
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
-  const { data: prescricoes = [], isLoading: loadingPrescricoes, refetch } = useSupabaseQuery<Record<string, any>>('prescricoes', { orderBy: { column: 'created_at', ascending: false } });
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
+  const { data: prescricoes = [], isLoading: loadingPrescricoes, refetch } = useSupabaseQuery<Record<string, any>>('prescricoes', {
+    orderBy: { column: 'created_at', ascending: false },
+    ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
+  });
 
   const selectedPaciente = useMemo(() => pacientes.find(p => p.id === formData.paciente_id), [pacientes, formData.paciente_id]);
   const medicamentoNomes = useMemo(() => medicamentos.map(m => m.nome).filter(Boolean), [medicamentos]);

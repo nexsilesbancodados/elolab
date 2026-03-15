@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePacientes, useAgendamentos, useLancamentos, useEstoque, useMedicos, useFilaAtendimento } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import {
   Users, Calendar, Clock, UserPlus, CalendarPlus, ArrowRight, ArrowUpRight,
   Activity, Stethoscope, Package, FileText, TrendingUp, TrendingDown,
@@ -208,13 +209,14 @@ function ActivityItem({ icon: Icon, title, subtitle, time, color }: {
 
 // ─── Main Dashboard ────────────────────────────────────────
 export default function Dashboard() {
-  const { profile: user } = useSupabaseAuth();
+  const { profile: user, isAdmin } = useSupabaseAuth();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: lancamentos = [], isLoading: loadingLancamentos } = useLancamentos();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
   const { data: estoque = [], isLoading: loadingEstoque } = useEstoque();
   const { data: fila = [] } = useFilaAtendimento();
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
 
   const isLoading = loadingPacientes || loadingAgendamentos || loadingLancamentos || loadingMedicos || loadingEstoque;
 
@@ -225,7 +227,10 @@ export default function Dashboard() {
   const SaudacaoIcon = horaAtual < 12 ? Sun : horaAtual < 18 ? Sunset : Moon;
 
   const stats = useMemo(() => {
-    const consultasHoje = agendamentos.filter(a => a.data === hoje);
+    const baseAgendamentos = isMedicoOnly && medicoId 
+      ? agendamentos.filter(a => a.medico_id === medicoId) 
+      : agendamentos;
+    const consultasHoje = baseAgendamentos.filter(a => a.data === hoje);
     const consultasConfirmadas = consultasHoje.filter(a => a.status === 'confirmado').length;
     const consultasAgendadas = consultasHoje.filter(a => a.status === 'agendado').length;
     const consultasFinalizadas = consultasHoje.filter(a => a.status === 'finalizado').length;
@@ -258,7 +263,7 @@ export default function Dashboard() {
       return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
     }).length;
 
-    const atendimentosFinalizadosMes = agendamentos.filter(a => {
+    const atendimentosFinalizadosMes = baseAgendamentos.filter(a => {
       const d = new Date(a.data);
       return a.status === 'finalizado' && d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
     }).length;
@@ -300,7 +305,7 @@ export default function Dashboard() {
       { name: 'Finalizado', value: consultasFinalizadas, color: 'hsl(var(--primary))' },
     ].filter(s => s.value > 0);
 
-    const proximosAgendamentos = agendamentos
+    const proximosAgendamentos = baseAgendamentos
       .filter(a => a.data >= hoje && (a.status === 'agendado' || a.status === 'confirmado'))
       .sort((a, b) => `${a.data}${a.hora_inicio}`.localeCompare(`${b.data}${b.hora_inicio}`))
       .slice(0, 6);
@@ -338,7 +343,7 @@ export default function Dashboard() {
       medicosAtivos: medicos.filter(m => m.ativo).length,
       recentActivities,
     };
-  }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje]);
+  }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje, isMedicoOnly, medicoId]);
 
   const setupSteps = useMemo(() => [
     { label: 'Cadastrar médicos', done: medicos.length > 0, icon: Stethoscope, href: '/medicos', color: 'text-info' },

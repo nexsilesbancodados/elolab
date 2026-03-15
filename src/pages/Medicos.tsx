@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Pencil, Trash2, Stethoscope, Phone , Star, BadgeCheck, Award} from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Stethoscope, Phone, Star, BadgeCheck, Award, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface FormData {
+  nome: string;
+  email: string;
   crm: string;
   especialidade: string;
   telefone: string;
@@ -48,6 +50,8 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
+  nome: '',
+  email: '',
   crm: '',
   especialidade: '',
   telefone: '',
@@ -84,8 +88,10 @@ export default function Medicos() {
 
   const filteredMedicos = useMemo(() => 
     medicos.filter(m =>
+      (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.crm.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase())
+      m.especialidade?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     ),
     [medicos, searchTerm]
   );
@@ -94,6 +100,8 @@ export default function Medicos() {
     if (medico) {
       setEditingId(medico.id);
       setFormData({
+        nome: medico.nome || '',
+        email: medico.email || '',
         crm: medico.crm,
         especialidade: medico.especialidade || '',
         telefone: medico.telefone || '',
@@ -116,6 +124,10 @@ export default function Medicos() {
       toast.error('CRM é obrigatório.');
       return;
     }
+    if (!formData.nome) {
+      toast.error('Nome é obrigatório.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -123,6 +135,8 @@ export default function Medicos() {
         const { error } = await supabase
           .from('medicos')
           .update({
+            nome: formData.nome || null,
+            email: formData.email || null,
             crm: formData.crm,
             especialidade: formData.especialidade || null,
             telefone: formData.telefone || null,
@@ -133,20 +147,64 @@ export default function Medicos() {
         if (error) throw error;
         toast.success('Médico atualizado com sucesso!');
       } else {
-        const { error } = await supabase
+        const { data: newMedico, error } = await supabase
           .from('medicos')
           .insert({
+            nome: formData.nome || null,
+            email: formData.email || null,
             crm: formData.crm,
             especialidade: formData.especialidade || null,
             telefone: formData.telefone || null,
             ativo: formData.ativo,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
         toast.success('Médico cadastrado com sucesso!');
+
+        // Auto-send invitation if email provided
+        if (formData.email && newMedico) {
+          try {
+            // Create a funcionario record first for the invitation system
+            const { data: funcData, error: funcError } = await supabase
+              .from('funcionarios')
+              .insert({
+                nome: formData.nome,
+                email: formData.email,
+                cargo: 'Médico',
+                departamento: formData.especialidade || 'Clínico',
+                ativo: true,
+              })
+              .select()
+              .single();
+
+            if (!funcError && funcData) {
+              const { error: inviteError } = await supabase.functions.invoke('send-employee-invitation', {
+                body: {
+                  funcionarioId: funcData.id,
+                  email: formData.email,
+                  nome: formData.nome,
+                  roles: ['medico'],
+                },
+              });
+
+              if (inviteError) {
+                console.error('Erro ao enviar convite:', inviteError);
+                toast.info('Médico cadastrado, mas o convite não pôde ser enviado. Envie manualmente.');
+              } else {
+                toast.success(`Convite de acesso enviado para ${formData.email}`);
+              }
+            }
+          } catch (invErr) {
+            console.error('Erro no convite automático:', invErr);
+            toast.info('Médico cadastrado. Convite pode ser enviado pela página de Funcionários.');
+          }
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['medicos'] });
+      queryClient.invalidateQueries({ queryKey: ['funcionarios'] });
       setIsDialogOpen(false);
     } catch (error: any) {
       console.error('Erro ao salvar médico:', error);
@@ -250,11 +308,11 @@ export default function Medicos() {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarFallback className="bg-primary/10 text-primary">
-                              {getInitials(medico.crm)}
+                              {(medico.nome || medico.crm).slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">Dr(a). {medico.crm}</p>
+                            <p className="font-medium">Dr(a). {medico.nome || medico.crm}</p>
                             <p className="text-sm text-muted-foreground">{medico.especialidade || 'Clínico Geral'}</p>
                           </div>
                         </div>
@@ -302,6 +360,29 @@ export default function Medicos() {
             <DialogTitle>{editingId ? 'Editar Médico' : 'Novo Médico'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo *</Label>
+              <Input
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Dr. João Silva"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="medico@email.com"
+              />
+              {!editingId && formData.email && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Mail className="h-3 w-3" />
+                  Um convite de acesso será enviado automaticamente para este e-mail
+                </p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label>CRM *</Label>
               <Input

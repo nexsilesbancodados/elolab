@@ -27,6 +27,7 @@ import {
   DischargeReport 
 } from '@/components/clinical';
 import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -50,6 +51,7 @@ export default function Prontuarios() {
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [] } = useMedicos();
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
   const [historicoEvolucoes, setHistoricoEvolucoes] = useState<any[]>([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [expandedEvol, setExpandedEvol] = useState<string | null>(null);
@@ -57,17 +59,21 @@ export default function Prontuarios() {
   useEffect(() => {
     if (!selectedPacienteId) { setHistoricoEvolucoes([]); return; }
     setLoadingHistorico(true);
-    supabase
+    let query = supabase
       .from('prontuarios')
       .select('id, data, queixa_principal, historia_doenca_atual, exames_fisicos, hipotese_diagnostica, conduta, medicos(crm, especialidade)')
       .eq('paciente_id', selectedPacienteId)
       .order('data', { ascending: false })
-      .limit(20)
-      .then(({ data }) => { setHistoricoEvolucoes(data ?? []); setLoadingHistorico(false); });
-  }, [selectedPacienteId]);
+      .limit(20);
+    if (isMedicoOnly && medicoId) {
+      query = query.eq('medico_id', medicoId);
+    }
+    query.then(({ data }) => { setHistoricoEvolucoes(data ?? []); setLoadingHistorico(false); });
+  }, [selectedPacienteId, isMedicoOnly, medicoId]);
   const { data: agendamentos = [] } = useAgendamentos(format(new Date(), 'yyyy-MM-dd'));
   const { data: prontuarios = [], isLoading: loadingProntuarios, refetch: refetchProntuarios } = useSupabaseQuery<Record<string, any>>('prontuarios', {
-    orderBy: { column: 'data', ascending: false }
+    orderBy: { column: 'data', ascending: false },
+    ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
   });
 
   const selectedPaciente = useMemo(() => {
