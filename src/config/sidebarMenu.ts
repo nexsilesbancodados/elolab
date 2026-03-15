@@ -27,6 +27,7 @@ import {
   Activity,
   ListTodo,
   TestTube,
+  BookOpen,
   LucideIcon,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
