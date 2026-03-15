@@ -271,7 +271,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ ORGANIZATION SECTION — Image + text like 4Medic ═══ */}
-      <section className="py-24 px-4 bg-secondary">
+      <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <img src={dashboardPreview} alt="Organização de ponta a ponta" className="w-full rounded-2xl shadow-lg" loading="lazy" width={600} height={400} />
