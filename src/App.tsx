@@ -84,16 +84,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Check if we should show only the landing page (production main domain only)
-function isLandingOnly() {
-  const hostname = window.location.hostname;
-  // Only restrict to landing on production elolab.com.br (without app. prefix)
-  // In dev/preview, show all routes
-  return hostname === 'elolab.com.br' || hostname === 'www.elolab.com.br';
-}
-
 function App() {
-  const isApp = !isLandingOnly();
 
   // Global error handling is now initialized in main.tsx via errorTracking.ts
 
