@@ -818,6 +818,7 @@ export default function Exames() {
         </DialogContent>
       </Dialog>
 
+
       {/* View Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-lg">
