@@ -98,6 +98,8 @@ export default function Medicos() {
     if (medico) {
       setEditingId(medico.id);
       setFormData({
+        nome: medico.nome || '',
+        email: medico.email || '',
         crm: medico.crm,
         especialidade: medico.especialidade || '',
         telefone: medico.telefone || '',
