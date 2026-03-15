@@ -392,6 +392,10 @@ export default function Exames() {
           <h1 className="text-3xl font-bold text-foreground">Exames</h1>
           <p className="text-muted-foreground">Gerencie solicitações e resultados de exames</p>
         </div>
+        <Button variant="outline" onClick={() => setIsManageTypesOpen(true)} className="gap-2">
+          <FileText className="h-4 w-4" />
+          Meus Tipos de Exame
+        </Button>
         <Button onClick={handleOpenNew} className="gap-2">
           <Plus className="h-4 w-4" />
           Solicitar Exame
