@@ -72,8 +72,10 @@ export default function Atestados() {
 
   const queryClient = useQueryClient();
 
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
   const { data: atestados = [], isLoading: loadingAtestados } = useSupabaseQuery<Atestado>('atestados', {
     orderBy: { column: 'created_at', ascending: false },
+    ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
   });
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
