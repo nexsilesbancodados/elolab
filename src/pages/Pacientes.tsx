@@ -141,6 +141,9 @@ export default function Pacientes() {
       estado: paciente.estado || '',
       alergias: paciente.alergias || [],
       observacoes: paciente.observacoes || '',
+      nome_responsavel: (paciente as any).nome_responsavel || '',
+      cpf_responsavel: (paciente as any).cpf_responsavel || '',
+      parentesco_responsavel: (paciente as any).parentesco_responsavel || '',
     });
     setIsFormOpen(true);
   };
