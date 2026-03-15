@@ -394,7 +394,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ STATS ═══ */}
-      <section className="py-20 px-4 bg-secondary">
+      <section className="py-20 px-4 bg-gradient-to-b from-muted/30 to-transparent">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
             {stats.map((s, i) => (
