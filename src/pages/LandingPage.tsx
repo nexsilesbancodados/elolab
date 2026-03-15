@@ -451,7 +451,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      <section id="testimonials" className="py-24 px-4 bg-background">
+      <section id="testimonials" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <SectionHeading badge="NOSSOS CLIENTES" title="Histórias de quem faz acontecer com o EloLab" description="Veja o que profissionais de saúde dizem sobre nossa plataforma." />
           <div className="grid gap-6 md:grid-cols-3">
