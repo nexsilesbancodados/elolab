@@ -888,7 +888,7 @@ export default function Prontuarios() {
               {/* ─── Anexos Tab ─── */}
               <TabsContent value="anexos" className="pt-2">
                 {currentProntuario.id && selectedPacienteId ? (
-                  <AnexosProntuario pacienteId={selectedPacienteId} prontuarioId={currentProntuario.id} />
+                  <AnexosProntuario pacienteId={selectedPacienteId} prontuarioId={currentProntuario.id} anexos={[]} onAnexoAdicionado={() => {}} onAnexoRemovido={() => {}} />
                 ) : (
                   <div className="flex flex-col items-center py-12 text-muted-foreground">
                     <Paperclip className="h-10 w-10 mb-2 opacity-30" />
