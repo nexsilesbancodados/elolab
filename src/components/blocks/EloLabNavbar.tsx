@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import {
   Calendar, FileText, DollarSign, Bot, Shield, BarChart3,
   Stethoscope, Users, Heart, ClipboardList, Menu, LogIn,
@@ -262,10 +261,10 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
             >
               <img src={logoIcon} className="h-10 w-10 object-contain" alt="EloLab" />
               <span className="text-xl font-bold font-display tracking-tight">
-                <span className={scrolled ? "text-foreground" : "text-foreground drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"}>
+                <span className={scrolled ? "text-foreground" : "text-white"}>
                   ELO
                 </span>
-                <span className="text-brand">LAB</span>
+                <span className={scrolled ? "text-brand" : "text-white/80"}>LAB</span>
               </span>
             </button>
             <div className="flex items-center">
@@ -307,8 +306,8 @@ const EloLabNavbar = ({ scrolled = false, onScrollTo }: EloLabNavbarProps) => {
           >
             <img src={logoIcon} className="h-10 w-10 object-contain" alt="EloLab" />
             <span className="text-xl font-bold font-display tracking-tight">
-              <span className={scrolled ? "text-foreground" : "text-foreground drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"}>ELO</span>
-              <span className="text-brand">LAB</span>
+              <span className={scrolled ? "text-foreground" : "text-white"}>ELO</span>
+              <span className={scrolled ? "text-brand" : "text-white/80"}>LAB</span>
             </span>
           </button>
           <Sheet>
