@@ -603,45 +603,47 @@ export default function Exames() {
 
       {/* New Exam Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Solicitar Exame</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Paciente *</Label>
-              <Select
-                value={formData.paciente_id}
-                onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pacientes.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Paciente *</Label>
+                <Select
+                  value={formData.paciente_id}
+                  onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pacientes.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Médico Solicitante *</Label>
-              <Select
-                value={formData.medico_solicitante_id}
-                onValueChange={(v) => setFormData({ ...formData, medico_solicitante_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o médico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {medicos.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.crm} - {m.especialidade || 'Clínico'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Médico Solicitante *</Label>
+                <Select
+                  value={formData.medico_solicitante_id}
+                  onValueChange={(v) => setFormData({ ...formData, medico_solicitante_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o médico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {medicos.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nome || m.crm} - {m.especialidade || 'Clínico'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -686,18 +688,117 @@ export default function Exames() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Urgência</Label>
+                <Select
+                  value={formData.urgencia}
+                  onValueChange={(v) => setFormData({ ...formData, urgencia: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                    <SelectItem value="emergencia">Emergência</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Lateralidade</Label>
+                <Select
+                  value={formData.lateralidade}
+                  onValueChange={(v) => setFormData({ ...formData, lateralidade: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Se aplicável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao_aplica">Não se aplica</SelectItem>
+                    <SelectItem value="direito">Direito</SelectItem>
+                    <SelectItem value="esquerdo">Esquerdo</SelectItem>
+                    <SelectItem value="bilateral">Bilateral</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Jejum</Label>
+                <Select
+                  value={formData.jejum}
+                  onValueChange={(v) => setFormData({ ...formData, jejum: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Necessidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao">Não necessário</SelectItem>
+                    <SelectItem value="8h">8 horas</SelectItem>
+                    <SelectItem value="10h">10 horas</SelectItem>
+                    <SelectItem value="12h">12 horas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>Região Anatômica / Local</Label>
+              <Input
+                value={formData.regiao_anatomica}
+                onChange={(e) => setFormData({ ...formData, regiao_anatomica: e.target.value })}
+                placeholder="Ex: Joelho direito, Abdome superior, Coluna lombar L4-L5..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Indicação Clínica *</Label>
               <Textarea
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                placeholder="Informações adicionais sobre o exame..."
+                value={formData.indicacao_clinica}
+                onChange={(e) => setFormData({ ...formData, indicacao_clinica: e.target.value })}
+                placeholder="Motivo da solicitação: sintomas, achados clínicos, suspeita diagnóstica..."
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Observações</Label>
+              <Label>Hipótese Diagnóstica / CID</Label>
+              <Input
+                value={formData.hipotese_diagnostica}
+                onChange={(e) => setFormData({ ...formData, hipotese_diagnostica: e.target.value })}
+                placeholder="Ex: J18.9 - Pneumonia, M54.5 - Lombalgia..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrição / Informações Adicionais</Label>
+              <Textarea
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Detalhes adicionais: uso de contraste, preparo especial, medicamentos em uso..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observações para o Laboratório/Clínica</Label>
+              <Textarea
+                value={formData.observacoes}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                placeholder="Instruções especiais, alergias a contraste, marcapasso, próteses..."
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
+              Solicitar
+            </LoadingButton>
+          </DialogFooter>
               <Textarea
                 value={formData.observacoes}
                 onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
