@@ -52,7 +52,6 @@ import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
 
 // Only lazy load rarely-accessed pages
-const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
 const PainelTV = lazy(() => import("@/pages/PainelTV"));
@@ -85,16 +84,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Check if we should show only the landing page (production main domain only)
-function isLandingOnly() {
-  const hostname = window.location.hostname;
-  // Only restrict to landing on production elolab.com.br (without app. prefix)
-  // In dev/preview, show all routes
-  return hostname === 'elolab.com.br' || hostname === 'www.elolab.com.br';
-}
-
 function App() {
-  const isApp = !isLandingOnly();
 
   // Global error handling is now initialized in main.tsx via errorTracking.ts
 
@@ -109,74 +99,59 @@ function App() {
               <SupabaseAuthProvider>
                 <NotificationBanner />
                 <Routes>
-                    {isApp ? (
-                      <>
-                        {/* App subdomain routes (app.elolab.com.br) */}
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
-                        <Route path="/login" element={<Navigate to="/auth" replace />} />
-                        <Route path="/aceitar-convite" element={<Suspense fallback={<PageLoader />}><AceitarConvite /></Suspense>} />
-                        <Route path="/portal-paciente" element={<Suspense fallback={<PageLoader />}><PortalPaciente /></Suspense>} />
-                        <Route path="/painel-tv" element={<SupabaseProtectedRoute><Suspense fallback={<PageLoader />}><PainelTV /></Suspense></SupabaseProtectedRoute>} />
-                        
-                        {/* Protected Routes — all eagerly loaded, no Suspense needed */}
-                        <Route
-                          element={
-                            <SupabaseProtectedRoute>
-                              <MainLayout />
-                            </SupabaseProtectedRoute>
-                          }
-                        >
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/pacientes" element={<Pacientes />} />
-                          <Route path="/agenda" element={<Agenda />} />
-                          <Route path="/fila" element={<Fila />} />
-                          <Route path="/prontuarios" element={<Prontuarios />} />
-                          <Route path="/prescricoes" element={<Prescricoes />} />
-                          <Route path="/atestados" element={<Atestados />} />
-                          <Route path="/medicos" element={<Medicos />} />
-                          <Route path="/funcionarios" element={<Funcionarios />} />
-                          <Route path="/exames" element={<Exames />} />
-                          <Route path="/triagem" element={<Triagem />} />
-                          <Route path="/salas" element={<Salas />} />
-                          <Route path="/lista-espera" element={<ListaEspera />} />
-                          <Route path="/templates" element={<Templates />} />
-                          <Route path="/encaminhamentos" element={<Encaminhamentos />} />
-                          <Route path="/financeiro" element={<Financeiro />} />
-                          <Route path="/contas-receber" element={<ContasReceber />} />
-                          <Route path="/contas-pagar" element={<ContasPagar />} />
-                          <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
-                          <Route path="/pagamentos" element={<Pagamentos />} />
-                          <Route path="/relatorios" element={<Relatorios />} />
-                          <Route path="/estoque" element={<Estoque />} />
-                          <Route path="/convenios" element={<Convenios />} />
-                          <Route path="/usuarios" element={<Usuarios />} />
-                          
-                          <Route path="/configuracoes" element={<Configuracoes />} />
-                          <Route path="/automacoes" element={<Automacoes />} />
-                          <Route path="/agente-ia" element={<AgenteIA />} />
-                          <Route path="/analytics" element={<Analytics />} />
-                          <Route path="/planos" element={<Planos />} />
-                          <Route path="/laboratorio" element={<Laboratorio />} />
-                          <Route path="/precos-exames" element={<PrecosExames />} />
-                          <Route path="/tarefas" element={<Tarefas />} />
-                          <Route path="/retornos" element={<Retornos />} />
-                          <Route path="/mapa-coleta" element={<MapaColeta />} />
-                          <Route path="/laudos-lab" element={<LaudosLab />} />
-                          <Route path="/documentacao" element={<Documentacao />} />
-                        </Route>
-                        
-                        <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
-                      </>
-                    ) : (
-                      <>
-                        {/* Main domain routes (elolab.com.br) */}
-                        <Route path="/" element={<Suspense fallback={<PageLoader />}><LandingPage /></Suspense>} />
-                        <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
-                        <Route path="/portal-paciente" element={<Suspense fallback={<PageLoader />}><PortalPaciente /></Suspense>} />
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                      </>
-                    )}
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
+                    <Route path="/login" element={<Navigate to="/auth" replace />} />
+                    <Route path="/aceitar-convite" element={<Suspense fallback={<PageLoader />}><AceitarConvite /></Suspense>} />
+                    <Route path="/portal-paciente" element={<Suspense fallback={<PageLoader />}><PortalPaciente /></Suspense>} />
+                    <Route path="/painel-tv" element={<SupabaseProtectedRoute><Suspense fallback={<PageLoader />}><PainelTV /></Suspense></SupabaseProtectedRoute>} />
+                    
+                    <Route
+                      element={
+                        <SupabaseProtectedRoute>
+                          <MainLayout />
+                        </SupabaseProtectedRoute>
+                      }
+                    >
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/pacientes" element={<Pacientes />} />
+                      <Route path="/agenda" element={<Agenda />} />
+                      <Route path="/fila" element={<Fila />} />
+                      <Route path="/prontuarios" element={<Prontuarios />} />
+                      <Route path="/prescricoes" element={<Prescricoes />} />
+                      <Route path="/atestados" element={<Atestados />} />
+                      <Route path="/medicos" element={<Medicos />} />
+                      <Route path="/funcionarios" element={<Funcionarios />} />
+                      <Route path="/exames" element={<Exames />} />
+                      <Route path="/triagem" element={<Triagem />} />
+                      <Route path="/salas" element={<Salas />} />
+                      <Route path="/lista-espera" element={<ListaEspera />} />
+                      <Route path="/templates" element={<Templates />} />
+                      <Route path="/encaminhamentos" element={<Encaminhamentos />} />
+                      <Route path="/financeiro" element={<Financeiro />} />
+                      <Route path="/contas-receber" element={<ContasReceber />} />
+                      <Route path="/contas-pagar" element={<ContasPagar />} />
+                      <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
+                      <Route path="/pagamentos" element={<Pagamentos />} />
+                      <Route path="/relatorios" element={<Relatorios />} />
+                      <Route path="/estoque" element={<Estoque />} />
+                      <Route path="/convenios" element={<Convenios />} />
+                      <Route path="/usuarios" element={<Usuarios />} />
+                      <Route path="/configuracoes" element={<Configuracoes />} />
+                      <Route path="/automacoes" element={<Automacoes />} />
+                      <Route path="/agente-ia" element={<AgenteIA />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/planos" element={<Planos />} />
+                      <Route path="/laboratorio" element={<Laboratorio />} />
+                      <Route path="/precos-exames" element={<PrecosExames />} />
+                      <Route path="/tarefas" element={<Tarefas />} />
+                      <Route path="/retornos" element={<Retornos />} />
+                      <Route path="/mapa-coleta" element={<MapaColeta />} />
+                      <Route path="/laudos-lab" element={<LaudosLab />} />
+                      <Route path="/documentacao" element={<Documentacao />} />
+                    </Route>
+                    
+                    <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
                   </Routes>
                 <InstallPWA />
               </SupabaseAuthProvider>
