@@ -1,39 +1,25 @@
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Eye, FileText, Loader2, PlusCircle } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import {
+  Plus, Search, Eye, FileText, Loader2, PlusCircle, X, Printer,
+  AlertTriangle, Upload, ShieldCheck, Clock, Calendar, Tag,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { usePacientes, useMedicos } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,261 +45,237 @@ const STATUS_LABELS: Record<StatusExame, string> = {
   cancelado: 'Cancelado',
 };
 
-const TIPOS_EXAME_DEFAULT = [
-  // ── Hematologia ──
-  'Hemograma Completo', 'Hemograma com Contagem de Plaquetas', 'Coagulograma', 'VHS (Velocidade de Hemossedimentação)',
-  'Reticulócitos', 'Tipagem Sanguínea (ABO/Rh)', 'Coombs Direto', 'Coombs Indireto',
-  'Teste de Falcização', 'Eletroforese de Hemoglobina', 'Mielograma', 'Tempo de Sangramento (TS)',
-  'Tempo de Coagulação (TC)', 'Hematócrito', 'Leucograma',
-  // ── Bioquímica ──
-  'Glicemia em Jejum', 'Glicemia Pós-Prandial', 'Hemoglobina Glicada (HbA1c)', 'Curva Glicêmica (TOTG)',
-  'Colesterol Total', 'Colesterol HDL', 'Colesterol LDL', 'Colesterol VLDL', 'Perfil Lipídico Completo',
-  'Triglicerídeos', 'Ureia', 'Creatinina', 'Taxa de Filtração Glomerular (TFG)',
-  'Ácido Úrico', 'TGO (AST)', 'TGP (ALT)', 'Gama GT', 'Fosfatase Alcalina',
-  'Bilirrubinas (Total e Frações)', 'Bilirrubina Direta', 'Bilirrubina Indireta',
-  'Proteínas Totais e Frações', 'Albumina', 'Globulinas',
-  'Amilase', 'Lipase', 'LDH (Desidrogenase Láctica)', 'CPK (Creatinoquinase)', 'CPK-MB',
-  'Troponina I', 'Troponina T', 'BNP (Peptídeo Natriurético)', 'NT-proBNP',
-  'Ferro Sérico', 'Ferritina', 'Transferrina', 'TIBC (Capacidade Total de Ligação do Ferro)',
-  'Saturação de Transferrina', 'Haptoglobina',
-  'Cálcio Total', 'Cálcio Iônico', 'Fósforo', 'Magnésio',
-  'Sódio', 'Potássio', 'Cloro', 'Bicarbonato',
-  'Lactato', 'Amônia', 'Ácido Lático', 'Osmolaridade Sérica',
-  'Proteína C Reativa Ultrassensível (PCR-us)', 'Homocisteína', 'Lipoproteína (a)',
-  'Apolipoproteína A1', 'Apolipoproteína B',
-  // ── Função Renal ──
-  'Clearance de Creatinina', 'Cistatina C', 'Beta-2 Microglobulina',
-  'Relação Albumina/Creatinina Urinária',
-  // ── Função Hepática ──
-  '5-Nucleotidase', 'Colinesterase', 'Ceruloplasmina', 'Cobre Sérico', 'Alfa-1 Antitripsina',
-  // ── Hormônios Tireoidianos ──
-  'TSH', 'T4 Livre', 'T4 Total', 'T3 Total', 'T3 Livre', 'T3 Reverso',
-  'Anti-TPO (Anticorpos Anti-Peroxidase)', 'Anti-Tireoglobulina', 'TRAb (Anticorpos Anti-Receptor de TSH)',
-  'Tireoglobulina', 'Calcitonina',
-  // ── Hormônios Reprodutivos ──
-  'FSH', 'LH', 'Estradiol (E2)', 'Progesterona', 'Testosterona Total', 'Testosterona Livre',
-  'Testosterona Biodisponível', 'SHBG (Globulina Ligadora de Hormônios Sexuais)',
-  'Prolactina', 'Androstenediona', '17-OH Progesterona',
-  'AMH (Hormônio Anti-Mülleriano)', 'Inibina B',
-  'Beta-HCG Quantitativo', 'Beta-HCG Qualitativo',
-  'Estrona (E1)', 'Estriol (E3)',
-  // ── Hormônios Adrenais ──
-  'Cortisol Basal', 'Cortisol Salivar', 'Cortisol Livre Urinário 24h',
-  'ACTH', 'DHEA-S', 'DHEA', 'Aldosterona', 'Renina',
-  'Metanefrinas Plasmáticas', 'Metanefrinas Urinárias', 'Catecolaminas Urinárias',
-  // ── Outros Hormônios ──
-  'Insulina Basal', 'Insulina Pós-Prandial', 'Peptídeo C',
-  'PTH (Paratormônio)', 'GH (Hormônio do Crescimento)', 'IGF-1', 'IGFBP-3',
-  'Vitamina D (25-OH)', 'Vitamina D (1,25-OH)',
-  'Leptina', 'Adiponectina', 'Eritropoietina',
-  // ── Urinálise ──
-  'EAS (Urina Tipo I)', 'Urina 24h (Proteínas)', 'Urina 24h (Creatinina)',
-  'Urina 24h (Cálcio)', 'Urina 24h (Ácido Úrico)', 'Urina 24h (Sódio)',
-  'Urina 24h (Potássio)', 'Urina 24h (Citrato)', 'Urina 24h (Oxalato)',
-  'Urocultura', 'Microalbuminúria', 'Proteinúria de 24h',
-  'Clearance de Creatinina (Urina 24h)', 'Pesquisa de Dismorfismo Eritrocitário',
-  // ── Parasitologia e Fezes ──
-  'Parasitológico de Fezes (EPF)', 'Parasitológico Seriado (3 amostras)',
-  'Pesquisa de Sangue Oculto nas Fezes', 'Coprocultura',
-  'Pesquisa de Gordura Fecal (Sudan III)', 'Elastase Fecal',
-  'Calprotectina Fecal', 'Pesquisa de Rotavírus', 'Pesquisa de H. pylori nas Fezes',
-  // ── Sorologia e Imunologia ──
-  'Anti-HIV (1 e 2)', 'VDRL', 'FTA-Abs (IgG e IgM)',
-  'HBsAg (Hepatite B)', 'Anti-HBs', 'Anti-HBc Total', 'Anti-HBc IgM', 'Anti-HBe', 'HBeAg',
-  'Carga Viral Hepatite B (HBV-DNA)', 'Carga Viral Hepatite C (HCV-RNA)',
-  'Anti-HCV (Hepatite C)', 'Genotipagem Hepatite C',
-  'Anti-HAV IgM', 'Anti-HAV IgG',
-  'Toxoplasmose (IgG e IgM)', 'Toxoplasmose (Avidez IgG)',
-  'Rubéola (IgG e IgM)', 'Citomegalovírus (IgG e IgM)', 'CMV Avidez IgG',
-  'Herpes Simplex 1 (IgG e IgM)', 'Herpes Simplex 2 (IgG e IgM)',
-  'Epstein-Barr (VCA IgG/IgM, EBNA)', 'Mononucleose (Monoteste)',
-  'Dengue (IgG e IgM)', 'Dengue NS1', 'Chikungunya (IgG e IgM)', 'Zika Vírus (IgG e IgM)',
-  'Covid-19 (IgG e IgM)', 'Covid-19 PCR (RT-PCR)',
-  'Influenza A/B (Teste Rápido)', 'Influenza PCR',
-  'Chagas (IgG)', 'Leishmaniose (Sorologia)',
-  'Leptospirose (IgG e IgM)', 'Febre Amarela (IgG e IgM)',
-  'PCR (Proteína C Reativa)', 'PCR Ultrassensível',
-  'Fator Reumatoide (FR)', 'Anti-CCP (Peptídeo Citrulinado Cíclico)',
-  'FAN (Fator Antinuclear)', 'Anti-DNA Nativo (Anti-dsDNA)',
-  'Anti-SM', 'Anti-RNP', 'Anti-SSA (Ro)', 'Anti-SSB (La)',
-  'Anti-SCL-70', 'Anti-Jo-1', 'Anti-Centrômero',
-  'ANCA (c-ANCA e p-ANCA)', 'Anti-Membrana Basal Glomerular',
-  'ASLO (Antiestreptolisina O)',
-  'Complemento C3', 'Complemento C4', 'CH50',
-  'Imunoglobulina A (IgA)', 'Imunoglobulina G (IgG)', 'Imunoglobulina M (IgM)', 'Imunoglobulina E Total (IgE)',
-  'IgE Específica (RAST)', 'Imunoeletroforese de Proteínas',
-  'Crioglobulinas', 'Waaler-Rose', 'Antifosfolipídeos (aCL IgG/IgM)',
-  'Anticoagulante Lúpico', 'Anti-Beta2 Glicoproteína I',
-  // ── Marcadores Tumorais ──
-  'PSA Total', 'PSA Livre', 'Relação PSA Livre/Total',
-  'CEA (Antígeno Carcinoembrionário)', 'CA 125', 'CA 19-9', 'CA 15-3', 'CA 72-4',
-  'AFP (Alfafetoproteína)', 'HE4', 'ROMA (Algoritmo de Risco de Malignidade Ovariana)',
-  'SCC (Antígeno do Carcinoma de Células Escamosas)',
-  'Cromogranina A', 'Enolase Neurônio-Específica (NSE)',
-  'Cyfra 21-1', 'Beta-2 Microglobulina Sérica',
-  'Antígeno Prostático Específico Complexado',
-  // ── Coagulação ──
-  'TAP (Tempo de Protrombina)', 'TTPA', 'INR',
-  'Fibrinogênio', 'D-Dímero', 'Antitrombina III',
-  'Proteína C', 'Proteína S Livre', 'Proteína S Total',
-  'Fator V de Leiden (Mutação)', 'Mutação da Protrombina G20210A',
-  'Tempo de Trombina', 'Agregação Plaquetária',
-  'Fator VIII', 'Fator IX', 'Fator de von Willebrand',
-  // ── Vitaminas e Nutrientes ──
-  'Vitamina A (Retinol)', 'Vitamina B1 (Tiamina)', 'Vitamina B2 (Riboflavina)',
-  'Vitamina B3 (Niacina)', 'Vitamina B5 (Ácido Pantotênico)', 'Vitamina B6 (Piridoxina)',
-  'Vitamina B7 (Biotina)', 'Vitamina B9 (Ácido Fólico)', 'Vitamina B12 (Cobalamina)',
-  'Vitamina C (Ácido Ascórbico)', 'Vitamina E (Tocoferol)', 'Vitamina K',
-  'Zinco', 'Selênio', 'Cobre', 'Cromo', 'Manganês', 'Coenzima Q10',
-  // ── Gasometria ──
-  'Gasometria Arterial', 'Gasometria Venosa',
-  // ── Microbiologia ──
-  'Hemocultura (Aeróbia)', 'Hemocultura (Anaeróbia)', 'Hemocultura (Fungos)',
-  'Cultura de Secreção', 'Cultura de Escarro', 'Cultura de Líquor',
-  'Cultura de Líquido Pleural', 'Cultura de Líquido Ascítico',
-  'Cultura de Ponta de Cateter', 'Cultura de Fragmento de Tecido',
-  'Antibiograma', 'Bacterioscopia (Gram)',
-  'BAAR (Pesquisa de Bacilo Álcool-Ácido Resistente)', 'Cultura para Micobactérias',
-  'Pesquisa de Fungos (KOH)', 'Cultura para Fungos',
-  'Pesquisa de Streptococcus (Teste Rápido)', 'Swab Nasal (MRSA)',
-  // ── Genética e Molecular ──
-  'Cariótipo', 'Cariótipo com Banda G',
-  'PCR para COVID-19', 'PCR para Influenza', 'PCR para Tuberculose (GeneXpert)',
-  'Genotipagem HLA', 'Teste de Paternidade (DNA)',
-  'NIPT (Teste Pré-Natal Não Invasivo)', 'BRCA1/BRCA2',
-  'Pesquisa de Mutação JAK2', 'BCR-ABL (Leucemia Mieloide Crônica)',
-  'Teste Farmacogenômico',
-  // ── Líquidos Corporais ──
-  'Líquor (Análise Completa)', 'Líquido Pleural (Análise)', 'Líquido Ascítico (Análise)',
-  'Líquido Sinovial (Análise)', 'Líquido Pericárdico (Análise)',
-  // ── Imagem – Raio-X ──
-  'Raio-X Tórax PA', 'Raio-X Tórax PA e Perfil', 'Raio-X Coluna Cervical',
-  'Raio-X Coluna Torácica', 'Raio-X Coluna Lombar', 'Raio-X Coluna Lombossacra',
-  'Raio-X Bacia/Pelve', 'Raio-X Quadril', 'Raio-X Joelho', 'Raio-X Tornozelo', 'Raio-X Pé',
-  'Raio-X Ombro', 'Raio-X Cotovelo', 'Raio-X Punho', 'Raio-X Mão',
-  'Raio-X Seios da Face', 'Raio-X Crânio', 'Raio-X Abdome (Simples)',
-  'Raio-X Abdome (Agudo)', 'Raio-X Panorâmico (Odontológico)',
-  'Raio-X Idade Óssea',
-  // ── Imagem – Ultrassonografia ──
-  'Ultrassom Abdominal Total', 'Ultrassom Abdominal Superior', 'Ultrassom Pélvico',
-  'Ultrassom Transvaginal', 'Ultrassom Obstétrico (1º Trimestre)',
-  'Ultrassom Obstétrico (2º Trimestre)', 'Ultrassom Obstétrico (3º Trimestre)',
-  'Ultrassom Obstétrico com Doppler', 'Ultrassom Morfológico',
-  'Ultrassom de Tireoide', 'Ultrassom de Mama', 'Ultrassom de Próstata (Via Abdominal)',
-  'Ultrassom de Próstata (Via Transretal)', 'Ultrassom de Bolsa Escrotal',
-  'Ultrassom de Rins e Vias Urinárias', 'Ultrassom de Articulações',
-  'Ultrassom de Partes Moles', 'Ultrassom de Parede Abdominal',
-  'Ultrassom Doppler de Carótidas e Vertebrais', 'Ultrassom Doppler de Membros Inferiores (Venoso)',
-  'Ultrassom Doppler de Membros Inferiores (Arterial)', 'Ultrassom Doppler de Membros Superiores',
-  'Ultrassom Doppler de Aorta', 'Ultrassom Doppler Renal', 'Ultrassom Doppler Hepático',
-  'Ultrassom Transfontanelar',
-  // ── Imagem – Tomografia ──
-  'TC Crânio (sem contraste)', 'TC Crânio (com contraste)', 'TC Seios da Face',
-  'TC Tórax (sem contraste)', 'TC Tórax (com contraste)', 'TC Tórax Alta Resolução',
-  'TC Abdome Total (sem contraste)', 'TC Abdome Total (com contraste)',
-  'TC Pelve', 'TC Coluna Cervical', 'TC Coluna Lombar', 'TC Coluna Torácica',
-  'Angiotomografia Coronariana', 'Angiotomografia Pulmonar',
-  'Angiotomografia de Aorta', 'Angiotomografia Cerebral',
-  'TC de Articulações (Joelho/Ombro/Quadril)',
-  'Escore de Cálcio Coronariano',
-  // ── Imagem – Ressonância Magnética ──
-  'RM Crânio', 'RM Crânio com Espectroscopia', 'RM Sela Túrcica (Hipófise)',
-  'RM Coluna Cervical', 'RM Coluna Torácica', 'RM Coluna Lombar', 'RM Coluna Lombossacra',
-  'RM Joelho', 'RM Ombro', 'RM Quadril', 'RM Tornozelo', 'RM Punho',
-  'RM Pelve', 'RM Abdome Superior', 'RM Mama (Bilateral)',
-  'RM Cardíaca', 'RM Próstata (Multiparamétrica)',
-  'Angiorressonância Cerebral', 'Angiorressonância de Aorta',
-  'RM de Plexo Braquial', 'RM de Articulação Temporomandibular (ATM)',
-  'Colangioressonância',
-  // ── Imagem – Mamografia ──
-  'Mamografia Bilateral', 'Mamografia Digital com Tomossíntese',
-  'Densitometria Óssea (Coluna e Fêmur)', 'Densitometria Óssea (Corpo Total)',
-  // ── Imagem – Medicina Nuclear ──
-  'Cintilografia de Tireoide', 'Cintilografia Óssea', 'Cintilografia de Perfusão Miocárdica',
-  'Cintilografia Renal (DMSA)', 'Cintilografia Renal (DTPA)',
-  'Cintilografia Pulmonar (Ventilação/Perfusão)',
-  'PET-CT (Corpo Inteiro)', 'PET-CT (Oncológico)',
-  // ── Cardiologia ──
-  'Eletrocardiograma (ECG)', 'Ecocardiograma Transtorácico', 'Ecocardiograma Transesofágico',
-  'Ecocardiograma com Estresse', 'Ecocardiograma Fetal',
-  'Teste Ergométrico', 'Teste Cardiopulmonar (Ergoespirometria)',
-  'Holter 24h', 'Holter 48h', 'Holter 7 dias',
-  'MAPA 24h', 'MRPA (Monitorização Residencial da PA)',
-  'Tilt Test', 'Cateterismo Cardíaco', 'Estudo Eletrofisiológico',
-  // ── Endoscopia e Procedimentos ──
-  'Endoscopia Digestiva Alta', 'Endoscopia com Biópsia', 'Endoscopia com Pesquisa de H. pylori',
-  'Colonoscopia', 'Colonoscopia com Biópsia', 'Colonoscopia com Polipectomia',
-  'Retossigmoidoscopia', 'Cápsula Endoscópica',
-  'Broncoscopia', 'Broncoscopia com Lavado Broncoalveolar',
-  'Laringoscopia', 'Nasofibrolaringoscopia',
-  'Cistoscopia', 'Histeroscopia Diagnóstica', 'Histeroscopia Cirúrgica',
-  // ── Pneumologia ──
-  'Espirometria', 'Espirometria com Broncodilatador', 'Pletismografia',
-  'Teste de Broncoprovocação', 'Teste de Difusão (DLCO)',
-  'Oximetria Noturna', 'Polissonografia (Tipo I)', 'Polissonografia (Tipo III)',
-  // ── Neurologia ──
-  'Eletroencefalograma (EEG)', 'EEG com Mapeamento Cerebral',
-  'Eletroneuromiografia (ENMG)', 'Potencial Evocado Somatossensitivo',
-  'Potencial Evocado Visual', 'Potencial Evocado Auditivo',
-  // ── Otorrinolaringologia ──
-  'Audiometria Tonal', 'Audiometria Vocal', 'Impedanciometria (Timpanometria)',
-  'BERA (Potencial Evocado Auditivo de Tronco Encefálico)',
-  'Emissões Otoacústicas (EOA)', 'Vectoeletronistagmografia (VENG)',
-  'Videonistagmografia', 'Nasofibroscopia',
-  // ── Oftalmologia ──
-  'Acuidade Visual', 'Tonometria (Pressão Intraocular)', 'Campimetria Visual',
-  'Fundoscopia', 'Retinografia', 'Angiofluoresceinografia',
-  'OCT (Tomografia de Coerência Óptica)', 'Paquimetria',
-  'Topografia Corneana', 'Biometria Ocular',
-  'Gonioscopia', 'Teste de Schirmer',
-  // ── Dermatologia ──
-  'Dermatoscopia', 'Biópsia de Pele', 'Teste de Contato (Patch Test)',
-  'Prick Test (Teste Cutâneo Alérgico)', 'Micológico Direto (Pele/Unha)',
-  'Cultura para Fungos (Pele/Unha)',
-  // ── Ginecologia e Obstetrícia ──
-  'Citopatológico (Papanicolau)', 'Colposcopia', 'Vulvoscopia',
-  'Captura Híbrida para HPV', 'Genotipagem de HPV',
-  'Perfil Obstétrico (Painel)', 'Estreptococo do Grupo B (Swab)',
-  'Pesquisa de Líquido Amniótico (Amniocentese)',
-  // ── Urologia ──
-  'Urodinâmica', 'Urofluxometria', 'PSA Ultrassensível',
-  // ── Reumatologia ──
-  'Pesquisa de Cristais (Líquido Sinovial)', 'Dosagem de Ácido Úrico 24h',
-  // ── Alergia ──
-  'Painel de Alérgenos Alimentares (IgE)', 'Painel de Alérgenos Inalantes (IgE)',
-  'IgE Específica para Medicamentos',
-  // ── Outros ──
-  'Teste do Pezinho Ampliado', 'Teste da Orelhinha', 'Teste do Olhinho', 'Teste do Coraçãozinho',
-  'Biópsia (com especificar local)', 'Punção Aspirativa por Agulha Fina (PAAF)',
-  'Anatomopatológico', 'Imunohistoquímica',
+// ── Catálogo de Exames com Código TUSS ──
+interface ExameCatalogo {
+  nome: string;
+  tuss: string;
+  categoria: string;
+}
+
+const CATALOGO_EXAMES: ExameCatalogo[] = [
+  // Hematologia
+  { nome: 'Hemograma Completo', tuss: '40304361', categoria: 'Hematologia' },
+  { nome: 'Coagulograma', tuss: '40304329', categoria: 'Hematologia' },
+  { nome: 'VHS', tuss: '40304400', categoria: 'Hematologia' },
+  { nome: 'Reticulócitos', tuss: '40304388', categoria: 'Hematologia' },
+  { nome: 'Tipagem Sanguínea (ABO/Rh)', tuss: '40304060', categoria: 'Hematologia' },
+  { nome: 'Eletroforese de Hemoglobina', tuss: '40304230', categoria: 'Hematologia' },
+  { nome: 'TAP (Tempo de Protrombina)', tuss: '40304396', categoria: 'Hematologia' },
+  { nome: 'TTPA', tuss: '40304078', categoria: 'Hematologia' },
+  { nome: 'INR', tuss: '40304396', categoria: 'Hematologia' },
+  { nome: 'Fibrinogênio', tuss: '40304256', categoria: 'Hematologia' },
+  { nome: 'D-Dímero', tuss: '40304191', categoria: 'Hematologia' },
+  // Bioquímica
+  { nome: 'Glicemia em Jejum', tuss: '40302040', categoria: 'Bioquímica' },
+  { nome: 'Hemoglobina Glicada (HbA1c)', tuss: '40302059', categoria: 'Bioquímica' },
+  { nome: 'Curva Glicêmica (TOTG)', tuss: '40302067', categoria: 'Bioquímica' },
+  { nome: 'Colesterol Total', tuss: '40301630', categoria: 'Bioquímica' },
+  { nome: 'Colesterol HDL', tuss: '40301621', categoria: 'Bioquímica' },
+  { nome: 'Colesterol LDL', tuss: '40301613', categoria: 'Bioquímica' },
+  { nome: 'Perfil Lipídico Completo', tuss: '40301648', categoria: 'Bioquímica' },
+  { nome: 'Triglicerídeos', tuss: '40302580', categoria: 'Bioquímica' },
+  { nome: 'Ureia', tuss: '40302601', categoria: 'Bioquímica' },
+  { nome: 'Creatinina', tuss: '40301702', categoria: 'Bioquímica' },
+  { nome: 'Ácido Úrico', tuss: '40301010', categoria: 'Bioquímica' },
+  { nome: 'TGO (AST)', tuss: '40302547', categoria: 'Bioquímica' },
+  { nome: 'TGP (ALT)', tuss: '40302555', categoria: 'Bioquímica' },
+  { nome: 'Gama GT', tuss: '40302024', categoria: 'Bioquímica' },
+  { nome: 'Fosfatase Alcalina', tuss: '40301990', categoria: 'Bioquímica' },
+  { nome: 'Bilirrubinas (Total e Frações)', tuss: '40301257', categoria: 'Bioquímica' },
+  { nome: 'Proteínas Totais e Frações', tuss: '40302377', categoria: 'Bioquímica' },
+  { nome: 'Albumina', tuss: '40301036', categoria: 'Bioquímica' },
+  { nome: 'PCR (Proteína C Reativa)', tuss: '40302318', categoria: 'Bioquímica' },
+  { nome: 'PCR Ultrassensível', tuss: '40302326', categoria: 'Bioquímica' },
+  { nome: 'Ferro Sérico', tuss: '40301974', categoria: 'Bioquímica' },
+  { nome: 'Ferritina', tuss: '40301966', categoria: 'Bioquímica' },
+  { nome: 'Transferrina', tuss: '40302598', categoria: 'Bioquímica' },
+  { nome: 'Sódio', tuss: '40302512', categoria: 'Bioquímica' },
+  { nome: 'Potássio', tuss: '40302369', categoria: 'Bioquímica' },
+  { nome: 'Cálcio Total', tuss: '40301290', categoria: 'Bioquímica' },
+  { nome: 'Cálcio Iônico', tuss: '40301281', categoria: 'Bioquímica' },
+  { nome: 'Magnésio', tuss: '40302199', categoria: 'Bioquímica' },
+  { nome: 'Fósforo', tuss: '40302008', categoria: 'Bioquímica' },
+  { nome: 'Amilase', tuss: '40301079', categoria: 'Bioquímica' },
+  { nome: 'Lipase', tuss: '40302181', categoria: 'Bioquímica' },
+  { nome: 'CPK (Creatinoquinase)', tuss: '40301710', categoria: 'Bioquímica' },
+  { nome: 'CPK-MB', tuss: '40301729', categoria: 'Bioquímica' },
+  { nome: 'Troponina I', tuss: '40302563', categoria: 'Bioquímica' },
+  { nome: 'LDH', tuss: '40301737', categoria: 'Bioquímica' },
+  { nome: 'Lactato', tuss: '40302164', categoria: 'Bioquímica' },
+  // Hormônios
+  { nome: 'TSH', tuss: '40316327', categoria: 'Hormônios' },
+  { nome: 'T4 Livre', tuss: '40316360', categoria: 'Hormônios' },
+  { nome: 'T3 Total', tuss: '40316343', categoria: 'Hormônios' },
+  { nome: 'FSH', tuss: '40316084', categoria: 'Hormônios' },
+  { nome: 'LH', tuss: '40316190', categoria: 'Hormônios' },
+  { nome: 'Estradiol (E2)', tuss: '40316068', categoria: 'Hormônios' },
+  { nome: 'Progesterona', tuss: '40316262', categoria: 'Hormônios' },
+  { nome: 'Testosterona Total', tuss: '40316300', categoria: 'Hormônios' },
+  { nome: 'Prolactina', tuss: '40316270', categoria: 'Hormônios' },
+  { nome: 'Cortisol Basal', tuss: '40316041', categoria: 'Hormônios' },
+  { nome: 'Insulina Basal', tuss: '40316149', categoria: 'Hormônios' },
+  { nome: 'PTH (Paratormônio)', tuss: '40316246', categoria: 'Hormônios' },
+  { nome: 'Vitamina D (25-OH)', tuss: '40316408', categoria: 'Hormônios' },
+  { nome: 'Beta-HCG Quantitativo', tuss: '40302016', categoria: 'Hormônios' },
+  { nome: 'GH', tuss: '40316106', categoria: 'Hormônios' },
+  { nome: 'IGF-1', tuss: '40316130', categoria: 'Hormônios' },
+  { nome: 'DHEA-S', tuss: '40316050', categoria: 'Hormônios' },
+  // Urinálise
+  { nome: 'EAS (Urina Tipo I)', tuss: '40311040', categoria: 'Urinálise' },
+  { nome: 'Urocultura', tuss: '40311058', categoria: 'Urinálise' },
+  { nome: 'Microalbuminúria', tuss: '40311023', categoria: 'Urinálise' },
+  { nome: 'Proteinúria de 24h', tuss: '40311031', categoria: 'Urinálise' },
+  { nome: 'Clearance de Creatinina', tuss: '40311015', categoria: 'Urinálise' },
+  // Sorologia
+  { nome: 'Anti-HIV (1 e 2)', tuss: '40307450', categoria: 'Sorologia' },
+  { nome: 'VDRL', tuss: '40307590', categoria: 'Sorologia' },
+  { nome: 'HBsAg (Hepatite B)', tuss: '40307310', categoria: 'Sorologia' },
+  { nome: 'Anti-HBs', tuss: '40307280', categoria: 'Sorologia' },
+  { nome: 'Anti-HBc Total', tuss: '40307271', categoria: 'Sorologia' },
+  { nome: 'Anti-HCV (Hepatite C)', tuss: '40307301', categoria: 'Sorologia' },
+  { nome: 'Toxoplasmose (IgG e IgM)', tuss: '40307565', categoria: 'Sorologia' },
+  { nome: 'Rubéola (IgG e IgM)', tuss: '40307530', categoria: 'Sorologia' },
+  { nome: 'CMV (IgG e IgM)', tuss: '40307115', categoria: 'Sorologia' },
+  { nome: 'Dengue (IgG e IgM)', tuss: '40307140', categoria: 'Sorologia' },
+  { nome: 'Covid-19 PCR (RT-PCR)', tuss: '40314618', categoria: 'Sorologia' },
+  // Imunologia
+  { nome: 'FAN (Fator Antinuclear)', tuss: '40306879', categoria: 'Imunologia' },
+  { nome: 'Fator Reumatoide (FR)', tuss: '40306895', categoria: 'Imunologia' },
+  { nome: 'Anti-CCP', tuss: '40306810', categoria: 'Imunologia' },
+  { nome: 'ASLO', tuss: '40306844', categoria: 'Imunologia' },
+  { nome: 'Complemento C3', tuss: '40306860', categoria: 'Imunologia' },
+  { nome: 'Complemento C4', tuss: '40306852', categoria: 'Imunologia' },
+  { nome: 'IgE Total', tuss: '40306917', categoria: 'Imunologia' },
+  // Marcadores Tumorais
+  { nome: 'PSA Total', tuss: '40316289', categoria: 'Marcadores Tumorais' },
+  { nome: 'PSA Livre', tuss: '40316297', categoria: 'Marcadores Tumorais' },
+  { nome: 'CEA', tuss: '40316033', categoria: 'Marcadores Tumorais' },
+  { nome: 'CA 125', tuss: '40316009', categoria: 'Marcadores Tumorais' },
+  { nome: 'CA 19-9', tuss: '40316017', categoria: 'Marcadores Tumorais' },
+  { nome: 'CA 15-3', tuss: '40316025', categoria: 'Marcadores Tumorais' },
+  { nome: 'AFP (Alfafetoproteína)', tuss: '40302385', categoria: 'Marcadores Tumorais' },
+  // Vitaminas
+  { nome: 'Vitamina B12', tuss: '40302610', categoria: 'Vitaminas' },
+  { nome: 'Ácido Fólico', tuss: '40301028', categoria: 'Vitaminas' },
+  { nome: 'Vitamina A', tuss: '40302628', categoria: 'Vitaminas' },
+  { nome: 'Zinco', tuss: '40302636', categoria: 'Vitaminas' },
+  // Fezes
+  { nome: 'Parasitológico de Fezes (EPF)', tuss: '40310060', categoria: 'Fezes' },
+  { nome: 'Sangue Oculto nas Fezes', tuss: '40310078', categoria: 'Fezes' },
+  { nome: 'Coprocultura', tuss: '40310035', categoria: 'Fezes' },
+  { nome: 'Calprotectina Fecal', tuss: '40310027', categoria: 'Fezes' },
+  // Imagem - Raio-X
+  { nome: 'Raio-X Tórax PA', tuss: '40801012', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Tórax PA e Perfil', tuss: '40801020', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Coluna Cervical', tuss: '40801039', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Coluna Lombar', tuss: '40801047', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Abdome', tuss: '40801055', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Seios da Face', tuss: '40801063', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Joelho', tuss: '40801071', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Ombro', tuss: '40801080', categoria: 'Imagem - RX' },
+  { nome: 'Raio-X Mão', tuss: '40801098', categoria: 'Imagem - RX' },
+  // Imagem - Ultrassom
+  { nome: 'Ultrassom Abdominal Total', tuss: '40901017', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom Pélvico', tuss: '40901025', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom Transvaginal', tuss: '40901033', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom de Tireoide', tuss: '40901041', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom de Mama', tuss: '40901050', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom Rins e Vias Urinárias', tuss: '40901068', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom Obstétrico', tuss: '40901076', categoria: 'Imagem - US' },
+  { nome: 'Ultrassom Morfológico', tuss: '40901084', categoria: 'Imagem - US' },
+  { nome: 'Doppler de Carótidas', tuss: '40901092', categoria: 'Imagem - US' },
+  { nome: 'Doppler Venoso MMII', tuss: '40901106', categoria: 'Imagem - US' },
+  // Imagem - Tomografia
+  { nome: 'TC Crânio (sem contraste)', tuss: '41001011', categoria: 'Imagem - TC' },
+  { nome: 'TC Crânio (com contraste)', tuss: '41001020', categoria: 'Imagem - TC' },
+  { nome: 'TC Tórax', tuss: '41001038', categoria: 'Imagem - TC' },
+  { nome: 'TC Abdome Total', tuss: '41001046', categoria: 'Imagem - TC' },
+  { nome: 'TC Coluna Lombar', tuss: '41001054', categoria: 'Imagem - TC' },
+  { nome: 'Angiotomografia Coronariana', tuss: '41001062', categoria: 'Imagem - TC' },
+  { nome: 'Angiotomografia Pulmonar', tuss: '41001070', categoria: 'Imagem - TC' },
+  // Imagem - Ressonância
+  { nome: 'RM Crânio', tuss: '41101014', categoria: 'Imagem - RM' },
+  { nome: 'RM Coluna Cervical', tuss: '41101022', categoria: 'Imagem - RM' },
+  { nome: 'RM Coluna Lombar', tuss: '41101030', categoria: 'Imagem - RM' },
+  { nome: 'RM Joelho', tuss: '41101049', categoria: 'Imagem - RM' },
+  { nome: 'RM Ombro', tuss: '41101057', categoria: 'Imagem - RM' },
+  { nome: 'RM Pelve', tuss: '41101065', categoria: 'Imagem - RM' },
+  { nome: 'RM Mama', tuss: '41101073', categoria: 'Imagem - RM' },
+  { nome: 'RM Cardíaca', tuss: '41101081', categoria: 'Imagem - RM' },
+  // Mamografia
+  { nome: 'Mamografia Bilateral', tuss: '40801128', categoria: 'Mamografia' },
+  { nome: 'Densitometria Óssea', tuss: '40801136', categoria: 'Mamografia' },
+  // Cardiologia
+  { nome: 'Eletrocardiograma (ECG)', tuss: '40101010', categoria: 'Cardiologia' },
+  { nome: 'Ecocardiograma Transtorácico', tuss: '40101029', categoria: 'Cardiologia' },
+  { nome: 'Teste Ergométrico', tuss: '40101037', categoria: 'Cardiologia' },
+  { nome: 'Holter 24h', tuss: '40101045', categoria: 'Cardiologia' },
+  { nome: 'MAPA 24h', tuss: '40101053', categoria: 'Cardiologia' },
+  // Endoscopia
+  { nome: 'Endoscopia Digestiva Alta', tuss: '40201015', categoria: 'Endoscopia' },
+  { nome: 'Colonoscopia', tuss: '40201023', categoria: 'Endoscopia' },
+  // Pneumologia
+  { nome: 'Espirometria', tuss: '40501012', categoria: 'Pneumologia' },
+  { nome: 'Polissonografia', tuss: '40501020', categoria: 'Pneumologia' },
+  // Neurologia
+  { nome: 'Eletroencefalograma (EEG)', tuss: '40401014', categoria: 'Neurologia' },
+  { nome: 'Eletroneuromiografia', tuss: '40401022', categoria: 'Neurologia' },
+  // Otorrino
+  { nome: 'Audiometria Tonal', tuss: '40601013', categoria: 'Otorrino' },
+  { nome: 'Impedanciometria', tuss: '40601021', categoria: 'Otorrino' },
+  // Oftalmologia
+  { nome: 'Tonometria', tuss: '40701017', categoria: 'Oftalmologia' },
+  { nome: 'Campimetria Visual', tuss: '40701025', categoria: 'Oftalmologia' },
+  { nome: 'OCT (Tomografia Óptica)', tuss: '40701033', categoria: 'Oftalmologia' },
+  // Ginecologia
+  { nome: 'Citopatológico (Papanicolau)', tuss: '40601030', categoria: 'Ginecologia' },
+  { nome: 'Colposcopia', tuss: '40601048', categoria: 'Ginecologia' },
+  // Gasometria
+  { nome: 'Gasometria Arterial', tuss: '40302032', categoria: 'Gasometria' },
+  // Microbiologia
+  { nome: 'Hemocultura', tuss: '40309011', categoria: 'Microbiologia' },
+  { nome: 'Cultura de Secreção', tuss: '40309029', categoria: 'Microbiologia' },
+  { nome: 'Antibiograma', tuss: '40309037', categoria: 'Microbiologia' },
+  { nome: 'BAAR', tuss: '40309045', categoria: 'Microbiologia' },
 ];
+
+// Grouped for display
+const CATEGORIAS_EXAME = [...new Set(CATALOGO_EXAMES.map(e => e.categoria))].sort();
+
+interface ExameSelecionado {
+  nome: string;
+  tuss: string;
+  lateralidade?: string;
+  regiao_anatomica?: string;
+  necessita_contraste?: boolean;
+}
 
 interface FormData {
   paciente_id: string;
   medico_solicitante_id: string;
-  tipo_exame: string;
-  descricao: string;
-  observacoes: string;
+  data_solicitacao: string;
+  validade_dias: number;
   indicacao_clinica: string;
   hipotese_diagnostica: string;
   urgencia: string;
+  justificativa_urgencia: string;
   jejum: string;
-  lateralidade: string;
-  regiao_anatomica: string;
+  observacoes: string;
+  necessita_contraste: boolean;
 }
 
 const initialFormData: FormData = {
   paciente_id: '',
   medico_solicitante_id: '',
-  tipo_exame: '',
-  descricao: '',
-  observacoes: '',
+  data_solicitacao: format(new Date(), 'yyyy-MM-dd'),
+  validade_dias: 30,
   indicacao_clinica: '',
   hipotese_diagnostica: '',
   urgencia: 'normal',
+  justificativa_urgencia: '',
   jejum: '',
-  lateralidade: '',
-  regiao_anatomica: '',
+  observacoes: '',
+  necessita_contraste: false,
 };
 
 export default function Exames() {
@@ -323,9 +285,20 @@ export default function Exames() {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isManageTypesOpen, setIsManageTypesOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>({ ...initialFormData });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customExameInput, setCustomExameInput] = useState('');
+
+  // Multi-select exams
+  const [examesSelecionados, setExamesSelecionados] = useState<ExameSelecionado[]>([]);
+  const [examSearch, setExamSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [showExamPicker, setShowExamPicker] = useState(false);
+
+  // Attachments
+  const [anexos, setAnexos] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Custom types
   const [newTypeInput, setNewTypeInput] = useState('');
   const [newTypeCat, setNewTypeCat] = useState('Personalizado');
 
@@ -335,37 +308,45 @@ export default function Exames() {
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
 
-  // Custom exam types from DB
   const { data: customTypesFromDB = [] } = useQuery({
     queryKey: ['tipos_exame_custom'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tipos_exame_custom' as any)
-        .select('*')
-        .order('nome');
+      const { data, error } = await supabase.from('tipos_exame_custom' as any).select('*').order('nome');
       if (error) throw error;
       return data as any[];
     },
     enabled: !!user,
   });
 
-  const TIPOS_EXAME = useMemo(() => {
-    const customNames = customTypesFromDB.map((t: any) => t.nome);
-    return [...new Set([...TIPOS_EXAME_DEFAULT, ...customNames])].sort();
+  // Merge catalog with custom types
+  const allExames = useMemo(() => {
+    const custom = customTypesFromDB.map((t: any) => ({
+      nome: t.nome,
+      tuss: t.codigo_tuss || '',
+      categoria: t.categoria || 'Personalizado',
+    }));
+    return [...CATALOGO_EXAMES, ...custom];
   }, [customTypesFromDB]);
+
+  const filteredCatalogo = useMemo(() => {
+    return allExames.filter(e => {
+      const matchSearch = !examSearch || e.nome.toLowerCase().includes(examSearch.toLowerCase()) || e.tuss.includes(examSearch);
+      const matchCat = !catFilter || e.categoria === catFilter;
+      const notSelected = !examesSelecionados.some(s => s.nome === e.nome);
+      return matchSearch && matchCat && notSelected;
+    });
+  }, [allExames, examSearch, catFilter, examesSelecionados]);
 
   const { data: exames = [], isLoading: loadingExames } = useQuery({
     queryKey: ['exames', isMedicoOnly, medicoId],
     queryFn: async () => {
       let query = supabase
         .from('exames')
-        .select('*, pacientes(nome), medicos(crm, especialidade)')
+        .select('*, pacientes(nome), medicos(crm, especialidade, nome)')
         .order('data_solicitacao', { ascending: false });
-
       if (isMedicoOnly && medicoId) {
         query = query.eq('medico_solicitante_id', medicoId);
       }
-
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -378,7 +359,7 @@ export default function Exames() {
   const filteredExames = useMemo(() => {
     return exames.filter(e => {
       const paciente = (e as any).pacientes;
-      const matchesSearch = 
+      const matchesSearch =
         paciente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.tipo_exame.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'todos' || e.status === statusFilter;
@@ -386,13 +367,23 @@ export default function Exames() {
     });
   }, [exames, searchTerm, statusFilter]);
 
-  const selectedExame = useMemo(() => 
-    exames.find(e => e.id === selectedId),
-    [exames, selectedId]
-  );
+  const selectedExame = useMemo(() => exames.find(e => e.id === selectedId), [exames, selectedId]);
+
+  const addExame = (exame: ExameCatalogo) => {
+    setExamesSelecionados(prev => [...prev, { nome: exame.nome, tuss: exame.tuss }]);
+    setExamSearch('');
+  };
+
+  const removeExame = (nome: string) => {
+    setExamesSelecionados(prev => prev.filter(e => e.nome !== nome));
+  };
 
   const handleOpenNew = () => {
-    setFormData(initialFormData);
+    setFormData({ ...initialFormData, medico_solicitante_id: medicoId || '' });
+    setExamesSelecionados([]);
+    setAnexos([]);
+    setExamSearch('');
+    setCatFilter('');
     setIsDialogOpen(true);
   };
 
@@ -401,43 +392,79 @@ export default function Exames() {
     setIsViewOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!formData.paciente_id || !formData.medico_solicitante_id || !formData.tipo_exame) {
-      toast.error('Preencha todos os campos obrigatórios.');
+  const handleSave = async (emitir = false) => {
+    if (!formData.paciente_id || !formData.medico_solicitante_id) {
+      toast.error('Selecione paciente e médico.');
+      return;
+    }
+    if (examesSelecionados.length === 0) {
+      toast.error('Adicione pelo menos um exame à guia.');
+      return;
+    }
+    if ((formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && !formData.justificativa_urgencia) {
+      toast.error('Justifique a urgência/emergência para fins de autorização.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Build detailed description with all clinical info
+      const validadeData = format(addDays(new Date(formData.data_solicitacao + 'T12:00'), formData.validade_dias), 'yyyy-MM-dd');
+
+      // Upload attachments
+      const anexoUrls: string[] = [];
+      for (const file of anexos) {
+        const ext = file.name.split('.').pop();
+        const path = `exames/${formData.paciente_id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('medical-attachments').upload(path, file);
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from('medical-attachments').getPublicUrl(path);
+          anexoUrls.push(urlData.publicUrl);
+        }
+      }
+
+      // Build details
       const detalhes = [
         formData.indicacao_clinica && `Indicação Clínica: ${formData.indicacao_clinica}`,
         formData.hipotese_diagnostica && `Hipótese Diagnóstica: ${formData.hipotese_diagnostica}`,
-        formData.lateralidade && formData.lateralidade !== 'nao_aplica' && `Lateralidade: ${formData.lateralidade}`,
-        formData.regiao_anatomica && `Região: ${formData.regiao_anatomica}`,
         formData.urgencia !== 'normal' && `Urgência: ${formData.urgencia.toUpperCase()}`,
+        formData.justificativa_urgencia && `Justificativa: ${formData.justificativa_urgencia}`,
         formData.jejum && formData.jejum !== 'nao' && `Jejum: ${formData.jejum}`,
-        formData.descricao,
+        formData.necessita_contraste && 'Necessita de Contraste: SIM',
+        `Validade: até ${format(new Date(validadeData + 'T12:00'), 'dd/MM/yyyy')}`,
+        anexoUrls.length > 0 && `Anexos: ${anexoUrls.length} arquivo(s)`,
       ].filter(Boolean).join('\n');
 
-      const { error } = await supabase.from('exames').insert({
+      // Insert one row per exam in the batch
+      const inserts = examesSelecionados.map(ex => ({
         paciente_id: formData.paciente_id,
         medico_solicitante_id: formData.medico_solicitante_id,
-        tipo_exame: formData.tipo_exame,
+        tipo_exame: `${ex.tuss ? ex.tuss + ' - ' : ''}${ex.nome}`,
         descricao: detalhes || null,
-        observacoes: formData.observacoes || null,
+        observacoes: [
+          formData.observacoes,
+          ex.lateralidade && `Lateralidade: ${ex.lateralidade}`,
+          ex.regiao_anatomica && `Região: ${ex.regiao_anatomica}`,
+          ex.necessita_contraste && 'Necessita Contraste',
+          anexoUrls.length > 0 && `Anexos: ${anexoUrls.join(', ')}`,
+        ].filter(Boolean).join('\n') || null,
         status: 'solicitado' as StatusExame,
-        data_solicitacao: new Date().toISOString().split('T')[0],
-      });
+        data_solicitacao: formData.data_solicitacao,
+      }));
 
+      const { error } = await supabase.from('exames').insert(inserts);
       if (error) throw error;
-      
-      toast.success('Exame solicitado com sucesso!');
+
       queryClient.invalidateQueries({ queryKey: ['exames'] });
       setIsDialogOpen(false);
+
+      if (emitir) {
+        toast.success(`${examesSelecionados.length} exame(s) emitidos e prontos para assinatura digital.`);
+      } else {
+        toast.success(`${examesSelecionados.length} exame(s) solicitados com sucesso!`);
+      }
     } catch (error: any) {
-      console.error('Erro ao solicitar exame:', error);
-      toast.error(error.message || 'Erro ao solicitar exame');
+      console.error('Erro ao solicitar exames:', error);
+      toast.error(error.message || 'Erro ao solicitar exames.');
     } finally {
       setIsSubmitting(false);
     }
@@ -446,90 +473,74 @@ export default function Exames() {
   const handleUpdateStatus = async (id: string, newStatus: StatusExame) => {
     try {
       const updateData: Record<string, any> = { status: newStatus };
-      
-      if (newStatus === 'realizado') {
-        updateData.data_realizacao = new Date().toISOString().split('T')[0];
-      }
-
-      const { error } = await supabase
-        .from('exames')
-        .update(updateData)
-        .eq('id', id);
-
+      if (newStatus === 'realizado') updateData.data_realizacao = new Date().toISOString().split('T')[0];
+      const { error } = await supabase.from('exames').update(updateData).eq('id', id);
       if (error) throw error;
-      
       toast.success('Status atualizado!');
       queryClient.invalidateQueries({ queryKey: ['exames'] });
     } catch (error: any) {
-      console.error('Erro ao atualizar status:', error);
       toast.error(error.message || 'Erro ao atualizar status');
     }
   };
 
-  const getPacienteNome = (exame: any) => {
-    return exame.pacientes?.nome || 'Desconhecido';
-  };
-
+  const getPacienteNome = (exame: any) => exame.pacientes?.nome || 'Desconhecido';
   const getMedicoInfo = (exame: any) => {
-    const medico = exame.medicos;
-    return medico ? `${medico.crm} - ${medico.especialidade || 'Clínico'}` : 'Desconhecido';
+    const m = exame.medicos;
+    return m ? `${m.nome || m.crm} - ${m.especialidade || 'Clínico'}` : 'Desconhecido';
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96" />
-      </div>
-    );
-  }
+  if (isLoading) return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Exames</h1>
-          <p className="text-muted-foreground">Gerencie solicitações e resultados de exames</p>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <FileText className="h-8 w-8 text-primary" />
+            Solicitação de Exames
+          </h1>
+          <p className="text-muted-foreground">Gerencie guias de exames com código TUSS integrado</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsManageTypesOpen(true)} className="gap-2">
-            <FileText className="h-4 w-4" />
-            Meus Tipos de Exame
+            <Tag className="h-4 w-4" />Meus Tipos
           </Button>
-          <Button onClick={handleOpenNew} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Solicitar Exame
-          </Button>
+          <Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" />Nova Guia de Exames</Button>
         </div>
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {Object.entries(STATUS_LABELS).map(([key, label]) => {
+          const count = exames.filter(e => e.status === key).length;
+          return (
+            <Card key={key} className="kpi-card cursor-pointer" onClick={() => setStatusFilter(key)}>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold tabular-nums">{count}</p>
+                <Badge className={cn('mt-1', STATUS_COLORS[key as StatusExame])}>{label}</Badge>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Table */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Exames ({filteredExames.length})
-            </CardTitle>
+            <CardTitle>Exames ({filteredExames.length})</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filtrar status" />
-                </SelectTrigger>
+                <SelectTrigger className="w-40"><SelectValue placeholder="Filtrar" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
-                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
+                  {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                 </SelectContent>
               </Select>
               <div className="relative w-full sm:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar paciente ou exame..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Buscar paciente ou exame..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
             </div>
           </div>
@@ -540,7 +551,7 @@ export default function Exames() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Exame</TableHead>
+                  <TableHead>Exame (TUSS)</TableHead>
                   <TableHead className="hidden md:table-cell">Solicitante</TableHead>
                   <TableHead className="hidden sm:table-cell">Data</TableHead>
                   <TableHead>Status</TableHead>
@@ -556,53 +567,25 @@ export default function Exames() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredExames.map((exame) => (
+                  filteredExames.map(exame => (
                     <TableRow key={exame.id}>
                       <TableCell className="font-medium">{getPacienteNome(exame)}</TableCell>
-                      <TableCell>{exame.tipo_exame}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {getMedicoInfo(exame)}
+                      <TableCell>
+                        <span className="text-sm">{exame.tipo_exame}</span>
                       </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{getMedicoInfo(exame)}</TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">
                         {exame.data_solicitacao && format(new Date(exame.data_solicitacao), 'dd/MM/yyyy')}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[exame.status || 'solicitado'])}>
-                          {STATUS_LABELS[exame.status || 'solicitado']}
-                        </Badge>
+                        <Badge className={cn(STATUS_COLORS[exame.status || 'solicitado'])}>{STATUS_LABELS[exame.status || 'solicitado']}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleView(exame.id)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {exame.status === 'solicitado' && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleUpdateStatus(exame.id, 'agendado')}
-                            >
-                              Agendar
-                            </Button>
-                          )}
-                          {exame.status === 'agendado' && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleUpdateStatus(exame.id, 'realizado')}
-                            >
-                              Realizado
-                            </Button>
-                          )}
-                          {exame.status === 'realizado' && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleUpdateStatus(exame.id, 'laudo_disponivel')}
-                            >
-                              Laudo OK
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon" onClick={() => handleView(exame.id)}><Eye className="h-4 w-4" /></Button>
+                          {exame.status === 'solicitado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'agendado')}>Agendar</Button>}
+                          {exame.status === 'agendado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'realizado')}>Realizado</Button>}
+                          {exame.status === 'realizado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'laudo_disponivel')}>Laudo OK</Button>}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -614,103 +597,58 @@ export default function Exames() {
         </CardContent>
       </Card>
 
-      {/* New Exam Dialog */}
+      {/* ─── New Exam Dialog ─── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Solicitar Exame</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Nova Guia de Exames
+              <Badge variant="outline" className="ml-auto text-[10px] gap-1"><ShieldCheck className="h-3 w-3 text-green-500" />ICP-Brasil</Badge>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+
+          <div className="flex-1 overflow-y-auto space-y-5 pr-2">
+            {/* Paciente + Médico */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Paciente *</Label>
-                <Select
-                  value={formData.paciente_id}
-                  onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o paciente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pacientes.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Paciente *</Label>
+                <Select value={formData.paciente_id} onValueChange={v => setFormData({ ...formData, paciente_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o paciente" /></SelectTrigger>
+                  <SelectContent>{pacientes.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label>Médico Solicitante *</Label>
-                <Select
-                  value={formData.medico_solicitante_id}
-                  onValueChange={(v) => setFormData({ ...formData, medico_solicitante_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o médico" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {medicos.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.nome || m.crm} - {m.especialidade || 'Clínico'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Médico Solicitante *</Label>
+                <Select value={formData.medico_solicitante_id} onValueChange={v => setFormData({ ...formData, medico_solicitante_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o médico" /></SelectTrigger>
+                  <SelectContent>{medicos.map(m => <SelectItem key={m.id} value={m.id}>{m.nome || m.crm} — {m.especialidade || 'Clínico'}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Tipo de Exame *</Label>
-              <Select
-                value={formData.tipo_exame}
-                onValueChange={(v) => setFormData({ ...formData, tipo_exame: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o exame" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {TIPOS_EXAME.map((tipo) => (
-                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Input
-                  value={customExameInput}
-                  onChange={(e) => setCustomExameInput(e.target.value)}
-                  placeholder="Ou digite um tipo personalizado..."
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={!customExameInput.trim()}
-                  onClick={async () => {
-                    const name = customExameInput.trim();
-                    if (name && !TIPOS_EXAME.includes(name) && user) {
-                      await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: name } as any);
-                      queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
-                    }
-                    setFormData({ ...formData, tipo_exame: name });
-                    setCustomExameInput('');
-                  }}
-                >
-                  <PlusCircle className="h-4 w-4" />
-                </Button>
+            {/* Data + Validade */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="h-3 w-3" />Data do Pedido</Label>
+                <Input type="date" value={formData.data_solicitacao} onChange={e => setFormData({ ...formData, data_solicitacao: e.target.value })} />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Urgência</Label>
-                <Select
-                  value={formData.urgencia}
-                  onValueChange={(v) => setFormData({ ...formData, urgencia: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium flex items-center gap-1"><Clock className="h-3 w-3" />Validade (dias)</Label>
+                <Select value={formData.validade_dias.toString()} onValueChange={v => setFormData({ ...formData, validade_dias: parseInt(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                    <SelectItem value="180">180 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Urgência</Label>
+                <Select value={formData.urgencia} onValueChange={v => setFormData({ ...formData, urgencia: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="urgente">Urgente</SelectItem>
@@ -718,34 +656,10 @@ export default function Exames() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label>Lateralidade</Label>
-                <Select
-                  value={formData.lateralidade}
-                  onValueChange={(v) => setFormData({ ...formData, lateralidade: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Se aplicável" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nao_aplica">Não se aplica</SelectItem>
-                    <SelectItem value="direito">Direito</SelectItem>
-                    <SelectItem value="esquerdo">Esquerdo</SelectItem>
-                    <SelectItem value="bilateral">Bilateral</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Jejum</Label>
-                <Select
-                  value={formData.jejum}
-                  onValueChange={(v) => setFormData({ ...formData, jejum: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Necessidade" />
-                  </SelectTrigger>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Jejum</Label>
+                <Select value={formData.jejum} onValueChange={v => setFormData({ ...formData, jejum: v })}>
+                  <SelectTrigger><SelectValue placeholder="Se necessário" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nao">Não necessário</SelectItem>
                     <SelectItem value="8h">8 horas</SelectItem>
@@ -756,72 +670,199 @@ export default function Exames() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Região Anatômica / Local</Label>
-              <Input
-                value={formData.regiao_anatomica}
-                onChange={(e) => setFormData({ ...formData, regiao_anatomica: e.target.value })}
-                placeholder="Ex: Joelho direito, Abdome superior, Coluna lombar L4-L5..."
-              />
+            {/* Urgency justification */}
+            {(formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && (
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-2">
+                <Label className="text-xs font-medium flex items-center gap-1 text-amber-700 dark:text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5" />Justificativa de Urgência (obrigatória para autorização) *
+                </Label>
+                <Textarea
+                  value={formData.justificativa_urgencia}
+                  onChange={e => setFormData({ ...formData, justificativa_urgencia: e.target.value })}
+                  placeholder="Justifique a necessidade de urgência para fins de autorização pelo convênio..."
+                  rows={2}
+                />
+              </div>
+            )}
+
+            <Separator />
+
+            {/* ─── Multi-Exam Selector ─── */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Exames Solicitados ({examesSelecionados.length})</Label>
+                <Badge variant="outline" className="text-[10px]">TUSS integrado</Badge>
+              </div>
+
+              {/* Selected exams as tags */}
+              {examesSelecionados.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {examesSelecionados.map(ex => (
+                    <Badge key={ex.nome} variant="secondary" className="gap-1.5 py-1.5 px-3 text-xs">
+                      {ex.tuss && <span className="text-[10px] text-muted-foreground font-mono">{ex.tuss}</span>}
+                      {ex.nome}
+                      {ex.necessita_contraste && <span className="text-amber-600">⚠ contraste</span>}
+                      <button onClick={() => removeExame(ex.nome)} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Search + Category filter */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou código TUSS..."
+                    value={examSearch}
+                    onChange={e => { setExamSearch(e.target.value); setShowExamPicker(true); }}
+                    onFocus={() => setShowExamPicker(true)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={catFilter} onValueChange={v => { setCatFilter(v === '__all__' ? '' : v); setShowExamPicker(true); }}>
+                  <SelectTrigger className="w-48"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas categorias</SelectItem>
+                    {CATEGORIAS_EXAME.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Exam picker dropdown */}
+              {showExamPicker && (
+                <div className="border rounded-lg max-h-48 overflow-y-auto bg-background">
+                  {filteredCatalogo.length === 0 ? (
+                    <p className="text-center py-4 text-sm text-muted-foreground">Nenhum exame encontrado</p>
+                  ) : (
+                    filteredCatalogo.slice(0, 30).map(ex => (
+                      <button
+                        key={ex.nome}
+                        type="button"
+                        className="w-full flex items-center justify-between px-3 py-2 hover:bg-muted/50 text-left text-sm border-b last:border-0 transition-colors"
+                        onClick={() => addExame(ex)}
+                      >
+                        <div>
+                          <span className="font-medium">{ex.nome}</span>
+                          <span className="ml-2 text-[10px] text-muted-foreground font-mono">{ex.tuss}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">{ex.categoria}</Badge>
+                      </button>
+                    ))
+                  )}
+                  {filteredCatalogo.length > 30 && (
+                    <p className="text-center py-2 text-xs text-muted-foreground">Mostrando 30 de {filteredCatalogo.length} — refine sua busca</p>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Indicação Clínica *</Label>
+            {/* Contrast checkbox */}
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="contraste"
+                checked={formData.necessita_contraste}
+                onCheckedChange={c => setFormData({ ...formData, necessita_contraste: c as boolean })}
+              />
+              <Label htmlFor="contraste" className="text-sm cursor-pointer">
+                Necessita de Contraste? <span className="text-xs text-muted-foreground">(altera preparo do paciente e valor)</span>
+              </Label>
+            </div>
+
+            <Separator />
+
+            {/* Clinical info */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Indicação Clínica *</Label>
               <Textarea
                 value={formData.indicacao_clinica}
-                onChange={(e) => setFormData({ ...formData, indicacao_clinica: e.target.value })}
-                placeholder="Motivo da solicitação: sintomas, achados clínicos, suspeita diagnóstica..."
+                onChange={e => setFormData({ ...formData, indicacao_clinica: e.target.value })}
+                placeholder="Sintomas, achados clínicos, suspeita diagnóstica..."
                 rows={2}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Hipótese Diagnóstica / CID</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Hipótese Diagnóstica / CID</Label>
               <Input
                 value={formData.hipotese_diagnostica}
-                onChange={(e) => setFormData({ ...formData, hipotese_diagnostica: e.target.value })}
+                onChange={e => setFormData({ ...formData, hipotese_diagnostica: e.target.value })}
                 placeholder="Ex: J18.9 - Pneumonia, M54.5 - Lombalgia..."
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Descrição / Informações Adicionais</Label>
-              <Textarea
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                placeholder="Detalhes adicionais: uso de contraste, preparo especial, medicamentos em uso..."
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Observações para o Laboratório/Clínica</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Observações para Laboratório/Clínica</Label>
               <Textarea
                 value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                onChange={e => setFormData({ ...formData, observacoes: e.target.value })}
                 placeholder="Instruções especiais, alergias a contraste, marcapasso, próteses..."
                 rows={2}
               />
             </div>
+
+            {/* Attachments */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium flex items-center gap-1"><Upload className="h-3 w-3" />Anexos (laudos anteriores, fotos de lesões)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf"
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files) setAnexos(prev => [...prev, ...Array.from(e.target.files!)]);
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1">
+                  <Upload className="h-3.5 w-3.5" />Selecionar Arquivos
+                </Button>
+                <span className="text-xs text-muted-foreground">{anexos.length} arquivo(s)</span>
+              </div>
+              {anexos.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {anexos.map((f, i) => (
+                    <Badge key={i} variant="outline" className="gap-1 text-xs">
+                      {f.name.length > 25 ? f.name.slice(0, 25) + '...' : f.name}
+                      <button onClick={() => setAnexos(prev => prev.filter((_, idx) => idx !== i))}><X className="h-3 w-3" /></button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Validity info */}
+            <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <Clock className="h-5 w-5 text-primary flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">Validade da Solicitação</p>
+                <p className="text-xs text-muted-foreground">
+                  Esta guia é válida por <strong>{formData.validade_dias} dias</strong> — até{' '}
+                  {format(addDays(new Date(formData.data_solicitacao + 'T12:00'), formData.validade_dias), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}.
+                </p>
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
-              Cancelar
+
+          <DialogFooter className="flex-shrink-0 pt-4 border-t gap-2">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>Cancelar</Button>
+            <Button variant="secondary" onClick={() => handleSave(false)} disabled={isSubmitting} className="gap-1">
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Solicitar ({examesSelecionados.length})
             </Button>
-            <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">
-              Solicitar
-            </LoadingButton>
+            <Button onClick={() => handleSave(true)} disabled={isSubmitting} className="gap-1">
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Printer className="h-4 w-4" />Emitir e Assinar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
-      {/* View Dialog */}
+      {/* ─── View Dialog ─── */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Exame</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Detalhes do Exame</DialogTitle></DialogHeader>
           {selectedExame && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -831,13 +872,11 @@ export default function Exames() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={cn(STATUS_COLORS[selectedExame.status || 'solicitado'])}>
-                    {STATUS_LABELS[selectedExame.status || 'solicitado']}
-                  </Badge>
+                  <Badge className={cn(STATUS_COLORS[selectedExame.status || 'solicitado'])}>{STATUS_LABELS[selectedExame.status || 'solicitado']}</Badge>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Tipo de Exame</p>
+                <p className="text-sm text-muted-foreground">Exame (TUSS)</p>
                 <p className="font-medium">{selectedExame.tipo_exame}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -854,8 +893,8 @@ export default function Exames() {
               </div>
               {selectedExame.descricao && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Descrição</p>
-                  <p>{selectedExame.descricao}</p>
+                  <p className="text-sm text-muted-foreground">Detalhes</p>
+                  <p className="text-sm whitespace-pre-wrap">{selectedExame.descricao}</p>
                 </div>
               )}
               {selectedExame.resultado && (
@@ -867,85 +906,62 @@ export default function Exames() {
               {selectedExame.observacoes && (
                 <div>
                   <p className="text-sm text-muted-foreground">Observações</p>
-                  <p>{selectedExame.observacoes}</p>
+                  <p className="text-sm whitespace-pre-wrap">{selectedExame.observacoes}</p>
                 </div>
               )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewOpen(false)}>
-              Fechar
-            </Button>
+            <Button variant="outline" onClick={() => setIsViewOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Manage Custom Types Dialog */}
+      {/* ─── Manage Custom Types ─── */}
       <Dialog open={isManageTypesOpen} onOpenChange={setIsManageTypesOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Meus Tipos de Exame</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Meus Tipos de Exame</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex gap-2">
-              <Input
-                value={newTypeInput}
-                onChange={e => setNewTypeInput(e.target.value)}
-                placeholder="Nome do tipo de exame..."
-                className="flex-1"
-                onKeyDown={async (e) => {
+              <Input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} placeholder="Nome do exame..." className="flex-1"
+                onKeyDown={async e => {
                   if (e.key === 'Enter' && newTypeInput.trim() && user) {
                     await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
                     queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
                     setNewTypeInput('');
-                    toast.success('Tipo de exame cadastrado!');
+                    toast.success('Tipo cadastrado!');
                   }
                 }}
               />
-              <Button
-                disabled={!newTypeInput.trim()}
-                onClick={async () => {
-                  if (!newTypeInput.trim() || !user) return;
-                  await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
-                  queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
-                  setNewTypeInput('');
-                  toast.success('Tipo de exame cadastrado!');
-                }}
-                className="gap-1"
-              >
-                <Plus className="h-4 w-4" /> Adicionar
-              </Button>
+              <Button disabled={!newTypeInput.trim()} onClick={async () => {
+                if (!newTypeInput.trim() || !user) return;
+                await supabase.from('tipos_exame_custom' as any).insert({ user_id: user.id, nome: newTypeInput.trim(), categoria: newTypeCat } as any);
+                queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                setNewTypeInput('');
+                toast.success('Tipo cadastrado!');
+              }} className="gap-1"><Plus className="h-4 w-4" />Adicionar</Button>
             </div>
             {customTypesFromDB.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum tipo personalizado cadastrado ainda</p>
+              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum tipo personalizado cadastrado</p>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {customTypesFromDB.map((tipo: any) => (
                   <div key={tipo.id} className="flex items-center justify-between border rounded-lg px-3 py-2">
                     <div>
                       <p className="font-medium text-sm">{tipo.nome}</p>
-                      <p className="text-xs text-muted-foreground">{tipo.categoria}</p>
+                      <p className="text-xs text-muted-foreground">{tipo.categoria} {tipo.codigo_tuss && `• TUSS: ${tipo.codigo_tuss}`}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive h-7"
-                      onClick={async () => {
-                        await supabase.from('tipos_exame_custom' as any).delete().eq('id', tipo.id);
-                        queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
-                        toast.success('Tipo removido');
-                      }}
-                    >
-                      Remover
-                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={async () => {
+                      await supabase.from('tipos_exame_custom' as any).delete().eq('id', tipo.id);
+                      queryClient.invalidateQueries({ queryKey: ['tipos_exame_custom'] });
+                      toast.success('Removido');
+                    }}>Remover</Button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsManageTypesOpen(false)}>Fechar</Button>
-          </DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setIsManageTypesOpen(false)}>Fechar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
