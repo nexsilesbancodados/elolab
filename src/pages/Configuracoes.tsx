@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Save, Building, Clock, Bell, Database, Download, History,
-  Shield, Palette, Globe, MessageSquare, CreditCard, Mail,
-  Smartphone, Key, RefreshCw, Server, HardDrive, CheckCircle2,
-  AlertTriangle, ExternalLink, Zap, Settings2
+  Save, Building, Clock, Bell, Download, History,
+  Shield, Palette, Globe,
+  Key, RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
