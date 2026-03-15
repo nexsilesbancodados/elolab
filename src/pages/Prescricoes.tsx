@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { gerarReceita, openPDF } from '@/lib/pdfGenerator';
 import { DrugInteractionChecker, AllergyAlert } from '@/components/clinical';
 import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 
