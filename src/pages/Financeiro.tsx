@@ -208,7 +208,7 @@ export default function Financeiro() {
         valor: parseFloat(form.valor.replace(',', '.')),
         data: form.data,
         data_vencimento: form.data_vencimento || null,
-        status: form.status,
+        status: form.status as "pendente" | "pago" | "atrasado" | "cancelado" | "estornado",
         forma_pagamento: form.forma_pagamento || null,
       };
       if (editTarget) {
