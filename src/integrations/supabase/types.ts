@@ -537,56 +537,68 @@ export type Database = {
         Row: {
           codigo_amostra: string
           coletado_por: string | null
+          condicao_amostra: string[] | null
           created_at: string | null
           data_coleta: string | null
           exame_id: string | null
           id: string
           jejum_horas: number | null
           jejum_necessario: boolean | null
+          lote_insumo: string | null
           medico_solicitante_id: string | null
           observacoes: string | null
           paciente_id: string
+          sitio_coleta: string | null
           status: string
           tipo_amostra: string
           tubo: string | null
           updated_at: string | null
           urgente: boolean | null
+          volume_ml: number | null
         }
         Insert: {
           codigo_amostra?: string
           coletado_por?: string | null
+          condicao_amostra?: string[] | null
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
           id?: string
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
+          lote_insumo?: string | null
           medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id: string
+          sitio_coleta?: string | null
           status?: string
           tipo_amostra?: string
           tubo?: string | null
           updated_at?: string | null
           urgente?: boolean | null
+          volume_ml?: number | null
         }
         Update: {
           codigo_amostra?: string
           coletado_por?: string | null
+          condicao_amostra?: string[] | null
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
           id?: string
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
+          lote_insumo?: string | null
           medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id?: string
+          sitio_coleta?: string | null
           status?: string
           tipo_amostra?: string
           tubo?: string | null
           updated_at?: string | null
           urgente?: boolean | null
+          volume_ml?: number | null
         }
         Relationships: [
           {
