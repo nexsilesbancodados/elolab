@@ -122,6 +122,10 @@ export default function Medicos() {
       toast.error('CRM é obrigatório.');
       return;
     }
+    if (!formData.nome) {
+      toast.error('Nome é obrigatório.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -129,6 +133,8 @@ export default function Medicos() {
         const { error } = await supabase
           .from('medicos')
           .update({
+            nome: formData.nome || null,
+            email: formData.email || null,
             crm: formData.crm,
             especialidade: formData.especialidade || null,
             telefone: formData.telefone || null,
@@ -139,20 +145,64 @@ export default function Medicos() {
         if (error) throw error;
         toast.success('Médico atualizado com sucesso!');
       } else {
-        const { error } = await supabase
+        const { data: newMedico, error } = await supabase
           .from('medicos')
           .insert({
+            nome: formData.nome || null,
+            email: formData.email || null,
             crm: formData.crm,
             especialidade: formData.especialidade || null,
             telefone: formData.telefone || null,
             ativo: formData.ativo,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
         toast.success('Médico cadastrado com sucesso!');
+
+        // Auto-send invitation if email provided
+        if (formData.email && newMedico) {
+          try {
+            // Create a funcionario record first for the invitation system
+            const { data: funcData, error: funcError } = await supabase
+              .from('funcionarios')
+              .insert({
+                nome: formData.nome,
+                email: formData.email,
+                cargo: 'Médico',
+                departamento: formData.especialidade || 'Clínico',
+                ativo: true,
+              })
+              .select()
+              .single();
+
+            if (!funcError && funcData) {
+              const { error: inviteError } = await supabase.functions.invoke('send-employee-invitation', {
+                body: {
+                  funcionarioId: funcData.id,
+                  email: formData.email,
+                  nome: formData.nome,
+                  roles: ['medico'],
+                },
+              });
+
+              if (inviteError) {
+                console.error('Erro ao enviar convite:', inviteError);
+                toast.info('Médico cadastrado, mas o convite não pôde ser enviado. Envie manualmente.');
+              } else {
+                toast.success(`Convite de acesso enviado para ${formData.email}`);
+              }
+            }
+          } catch (invErr) {
+            console.error('Erro no convite automático:', invErr);
+            toast.info('Médico cadastrado. Convite pode ser enviado pela página de Funcionários.');
+          }
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['medicos'] });
+      queryClient.invalidateQueries({ queryKey: ['funcionarios'] });
       setIsDialogOpen(false);
     } catch (error: any) {
       console.error('Erro ao salvar médico:', error);
