@@ -535,12 +535,36 @@ export default function Exames() {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o exame" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {TIPOS_EXAME.map((tipo) => (
                     <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex gap-2">
+                <Input
+                  value={customExameInput}
+                  onChange={(e) => setCustomExameInput(e.target.value)}
+                  placeholder="Ou digite um tipo personalizado..."
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={!customExameInput.trim()}
+                  onClick={() => {
+                    const name = customExameInput.trim();
+                    if (name && !TIPOS_EXAME.includes(name)) {
+                      setCustomExames(prev => [...prev, name]);
+                    }
+                    setFormData({ ...formData, tipo_exame: name });
+                    setCustomExameInput('');
+                  }}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
