@@ -149,6 +149,7 @@ function App() {
                       <Route path="/mapa-coleta" element={<MapaColeta />} />
                       <Route path="/laudos-lab" element={<LaudosLab />} />
                       <Route path="/documentacao" element={<Documentacao />} />
+                      <Route path="/painel-admin" element={<PainelAdmin />} />
                     </Route>
                     
                     <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
