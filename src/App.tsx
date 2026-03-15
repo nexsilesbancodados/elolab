@@ -107,19 +107,18 @@ function App() {
             <BrowserRouter>
               <SupabaseAuthProvider>
                 <NotificationBanner />
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+                <Routes>
                     {isApp ? (
                       <>
                         {/* App subdomain routes (app.elolab.com.br) */}
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
                         <Route path="/login" element={<Navigate to="/auth" replace />} />
-                        <Route path="/aceitar-convite" element={<AceitarConvite />} />
-                        <Route path="/portal-paciente" element={<PortalPaciente />} />
-                        <Route path="/painel-tv" element={<SupabaseProtectedRoute><PainelTV /></SupabaseProtectedRoute>} />
+                        <Route path="/aceitar-convite" element={<Suspense fallback={<PageLoader />}><AceitarConvite /></Suspense>} />
+                        <Route path="/portal-paciente" element={<Suspense fallback={<PageLoader />}><PortalPaciente /></Suspense>} />
+                        <Route path="/painel-tv" element={<SupabaseProtectedRoute><Suspense fallback={<PageLoader />}><PainelTV /></Suspense></SupabaseProtectedRoute>} />
                         
-                        {/* Protected Routes */}
+                        {/* Protected Routes — all eagerly loaded, no Suspense needed */}
                         <Route
                           element={
                             <SupabaseProtectedRoute>
@@ -165,19 +164,18 @@ function App() {
                           <Route path="/laudos-lab" element={<LaudosLab />} />
                         </Route>
                         
-                        <Route path="*" element={<NotFound />} />
+                        <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
                       </>
                     ) : (
                       <>
                         {/* Main domain routes (elolab.com.br) */}
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/portal-paciente" element={<PortalPaciente />} />
+                        <Route path="/" element={<Suspense fallback={<PageLoader />}><LandingPage /></Suspense>} />
+                        <Route path="/auth" element={<Suspense fallback={<PageLoader />}><Auth /></Suspense>} />
+                        <Route path="/portal-paciente" element={<Suspense fallback={<PageLoader />}><PortalPaciente /></Suspense>} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </>
                     )}
                   </Routes>
-                </Suspense>
                 <InstallPWA />
               </SupabaseAuthProvider>
             </BrowserRouter>
