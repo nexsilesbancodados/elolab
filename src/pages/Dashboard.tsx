@@ -357,7 +357,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 pb-10">
       <OnboardingWizard />
-      <ServiceStatusBanner />
+      
 
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}
