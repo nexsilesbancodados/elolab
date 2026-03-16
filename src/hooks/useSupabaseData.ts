@@ -190,6 +190,9 @@ export function usePacientes() {
     alergias: string[] | null;
     observacoes: string | null;
     foto_url: string | null;
+    nome_responsavel: string | null;
+    cpf_responsavel: string | null;
+    parentesco_responsavel: string | null;
     created_at: string;
     updated_at: string;
   }>('pacientes', {
