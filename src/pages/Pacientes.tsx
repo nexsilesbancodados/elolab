@@ -53,6 +53,7 @@ interface PacienteFormData {
   nome_responsavel: string;
   cpf_responsavel: string;
   parentesco_responsavel: string;
+  is_menor: boolean;
 }
 
 const initialFormData: PacienteFormData = {
