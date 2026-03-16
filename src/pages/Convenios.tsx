@@ -322,7 +322,7 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
 }
 
 /* ─── Página Principal ─── */
-export default function Convenios() {
+function Convenios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
