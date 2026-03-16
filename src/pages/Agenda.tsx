@@ -300,7 +300,7 @@ export default function Agenda() {
       if (error) throw error;
       
       toast.success('Agendamento excluído!');
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
     } catch (error) {
       console.error('Error deleting agendamento:', error);
