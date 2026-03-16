@@ -361,125 +361,296 @@ export function gerarEtiquetaPaciente(
   return doc;
 }
 
-// Gerar PDF do prontuário completo
+// Gerar PDF do prontuário completo (Super Prontuário)
 export function gerarProntuarioPDF(
-  paciente: { nome: string; cpf?: string; dataNascimento?: string; alergias?: string[] },
-  medico: { nome: string; crm?: string; especialidade?: string },
+  paciente: {
+    nome: string; cpf?: string; dataNascimento?: string; alergias?: string[];
+    telefone?: string; email?: string; sexo?: string; convenio?: string;
+    numeroCarteira?: string; nomeResponsavel?: string;
+  },
+  medico: { nome: string; crm?: string; especialidade?: string; rqe?: string; crmUf?: string },
   prontuario: {
     data: string;
     queixaPrincipal?: string;
     historiaDoencaAtual?: string;
+    historiaPatologicaPregressa?: string;
+    historiaFamiliar?: string;
+    historiaSocial?: string;
+    revisaoSistemas?: string;
+    alergiasRelatadas?: string;
+    medicamentosEmUso?: string;
     examesFisicos?: string;
+    exameCabecaPescoco?: string;
+    exameTorax?: string;
+    exameAbdomen?: string;
+    exameMembros?: string;
+    exameNeurologico?: string;
+    examePele?: string;
     hipoteseDiagnostica?: string;
+    diagnosticoPrincipal?: string;
+    diagnosticosSecundarios?: string[];
     conduta?: string;
+    planoTerapeutico?: string;
+    orientacoesPaciente?: string;
+    sinaisVitais?: Record<string, string>;
   },
-  prescricoes: Array<{ medicamento: string; dosagem?: string; posologia?: string; duracao?: string }> = []
+  prescricoes: Array<{ medicamento: string; dosagem?: string; posologia?: string; duracao?: string; quantidade?: string; observacoes?: string }> = []
 ) {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  let yPos = 0;
 
-  addHeader(doc, 'PRONTUÁRIO DE ATENDIMENTO');
+  // ─── Beautiful Header ───
+  // Top accent bar
+  doc.setFillColor(0, 153, 102); // brand green
+  doc.rect(0, 0, pageWidth, 6, 'F');
 
-  // Data
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`Data do Atendimento: ${formatDateBR(prontuario.data)}`, 20, 60);
+  doc.setFontSize(16);
+  doc.setTextColor(0, 102, 68);
+  doc.setFont('helvetica', 'bold');
+  doc.text(CLINICA.nome, pageWidth / 2, 18, { align: 'center' });
 
-  // Dados do paciente
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.setFont('helvetica', 'normal');
+  doc.text(CLINICA.endereco, pageWidth / 2, 24, { align: 'center' });
+  doc.text(`Tel: ${CLINICA.telefone} | CNPJ: ${CLINICA.cnpj}`, pageWidth / 2, 29, { align: 'center' });
+
+  // Title bar
+  doc.setFillColor(240, 248, 245);
+  doc.roundedRect(margin, 34, contentWidth, 12, 2, 2, 'F');
   doc.setFontSize(11);
+  doc.setTextColor(0, 102, 68);
   doc.setFont('helvetica', 'bold');
-  doc.text('DADOS DO PACIENTE', 20, 75);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(`Nome: ${paciente.nome}`, 20, 82);
-  if (paciente.cpf) doc.text(`CPF: ${paciente.cpf}`, 120, 82);
-  if (paciente.dataNascimento) {
-    doc.text(`Data Nasc.: ${formatDateBR(paciente.dataNascimento)}`, 20, 89);
-  }
-  if (paciente.alergias && paciente.alergias.length > 0) {
-    doc.setTextColor(220, 38, 38);
-    doc.text(`⚠️ Alergias: ${paciente.alergias.join(', ')}`, 20, 96);
-    doc.setTextColor(0, 0, 0);
-  }
+  doc.text('PRONTUÁRIO DE ATENDIMENTO', pageWidth / 2, 42, { align: 'center' });
 
-  doc.line(20, 102, 190, 102);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Data: ${formatDateBR(prontuario.data)}`, margin + 2, 42);
+  doc.text(`Nº ${Math.random().toString(36).substr(2, 8).toUpperCase()}`, pageWidth - margin - 2, 42, { align: 'right' });
 
-  let yPos = 112;
+  yPos = 52;
 
-  // Seções do prontuário
-  const sections = [
-    { title: 'QUEIXA PRINCIPAL', content: prontuario.queixaPrincipal },
-    { title: 'HISTÓRIA DA DOENÇA ATUAL', content: prontuario.historiaDoencaAtual },
-    { title: 'EXAME FÍSICO', content: prontuario.examesFisicos },
-    { title: 'HIPÓTESE DIAGNÓSTICA', content: prontuario.hipoteseDiagnostica },
-    { title: 'CONDUTA', content: prontuario.conduta },
-  ];
-
-  for (const section of sections) {
-    if (!section.content) continue;
-
-    if (yPos > 240) {
-      doc.addPage();
-      yPos = 30;
-    }
-
-    doc.setFont('helvetica', 'bold');
+  // ─── Helper: Section title ───
+  const addSectionTitle = (title: string, y: number): number => {
+    if (y > 260) { doc.addPage(); y = 20; addPageAccent(doc); }
+    doc.setFillColor(0, 153, 102);
+    doc.rect(margin, y, 3, 7, 'F');
     doc.setFontSize(10);
-    doc.text(section.title, 20, yPos);
-    yPos += 6;
+    doc.setTextColor(0, 80, 55);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, margin + 6, y + 5.5);
+    return y + 10;
+  };
 
+  const addTextField = (label: string, value: string | undefined, y: number): number => {
+    if (!value) return y;
+    if (y > 255) { doc.addPage(); y = 20; addPageAccent(doc); }
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label + ':', margin + 2, y);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const lines = doc.splitTextToSize(section.content, 160);
-    doc.text(lines, 20, yPos);
-    yPos += lines.length * 5 + 8;
+    doc.setTextColor(30, 30, 30);
+    const lines = doc.splitTextToSize(value, contentWidth - 4);
+    doc.text(lines, margin + 2, y + 4.5);
+    return y + 4.5 + lines.length * 3.8 + 2;
+  };
+
+  // ─── Patient data box ───
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(220, 220, 220);
+  doc.roundedRect(margin, yPos, contentWidth, 28, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Paciente: ${paciente.nome}`, margin + 4, yPos + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
+  let infoLine = '';
+  if (paciente.cpf) infoLine += `CPF: ${paciente.cpf}  `;
+  if (paciente.dataNascimento) infoLine += `Nasc: ${formatDateBR(paciente.dataNascimento)}  `;
+  if (paciente.sexo) infoLine += `Sexo: ${paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'feminino' ? 'F' : 'Outro'}  `;
+  doc.text(infoLine, margin + 4, yPos + 12);
+
+  let infoLine2 = '';
+  if (paciente.telefone) infoLine2 += `Tel: ${paciente.telefone}  `;
+  if (paciente.email) infoLine2 += `Email: ${paciente.email}  `;
+  if (paciente.convenio) infoLine2 += `Convênio: ${paciente.convenio}  `;
+  if (paciente.numeroCarteira) infoLine2 += `Carteira: ${paciente.numeroCarteira}`;
+  if (infoLine2) doc.text(infoLine2, margin + 4, yPos + 17);
+
+  if (paciente.nomeResponsavel) {
+    doc.text(`Responsável: ${paciente.nomeResponsavel}`, margin + 4, yPos + 22);
   }
 
-  // Prescrições
-  if (prescricoes.length > 0) {
-    if (yPos > 220) {
-      doc.addPage();
-      yPos = 30;
-    }
-
+  // Allergy warning
+  if (paciente.alergias && paciente.alergias.length > 0) {
+    doc.setFillColor(254, 226, 226);
+    doc.setDrawColor(239, 68, 68);
+    doc.roundedRect(margin, yPos + 29, contentWidth, 8, 1, 1, 'FD');
+    doc.setFontSize(8);
+    doc.setTextColor(185, 28, 28);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('PRESCRIÇÕES', 20, yPos);
-    yPos += 8;
+    doc.text(`⚠ ALERGIAS: ${paciente.alergias.join(', ')}`, margin + 4, yPos + 34);
+    yPos += 40;
+  } else {
+    yPos += 32;
+  }
 
-    for (const [i, presc] of prescricoes.entries()) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 30;
-      }
+  // ─── Vital Signs table ───
+  const sv = prontuario.sinaisVitais;
+  if (sv && Object.values(sv).some(v => v)) {
+    yPos = addSectionTitle('SINAIS VITAIS', yPos);
+    const vitalsData: string[][] = [];
+    if (sv.pressao_sistolica) vitalsData.push(['PA', `${sv.pressao_sistolica}/${sv.pressao_diastolica || '?'} mmHg`]);
+    if (sv.frequencia_cardiaca) vitalsData.push(['FC', `${sv.frequencia_cardiaca} bpm`]);
+    if (sv.frequencia_respiratoria) vitalsData.push(['FR', `${sv.frequencia_respiratoria} irpm`]);
+    if (sv.temperatura) vitalsData.push(['Temp', `${sv.temperatura} °C`]);
+    if (sv.saturacao) vitalsData.push(['SpO₂', `${sv.saturacao}%`]);
+    if (sv.peso) vitalsData.push(['Peso', `${sv.peso} kg`]);
+    if (sv.altura) vitalsData.push(['Altura', `${sv.altura} cm`]);
+    if (sv.imc) vitalsData.push(['IMC', sv.imc]);
+    if (sv.glasgow) vitalsData.push(['Glasgow', sv.glasgow]);
+    if (sv.dor) vitalsData.push(['Dor', `${sv.dor}/10`]);
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.text(`${i + 1}. ${presc.medicamento}`, 25, yPos);
-      yPos += 5;
-
-      doc.setFont('helvetica', 'normal');
-      const details = [presc.dosagem, presc.posologia, presc.duracao].filter(Boolean).join(' | ');
-      if (details) {
-        doc.text(details, 30, yPos);
-        yPos += 5;
-      }
-      yPos += 3;
+    if (vitalsData.length > 0) {
+      autoTable(doc, {
+        startY: yPos,
+        body: vitalsData,
+        theme: 'plain',
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 25, textColor: [0, 102, 68] } },
+        margin: { left: margin + 2, right: margin },
+        tableWidth: contentWidth - 4,
+      });
+      yPos = (doc as any).lastAutoTable.finalY + 4;
     }
   }
 
-  // Assinatura do médico
-  const assinaturaY = Math.min(yPos + 20, 250);
-  doc.line(60, assinaturaY, 150, assinaturaY);
+  // ─── Clinical Sections ───
+  yPos = addSectionTitle('ANAMNESE', yPos);
+  yPos = addTextField('Queixa Principal', prontuario.queixaPrincipal, yPos);
+  yPos = addTextField('HDA', prontuario.historiaDoencaAtual, yPos);
+  yPos = addTextField('HDP', prontuario.historiaPatologicaPregressa, yPos);
+  yPos = addTextField('H. Familiar', prontuario.historiaFamiliar, yPos);
+  yPos = addTextField('H. Social', prontuario.historiaSocial, yPos);
+  yPos = addTextField('Revisão de Sistemas', prontuario.revisaoSistemas, yPos);
+  yPos = addTextField('Alergias Relatadas', prontuario.alergiasRelatadas, yPos);
+  yPos = addTextField('Medicamentos em Uso', prontuario.medicamentosEmUso, yPos);
+
+  // Physical exam
+  const hasExame = prontuario.examesFisicos || prontuario.exameCabecaPescoco || prontuario.exameTorax || prontuario.exameAbdomen || prontuario.exameMembros || prontuario.exameNeurologico || prontuario.examePele;
+  if (hasExame) {
+    yPos = addSectionTitle('EXAME FÍSICO', yPos);
+    yPos = addTextField('Geral', prontuario.examesFisicos, yPos);
+    yPos = addTextField('Cabeça/Pescoço', prontuario.exameCabecaPescoco, yPos);
+    yPos = addTextField('Tórax', prontuario.exameTorax, yPos);
+    yPos = addTextField('Abdome', prontuario.exameAbdomen, yPos);
+    yPos = addTextField('Membros', prontuario.exameMembros, yPos);
+    yPos = addTextField('Neurológico', prontuario.exameNeurologico, yPos);
+    yPos = addTextField('Pele', prontuario.examePele, yPos);
+  }
+
+  // Diagnosis
+  if (prontuario.hipoteseDiagnostica || prontuario.diagnosticoPrincipal) {
+    yPos = addSectionTitle('DIAGNÓSTICO', yPos);
+    yPos = addTextField('Hipótese Diagnóstica (CID-10)', prontuario.hipoteseDiagnostica, yPos);
+    yPos = addTextField('Diagnóstico Principal', prontuario.diagnosticoPrincipal, yPos);
+    if (prontuario.diagnosticosSecundarios && prontuario.diagnosticosSecundarios.length > 0) {
+      yPos = addTextField('Diagnósticos Secundários', prontuario.diagnosticosSecundarios.join('; '), yPos);
+    }
+  }
+
+  // Conduct
+  if (prontuario.conduta || prontuario.planoTerapeutico || prontuario.orientacoesPaciente) {
+    yPos = addSectionTitle('CONDUTA E PLANO', yPos);
+    yPos = addTextField('Conduta', prontuario.conduta, yPos);
+    yPos = addTextField('Plano Terapêutico', prontuario.planoTerapeutico, yPos);
+    yPos = addTextField('Orientações ao Paciente', prontuario.orientacoesPaciente, yPos);
+  }
+
+  // Prescriptions
+  if (prescricoes.length > 0) {
+    yPos = addSectionTitle('PRESCRIÇÕES', yPos);
+    const prescData = prescricoes.map((p, i) => [
+      `${i + 1}`,
+      p.medicamento,
+      p.dosagem || '-',
+      p.posologia || '-',
+      p.duracao || '-',
+      p.quantidade || '-',
+    ]);
+    autoTable(doc, {
+      startY: yPos,
+      head: [['#', 'Medicamento', 'Dosagem', 'Posologia', 'Duração', 'Qtd']],
+      body: prescData,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 153, 102], fontSize: 7, cellPadding: 2 },
+      bodyStyles: { fontSize: 7, cellPadding: 1.5 },
+      columnStyles: { 0: { cellWidth: 8 } },
+      margin: { left: margin, right: margin },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 4;
+    // prescription observations
+    prescricoes.forEach((p, i) => {
+      if (p.observacoes) {
+        yPos = addTextField(`Obs Med. ${i + 1}`, p.observacoes, yPos);
+      }
+    });
+  }
+
+  // ─── Doctor signature ───
+  if (yPos > 230) { doc.addPage(); yPos = 20; addPageAccent(doc); }
+  yPos = Math.max(yPos + 15, 240);
+
+  doc.setDrawColor(0, 153, 102);
+  doc.setLineWidth(0.5);
+  doc.line(55, yPos, 155, yPos);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text(medico.nome, 105, assinaturaY + 6, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text(medico.nome, pageWidth / 2, yPos + 6, { align: 'center' });
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(`CRM: ${medico.crm || 'N/A'} | ${medico.especialidade || ''}`, 105, assinaturaY + 12, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 80);
+  const crmLine = [
+    medico.crm ? `CRM: ${medico.crm}` : null,
+    medico.crmUf || null,
+    medico.rqe ? `RQE: ${medico.rqe}` : null,
+    medico.especialidade || null,
+  ].filter(Boolean).join(' | ');
+  doc.text(crmLine, pageWidth / 2, yPos + 11, { align: 'center' });
 
-  addFooter(doc);
+  // Footer on all pages
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(0, 153, 102);
+    doc.rect(0, pageHeight - 3, pageWidth, 3, 'F');
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} — Prontuário digital ${CLINICA.nome} — Pág. ${i}/${totalPages}`,
+      pageWidth / 2,
+      pageHeight - 6,
+      { align: 'center' }
+    );
+    doc.text('Documento confidencial — Uso exclusivo da equipe médica', pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
 
   return doc;
+}
+
+function addPageAccent(doc: jsPDF) {
+  doc.setFillColor(0, 153, 102);
+  doc.rect(0, 0, doc.internal.pageSize.width, 3, 'F');
 }
 
 function formatDateBR(dateStr: string): string {
