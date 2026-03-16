@@ -27,26 +27,26 @@
     --success-foreground: 0 0% 100%;
     
     /* Background & Surfaces */
-    --background: 0 0% 99%;
+    --background: 210 11% 95%;
     --foreground: 0 0% 9%;
     
     /* Cards */
-    --card: 0 0% 99%;
+    --card: 210 9% 97%;
     --card-foreground: 0 0% 9%;
     
-    --popover: 0 0% 99%;
+    --popover: 210 9% 97%;
     --popover-foreground: 0 0% 32%;
     
     /* Secondary */
-    --secondary: 0 0% 99%;
+    --secondary: 210 9% 93%;
     --secondary-foreground: 0 0% 9%;
     
     /* Muted */
-    --muted: 0 0% 93%;
+    --muted: 210 7% 89%;
     --muted-foreground: 0 0% 13%;
     
     /* Accent */
-    --accent: 0 0% 93%;
+    --accent: 210 7% 89%;
     --accent-foreground: 0 0% 13%;
     
     /* Destructive */
