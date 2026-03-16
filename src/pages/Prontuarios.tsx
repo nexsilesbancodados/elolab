@@ -943,7 +943,7 @@ export default function Prontuarios() {
                         conduta: currentProntuario.conduta,
                         planoTerapeutico: currentProntuario.plano_terapeutico,
                         orientacoesPaciente: currentProntuario.orientacoes_paciente,
-                        sinaisVitais: sinaisVitais as Record<string, string>,
+                        sinaisVitais: sinaisVitais as unknown as Record<string, string>,
                       },
                       prescricoes.filter(p => p.medicamento)
                     );
