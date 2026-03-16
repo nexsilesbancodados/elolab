@@ -919,18 +919,18 @@ export default function Pacientes() {
                   <InfoField icon={Phone} label="Telefone" value={selectedPaciente.telefone} />
                   <InfoField icon={Mail} label="Email" value={selectedPaciente.email} />
                   <InfoField icon={Building2} label="Convênio" value={getConvenioNome(selectedPaciente.convenio_id)} />
-                  <InfoField icon={CreditCard} label="Carteira" value={(selectedPaciente as any).numero_carteira} />
+                  <InfoField icon={CreditCard} label="Carteira" value={selectedPaciente.numero_carteira} />
                 </div>
 
-                {(selectedPaciente as any).nome_responsavel && (
+                {selectedPaciente.nome_responsavel && (
                   <>
                     <Separator />
                     <div>
                       <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
                       <div className="grid grid-cols-3 gap-4 text-sm">
-                        <InfoField icon={User2} label="Nome" value={(selectedPaciente as any).nome_responsavel} />
-                        <InfoField icon={FileText} label="CPF" value={(selectedPaciente as any).cpf_responsavel} />
-                        <InfoField icon={Users} label="Parentesco" value={(selectedPaciente as any).parentesco_responsavel} />
+                        <InfoField icon={User2} label="Nome" value={selectedPaciente.nome_responsavel} />
+                        <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf_responsavel} />
+                        <InfoField icon={Users} label="Parentesco" value={selectedPaciente.parentesco_responsavel} />
                       </div>
                     </div>
                   </>
