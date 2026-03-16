@@ -727,3 +727,21 @@ export function openPDF(doc: jsPDF) {
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
 }
+
+// Share PDF via WhatsApp (opens WhatsApp with a message; browser limitation prevents direct file attach)
+export function sharePDFWhatsApp(doc: jsPDF, filename: string, telefone?: string) {
+  // Download the file first
+  doc.save(`${filename}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+
+  // Build WhatsApp message
+  const msg = encodeURIComponent(
+    `📋 *Prontuário Digital - ${CLINICA.nome}*\n\nOlá! Segue em anexo o prontuário do atendimento.\n\n_Documento gerado digitalmente pelo sistema EloLab._`
+  );
+
+  const phone = telefone?.replace(/\D/g, '') || '';
+  const waUrl = phone
+    ? `https://wa.me/55${phone}?text=${msg}`
+    : `https://wa.me/?text=${msg}`;
+
+  window.open(waUrl, '_blank');
+}
