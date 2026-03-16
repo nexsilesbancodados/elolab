@@ -330,7 +330,7 @@ export default function Agenda() {
               <SelectItem value="todos">Todos os médicos</SelectItem>
               {medicos.map((medico) => (
                 <SelectItem key={medico.id} value={medico.id}>
-                  {medico.crm} - {medico.especialidade}
+                  {medico.nome || medico.crm} - {medico.especialidade || 'Geral'}
                 </SelectItem>
               ))}
             </SelectContent>
