@@ -732,8 +732,10 @@ export default function Dashboard() {
                 <CardContent>
                   {stats.proximosAgendamentos.length > 0 ? (
                     <div className="space-y-2">
-                      {stats.proximosAgendamentos.map((ag, idx) => {
+                      {stats.proximosAgendamentos.map((ag: any, idx: number) => {
                         const isHoje = ag.data === hoje;
+                        const pacienteNome = ag.pacientes?.nome || ag.observacoes || ag.tipo || 'Consulta';
+                        const medicoNome = ag.medicos?.nome;
                         return (
                           <motion.div key={ag.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.04 }}
@@ -747,14 +749,26 @@ export default function Dashboard() {
                                 {ag.hora_inicio?.slice(0, 5)}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-medium text-sm truncate">{ag.observacoes || ag.tipo || 'Consulta'}</p>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="font-medium text-sm truncate">{pacienteNome}</p>
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                                   {isHoje ? (
                                     <span className="text-primary font-medium">Hoje</span>
                                   ) : (
-                                    format(parseISO(ag.data), "dd 'de' MMM", { locale: ptBR })
+                                    <span>{format(parseISO(ag.data), "dd 'de' MMM", { locale: ptBR })}</span>
                                   )}
-                                </p>
+                                  {medicoNome && (
+                                    <>
+                                      <span className="text-border">•</span>
+                                      <span>Dr(a). {medicoNome}</span>
+                                    </>
+                                  )}
+                                  {ag.tipo && ag.tipo !== 'consulta' && (
+                                    <>
+                                      <span className="text-border">•</span>
+                                      <span className="capitalize">{ag.tipo}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <Badge variant={ag.status === 'confirmado' ? 'default' : 'secondary'}
