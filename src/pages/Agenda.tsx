@@ -307,7 +307,7 @@ export default function Agenda() {
   const getPacienteNome = (id: string) => pacientes.find((p) => p.id === id)?.nome || 'Desconhecido';
   const getMedicoNome = (id: string) => {
     const medico = medicos.find((m) => m.id === id);
-    return medico ? `Dr(a). ${medico.crm}` : 'Desconhecido';
+    return medico ? `Dr(a). ${medico.nome || medico.crm}` : 'Desconhecido';
   };
 
   if (isLoading) {
@@ -330,7 +330,7 @@ export default function Agenda() {
               <SelectItem value="todos">Todos os médicos</SelectItem>
               {medicos.map((medico) => (
                 <SelectItem key={medico.id} value={medico.id}>
-                  {medico.crm} - {medico.especialidade}
+                  {medico.nome || medico.crm} - {medico.especialidade || 'Geral'}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -596,7 +596,7 @@ export default function Agenda() {
                 <SelectContent>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.crm} - {m.especialidade}
+                      {m.nome || m.crm} - {m.especialidade || 'Geral'}
                     </SelectItem>
                   ))}
                 </SelectContent>

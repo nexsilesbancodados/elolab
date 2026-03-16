@@ -190,6 +190,9 @@ export function usePacientes() {
     alergias: string[] | null;
     observacoes: string | null;
     foto_url: string | null;
+    nome_responsavel: string | null;
+    cpf_responsavel: string | null;
+    parentesco_responsavel: string | null;
     created_at: string;
     updated_at: string;
   }>('pacientes', {
@@ -204,13 +207,20 @@ export function useMedicos() {
     nome: string | null;
     email: string | null;
     crm: string;
+    crm_uf: string | null;
+    cpf: string | null;
+    rqe: string | null;
     especialidade: string | null;
     telefone: string | null;
+    foto_url: string | null;
+    carimbo_url: string | null;
+    cns: string | null;
+    intervalo_consulta: number | null;
     ativo: boolean;
     created_at: string;
     updated_at: string;
   }>('medicos', {
-    orderBy: { column: 'crm', ascending: true },
+    orderBy: { column: 'nome', ascending: true },
   });
 }
 
@@ -265,10 +275,19 @@ export function useLancamentos() {
     valor: number;
     data: string;
     data_vencimento: string | null;
+    data_emissao: string | null;
     status: string;
     paciente_id: string | null;
     agendamento_id: string | null;
     forma_pagamento: string | null;
+    fornecedor: string | null;
+    numero_documento: string | null;
+    centro_custo: string | null;
+    competencia: string | null;
+    recorrente: boolean | null;
+    frequencia_recorrencia: string | null;
+    observacoes: string | null;
+    anexo_url: string | null;
     created_at: string;
     updated_at: string;
   }>('lancamentos', {
@@ -431,16 +450,20 @@ export function useRetornos() {
   return useSupabaseQuery<{
     id: string;
     paciente_id: string;
-    medico_id: string | null;
-    agendamento_origem_id: string | null;
-    data_retorno: string;
+    medico_id: string;
+    agendamento_id: string | null;
+    prontuario_id: string | null;
+    data_retorno_prevista: string;
+    data_consulta_origem: string;
     motivo: string | null;
-    status: string;
+    status: string | null;
+    tipo_retorno: string | null;
+    lembrete_enviado: boolean | null;
     observacoes: string | null;
     created_at: string;
     updated_at: string;
   }>('retornos', {
-    orderBy: { column: 'data_retorno', ascending: true },
+    orderBy: { column: 'data_retorno_prevista', ascending: true },
   });
 }
 

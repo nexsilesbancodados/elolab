@@ -176,7 +176,7 @@ export default function Relatorios() {
       ).length;
 
       return {
-        nome: medico.crm,
+        nome: medico.nome || medico.crm,
         especialidade: medico.especialidade || 'Geral',
         atendimentos,
         finalizados,

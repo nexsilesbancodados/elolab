@@ -475,7 +475,7 @@ export default function ListaEspera() {
                   <SelectItem value="">Qualquer médico</SelectItem>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.crm} - {m.especialidade || 'Clínico'}
+                      {m.nome || m.crm} - {m.especialidade || 'Clínico'}
                     </SelectItem>
                   ))}
                 </SelectContent>

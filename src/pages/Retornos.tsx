@@ -55,15 +55,15 @@ export default function RetornosControl() {
     select: 'id, nome, telefone',
   });
 
-  const { data: medicos = [] } = useSupabaseQuery<{ id: string; crm: string; especialidade: string | null }>('medicos', {
-    select: 'id, crm, especialidade',
+  const { data: medicos = [] } = useSupabaseQuery<{ id: string; nome: string | null; crm: string; especialidade: string | null }>('medicos', {
+    select: 'id, nome, crm, especialidade',
   });
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
   const getPacienteTelefone = (id: string) => pacientes.find(p => p.id === id)?.telefone || null;
-  const getMedicoCRM = (id: string) => {
+  const getMedicoNome = (id: string) => {
     const m = medicos.find(m => m.id === id);
-    return m ? `Dr(a). ${m.crm}` : 'Médico';
+    return m ? `Dr(a). ${m.nome || m.crm}` : 'Médico';
   };
 
   const hoje = new Date();
@@ -211,7 +211,7 @@ export default function RetornosControl() {
                 {filtrados.map((r) => (
                   <TableRow key={r.id} className={cn(r.statusCalculado === 'atrasado' && 'bg-destructive/5')}>
                     <TableCell className="font-medium">{getPacienteNome(r.paciente_id)}</TableCell>
-                    <TableCell>{getMedicoCRM(r.medico_id)}</TableCell>
+                    <TableCell>{getMedicoNome(r.medico_id)}</TableCell>
                     <TableCell>
                       <div>
                         {format(r.dataRetorno, "dd/MM/yyyy", { locale: ptBR })}

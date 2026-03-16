@@ -68,7 +68,7 @@ export function BloqueioAgenda({ medicoIdFilter }: BloqueioAgendaProps) {
 
   const getMedicoLabel = (id: string) => {
     const m = medicos.find(m => m.id === id);
-    return m ? `Dr(a). ${m.crm} - ${m.especialidade || 'Geral'}` : id;
+    return m ? `Dr(a). ${m.nome || m.crm} - ${m.especialidade || 'Geral'}` : id;
   };
 
   const handleSave = async () => {

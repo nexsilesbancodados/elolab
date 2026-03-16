@@ -203,7 +203,7 @@ export default function Fila() {
   const getMedicoNome = (agId: string) => {
     const ag = agendamentos.find(a => a.id === agId) as any;
     const med = ag?.medicos ?? medicos.find(m => m.id === ag?.medico_id);
-    return med ? `Dr(a). ${med.crm}` : '—';
+    return med ? `Dr(a). ${med.nome || med.crm}` : '—';
   };
 
   const getSalaNome = (salaId: string | null) =>
