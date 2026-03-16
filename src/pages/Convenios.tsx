@@ -66,10 +66,12 @@ interface ExamePreco {
   descricao: string;
   valor_tabela: number;
   valor_filme: number;
+  valor_custo: number;
+  valor_repasse: number;
 }
 
 const initialExameForm: ExamePreco = {
-  tipo_exame: '', codigo_tuss: '', descricao: '', valor_tabela: 0, valor_filme: 0,
+  tipo_exame: '', codigo_tuss: '', descricao: '', valor_tabela: 0, valor_filme: 0, valor_custo: 0, valor_repasse: 0,
 };
 
 /* ─── Tabela de Exames do Convênio ─── */
