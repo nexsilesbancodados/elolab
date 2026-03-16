@@ -55,8 +55,8 @@ export default function RetornosControl() {
     select: 'id, nome, telefone',
   });
 
-  const { data: medicos = [] } = useSupabaseQuery<{ id: string; crm: string; especialidade: string | null }>('medicos', {
-    select: 'id, crm, especialidade',
+  const { data: medicos = [] } = useSupabaseQuery<{ id: string; nome: string | null; crm: string; especialidade: string | null }>('medicos', {
+    select: 'id, nome, crm, especialidade',
   });
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
