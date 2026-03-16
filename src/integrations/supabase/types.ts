@@ -1874,7 +1874,9 @@ export type Database = {
           id: string
           tipo_exame: string
           updated_at: string | null
+          valor_custo: number | null
           valor_filme: number | null
+          valor_repasse: number | null
           valor_tabela: number
           valor_total: number | null
         }
@@ -1887,7 +1889,9 @@ export type Database = {
           id?: string
           tipo_exame: string
           updated_at?: string | null
+          valor_custo?: number | null
           valor_filme?: number | null
+          valor_repasse?: number | null
           valor_tabela?: number
           valor_total?: number | null
         }
@@ -1900,7 +1904,9 @@ export type Database = {
           id?: string
           tipo_exame?: string
           updated_at?: string | null
+          valor_custo?: number | null
           valor_filme?: number | null
+          valor_repasse?: number | null
           valor_tabela?: number
           valor_total?: number | null
         }
