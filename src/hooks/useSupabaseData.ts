@@ -204,13 +204,20 @@ export function useMedicos() {
     nome: string | null;
     email: string | null;
     crm: string;
+    crm_uf: string | null;
+    cpf: string | null;
+    rqe: string | null;
     especialidade: string | null;
     telefone: string | null;
+    foto_url: string | null;
+    carimbo_url: string | null;
+    cns: string | null;
+    intervalo_consulta: number | null;
     ativo: boolean;
     created_at: string;
     updated_at: string;
   }>('medicos', {
-    orderBy: { column: 'crm', ascending: true },
+    orderBy: { column: 'nome', ascending: true },
   });
 }
 
