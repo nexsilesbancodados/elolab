@@ -289,20 +289,41 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
               <Input type="number" step="0.01" value={exameForm.valor_filme}
                 onChange={e => setExameForm({ ...exameForm, valor_filme: parseFloat(e.target.value) || 0 })} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Custo (R$)</Label>
+                <Input type="number" step="0.01" value={exameForm.valor_custo}
+                  onChange={e => setExameForm({ ...exameForm, valor_custo: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Repasse (R$)</Label>
+                <Input type="number" step="0.01" value={exameForm.valor_repasse}
+                  onChange={e => setExameForm({ ...exameForm, valor_repasse: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Descrição</Label>
               <Input value={exameForm.descricao}
                 onChange={e => setExameForm({ ...exameForm, descricao: e.target.value })}
                 placeholder="Descrição opcional do procedimento" />
             </div>
-            <div className="p-3 rounded-lg bg-muted/50 border">
+            <div className="p-3 rounded-lg bg-muted/50 border space-y-1">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Valor Total</span>
+                <span className="text-muted-foreground">Valor Total (Tabela + Filme)</span>
                 <span className="font-bold text-primary">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                     .format(exameForm.valor_tabela + (exameForm.valor_filme || 0))}
                 </span>
               </div>
+              {(exameForm.valor_custo > 0 || exameForm.valor_repasse > 0) && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Margem (Total - Custo - Repasse)</span>
+                  <span className="font-semibold">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                      .format((exameForm.valor_tabela + (exameForm.valor_filme || 0)) - (exameForm.valor_custo || 0) - (exameForm.valor_repasse || 0))}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
