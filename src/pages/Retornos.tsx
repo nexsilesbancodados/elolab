@@ -61,9 +61,9 @@ export default function RetornosControl() {
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
   const getPacienteTelefone = (id: string) => pacientes.find(p => p.id === id)?.telefone || null;
-  const getMedicoCRM = (id: string) => {
+  const getMedicoNome = (id: string) => {
     const m = medicos.find(m => m.id === id);
-    return m ? `Dr(a). ${m.crm}` : 'Médico';
+    return m ? `Dr(a). ${m.nome || m.crm}` : 'Médico';
   };
 
   const hoje = new Date();
