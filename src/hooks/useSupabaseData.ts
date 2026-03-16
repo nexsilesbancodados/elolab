@@ -265,10 +265,19 @@ export function useLancamentos() {
     valor: number;
     data: string;
     data_vencimento: string | null;
+    data_emissao: string | null;
     status: string;
     paciente_id: string | null;
     agendamento_id: string | null;
     forma_pagamento: string | null;
+    fornecedor: string | null;
+    numero_documento: string | null;
+    centro_custo: string | null;
+    competencia: string | null;
+    recorrente: boolean | null;
+    frequencia_recorrencia: string | null;
+    observacoes: string | null;
+    anexo_url: string | null;
     created_at: string;
     updated_at: string;
   }>('lancamentos', {
