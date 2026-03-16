@@ -63,6 +63,7 @@ const initialFormData: PacienteFormData = {
   convenio_id: '', numero_carteira: '', validade_carteira: '',
   alergias: [], observacoes: '',
   nome_responsavel: '', cpf_responsavel: '', parentesco_responsavel: '',
+  is_menor: false,
 };
 
 const SEXO_OPTIONS = [
