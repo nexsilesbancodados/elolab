@@ -357,6 +357,11 @@ export default function Dashboard() {
 
   if (isLoading) return <DashboardSkeleton />;
 
+  // Doctor-specific dashboard
+  if (isMedicoOnly) {
+    return <DoctorDashboard userName={user?.nome || 'Doutor(a)'} />;
+  }
+
   const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
   const firstName = user?.nome?.split(' ')[0] || 'Usuário';
 
