@@ -212,7 +212,9 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
                 <TableHead>Exame</TableHead>
                 <TableHead className="hidden sm:table-cell">Código TUSS</TableHead>
                 <TableHead className="text-right">Valor Tabela</TableHead>
-                <TableHead className="text-right hidden sm:table-cell">Valor Filme</TableHead>
+                <TableHead className="text-right hidden sm:table-cell">Filme</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Custo</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Repasse</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right w-24">Ações</TableHead>
               </TableRow>
@@ -233,6 +235,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-sm">{formatCurrency(e.valor_tabela)}</TableCell>
                   <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{formatCurrency(e.valor_filme || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{formatCurrency(e.valor_custo || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{formatCurrency(e.valor_repasse || 0)}</TableCell>
                   <TableCell className="text-right tabular-nums text-sm font-semibold">{formatCurrency(e.valor_total || e.valor_tabela + (e.valor_filme || 0))}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
