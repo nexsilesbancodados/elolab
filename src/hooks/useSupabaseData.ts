@@ -440,16 +440,20 @@ export function useRetornos() {
   return useSupabaseQuery<{
     id: string;
     paciente_id: string;
-    medico_id: string | null;
-    agendamento_origem_id: string | null;
-    data_retorno: string;
+    medico_id: string;
+    agendamento_id: string | null;
+    prontuario_id: string | null;
+    data_retorno_prevista: string;
+    data_consulta_origem: string;
     motivo: string | null;
-    status: string;
+    status: string | null;
+    tipo_retorno: string | null;
+    lembrete_enviado: boolean | null;
     observacoes: string | null;
     created_at: string;
     updated_at: string;
   }>('retornos', {
-    orderBy: { column: 'data_retorno', ascending: true },
+    orderBy: { column: 'data_retorno_prevista', ascending: true },
   });
 }
 
