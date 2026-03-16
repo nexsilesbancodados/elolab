@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { DoctorDashboard } from '@/components/dashboard/DoctorDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
