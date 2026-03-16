@@ -240,6 +240,7 @@ export default function Pacientes() {
       nome_responsavel: (paciente as any).nome_responsavel || '',
       cpf_responsavel: (paciente as any).cpf_responsavel || '',
       parentesco_responsavel: (paciente as any).parentesco_responsavel || '',
+      is_menor: !!(paciente as any).nome_responsavel || isMinor(paciente.data_nascimento || ''),
     });
     setFormSection('pessoal');
     setIsFormOpen(true);
