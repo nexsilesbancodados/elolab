@@ -66,10 +66,12 @@ interface ExamePreco {
   descricao: string;
   valor_tabela: number;
   valor_filme: number;
+  valor_custo: number;
+  valor_repasse: number;
 }
 
 const initialExameForm: ExamePreco = {
-  tipo_exame: '', codigo_tuss: '', descricao: '', valor_tabela: 0, valor_filme: 0,
+  tipo_exame: '', codigo_tuss: '', descricao: '', valor_tabela: 0, valor_filme: 0, valor_custo: 0, valor_repasse: 0,
 };
 
 /* ─── Tabela de Exames do Convênio ─── */
@@ -117,6 +119,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
       descricao: e.descricao || '',
       valor_tabela: e.valor_tabela || 0,
       valor_filme: e.valor_filme || 0,
+      valor_custo: e.valor_custo || 0,
+      valor_repasse: e.valor_repasse || 0,
     });
     setIsExameFormOpen(true);
   };
@@ -133,6 +137,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
         descricao: exameForm.descricao || null,
         valor_tabela: exameForm.valor_tabela,
         valor_filme: exameForm.valor_filme || 0,
+        valor_custo: exameForm.valor_custo || 0,
+        valor_repasse: exameForm.valor_repasse || 0,
         valor_total: exameForm.valor_tabela + (exameForm.valor_filme || 0),
       };
       if (editingExameId) {
@@ -206,7 +212,9 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
                 <TableHead>Exame</TableHead>
                 <TableHead className="hidden sm:table-cell">Código TUSS</TableHead>
                 <TableHead className="text-right">Valor Tabela</TableHead>
-                <TableHead className="text-right hidden sm:table-cell">Valor Filme</TableHead>
+                <TableHead className="text-right hidden sm:table-cell">Filme</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Custo</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Repasse</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right w-24">Ações</TableHead>
               </TableRow>
@@ -227,6 +235,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-sm">{formatCurrency(e.valor_tabela)}</TableCell>
                   <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{formatCurrency(e.valor_filme || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{formatCurrency(e.valor_custo || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{formatCurrency(e.valor_repasse || 0)}</TableCell>
                   <TableCell className="text-right tabular-nums text-sm font-semibold">{formatCurrency(e.valor_total || e.valor_tabela + (e.valor_filme || 0))}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -279,20 +289,41 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
               <Input type="number" step="0.01" value={exameForm.valor_filme}
                 onChange={e => setExameForm({ ...exameForm, valor_filme: parseFloat(e.target.value) || 0 })} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Custo (R$)</Label>
+                <Input type="number" step="0.01" value={exameForm.valor_custo}
+                  onChange={e => setExameForm({ ...exameForm, valor_custo: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Repasse (R$)</Label>
+                <Input type="number" step="0.01" value={exameForm.valor_repasse}
+                  onChange={e => setExameForm({ ...exameForm, valor_repasse: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Descrição</Label>
               <Input value={exameForm.descricao}
                 onChange={e => setExameForm({ ...exameForm, descricao: e.target.value })}
                 placeholder="Descrição opcional do procedimento" />
             </div>
-            <div className="p-3 rounded-lg bg-muted/50 border">
+            <div className="p-3 rounded-lg bg-muted/50 border space-y-1">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Valor Total</span>
+                <span className="text-muted-foreground">Valor Total (Tabela + Filme)</span>
                 <span className="font-bold text-primary">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                     .format(exameForm.valor_tabela + (exameForm.valor_filme || 0))}
                 </span>
               </div>
+              {(exameForm.valor_custo > 0 || exameForm.valor_repasse > 0) && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Margem (Total - Custo - Repasse)</span>
+                  <span className="font-semibold">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                      .format((exameForm.valor_tabela + (exameForm.valor_filme || 0)) - (exameForm.valor_custo || 0) - (exameForm.valor_repasse || 0))}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
