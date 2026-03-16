@@ -1,28 +1,318 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, FlaskConical, CreditCard, User, ExternalLink, Lock , Star, ThumbsUp, MessageSquare, CheckCircle2, HeartHandshake} from 'lucide-react';
-import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
+import {
+  Calendar, FlaskConical, CreditCard, User, ExternalLink, Lock,
+  Star, MessageSquare, CheckCircle2, HeartHandshake, Clock,
+  Activity, FileText, Phone, Shield, Sparkles, ChevronRight,
+  Heart, Pill, AlertTriangle, Download, RefreshCw,
+} from 'lucide-react';
+import { format, isPast, isToday, isFuture, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const statusColors: Record<string, string> = {
-  agendado: 'bg-blue-500/10 text-blue-700 border-blue-300',
-  confirmado: 'bg-green-500/10 text-green-700 border-green-300',
-  finalizado: 'bg-muted text-muted-foreground',
-  cancelado: 'bg-destructive/10 text-destructive',
-  faltou: 'bg-destructive/10 text-destructive',
-  aprovado: 'bg-green-500/10 text-green-700',
-  pendente: 'bg-yellow-500/10 text-yellow-700',
-  solicitado: 'bg-blue-500/10 text-blue-700',
-  laudo_disponivel: 'bg-green-500/10 text-green-700',
+// ─── Status helpers ────────────────────────────────────────
+const statusConfig: Record<string, { bg: string; label: string }> = {
+  agendado: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200', label: 'Agendado' },
+  confirmado: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-200', label: 'Confirmado' },
+  finalizado: { bg: 'bg-muted text-muted-foreground', label: 'Finalizado' },
+  cancelado: { bg: 'bg-destructive/10 text-destructive', label: 'Cancelado' },
+  faltou: { bg: 'bg-destructive/10 text-destructive', label: 'Faltou' },
+  aprovado: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Aprovado' },
+  pendente: { bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300', label: 'Pendente' },
+  solicitado: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', label: 'Solicitado' },
+  laudo_disponivel: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Laudo Disponível' },
+  em_andamento: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', label: 'Em Andamento' },
+  pago: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Pago' },
 };
 
+function StatusBadge({ status }: { status: string }) {
+  const cfg = statusConfig[status] || { bg: 'bg-muted text-muted-foreground', label: status };
+  return <Badge variant="outline" className={`text-[11px] ${cfg.bg}`}>{cfg.label}</Badge>;
+}
+
+function formatCurrency(v: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+}
+
+function calcularIdade(dn: string | null) {
+  if (!dn) return null;
+  const hoje = new Date(), nasc = new Date(dn);
+  let i = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) i--;
+  return i;
+}
+
+// ─── Animated counter ──────────────────────────────────────
+function AnimatedNumber({ value }: { value: number }) {
+  return (
+    <motion.span
+      key={value}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="tabular-nums font-bold text-2xl"
+    >
+      {value}
+    </motion.span>
+  );
+}
+
+// ─── Login Screen ──────────────────────────────────────────
+function LoginScreen({ token, setToken, onLogin, loading, error }: {
+  token: string; setToken: (v: string) => void;
+  onLogin: () => void; loading: boolean; error: string;
+}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-primary/8 blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="backdrop-blur-xl border-border/50 shadow-xl">
+          <CardHeader className="text-center pb-2">
+            {/* Animated logo ring */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              className="mx-auto mb-4 relative"
+            >
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+                <HeartHandshake className="h-10 w-10 text-primary" />
+              </div>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rounded-2xl border-2 border-dashed border-primary/20"
+              />
+            </motion.div>
+
+            <CardTitle className="text-2xl font-display">Portal do Paciente</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Acesse seu histórico, consultas e exames
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Digite seu código de acesso"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && onLogin()}
+                  className="pl-10 h-12 text-base"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Código fornecido pela clínica EloLab
+              </p>
+            </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <Button
+              className="w-full h-12 text-base gap-2"
+              variant="premium"
+              onClick={onLogin}
+              disabled={loading || !token.trim()}
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {loading ? 'Verificando...' : 'Acessar Portal'}
+            </Button>
+
+            <div className="flex items-center gap-2 justify-center text-xs text-muted-foreground pt-2">
+              <Shield className="h-3.5 w-3.5" />
+              <span>Acesso seguro — Dados protegidos pela LGPD</span>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Next Appointment Hero ─────────────────────────────────
+function NextAppointmentHero({ agendamentos }: { agendamentos: any[] }) {
+  const proxima = agendamentos.find(a =>
+    (a.status === 'agendado' || a.status === 'confirmado') &&
+    (isToday(parseISO(a.data)) || isFuture(parseISO(a.data)))
+  );
+
+  if (!proxima) return null;
+
+  const dataConsulta = parseISO(proxima.data);
+  const diasRestantes = differenceInDays(dataConsulta, new Date());
+  const isHoje = isToday(dataConsulta);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <Card className="overflow-hidden border-primary/30 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-primary/20">
+              <Calendar className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-sm font-semibold text-primary uppercase tracking-wide">
+              Próxima Consulta
+            </span>
+            {isHoje && (
+              <Badge className="bg-primary text-primary-foreground text-[10px] animate-pulse">HOJE</Badge>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-lg font-bold">
+                {format(dataConsulta, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+              </p>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  {proxima.hora_inicio?.slice(0, 5)}
+                </span>
+                <span>{proxima.tipo || 'Consulta'}</span>
+                {proxima.medicos?.nome && (
+                  <span>Dr(a). {proxima.medicos.nome}</span>
+                )}
+              </div>
+            </div>
+
+            {!isHoje && diasRestantes > 0 && (
+              <div className="text-center px-4 py-2 rounded-xl bg-primary/10">
+                <p className="text-2xl font-bold text-primary tabular-nums">{diasRestantes}</p>
+                <p className="text-[10px] text-muted-foreground uppercase">dia{diasRestantes > 1 ? 's' : ''}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─── NPS Survey ────────────────────────────────────────────
+function NPSSurvey({ profile }: { profile: any }) {
+  const [nota, setNota] = useState<number | null>(null);
+  const [comentario, setComentario] = useState('');
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async () => {
+    if (nota === null) return;
+    // Store in audit_log or notification_queue as feedback
+    setSent(true);
+  };
+
+  if (sent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <Card className="text-center p-8 border-primary/20 bg-primary/5">
+          <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-3" />
+          <h3 className="text-lg font-bold">Obrigado pelo feedback!</h3>
+          <p className="text-sm text-muted-foreground mt-1">Sua opinião nos ajuda a melhorar.</p>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <CardTitle className="text-base">Como foi sua experiência?</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex justify-center gap-1">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+            <motion.button
+              key={n}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setNota(n)}
+              className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+                nota === n
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : nota !== null && n <= nota
+                    ? 'bg-primary/20 text-primary'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {n}
+            </motion.button>
+          ))}
+        </div>
+        <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+          <span>Nada provável</span>
+          <span>Muito provável</span>
+        </div>
+
+        <AnimatePresence>
+          {nota !== null && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-3"
+            >
+              <Textarea
+                placeholder="Conte-nos mais sobre sua experiência (opcional)..."
+                value={comentario}
+                onChange={e => setComentario(e.target.value)}
+                rows={2}
+                className="text-sm"
+              />
+              <Button onClick={handleSubmit} className="w-full gap-2" size="sm">
+                <Star className="h-3.5 w-3.5" />
+                Enviar Avaliação
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Main Portal ───────────────────────────────────────────
 export default function PortalPaciente() {
   const [searchParams] = useSearchParams();
   const [token, setToken] = useState(searchParams.get('token') || '');
@@ -33,9 +323,6 @@ export default function PortalPaciente() {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [exames, setExames] = useState<any[]>([]);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
-  const [npsNota, setNpsNota] = useState<number | null>(null);
-  const [npsComentario, setNpsComentario] = useState('');
-  const [npsSent, setNpsSent] = useState(false);
 
   const fetchData = async (accessToken: string, action: string) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
@@ -53,13 +340,12 @@ export default function PortalPaciente() {
     try {
       const profileData = await fetchData(token, 'get_profile');
       if (!profileData || profileData.error) {
-        setError(profileData?.error || 'Token inválido');
+        setError(profileData?.error || 'Token inválido ou expirado');
         return;
       }
       setProfile(profileData);
       setAuthenticated(true);
 
-      // Fetch all data in parallel
       const [ag, ex, pg] = await Promise.all([
         fetchData(token, 'get_agendamentos'),
         fetchData(token, 'get_exames'),
@@ -81,154 +367,334 @@ export default function PortalPaciente() {
     }
   }, []);
 
+  // ─── Login ────────────────────────────────────────────────
   if (!authenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-4 rounded-full bg-primary/10">
-              <Lock className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Portal do Paciente</CardTitle>
-            <CardDescription>
-              Insira o código de acesso fornecido pela clínica
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Código de acesso"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button className="w-full" onClick={handleLogin} disabled={loading || !token.trim()}>
-              {loading ? 'Verificando...' : 'Acessar'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoginScreen token={token} setToken={setToken} onLogin={handleLogin} loading={loading} error={error} />;
   }
+
+  // Stats
+  const totalConsultas = agendamentos.length;
+  const consultasFuturas = agendamentos.filter(a => (a.status === 'agendado' || a.status === 'confirmado')).length;
+  const examesPendentes = exames.filter(e => e.status === 'solicitado' || e.status === 'em_andamento').length;
+  const laudosDisponiveis = exames.filter(e => e.status === 'laudo_disponivel').length;
+  const idade = calcularIdade(profile?.data_nascimento);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0 },
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-primary">EloLab</h1>
-            <p className="text-sm text-muted-foreground">Portal do Paciente</p>
+      {/* ─── Header ─── */}
+      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-xl px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <HeartHandshake className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold font-display text-foreground">EloLab</h1>
+              <p className="text-[11px] text-muted-foreground -mt-0.5">Portal do Paciente</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{profile?.nome}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-semibold">{profile?.nome}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {idade && `${idade} anos`}
+                {profile?.cpf && ` • CPF: ***${profile.cpf.slice(-5)}`}
+              </p>
+            </div>
+            <div className="p-2 rounded-full bg-primary/10">
+              <User className="h-4 w-4 text-primary" />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-6 space-y-6">
-        <Tabs defaultValue="agendamentos">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="agendamentos" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Consultas
-            </TabsTrigger>
-            <TabsTrigger value="exames" className="gap-2">
-              <FlaskConical className="h-4 w-4" />
-              Exames
-            </TabsTrigger>
-            <TabsTrigger value="pagamentos" className="gap-2">
-              <CreditCard className="h-4 w-4" />
-              Pagamentos
-            </TabsTrigger>
-          </TabsList>
+      {/* ─── Main Content ─── */}
+      <main className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="space-y-6"
+        >
+          {/* ─── Welcome Hero ─── */}
+          <motion.div variants={itemVariants} className="space-y-1">
+            <h2 className="text-2xl sm:text-3xl font-bold font-display">
+              Olá, {profile?.nome?.split(' ')[0]} 👋
+            </h2>
+            <p className="text-muted-foreground">
+              Acompanhe suas consultas, exames e pagamentos.
+            </p>
+          </motion.div>
 
-          <TabsContent value="agendamentos" className="space-y-3 mt-4">
-            {!agendamentos.length ? (
-              <Card>
-                <CardContent className="p-8 text-center text-muted-foreground">
-                  Nenhuma consulta agendada
+          {/* ─── Next Appointment ─── */}
+          <motion.div variants={itemVariants}>
+            <NextAppointmentHero agendamentos={agendamentos} />
+          </motion.div>
+
+          {/* ─── KPI Stats ─── */}
+          <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: Calendar, label: 'Consultas', value: totalConsultas, accent: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
+              { icon: Clock, label: 'Agendadas', value: consultasFuturas, accent: 'text-primary bg-primary/10' },
+              { icon: FlaskConical, label: 'Exames Pendentes', value: examesPendentes, accent: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+              { icon: FileText, label: 'Laudos Prontos', value: laudosDisponiveis, accent: 'text-green-600 dark:text-green-400 bg-green-500/10' },
+            ].map(stat => (
+              <Card key={stat.label} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${stat.accent}`}>
+                    <stat.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <AnimatedNumber value={stat.value} />
+                    <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+                  </div>
                 </CardContent>
               </Card>
-            ) : (
-              agendamentos.map((a: any) => (
-                <Card key={a.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{a.tipo || 'Consulta'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {a.data} às {a.hora_inicio} • Dr(a). CRM {a.medicos?.crm}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={statusColors[a.status] || ''}>{a.status}</Badge>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+            ))}
+          </motion.div>
 
-          <TabsContent value="exames" className="space-y-3 mt-4">
-            {!exames.length ? (
-              <Card>
-                <CardContent className="p-8 text-center text-muted-foreground">
-                  Nenhum exame encontrado
-                </CardContent>
-              </Card>
-            ) : (
-              exames.map((e: any) => (
-                <Card key={e.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{e.tipo_exame}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Solicitado: {e.data_solicitacao || 'N/A'}
-                        {e.data_realizacao && ` • Realizado: ${e.data_realizacao}`}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={statusColors[e.status] || ''}>{e.status?.replace('_', ' ')}</Badge>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+          {/* ─── Allergy alert ─── */}
+          {profile?.alergias && profile.alergias.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+                <span className="text-sm font-medium text-destructive">
+                  Alergias: {profile.alergias.join(', ')}
+                </span>
+              </div>
+            </motion.div>
+          )}
 
-          <TabsContent value="pagamentos" className="space-y-3 mt-4">
-            {!pagamentos.length ? (
-              <Card>
-                <CardContent className="p-8 text-center text-muted-foreground">
-                  Nenhum pagamento encontrado
-                </CardContent>
-              </Card>
-            ) : (
-              pagamentos.map((p: any) => (
-                <Card key={p.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{p.descricao}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {p.created_at ? format(new Date(p.created_at), 'dd/MM/yyyy', { locale: ptBR }) : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="font-semibold">
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valor)}
-                        </p>
-                        <Badge variant="outline" className={statusColors[p.status] || ''}>{p.status}</Badge>
-                      </div>
-                      {p.checkout_url && p.status === 'pendente' && (
-                        <Button size="sm" variant="outline" onClick={() => window.open(p.checkout_url, '_blank')}>
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
+          {/* ─── Tabs ─── */}
+          <motion.div variants={itemVariants}>
+            <Tabs defaultValue="consultas" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 h-12">
+                <TabsTrigger value="consultas" className="gap-2 data-[state=active]:bg-primary/10">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Consultas</span>
+                  <span className="sm:hidden text-xs">Consultas</span>
+                </TabsTrigger>
+                <TabsTrigger value="exames" className="gap-2 data-[state=active]:bg-primary/10">
+                  <FlaskConical className="h-4 w-4" />
+                  <span className="hidden sm:inline">Exames</span>
+                  <span className="sm:hidden text-xs">Exames</span>
+                </TabsTrigger>
+                <TabsTrigger value="financeiro" className="gap-2 data-[state=active]:bg-primary/10">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Financeiro</span>
+                  <span className="sm:hidden text-xs">Financeiro</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* ─── Consultas Tab ─── */}
+              <TabsContent value="consultas" className="mt-4 space-y-3">
+                {!agendamentos.length ? (
+                  <EmptyState icon={Calendar} text="Nenhuma consulta encontrada" />
+                ) : (
+                  agendamentos.map((a: any, i: number) => {
+                    const dataAg = parseISO(a.data);
+                    const passado = isPast(dataAg) && !isToday(dataAg);
+                    return (
+                      <motion.div
+                        key={a.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <Card className={`transition-all hover:shadow-md ${passado ? 'opacity-60' : ''}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-start gap-3">
+                                <div className={`p-2.5 rounded-xl ${isToday(dataAg) ? 'bg-primary/20' : 'bg-muted'}`}>
+                                  <Calendar className={`h-4 w-4 ${isToday(dataAg) ? 'text-primary' : 'text-muted-foreground'}`} />
+                                </div>
+                                <div className="space-y-0.5">
+                                  <p className="font-semibold text-sm">
+                                    {a.tipo || 'Consulta'}
+                                    {isToday(dataAg) && <Badge className="ml-2 bg-primary text-primary-foreground text-[9px]">HOJE</Badge>}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(dataAg, "dd 'de' MMM, yyyy", { locale: ptBR })}
+                                    {a.hora_inicio && ` às ${a.hora_inicio.slice(0, 5)}`}
+                                  </p>
+                                  {a.medicos?.nome && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Dr(a). {a.medicos.nome}
+                                      {a.medicos.especialidade && ` — ${a.medicos.especialidade}`}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <StatusBadge status={a.status} />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </TabsContent>
+
+              {/* ─── Exames Tab ─── */}
+              <TabsContent value="exames" className="mt-4 space-y-3">
+                {!exames.length ? (
+                  <EmptyState icon={FlaskConical} text="Nenhum exame encontrado" />
+                ) : (
+                  exames.map((e: any, i: number) => {
+                    const isLaudo = e.status === 'laudo_disponivel';
+                    return (
+                      <motion.div
+                        key={e.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <Card className={`transition-all hover:shadow-md ${isLaudo ? 'border-green-300 dark:border-green-700' : ''}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-start gap-3">
+                                <div className={`p-2.5 rounded-xl ${isLaudo ? 'bg-green-500/10' : 'bg-muted'}`}>
+                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`} />
+                                </div>
+                                <div className="space-y-0.5">
+                                  <p className="font-semibold text-sm flex items-center gap-2">
+                                    {e.tipo_exame}
+                                    {isLaudo && (
+                                      <Badge className="bg-green-500/10 text-green-700 dark:text-green-300 text-[9px] border-green-200">
+                                        ✓ Laudo pronto
+                                      </Badge>
+                                    )}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Solicitado: {e.data_solicitacao ? format(parseISO(e.data_solicitacao), 'dd/MM/yyyy') : 'N/A'}
+                                    {e.data_realizacao && ` • Realizado: ${format(parseISO(e.data_realizacao), 'dd/MM/yyyy')}`}
+                                  </p>
+                                  {e.resultado && (
+                                    <p className="text-xs text-foreground mt-1 bg-muted/50 px-2 py-1 rounded">
+                                      {e.resultado.length > 120 ? e.resultado.slice(0, 120) + '...' : e.resultado}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status={e.status} />
+                                {e.arquivo_resultado && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1 text-xs"
+                                    onClick={() => window.open(e.arquivo_resultado, '_blank')}
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    PDF
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </TabsContent>
+
+              {/* ─── Financeiro Tab ─── */}
+              <TabsContent value="financeiro" className="mt-4 space-y-3">
+                {!pagamentos.length ? (
+                  <EmptyState icon={CreditCard} text="Nenhum pagamento encontrado" />
+                ) : (
+                  pagamentos.map((p: any, i: number) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="transition-all hover:shadow-md">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-start gap-3">
+                              <div className={`p-2.5 rounded-xl ${p.status === 'pago' || p.status === 'aprovado' ? 'bg-green-500/10' : 'bg-amber-500/10'}`}>
+                                <CreditCard className={`h-4 w-4 ${p.status === 'pago' || p.status === 'aprovado' ? 'text-green-600' : 'text-amber-600'}`} />
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="font-semibold text-sm">{p.descricao || 'Pagamento'}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {p.created_at ? format(new Date(p.created_at), "dd 'de' MMM, yyyy", { locale: ptBR }) : ''}
+                                  {p.metodo_pagamento && ` • ${p.metodo_pagamento}`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <p className="font-bold tabular-nums">{formatCurrency(p.valor)}</p>
+                                <StatusBadge status={p.status} />
+                              </div>
+                              {p.checkout_url && p.status === 'pendente' && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="gap-1.5"
+                                  onClick={() => window.open(p.checkout_url, '_blank')}
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Pagar
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+
+          {/* ─── NPS Survey ─── */}
+          <motion.div variants={itemVariants}>
+            <NPSSurvey profile={profile} />
+          </motion.div>
+
+          {/* ─── Footer ─── */}
+          <motion.div variants={itemVariants}>
+            <div className="text-center py-6 space-y-2">
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Shield className="h-3.5 w-3.5" />
+                <span>Seus dados são protegidos pela LGPD</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                EloLab Clínica Médica • Portal seguro do paciente
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
       </main>
     </div>
+  );
+}
+
+// ─── Empty State ───────────────────────────────────────────
+function EmptyState({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <div className="p-4 rounded-2xl bg-muted/50 mb-3">
+          <Icon className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm">{text}</p>
+      </CardContent>
+    </Card>
   );
 }
