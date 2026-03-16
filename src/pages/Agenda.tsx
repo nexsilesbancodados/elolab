@@ -108,11 +108,11 @@ export default function Agenda() {
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
   // Auto-set filter to own doctor when logged in as medico-only
-  useState(() => {
+  useMemo(() => {
     if (isMedicoOnly && medicoId) {
       setSelectedMedico(medicoId);
     }
-  });
+  }, [isMedicoOnly, medicoId]);
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
@@ -223,6 +223,12 @@ export default function Agenda() {
     setIsSaving(true);
 
     try {
+      // Normalize hora to HH:mm:ss for consistent DB storage
+      const normalizeTime = (t: string | undefined) => {
+        if (!t) return t;
+        return t.length === 5 ? `${t}:00` : t;
+      };
+
       if (formData.id) {
         // Update existing
         const { error } = await supabase
@@ -231,8 +237,8 @@ export default function Agenda() {
             paciente_id: formData.paciente_id,
             medico_id: formData.medico_id,
             data: formData.data!,
-            hora_inicio: formData.hora_inicio!,
-            hora_fim: formData.hora_fim,
+            hora_inicio: normalizeTime(formData.hora_inicio)!,
+            hora_fim: normalizeTime(formData.hora_fim),
             tipo: formData.tipo,
             status: formData.status,
             observacoes: formData.observacoes,
@@ -249,8 +255,8 @@ export default function Agenda() {
           paciente_id: formData.paciente_id!,
           medico_id: formData.medico_id!,
           data: date,
-          hora_inicio: formData.hora_inicio!,
-          hora_fim: formData.hora_fim,
+          hora_inicio: normalizeTime(formData.hora_inicio)!,
+          hora_fim: normalizeTime(formData.hora_fim),
           tipo: formData.tipo,
           status: formData.status as StatusAgendamento,
           observacoes: formData.observacoes,
@@ -270,7 +276,7 @@ export default function Agenda() {
         );
       }
 
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
       setRecurrence({ type: 'none', occurrences: 4 });
     } catch (error) {
@@ -294,7 +300,7 @@ export default function Agenda() {
       if (error) throw error;
       
       toast.success('Agendamento excluído!');
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
     } catch (error) {
       console.error('Error deleting agendamento:', error);
