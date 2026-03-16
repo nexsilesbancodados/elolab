@@ -153,7 +153,7 @@ export default function Agenda() {
   const getAgendamentoForSlot = (data: Date, hora: string) => {
     const dataStr = format(data, 'yyyy-MM-dd');
     return filteredAgendamentos.find(
-      (ag) => ag.data === dataStr && ag.hora_inicio === hora
+      (ag) => ag.data === dataStr && (ag.hora_inicio === hora || ag.hora_inicio?.slice(0, 5) === hora)
     );
   };
 
