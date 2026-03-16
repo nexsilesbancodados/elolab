@@ -211,7 +211,7 @@ export default function RetornosControl() {
                 {filtrados.map((r) => (
                   <TableRow key={r.id} className={cn(r.statusCalculado === 'atrasado' && 'bg-destructive/5')}>
                     <TableCell className="font-medium">{getPacienteNome(r.paciente_id)}</TableCell>
-                    <TableCell>{getMedicoCRM(r.medico_id)}</TableCell>
+                    <TableCell>{getMedicoNome(r.medico_id)}</TableCell>
                     <TableCell>
                       <div>
                         {format(r.dataRetorno, "dd/MM/yyyy", { locale: ptBR })}

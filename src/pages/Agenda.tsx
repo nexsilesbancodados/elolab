@@ -596,7 +596,7 @@ export default function Agenda() {
                 <SelectContent>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.crm} - {m.especialidade}
+                      {m.nome || m.crm} - {m.especialidade || 'Geral'}
                     </SelectItem>
                   ))}
                 </SelectContent>
