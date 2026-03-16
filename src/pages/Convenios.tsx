@@ -119,6 +119,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
       descricao: e.descricao || '',
       valor_tabela: e.valor_tabela || 0,
       valor_filme: e.valor_filme || 0,
+      valor_custo: e.valor_custo || 0,
+      valor_repasse: e.valor_repasse || 0,
     });
     setIsExameFormOpen(true);
   };
