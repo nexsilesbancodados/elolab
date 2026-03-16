@@ -108,11 +108,11 @@ export default function Agenda() {
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
   // Auto-set filter to own doctor when logged in as medico-only
-  useState(() => {
+  useMemo(() => {
     if (isMedicoOnly && medicoId) {
       setSelectedMedico(medicoId);
     }
-  });
+  }, [isMedicoOnly, medicoId]);
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
