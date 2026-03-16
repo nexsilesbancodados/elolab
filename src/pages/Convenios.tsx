@@ -788,3 +788,5 @@ function Convenios() {
     </div>
   );
 }
+
+export default Convenios;
