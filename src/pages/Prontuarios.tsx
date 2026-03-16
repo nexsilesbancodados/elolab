@@ -7,7 +7,7 @@ import {
   ClipboardList, AlertTriangle, User, Clock, ChevronDown, ChevronRight,
   Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
   Phone, Mail, Building2, CreditCard, Baby, Shield, Lock,
-  TestTube, ArrowRight, UserCheck, BadgeCheck,
+  TestTube, ArrowRight, UserCheck, BadgeCheck, Share2, MessageCircle, ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
