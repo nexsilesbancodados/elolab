@@ -53,6 +53,7 @@ interface PacienteFormData {
   nome_responsavel: string;
   cpf_responsavel: string;
   parentesco_responsavel: string;
+  is_menor: boolean;
 }
 
 const initialFormData: PacienteFormData = {
@@ -62,6 +63,7 @@ const initialFormData: PacienteFormData = {
   convenio_id: '', numero_carteira: '', validade_carteira: '',
   alergias: [], observacoes: '',
   nome_responsavel: '', cpf_responsavel: '', parentesco_responsavel: '',
+  is_menor: false,
 };
 
 const SEXO_OPTIONS = [
@@ -238,6 +240,7 @@ export default function Pacientes() {
       nome_responsavel: (paciente as any).nome_responsavel || '',
       cpf_responsavel: (paciente as any).cpf_responsavel || '',
       parentesco_responsavel: (paciente as any).parentesco_responsavel || '',
+      is_menor: !!(paciente as any).nome_responsavel || isMinor(paciente.data_nascimento || ''),
     });
     setFormSection('pessoal');
     setIsFormOpen(true);
@@ -688,11 +691,34 @@ export default function Pacientes() {
                   </div>
                 </div>
 
-                {isMinor(formData.data_nascimento) && (
+                {/* Toggle menor de idade */}
+                <div className="border rounded-lg p-4 bg-muted/30">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium flex items-center gap-2 text-sm">
+                      <Baby className="h-4 w-4 text-amber-500" />
+                      Paciente menor de idade ou dependente?
+                    </h4>
+                    <Button
+                      type="button"
+                      variant={formData.is_menor ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, is_menor: !formData.is_menor })}
+                    >
+                      {formData.is_menor ? 'Sim' : 'Não'}
+                    </Button>
+                  </div>
+                  {isMinor(formData.data_nascimento) && !formData.is_menor && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      ⚠️ A data de nascimento indica menor de idade. Considere ativar esta opção.
+                    </p>
+                  )}
+                </div>
+
+                {formData.is_menor && (
                   <div className="border rounded-lg p-4 bg-amber-500/5 border-amber-500/20">
                     <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-700 dark:text-amber-300">
                       <Baby className="h-4 w-4" />
-                      Responsável Legal (menor de idade)
+                      Dados do Responsável Legal
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
