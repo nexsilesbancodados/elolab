@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { format, parseISO, isToday, isTomorrow, differenceInYears } from 'date-fns';
+import { format, parseISO, differenceInYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Calendar, Users, FileText, Pill, Clock, Stethoscope, ClipboardList,
-  ArrowRight, ArrowUpRight, TrendingUp, Activity, Target, Heart,
+  ArrowRight, ArrowUpRight, Activity, Target,
   Sun, Sunset, Moon, CheckCircle2, AlertTriangle, Eye, UserCheck,
   TestTube, Send, BadgeCheck, Phone, Timer, Zap,
 } from 'lucide-react';
@@ -29,18 +29,6 @@ const fadeUp = {
   }),
 };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
-
-function LiveClock() {
-  const [time, setTime] = __import_useState(new Date());
-  __import_useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  return <span className="tabular-nums font-semibold text-lg tracking-tight">{format(time, 'HH:mm')}</span>;
-}
-
-// Fix: use proper imports
-import { useState, useEffect } from 'react';
 
 function LiveClockComponent() {
   const [time, setTime] = useState(new Date());
