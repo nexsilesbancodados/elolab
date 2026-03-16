@@ -7,7 +7,7 @@ import {
   ClipboardList, AlertTriangle, User, Clock, ChevronDown, ChevronRight,
   Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
   Phone, Mail, Building2, CreditCard, Baby, Shield, Lock,
-  TestTube, ArrowRight, UserCheck, BadgeCheck,
+  TestTube, ArrowRight, UserCheck, BadgeCheck, Share2, MessageCircle, ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { gerarProntuarioPDF, downloadPDF } from '@/lib/pdfGenerator';
+import { gerarProntuarioPDF, downloadPDF, openPDF, sharePDFWhatsApp } from '@/lib/pdfGenerator';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -897,19 +897,80 @@ export default function Prontuarios() {
                     compact
                   />
                 )}
-                {currentProntuario.id && (
-                  <Button variant="outline" size="sm" onClick={() => {
-                    const doc = gerarProntuarioPDF(
-                      { nome: selectedPaciente?.nome || '', cpf: selectedPaciente?.cpf || undefined, dataNascimento: selectedPaciente?.data_nascimento || undefined, alergias: selectedPaciente?.alergias || [] },
-                      { nome: user?.nome || 'Médico' },
-                      { data: currentProntuario.data, queixaPrincipal: currentProntuario.queixa_principal, historiaDoencaAtual: currentProntuario.historia_doenca_atual, examesFisicos: currentProntuario.exames_fisicos, hipoteseDiagnostica: currentProntuario.hipotese_diagnostica, conduta: currentProntuario.conduta },
+                {currentProntuario.id && (() => {
+                  const buildPDF = () => {
+                    const medicoData = medicos.find((m: any) => m.id === currentProntuario.medico_id);
+                    return gerarProntuarioPDF(
+                      {
+                        nome: selectedPaciente?.nome || '',
+                        cpf: selectedPaciente?.cpf || undefined,
+                        dataNascimento: selectedPaciente?.data_nascimento || undefined,
+                        alergias: selectedPaciente?.alergias || [],
+                        telefone: selectedPaciente?.telefone || undefined,
+                        email: selectedPaciente?.email || undefined,
+                        sexo: selectedPaciente?.sexo || undefined,
+                        convenio: getConvenioNome(selectedPaciente?.convenio_id),
+                        numeroCarteira: selectedPaciente?.numero_carteira || undefined,
+                        nomeResponsavel: selectedPaciente?.nome_responsavel || undefined,
+                      },
+                      {
+                        nome: medicoData?.nome || user?.nome || 'Médico',
+                        crm: medicoData?.crm,
+                        especialidade: medicoData?.especialidade,
+                        rqe: medicoData?.rqe,
+                        crmUf: medicoData?.crm_uf,
+                      },
+                      {
+                        data: currentProntuario.data,
+                        queixaPrincipal: currentProntuario.queixa_principal,
+                        historiaDoencaAtual: currentProntuario.historia_doenca_atual,
+                        historiaPatologicaPregressa: currentProntuario.historia_patologica_pregressa,
+                        historiaFamiliar: currentProntuario.historia_familiar,
+                        historiaSocial: currentProntuario.historia_social,
+                        revisaoSistemas: currentProntuario.revisao_sistemas,
+                        alergiasRelatadas: currentProntuario.alergias_relatadas,
+                        medicamentosEmUso: currentProntuario.medicamentos_em_uso,
+                        examesFisicos: currentProntuario.exames_fisicos,
+                        exameCabecaPescoco: currentProntuario.exame_cabeca_pescoco,
+                        exameTorax: currentProntuario.exame_torax,
+                        exameAbdomen: currentProntuario.exame_abdomen,
+                        exameMembros: currentProntuario.exame_membros,
+                        exameNeurologico: currentProntuario.exame_neurologico,
+                        examePele: currentProntuario.exame_pele,
+                        hipoteseDiagnostica: currentProntuario.hipotese_diagnostica,
+                        diagnosticoPrincipal: currentProntuario.diagnostico_principal,
+                        diagnosticosSecundarios: currentProntuario.diagnosticos_secundarios,
+                        conduta: currentProntuario.conduta,
+                        planoTerapeutico: currentProntuario.plano_terapeutico,
+                        orientacoesPaciente: currentProntuario.orientacoes_paciente,
+                        sinaisVitais: sinaisVitais as unknown as Record<string, string>,
+                      },
                       prescricoes.filter(p => p.medicamento)
                     );
-                    downloadPDF(doc, `prontuario-${selectedPaciente?.nome?.replace(/\s+/g, '-') || 'paciente'}`);
-                  }}>
-                    <Printer className="h-4 w-4 mr-1" />PDF
-                  </Button>
-                )}
+                  };
+                  const filename = `prontuario-${selectedPaciente?.nome?.replace(/\s+/g, '-') || 'paciente'}`;
+                  return (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => { openPDF(buildPDF()); }} className="gap-1.5">
+                        <ExternalLink className="h-3.5 w-3.5" />Visualizar
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => { downloadPDF(buildPDF(), filename); }} className="gap-1.5">
+                        <Printer className="h-3.5 w-3.5" />PDF
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          sharePDFWhatsApp(buildPDF(), filename, selectedPaciente?.telefone);
+                          toast({ title: 'WhatsApp', description: 'PDF baixado! Cole-o na conversa do WhatsApp que foi aberta.' });
+                        }}
+                        className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-950"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />WhatsApp
+                      </Button>
+                    </>
+                  );
+                })()}
                 <Button variant="outline" size="sm" onClick={() => setShowDischargeReport(true)}>
                   <FileCheck className="h-4 w-4 mr-1" />Alta
                 </Button>
