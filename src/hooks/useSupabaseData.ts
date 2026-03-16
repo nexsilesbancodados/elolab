@@ -486,3 +486,66 @@ export function useFuncionarios() {
     orderBy: { column: 'nome', ascending: true },
   });
 }
+
+export function useAtestados(medicoId?: string) {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_id: string;
+    tipo: string | null;
+    motivo: string | null;
+    cid: string | null;
+    dias: number | null;
+    data_emissao: string | null;
+    data_inicio: string | null;
+    data_fim: string | null;
+    observacoes: string | null;
+    created_at: string;
+    updated_at: string;
+  }>('atestados', {
+    orderBy: { column: 'data_emissao', ascending: false },
+    filters: medicoId ? [{ column: 'medico_id', operator: 'eq', value: medicoId }] : undefined,
+  });
+}
+
+export function useExames(medicoId?: string) {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_solicitante_id: string;
+    tipo_exame: string;
+    descricao: string | null;
+    resultado: string | null;
+    arquivo_resultado: string | null;
+    status: string | null;
+    data_solicitacao: string | null;
+    data_agendamento: string | null;
+    data_realizacao: string | null;
+    observacoes: string | null;
+    created_at: string;
+    updated_at: string;
+  }>('exames', {
+    orderBy: { column: 'data_solicitacao', ascending: false },
+    filters: medicoId ? [{ column: 'medico_solicitante_id', operator: 'eq', value: medicoId }] : undefined,
+  });
+}
+
+export function useEncaminhamentos(medicoId?: string) {
+  return useSupabaseQuery<{
+    id: string;
+    paciente_id: string;
+    medico_origem_id: string;
+    medico_destino_id: string | null;
+    especialidade_destino: string;
+    motivo: string;
+    hipotese_diagnostica: string | null;
+    status: string | null;
+    urgencia: string | null;
+    data_encaminhamento: string | null;
+    created_at: string;
+    updated_at: string;
+  }>('encaminhamentos', {
+    orderBy: { column: 'data_encaminhamento', ascending: false },
+    filters: medicoId ? [{ column: 'medico_origem_id', operator: 'eq', value: medicoId }] : undefined,
+  });
+}

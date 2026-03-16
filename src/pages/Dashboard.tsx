@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { DoctorDashboard } from '@/components/dashboard/DoctorDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -355,6 +356,11 @@ export default function Dashboard() {
   const setupProgress = Math.round((setupSteps.filter(s => s.done).length / setupSteps.length) * 100);
 
   if (isLoading) return <DashboardSkeleton />;
+
+  // Doctor-specific dashboard
+  if (isMedicoOnly) {
+    return <DoctorDashboard userName={user?.nome || 'Doutor(a)'} />;
+  }
 
   const hasData = pacientes.length > 0 || agendamentos.length > 0 || lancamentos.length > 0;
   const firstName = user?.nome?.split(' ')[0] || 'Usuário';
