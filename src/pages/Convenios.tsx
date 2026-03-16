@@ -137,6 +137,8 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
         descricao: exameForm.descricao || null,
         valor_tabela: exameForm.valor_tabela,
         valor_filme: exameForm.valor_filme || 0,
+        valor_custo: exameForm.valor_custo || 0,
+        valor_repasse: exameForm.valor_repasse || 0,
         valor_total: exameForm.valor_tabela + (exameForm.valor_filme || 0),
       };
       if (editingExameId) {
