@@ -45,23 +45,27 @@ const unregisterServiceWorkers = async () => {
 
 const bootstrapApp = async () => {
   const url = new URL(window.location.href);
-  const alreadyReset =
-    sessionStorage.getItem(CACHE_RESET_DONE) === "1" ||
-    url.searchParams.get(CACHE_RESET_PARAM) === "1";
+  const resetParamActive = url.searchParams.get(CACHE_RESET_PARAM) === "1";
+  const storedBuildId = getStoredBuildId();
+  const shouldResetForBuild = storedBuildId !== APP_BUILD_ID && !resetParamActive;
 
-  if (!alreadyReset) {
+  if (shouldResetForBuild) {
     await Promise.all([clearLegacyCaches(), unregisterServiceWorkers()]);
-    sessionStorage.setItem(CACHE_RESET_DONE, "1");
+    persistBuildId(APP_BUILD_ID);
     url.searchParams.set(CACHE_RESET_PARAM, "1");
     window.location.replace(url.toString());
     return;
   }
 
-  if (url.searchParams.has(CACHE_RESET_PARAM)) {
+  if (resetParamActive) {
     url.searchParams.delete(CACHE_RESET_PARAM);
     const sanitizedSearch = url.searchParams.toString();
     const nextUrl = `${url.pathname}${sanitizedSearch ? `?${sanitizedSearch}` : ""}${url.hash}`;
     window.history.replaceState({}, "", nextUrl);
+  }
+
+  if (storedBuildId !== APP_BUILD_ID) {
+    persistBuildId(APP_BUILD_ID);
   }
 
   // Initialize global error tracking and performance monitoring
