@@ -116,6 +116,13 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  define: {
+    "globalThis.__APP_BUILD_ID__": JSON.stringify(
+      process.env.VERCEL_GIT_COMMIT_SHA ??
+        process.env.VITE_APP_BUILD_ID ??
+        `build-${Date.now()}`,
+    ),
+  },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
