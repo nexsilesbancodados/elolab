@@ -6,7 +6,28 @@ import { initGlobalErrorTracking } from "./lib/errorTracking";
 import { initWebVitals } from "./lib/webVitals";
 
 const CACHE_RESET_PARAM = "cache_reset";
-const CACHE_RESET_DONE = "elolab-cache-reset-done";
+const CACHE_BUILD_KEY = "elolab-build-id";
+const APP_BUILD_ID =
+  (globalThis as typeof globalThis & { __APP_BUILD_ID__?: string }).__APP_BUILD_ID__ ??
+  "dev-build";
+
+const getStoredBuildId = () => {
+  try {
+    return localStorage.getItem(CACHE_BUILD_KEY) ?? sessionStorage.getItem(CACHE_BUILD_KEY);
+  } catch {
+    return sessionStorage.getItem(CACHE_BUILD_KEY);
+  }
+};
+
+const persistBuildId = (buildId: string) => {
+  try {
+    localStorage.setItem(CACHE_BUILD_KEY, buildId);
+  } catch {
+    // Ignore storage restrictions and keep a session fallback
+  }
+
+  sessionStorage.setItem(CACHE_BUILD_KEY, buildId);
+};
 
 const clearLegacyCaches = async () => {
   if (!("caches" in window)) return;
