@@ -104,6 +104,17 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "get_prescricoes": {
+        const { data } = await supabase
+          .from("prescricoes")
+          .select("id, medicamento, dosagem, posologia, quantidade, duracao, observacoes, tipo, data_emissao, medicos:medico_id(nome, especialidade)")
+          .eq("paciente_id", pacienteId)
+          .order("data_emissao", { ascending: false })
+          .limit(50);
+        result = data || [];
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Ação desconhecida: ${action}` }), {
           status: 400,

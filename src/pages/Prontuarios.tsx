@@ -1060,6 +1060,22 @@ export default function Prontuarios() {
                             historia_doenca_atual: 'Início: ___. Duração: ___. Localização: ___. Intensidade: ___/10. Fatores de melhora: ___. Fatores de piora: ___. Sintomas associados: ___. Medicações utilizadas: ___.',
                           },
                         },
+                        {
+                          label: 'Ortopedia',
+                          data: {
+                            queixa_principal: 'Dor em ___',
+                            historia_doenca_atual: 'Paciente refere dor em ___ há ___. Mecanismo do trauma: ___. Limitação funcional: sim/não. Tratamento prévio: ___. Exames de imagem anteriores: ___.',
+                            conduta: 'Exame físico articular/muscular. Solicitar exames de imagem. Imobilização/repouso conforme necessário. Prescrição de analgesia. Fisioterapia. Retorno em ___ dias.',
+                          },
+                        },
+                        {
+                          label: 'Dermatologia',
+                          data: {
+                            queixa_principal: 'Lesão cutânea em ___',
+                            historia_doenca_atual: 'Paciente apresenta lesão em ___ há ___. Tipo: mácula/pápula/placa/nódulo/vesícula. Tamanho: ___cm. Prurido: sim/não. Dor: sim/não. Evolução: ___. Uso de produtos tópicos: ___.',
+                            conduta: 'Dermatoscopia: ___. Conduta: tratamento tópico/sistêmico/biópsia. Orientações sobre proteção solar. Retorno para reavaliação.',
+                          },
+                        },
                       ].map(template => (
                         <Button
                           key={template.label}
