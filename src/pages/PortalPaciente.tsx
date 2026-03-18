@@ -477,7 +477,7 @@ export default function PortalPaciente() {
           {/* ─── Tabs ─── */}
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="consultas" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-12">
+              <TabsList className="grid w-full grid-cols-4 h-12">
                 <TabsTrigger value="consultas" className="gap-2 data-[state=active]:bg-primary/10">
                   <Calendar className="h-4 w-4" />
                   <span className="hidden sm:inline">Consultas</span>
@@ -487,6 +487,11 @@ export default function PortalPaciente() {
                   <FlaskConical className="h-4 w-4" />
                   <span className="hidden sm:inline">Exames</span>
                   <span className="sm:hidden text-xs">Exames</span>
+                </TabsTrigger>
+                <TabsTrigger value="historico" className="gap-2 data-[state=active]:bg-primary/10">
+                  <Heart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Histórico</span>
+                  <span className="sm:hidden text-xs">Histórico</span>
                 </TabsTrigger>
                 <TabsTrigger value="financeiro" className="gap-2 data-[state=active]:bg-primary/10">
                   <CreditCard className="h-4 w-4" />
@@ -606,6 +611,122 @@ export default function PortalPaciente() {
                     );
                   })
                 )}
+              </TabsContent>
+
+              {/* ─── Histórico Médico Tab ─── */}
+              <TabsContent value="historico" className="mt-4 space-y-3">
+                {/* Alergias */}
+                {profile?.alergias && profile.alergias.length > 0 && (
+                  <Card className="border-destructive/20 bg-destructive/5">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <span className="text-sm font-semibold text-destructive">Alergias Conhecidas</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {profile.alergias.map((a: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-destructive border-destructive/30 text-xs">{a}</Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Dados do paciente */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">Dados Pessoais</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {profile?.nome && (
+                        <div><span className="text-muted-foreground text-xs">Nome</span><p className="font-medium">{profile.nome}</p></div>
+                      )}
+                      {profile?.data_nascimento && (
+                        <div><span className="text-muted-foreground text-xs">Data de Nascimento</span><p className="font-medium">{format(parseISO(profile.data_nascimento), 'dd/MM/yyyy')}</p></div>
+                      )}
+                      {profile?.sexo && (
+                        <div><span className="text-muted-foreground text-xs">Sexo</span><p className="font-medium capitalize">{profile.sexo}</p></div>
+                      )}
+                      {profile?.telefone && (
+                        <div><span className="text-muted-foreground text-xs">Telefone</span><p className="font-medium">{profile.telefone}</p></div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Resumo de saúde */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Activity className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">Resumo de Saúde</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-2xl font-bold text-primary tabular-nums">{agendamentos.length}</p>
+                        <p className="text-[10px] text-muted-foreground">Total Consultas</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-2xl font-bold text-primary tabular-nums">{exames.length}</p>
+                        <p className="text-[10px] text-muted-foreground">Exames Realizados</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-2xl font-bold text-primary tabular-nums">
+                          {exames.filter(e => e.status === 'laudo_disponivel').length}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Laudos Prontos</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-2xl font-bold text-primary tabular-nums">
+                          {agendamentos.filter(a => a.status === 'finalizado').length}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Atendimentos</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Prescrições recentes - from agendamentos finalizados */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Pill className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">Últimas Consultas Finalizadas</span>
+                    </div>
+                    {agendamentos.filter(a => a.status === 'finalizado').length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma consulta finalizada ainda</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {agendamentos
+                          .filter(a => a.status === 'finalizado')
+                          .slice(0, 5)
+                          .map((a: any) => (
+                            <div key={a.id} className="flex items-center justify-between border rounded-lg p-3 text-sm">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                <div>
+                                  <p className="font-medium">{a.tipo || 'Consulta'}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(parseISO(a.data), "dd/MM/yyyy")}
+                                    {a.medicos?.nome && ` — Dr(a). ${a.medicos.nome}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <StatusBadge status="finalizado" />
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* LGPD notice */}
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 text-xs text-muted-foreground">
+                  <Shield className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Seus dados médicos são armazenados com segurança e protegidos pela LGPD (Lei Geral de Proteção de Dados).</span>
+                </div>
               </TabsContent>
 
               {/* ─── Financeiro Tab ─── */}

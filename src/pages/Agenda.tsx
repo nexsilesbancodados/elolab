@@ -94,7 +94,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day'>('grid');
   const queryClient = useQueryClient();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
@@ -415,10 +415,20 @@ export default function Agenda() {
                   </Button>
                   <div className="flex rounded-lg border overflow-hidden">
                     <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      variant={viewMode === 'day' ? 'default' : 'ghost'}
                       size="icon"
                       className="h-9 w-9 rounded-none border-0"
+                      onClick={() => setViewMode('day')}
+                      title="Visão do dia"
+                    >
+                      <Clock className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0 border-l"
                       onClick={() => setViewMode('grid')}
+                      title="Visão semanal"
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </Button>
@@ -427,6 +437,7 @@ export default function Agenda() {
                       size="icon"
                       className="h-9 w-9 rounded-none border-0 border-l"
                       onClick={() => setViewMode('list')}
+                      title="Lista"
                     >
                       <LayoutList className="h-4 w-4" />
                     </Button>
@@ -435,7 +446,70 @@ export default function Agenda() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {viewMode === 'list' ? (
+              {viewMode === 'day' ? (
+                /* ─── Day View ─── */
+                <div className="divide-y">
+                  <div className="p-4 bg-muted/30 border-b">
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentWeek(addDays(currentWeek, -1))}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="flex-1 text-center">
+                        <p className="text-lg font-bold">{format(currentWeek, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {filteredAgendamentos.filter(a => a.data === format(currentWeek, 'yyyy-MM-dd')).length} agendamentos
+                        </p>
+                      </div>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentWeek(addDays(currentWeek, 1))}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {HORARIOS.map(hora => {
+                    const agendamento = getAgendamentoForSlot(currentWeek, hora);
+                    const blocked = isSlotBlocked(currentWeek, hora);
+                    return (
+                      <div
+                        key={hora}
+                        className={cn(
+                          'flex items-stretch min-h-[72px] transition-colors',
+                          blocked ? 'bg-muted/40' : 'hover:bg-muted/20 cursor-pointer',
+                        )}
+                        onClick={() => !blocked && handleSlotClick(currentWeek, hora)}
+                      >
+                        <div className="w-20 flex-shrink-0 flex items-center justify-center border-r bg-muted/20 text-sm font-medium text-muted-foreground">
+                          {hora}
+                        </div>
+                        <div className="flex-1 p-2">
+                          {blocked && !agendamento && (
+                            <div className="rounded-lg p-3 bg-muted text-muted-foreground/60 border border-dashed border-muted-foreground/20 h-full flex items-center justify-center text-sm">
+                              Bloqueado
+                            </div>
+                          )}
+                          {agendamento && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -5 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className={cn('rounded-lg p-3 border', STATUS_COLORS[agendamento.status || 'agendado'])}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold text-sm">{getPacienteNome(agendamento.paciente_id)}</p>
+                                  <p className="text-xs opacity-75">{getMedicoNome(agendamento.medico_id)}</p>
+                                  {agendamento.tipo && <p className="text-xs opacity-60 mt-0.5">{agendamento.tipo}</p>}
+                                </div>
+                                <Badge className={cn('text-[10px]', STATUS_COLORS[agendamento.status || 'agendado'])}>
+                                  {STATUS_LABELS[agendamento.status as StatusAgendamento || 'agendado']}
+                                </Badge>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : viewMode === 'list' ? (
                 <div className="divide-y">
                   {filteredAgendamentos
                     .filter(a => a.data >= format(weekDays[0], 'yyyy-MM-dd') && a.data <= format(weekDays[6], 'yyyy-MM-dd'))
