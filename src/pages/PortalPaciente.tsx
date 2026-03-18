@@ -323,6 +323,7 @@ export default function PortalPaciente() {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [exames, setExames] = useState<any[]>([]);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const [prescricoes, setPrescricoes] = useState<any[]>([]);
 
   const fetchData = async (accessToken: string, action: string) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
