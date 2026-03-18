@@ -107,6 +107,18 @@ export default function Agenda() {
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
+  // Send WhatsApp notification (best-effort, non-blocking)
+  const sendWhatsAppNotification = async (agendamentoId: string, action: string) => {
+    try {
+      await supabase.functions.invoke('whatsapp-notifications', {
+        body: { action, agendamento_id: agendamentoId },
+      });
+    } catch (err) {
+      // WhatsApp is optional - don't block the flow
+      console.log('WhatsApp notification skipped:', err);
+    }
+  };
+
   // Auto-set filter to own doctor when logged in as medico-only
   useMemo(() => {
     if (isMedicoOnly && medicoId) {

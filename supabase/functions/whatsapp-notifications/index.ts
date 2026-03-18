@@ -162,7 +162,7 @@ async function sendAppointmentReminder(
 
   const { data: agendamento } = await supabase
     .from("agendamentos")
-    .select("*, pacientes(nome, telefone), medicos(crm, especialidade)")
+    .select("*, pacientes(nome, telefone), medicos(crm, nome, especialidade)")
     .eq("id", agendamento_id)
     .single();
 
@@ -173,7 +173,10 @@ async function sendAppointmentReminder(
   const instanceName = await getActiveInstance(supabase);
   if (!instanceName) return { success: false, message: "Sem sessão WhatsApp ativa" };
 
-  const message = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${agendamento.data}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: Dr(a). CRM ${agendamento.medicos?.crm}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\n_EloLab Clínica_`;
+  const medicoNome = agendamento.medicos?.nome ? `Dr(a). ${agendamento.medicos.nome}` : `Dr(a). CRM ${agendamento.medicos?.crm}`;
+  const dataFormatada = formatDateBR(agendamento.data);
+
+  const message = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${dataFormatada}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\n_EloLab Clínica_`;
 
   await sendWhatsAppMessage(instanceName, agendamento.pacientes.telefone, message, evolutionApiUrl, evolutionApiKey);
 
