@@ -468,6 +468,7 @@ export default function Relatorios() {
       <Tabs defaultValue="financeiro" className="space-y-6">
         <TabsList className="flex-wrap">
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="dre">DRE</TabsTrigger>
           <TabsTrigger value="atendimentos">Atendimentos</TabsTrigger>
           <TabsTrigger value="medicos">Por Médico</TabsTrigger>
           <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
@@ -554,6 +555,129 @@ export default function Relatorios() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* DRE - Demonstrativo de Resultado */}
+        <TabsContent value="dre" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-primary" />
+                DRE Simplificado
+              </CardTitle>
+              <CardDescription>Demonstrativo de Resultado do Exercício por Categoria</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const receitasPorCategoria: Record<string, number> = {};
+                const despesasPorCategoria: Record<string, number> = {};
+                lancamentosFiltrados.forEach(l => {
+                  const cat = l.categoria || 'Outros';
+                  const val = Number(l.valor) || 0;
+                  if (l.tipo === 'receita') {
+                    receitasPorCategoria[cat] = (receitasPorCategoria[cat] || 0) + val;
+                  } else {
+                    despesasPorCategoria[cat] = (despesasPorCategoria[cat] || 0) + val;
+                  }
+                });
+
+                const totalReceitas = Object.values(receitasPorCategoria).reduce((a, b) => a + b, 0);
+                const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
+                const resultado = totalReceitas - totalDespesas;
+
+                return (
+                  <div className="space-y-6">
+                    {/* Receitas */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-success flex items-center gap-2 mb-3">
+                        <TrendingUp className="h-4 w-4" /> RECEITAS
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(receitasPorCategoria)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([cat, val]) => (
+                            <div key={cat} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/30">
+                              <span className="text-sm capitalize">{cat.replace(/_/g, ' ')}</span>
+                              <span className="text-sm font-semibold tabular-nums text-success">{formatCurrency(val)}</span>
+                            </div>
+                          ))}
+                        {Object.keys(receitasPorCategoria).length === 0 && (
+                          <p className="text-sm text-muted-foreground py-2">Nenhuma receita no período</p>
+                        )}
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-success/10 border border-success/20 font-bold">
+                          <span className="text-sm">Total Receitas</span>
+                          <span className="tabular-nums text-success">{formatCurrency(totalReceitas)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Despesas */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-destructive flex items-center gap-2 mb-3">
+                        <TrendingDown className="h-4 w-4" /> DESPESAS
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(despesasPorCategoria)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([cat, val]) => (
+                            <div key={cat} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/30">
+                              <span className="text-sm capitalize">{cat.replace(/_/g, ' ')}</span>
+                              <span className="text-sm font-semibold tabular-nums text-destructive">-{formatCurrency(val)}</span>
+                            </div>
+                          ))}
+                        {Object.keys(despesasPorCategoria).length === 0 && (
+                          <p className="text-sm text-muted-foreground py-2">Nenhuma despesa no período</p>
+                        )}
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-destructive/10 border border-destructive/20 font-bold">
+                          <span className="text-sm">Total Despesas</span>
+                          <span className="tabular-nums text-destructive">-{formatCurrency(totalDespesas)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Resultado */}
+                    <div className={cn(
+                      'flex items-center justify-between py-3 px-4 rounded-xl border-2 font-bold text-lg',
+                      resultado >= 0
+                        ? 'bg-success/10 border-success/30 text-success'
+                        : 'bg-destructive/10 border-destructive/30 text-destructive'
+                    )}>
+                      <span className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        RESULTADO DO PERÍODO
+                      </span>
+                      <span className="tabular-nums">{formatCurrency(resultado)}</span>
+                    </div>
+
+                    {/* Chart */}
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={(() => {
+                          const allCats = new Set([
+                            ...Object.keys(receitasPorCategoria),
+                            ...Object.keys(despesasPorCategoria),
+                          ]);
+                          return Array.from(allCats).map(cat => ({
+                            categoria: cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            receita: receitasPorCategoria[cat] || 0,
+                            despesa: -(despesasPorCategoria[cat] || 0),
+                          }));
+                        })()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="categoria" fontSize={11} />
+                          <YAxis fontSize={11} tickFormatter={(v) => `R$${Math.abs(v)}`} />
+                          <Tooltip formatter={(value: number) => formatCurrency(Math.abs(value))} />
+                          <Legend />
+                          <Bar dataKey="receita" fill="#00A86B" name="Receita" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="despesa" fill="#FF4D4F" name="Despesa" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="atendimentos" className="space-y-6">

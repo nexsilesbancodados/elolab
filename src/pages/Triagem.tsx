@@ -195,7 +195,7 @@ export default function TriagemPage() {
       const imc = calcularIMC(formData.peso, formData.altura);
       const { error } = await supabase.from('triagens').insert([{
         paciente_id: formData.paciente_id,
-        agendamento_id: formData.agendamento_id || '',
+        agendamento_id: formData.agendamento_id || null,
         enfermeiro_id: user?.id || '',
         pressao_arterial: formData.pressao_arterial,
         frequencia_cardiaca: parseInt(formData.frequencia_cardiaca) || null,
@@ -205,11 +205,13 @@ export default function TriagemPage() {
         peso: parseFloat(formData.peso) || null,
         altura: parseFloat(formData.altura) || null,
         imc: imc,
+        glicemia: parseFloat(formData.glicemia) || null,
+        dor_escala: parseInt(formData.dor_escala) || null,
         queixa_principal: formData.queixa_principal,
-        classificacao_risco: formData.classificacao_risco as "amarelo" | "laranja" | "verde" | "vermelho",
+        classificacao_risco: formData.classificacao_risco,
         observacoes: formData.observacoes || null,
         data_hora: new Date().toISOString(),
-      }]);
+      }] as any);
       if (error) throw error;
       toast.success('Triagem registrada!');
       queryClient.invalidateQueries({ queryKey: ['triagens'] });
