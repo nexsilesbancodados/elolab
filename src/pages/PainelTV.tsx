@@ -563,7 +563,7 @@ export default function PainelTV() {
                   </p>
                 </div>
               </div>
-            </div>
+              </motion.div>
           </div>
         )}
 
