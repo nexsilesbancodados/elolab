@@ -3068,6 +3068,10 @@ export type Database = {
         Args: { _token: string; _user_id: string }
         Returns: Json
       }
+      activate_public_registration: {
+        Args: { _codigo_convite: string; _user_id: string }
+        Returns: Json
+      }
       can_access_clinical: { Args: { _user_id: string }; Returns: boolean }
       can_access_financial: { Args: { _user_id: string }; Returns: boolean }
       can_manage_data: { Args: { _user_id: string }; Returns: boolean }
