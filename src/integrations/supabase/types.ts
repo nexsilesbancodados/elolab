@@ -3064,6 +3064,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_employee_invitation: {
+        Args: { _token: string; _user_id: string }
+        Returns: Json
+      }
       can_access_clinical: { Args: { _user_id: string }; Returns: boolean }
       can_access_financial: { Args: { _user_id: string }; Returns: boolean }
       can_manage_data: { Args: { _user_id: string }; Returns: boolean }
