@@ -375,11 +375,17 @@ export default function Medicos() {
               .insert({ nome: formData.nome, email: formData.email, cargo: 'Médico', departamento: formData.especialidade || 'Clínico', ativo: true })
               .select().single();
             if (!funcError && funcData) {
-              const { error: inviteError } = await supabase.functions.invoke('send-employee-invitation', {
+              const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-employee-invitation', {
                 body: { funcionarioId: funcData.id, email: formData.email, nome: formData.nome, roles: ['medico'] },
               });
-              if (inviteError) toast.info('Médico cadastrado, mas o convite não pôde ser enviado.');
-              else toast.success(`Convite de acesso enviado para ${formData.email}`);
+              if (inviteError) {
+                toast.info('Médico cadastrado, mas o convite não pôde ser enviado.');
+              } else {
+                const codigo = inviteData?.inviteCode || inviteData?.token;
+                toast.success(codigo
+                  ? `Convite enviado para ${formData.email} (código: ${codigo})`
+                  : `Convite de acesso enviado para ${formData.email}`);
+              }
             }
           } catch { toast.info('Médico cadastrado. Convite pode ser enviado pela página de Funcionários.'); }
         }
