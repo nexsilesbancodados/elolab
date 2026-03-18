@@ -377,22 +377,51 @@ export default function Agenda() {
       ) : (
         <>
           {/* Stats do dia */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: 'Consultas hoje', value: statsHoje.total, color: 'text-primary', bg: 'bg-primary/10' },
-              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-success', bg: 'bg-success/10' },
-              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-warning', bg: 'bg-warning/10' },
-              { label: 'Finalizados', value: statsHoje.finalizados, color: 'text-muted-foreground', bg: 'bg-muted' },
+              { label: 'Consultas hoje', value: statsHoje.total, color: 'text-primary', bg: 'bg-primary/10', icon: CalendarCheck },
+              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10', icon: Users },
+              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10', icon: Clock },
+              { label: 'Finalizados', value: statsHoje.finalizados, color: 'text-muted-foreground', bg: 'bg-muted', icon: CalendarCheck },
+              { label: 'Cancelados/Faltas', value: statsHoje.cancelados + agendamentosHoje.filter(a => a.status === 'faltou').length, color: 'text-destructive', bg: 'bg-destructive/10', icon: AlertTriangle },
             ].map(s => (
               <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
                 <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${s.bg}`}>
-                  <span className={`text-lg font-bold ${s.color}`}>{s.value}</span>
+                  <s.icon className={`h-4 w-4 ${s.color}`} />
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+                <div>
+                  <span className={`text-lg font-bold ${s.color}`}>{s.value}</span>
+                  <p className="text-[10px] text-muted-foreground font-medium leading-tight">{s.label}</p>
+                </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Quick status actions for today's appointments */}
+          {agendamentosHoje.filter(a => a.status === 'agendado').length > 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                {agendamentosHoje.filter(a => a.status === 'agendado').length} agendamento(s) ainda não confirmado(s) hoje
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-7 text-xs border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                onClick={async () => {
+                  const ids = agendamentosHoje.filter(a => a.status === 'agendado').map(a => a.id);
+                  const { error } = await supabase.from('agendamentos').update({ status: 'confirmado' as StatusAgendamento }).in('id', ids);
+                  if (!error) {
+                    toast.success(`${ids.length} agendamento(s) confirmado(s)!`);
+                    queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                  }
+                }}
+              >
+                Confirmar todos
+              </Button>
+            </motion.div>
+          )}
 
           <Card>
             <CardHeader>

@@ -680,6 +680,35 @@ export default function PortalPaciente() {
                   </Card>
                 )}
 
+                {/* Solicitar agendamento */}
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/20">
+                          <Calendar className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">Precisa agendar uma consulta?</p>
+                          <p className="text-xs text-muted-foreground">Entre em contato com a clínica</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                        onClick={() => {
+                          const msg = encodeURIComponent(`Olá! Sou ${profile?.nome}, gostaria de agendar uma consulta.`);
+                          window.open(`https://wa.me/?text=${msg}`, '_blank');
+                        }}
+                      >
+                        <Phone className="h-3.5 w-3.5" />
+                        WhatsApp
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Dados do paciente */}
                 <Card>
                   <CardContent className="p-4 space-y-3">

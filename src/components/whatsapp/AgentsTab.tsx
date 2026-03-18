@@ -110,11 +110,11 @@ export function AgentsTab({
               </CardContent>
             </Card>
           ) : (
-            agents.map((agent) => (
+              agents.map((agent) => (
               <Card
                 key={agent.id}
-                className={`cursor-pointer transition-colors ${
-                  selectedAgent?.id === agent.id ? 'border-primary' : ''
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  selectedAgent?.id === agent.id ? 'border-primary ring-1 ring-primary/20' : ''
                 }`}
                 onClick={() => {
                   setSelectedAgent(agent);
@@ -123,12 +123,21 @@ export function AgentsTab({
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{agent.nome}</h3>
-                      <div className="flex gap-2 mt-1">
-                        {getTipoBadge(agent.tipo)}
-                        {!agent.ativo && <Badge variant="destructive">Inativo</Badge>}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${agent.ativo ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground'}`} />
+                        <h3 className="font-medium">{agent.nome}</h3>
                       </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {getTipoBadge(agent.tipo)}
+                        <Badge variant="outline" className="text-[10px]">
+                          {agent.humor === 'profissional' ? '🏢 Formal' : agent.humor === 'amigavel' ? '😊 Amigável' : '🎯 Objetivo'}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        🕐 {agent.horario_atendimento_inicio} - {agent.horario_atendimento_fim}
+                        {agent.atende_fora_horario && ' • 24h'}
+                      </p>
                     </div>
                     <Settings className="h-5 w-5 text-muted-foreground" />
                   </div>
