@@ -119,7 +119,7 @@ async function sendAppointmentConfirmation(
 
   const { data: agendamento } = await supabase
     .from("agendamentos")
-    .select("*, pacientes(nome, telefone), medicos(crm, especialidade)")
+    .select("*, pacientes(nome, telefone), medicos(crm, nome, especialidade)")
     .eq("id", agendamento_id)
     .single();
 
@@ -132,7 +132,10 @@ async function sendAppointmentConfirmation(
     return { success: false, message: "Nenhuma sessão WhatsApp ativa" };
   }
 
-  const message = `✅ *Confirmação de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nSua consulta está confirmada:\n📅 Data: ${agendamento.data}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: Dr(a). CRM ${agendamento.medicos?.crm}\n📋 Tipo: ${agendamento.tipo || "Consulta"}\n\nResponda *SIM* para confirmar ou *NÃO* para cancelar.\n\n_EloLab Clínica_`;
+  const medicoNome = agendamento.medicos?.nome ? `Dr(a). ${agendamento.medicos.nome}` : `Dr(a). CRM ${agendamento.medicos?.crm}`;
+  const dataFormatada = formatDateBR(agendamento.data);
+
+  const message = `✅ *Confirmação de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nSua consulta está agendada:\n📅 Data: ${dataFormatada}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n📋 Tipo: ${agendamento.tipo || "Consulta"}\n\nResponda *SIM* para confirmar ou *NÃO* para cancelar.\n\n_EloLab Clínica_`;
 
   await sendWhatsAppMessage(instanceName, agendamento.pacientes.telefone, message, evolutionApiUrl, evolutionApiKey);
 
@@ -159,7 +162,7 @@ async function sendAppointmentReminder(
 
   const { data: agendamento } = await supabase
     .from("agendamentos")
-    .select("*, pacientes(nome, telefone), medicos(crm, especialidade)")
+    .select("*, pacientes(nome, telefone), medicos(crm, nome, especialidade)")
     .eq("id", agendamento_id)
     .single();
 
@@ -170,7 +173,10 @@ async function sendAppointmentReminder(
   const instanceName = await getActiveInstance(supabase);
   if (!instanceName) return { success: false, message: "Sem sessão WhatsApp ativa" };
 
-  const message = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${agendamento.data}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: Dr(a). CRM ${agendamento.medicos?.crm}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\n_EloLab Clínica_`;
+  const medicoNome = agendamento.medicos?.nome ? `Dr(a). ${agendamento.medicos.nome}` : `Dr(a). CRM ${agendamento.medicos?.crm}`;
+  const dataFormatada = formatDateBR(agendamento.data);
+
+  const message = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${dataFormatada}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\n_EloLab Clínica_`;
 
   await sendWhatsAppMessage(instanceName, agendamento.pacientes.telefone, message, evolutionApiUrl, evolutionApiKey);
 
@@ -250,7 +256,7 @@ async function sendBulkReminders(
 
   const { data: agendamentos } = await supabase
     .from("agendamentos")
-    .select("id, data, hora_inicio, tipo, pacientes(nome, telefone), medicos(crm)")
+    .select("id, data, hora_inicio, tipo, pacientes(nome, telefone), medicos(crm, nome)")
     .eq("data", tomorrowStr)
     .in("status", ["agendado", "confirmado"]);
 
@@ -292,4 +298,9 @@ async function sendBulkReminders(
   });
 
   return { success: true, enviados, erros, total: agendamentos.length };
+}
+
+function formatDateBR(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-')
+  return `${day}/${month}/${year}`
 }

@@ -20,6 +20,7 @@ interface Agendamento {
   }
   medicos: {
     crm: string
+    nome: string | null
     especialidade: string | null
   }
 }
@@ -35,10 +36,8 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const brevoApiKey = Deno.env.get('BREVO_API_KEY')
-
-    if (!brevoApiKey) {
-      throw new Error('BREVO_API_KEY não configurada')
-    }
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -74,18 +73,29 @@ Deno.serve(async (req) => {
     let totalErrors = 0
     const errors: string[] = []
 
+    // Check if WhatsApp is available
+    let whatsappInstanceName: string | null = null
+    if (evolutionApiUrl && evolutionApiKey) {
+      const { data: session } = await supabase
+        .from('whatsapp_sessions')
+        .select('instance_name')
+        .eq('status', 'connected')
+        .limit(1)
+        .single()
+      whatsappInstanceName = session?.instance_name || null
+    }
+
     // === LEMBRETE 24H ===
-    if (config24h?.ativo !== false && template24h) {
+    if (config24h?.ativo !== false) {
       const { data: agendamentos24h, error: err24h } = await supabase
         .from('agendamentos')
         .select(`
           id, data, hora_inicio, status, tipo, paciente_id, medico_id,
           pacientes!inner(nome, email, telefone),
-          medicos!inner(crm, especialidade)
+          medicos!inner(crm, nome, especialidade)
         `)
         .eq('data', tomorrowStr)
         .in('status', ['agendado', 'confirmado'])
-        .not('pacientes.email', 'is', null)
 
       if (err24h) {
         errors.push(`Erro 24h: ${err24h.message}`)
@@ -104,61 +114,86 @@ Deno.serve(async (req) => {
 
           const paciente = ag.pacientes
           const medico = ag.medicos
-          if (!paciente?.email) continue
+          const medicoNome = medico.nome ? `Dr(a). ${medico.nome}` : `Dr(a). CRM ${medico.crm}`
 
-          let conteudo = template24h.conteudo
-            .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
-            .replace(/\{\{data\}\}/g, formatDate(ag.data))
-            .replace(/\{\{horario\}\}/g, ag.hora_inicio)
-            .replace(/\{\{medico_nome\}\}/g, `Dr(a). ${medico.crm}`)
-            .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
-            .replace(/\{\{clinica_endereco\}\}/g, 'Endereço da clínica')
+          // === SEND VIA EMAIL ===
+          if (brevoApiKey && paciente?.email && template24h) {
+            let conteudo = template24h.conteudo
+              .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
+              .replace(/\{\{data\}\}/g, formatDate(ag.data))
+              .replace(/\{\{horario\}\}/g, ag.hora_inicio)
+              .replace(/\{\{medico_nome\}\}/g, medicoNome)
+              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+              .replace(/\{\{clinica_endereco\}\}/g, 'Endereço da clínica')
 
-          let assunto = (template24h.assunto || 'Lembrete de Consulta')
-            .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+            let assunto = (template24h.assunto || 'Lembrete de Consulta')
+              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
 
-          try {
-            const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
+            try {
+              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
 
-            if (emailRes.ok) {
-              totalSuccess++
+              if (emailRes.ok) {
+                totalSuccess++
+                await supabase.from('notification_queue').insert({
+                  template_id: template24h.id,
+                  tipo: 'email',
+                  destinatario_id: ag.paciente_id,
+                  destinatario_email: paciente.email,
+                  destinatario_nome: paciente.nome,
+                  assunto,
+                  conteudo,
+                  dados_extras: { agendamento_id: ag.id, tipo_lembrete: '24h' },
+                  status: 'enviado',
+                  enviado_em: new Date().toISOString(),
+                })
+              } else {
+                totalErrors++
+                const result = await emailRes.json()
+                errors.push(`Erro email para ${paciente.email}: ${JSON.stringify(result)}`)
+              }
+            } catch (emailError) {
+              totalErrors++
+              errors.push(`Exceção email para ${paciente.email}: ${emailError}`)
+            }
+          }
+
+          // === SEND VIA WHATSAPP ===
+          if (whatsappInstanceName && paciente?.telefone) {
+            try {
+              const whatsappMsg = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${paciente.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${formatDate(ag.data)}\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n📋 Tipo: ${ag.tipo || 'Consulta'}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\nResponda *CONFIRMAR* para confirmar sua presença.\n\n_EloLab Clínica_`
+
+              await sendWhatsAppMessage(evolutionApiUrl!, evolutionApiKey!, whatsappInstanceName, paciente.telefone, whatsappMsg)
+
               await supabase.from('notification_queue').insert({
-                template_id: template24h.id,
-                tipo: 'email',
+                tipo: 'whatsapp',
                 destinatario_id: ag.paciente_id,
-                destinatario_email: paciente.email,
+                destinatario_telefone: paciente.telefone,
                 destinatario_nome: paciente.nome,
-                assunto,
-                conteudo,
-                dados_extras: { agendamento_id: ag.id, tipo_lembrete: '24h' },
+                conteudo: whatsappMsg,
+                dados_extras: { agendamento_id: ag.id, tipo_lembrete: '24h_whatsapp' },
                 status: 'enviado',
                 enviado_em: new Date().toISOString(),
               })
-            } else {
-              totalErrors++
-              const result = await emailRes.json()
-              errors.push(`Erro ao enviar para ${paciente.email}: ${JSON.stringify(result)}`)
+              totalSuccess++
+            } catch (whatsappError) {
+              errors.push(`Erro WhatsApp para ${paciente.nome}: ${whatsappError}`)
             }
-          } catch (emailError) {
-            totalErrors++
-            errors.push(`Exceção ao enviar para ${paciente.email}: ${emailError}`)
           }
         }
       }
     }
 
     // === LEMBRETE 2H ===
-    if (config2h?.ativo !== false && template2h) {
+    if (config2h?.ativo !== false) {
       const { data: agendamentos2h, error: err2h } = await supabase
         .from('agendamentos')
         .select(`
           id, data, hora_inicio, status, tipo, paciente_id, medico_id,
           pacientes!inner(nome, email, telefone),
-          medicos!inner(crm, especialidade)
+          medicos!inner(crm, nome, especialidade)
         `)
         .eq('data', todayStr)
         .in('status', ['agendado', 'confirmado'])
-        .not('pacientes.email', 'is', null)
 
       if (err2h) {
         errors.push(`Erro 2h: ${err2h.message}`)
@@ -183,41 +218,67 @@ Deno.serve(async (req) => {
 
           const paciente = ag.pacientes
           const medico = ag.medicos
-          if (!paciente?.email) continue
+          const medicoNome = medico.nome ? `Dr(a). ${medico.nome}` : `Dr(a). CRM ${medico.crm}`
 
-          let conteudo = template2h.conteudo
-            .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
-            .replace(/\{\{horario\}\}/g, ag.hora_inicio)
-            .replace(/\{\{medico_nome\}\}/g, `Dr(a). ${medico.crm}`)
-            .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+          // === SEND VIA EMAIL ===
+          if (brevoApiKey && paciente?.email && template2h) {
+            let conteudo = template2h.conteudo
+              .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
+              .replace(/\{\{horario\}\}/g, ag.hora_inicio)
+              .replace(/\{\{medico_nome\}\}/g, medicoNome)
+              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
 
-          let assunto = (template2h.assunto || 'Lembrete de Consulta')
-            .replace(/\{\{horario\}\}/g, ag.hora_inicio)
-            .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+            let assunto = (template2h.assunto || 'Lembrete de Consulta')
+              .replace(/\{\{horario\}\}/g, ag.hora_inicio)
+              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
 
-          try {
-            const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
+            try {
+              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
 
-            if (emailRes.ok) {
-              totalSuccess++
+              if (emailRes.ok) {
+                totalSuccess++
+                await supabase.from('notification_queue').insert({
+                  template_id: template2h.id,
+                  tipo: 'email',
+                  destinatario_id: ag.paciente_id,
+                  destinatario_email: paciente.email,
+                  destinatario_nome: paciente.nome,
+                  assunto,
+                  conteudo,
+                  dados_extras: { agendamento_id: ag.id, tipo_lembrete: '2h' },
+                  status: 'enviado',
+                  enviado_em: new Date().toISOString(),
+                })
+              } else {
+                totalErrors++
+              }
+            } catch (emailError) {
+              totalErrors++
+              errors.push(`Exceção 2h email: ${emailError}`)
+            }
+          }
+
+          // === SEND VIA WHATSAPP ===
+          if (whatsappInstanceName && paciente?.telefone) {
+            try {
+              const whatsappMsg = `⏰ *Lembrete - EloLab*\n\nOlá, ${paciente.nome}! Sua consulta é daqui a 2 horas:\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n\nEstamos esperando por você!\n\n_EloLab Clínica_`
+
+              await sendWhatsAppMessage(evolutionApiUrl!, evolutionApiKey!, whatsappInstanceName, paciente.telefone, whatsappMsg)
+
               await supabase.from('notification_queue').insert({
-                template_id: template2h.id,
-                tipo: 'email',
+                tipo: 'whatsapp',
                 destinatario_id: ag.paciente_id,
-                destinatario_email: paciente.email,
+                destinatario_telefone: paciente.telefone,
                 destinatario_nome: paciente.nome,
-                assunto,
-                conteudo,
-                dados_extras: { agendamento_id: ag.id, tipo_lembrete: '2h' },
+                conteudo: whatsappMsg,
+                dados_extras: { agendamento_id: ag.id, tipo_lembrete: '2h_whatsapp' },
                 status: 'enviado',
                 enviado_em: new Date().toISOString(),
               })
-            } else {
-              totalErrors++
+              totalSuccess++
+            } catch (whatsappError) {
+              errors.push(`Erro WhatsApp 2h para ${paciente.nome}: ${whatsappError}`)
             }
-          } catch (emailError) {
-            totalErrors++
-            errors.push(`Exceção 2h: ${emailError}`)
           }
         }
       }
@@ -227,12 +288,12 @@ Deno.serve(async (req) => {
 
     await supabase.from('automation_logs').insert({
       tipo: 'lembrete',
-      nome: 'Lembretes de Consulta',
+      nome: 'Lembretes de Consulta (Email + WhatsApp)',
       status: totalErrors === 0 ? 'sucesso' : totalErrors === totalProcessed ? 'erro' : 'parcial',
       registros_processados: totalProcessed,
       registros_sucesso: totalSuccess,
       registros_erro: totalErrors,
-      detalhes: { errors },
+      detalhes: { errors, whatsapp_available: !!whatsappInstanceName },
       duracao_ms: duration,
       executado_por: 'cron',
     })
@@ -240,8 +301,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Lembretes processados',
-        stats: { processados: totalProcessed, sucesso: totalSuccess, erros: totalErrors, duracao_ms: duration },
+        message: 'Lembretes processados (Email + WhatsApp)',
+        stats: { processados: totalProcessed, sucesso: totalSuccess, erros: totalErrors, duracao_ms: duration, whatsapp: !!whatsappInstanceName },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -275,4 +336,26 @@ async function sendBrevoEmail(apiKey: string, to: string, toName: string, subjec
       htmlContent: htmlContent.replace(/\n/g, '<br>'),
     }),
   })
+}
+
+async function sendWhatsAppMessage(apiUrl: string, apiKey: string, instanceName: string, phone: string, message: string): Promise<void> {
+  const cleanPhone = phone.replace(/\D/g, '')
+  const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
+
+  const response = await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': apiKey,
+    },
+    body: JSON.stringify({
+      number: formattedPhone,
+      text: message,
+    }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Erro WhatsApp: ${errorText}`)
+  }
 }

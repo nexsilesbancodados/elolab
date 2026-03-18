@@ -107,6 +107,18 @@ export default function Agenda() {
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
 
+  // Send WhatsApp notification (best-effort, non-blocking)
+  const sendWhatsAppNotification = async (agendamentoId: string, action: string) => {
+    try {
+      await supabase.functions.invoke('whatsapp-notifications', {
+        body: { action, agendamento_id: agendamentoId },
+      });
+    } catch (err) {
+      // WhatsApp is optional - don't block the flow
+      console.log('WhatsApp notification skipped:', err);
+    }
+  };
+
   // Auto-set filter to own doctor when logged in as medico-only
   useMemo(() => {
     if (isMedicoOnly && medicoId) {
@@ -246,6 +258,12 @@ export default function Agenda() {
           .eq('id', formData.id);
 
         if (error) throw error;
+
+        // Send WhatsApp confirmation if status changed to confirmado
+        if (formData.status === 'confirmado') {
+          sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
+        }
+
         toast.success('Agendamento atualizado com sucesso!');
       } else {
         // Create new (possibly recurring)
@@ -262,12 +280,20 @@ export default function Agenda() {
           observacoes: formData.observacoes,
         }));
 
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('agendamentos')
-          .insert(newAgendamentos);
+          .insert(newAgendamentos)
+          .select('id');
 
         if (error) throw error;
         
+        // Send WhatsApp confirmation for each new appointment
+        if (inserted) {
+          for (const ag of inserted) {
+            sendWhatsAppNotification(ag.id, 'send_appointment_confirmation');
+          }
+        }
+
         const count = dates.length;
         toast.success(
           count > 1 
