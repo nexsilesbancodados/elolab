@@ -68,7 +68,8 @@ Deno.serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "https://lovable.app";
-    const inviteUrl = `${origin}/aceitar-convite?token=${token}`;
+    const inviteCode = token;
+    const inviteUrl = `${origin}/aceitar-convite?token=${encodeURIComponent(token)}`;
 
     const roleLabels: Record<string, string> = {
       admin: "Administrador",

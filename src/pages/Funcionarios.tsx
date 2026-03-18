@@ -277,9 +277,14 @@ export default function Funcionarios() {
 
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['funcionarios-with-roles'] });
-      toast.success('Convite enviado com sucesso!');
+      const codigo = data?.inviteCode || data?.token;
+      if (codigo) {
+        toast.success(`Convite enviado! Código: ${codigo}`);
+      } else {
+        toast.success('Convite enviado com sucesso!');
+      }
     },
     onError: (error: any) => {
       toast.error('Erro ao enviar convite: ' + error.message);
