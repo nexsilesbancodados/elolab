@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     // Validate token
     const { data: tokenData, error: tokenError } = await supabase
       .from("paciente_portal_tokens")
-      .select("*, pacientes(id, nome, email, telefone, foto_url)")
+      .select("*, pacientes(id, nome, email, telefone, foto_url, cpf, data_nascimento, sexo, alergias, observacoes)")
       .eq("token", token)
       .eq("ativo", true)
       .gte("expires_at", new Date().toISOString())
