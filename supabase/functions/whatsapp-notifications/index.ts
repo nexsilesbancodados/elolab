@@ -299,3 +299,8 @@ async function sendBulkReminders(
 
   return { success: true, enviados, erros, total: agendamentos.length };
 }
+
+function formatDateBR(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-')
+  return `${day}/${month}/${year}`
+}
