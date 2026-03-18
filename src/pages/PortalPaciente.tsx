@@ -477,7 +477,7 @@ export default function PortalPaciente() {
           {/* ─── Tabs ─── */}
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="consultas" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-12">
+              <TabsList className="grid w-full grid-cols-4 h-12">
                 <TabsTrigger value="consultas" className="gap-2 data-[state=active]:bg-primary/10">
                   <Calendar className="h-4 w-4" />
                   <span className="hidden sm:inline">Consultas</span>
@@ -487,6 +487,11 @@ export default function PortalPaciente() {
                   <FlaskConical className="h-4 w-4" />
                   <span className="hidden sm:inline">Exames</span>
                   <span className="sm:hidden text-xs">Exames</span>
+                </TabsTrigger>
+                <TabsTrigger value="historico" className="gap-2 data-[state=active]:bg-primary/10">
+                  <Heart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Histórico</span>
+                  <span className="sm:hidden text-xs">Histórico</span>
                 </TabsTrigger>
                 <TabsTrigger value="financeiro" className="gap-2 data-[state=active]:bg-primary/10">
                   <CreditCard className="h-4 w-4" />
