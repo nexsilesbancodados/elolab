@@ -133,29 +133,20 @@ export default function AceitarConvite() {
         throw new Error('Erro ao criar conta');
       }
 
-      // 2. Update invitation status
-      await supabase
-        .from('employee_invitations')
-        .update({
-          status: 'accepted',
-          accepted_at: new Date().toISOString(),
-        })
-        .eq('id', invitation.id);
+      // 2. Accept invitation via SECURITY DEFINER function (handles roles, funcionario link, status update)
+      const { data: acceptResult, error: acceptError } = await supabase.rpc(
+        'accept_employee_invitation' as any,
+        { _token: token, _user_id: authData.user.id }
+      );
 
-      // 3. Link funcionario to user
-      await supabase
-        .from('funcionarios')
-        .update({ user_id: authData.user.id })
-        .eq('id', invitation.funcionario_id);
+      if (acceptError) {
+        console.error('Error accepting invitation:', acceptError);
+        throw new Error('Erro ao processar convite');
+      }
 
-      // 4. Add user roles
-      if (invitation.roles.length > 0) {
-        const rolesToInsert = invitation.roles.map(role => ({
-          user_id: authData.user!.id,
-          role: role as 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro',
-        }));
-
-        await supabase.from('user_roles').insert(rolesToInsert);
+      const result = acceptResult as any;
+      if (result && !result.success) {
+        throw new Error(result.error || 'Erro ao processar convite');
       }
 
       toast.success('Conta criada com sucesso! Verifique seu e-mail para confirmar.');
