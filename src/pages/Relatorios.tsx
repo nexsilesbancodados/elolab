@@ -680,6 +680,7 @@ export default function Relatorios() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="atendimentos" className="space-y-6">
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleExportAtendimentosPDF} className="gap-2">
               <FileText className="h-4 w-4" />
