@@ -572,13 +572,13 @@ export default function Auth() {
 
           {/* Footer */}
           <div className="mt-8 space-y-3">
-            <Link
-              to="/"
+            <a
+              href="https://real-world-made.lovable.app"
               className="flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Voltar ao site
-            </Link>
+            </a>
             <p className="text-center text-[11px] text-muted-foreground/60">
               © {new Date().getFullYear()} EloLab · Todos os direitos reservados
             </p>
