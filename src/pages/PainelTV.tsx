@@ -541,7 +541,12 @@ export default function PainelTV() {
         {/* Chamada Atual - Destaque */}
         {chamados.length > 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 md:p-8 shadow-2xl shadow-primary/20 animate-pulse">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: [1, 1.01, 1], opacity: 1 }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 md:p-8 shadow-2xl shadow-primary/20"
+              >
               <p className="text-xl md:text-2xl mb-2 text-white/80">Chamando:</p>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
