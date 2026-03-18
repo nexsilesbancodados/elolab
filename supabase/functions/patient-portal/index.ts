@@ -61,11 +61,10 @@ Deno.serve(async (req) => {
       case "get_agendamentos": {
         const { data } = await supabase
           .from("agendamentos")
-          .select("id, data, hora_inicio, hora_fim, tipo, status, medicos(crm, especialidade)")
+          .select("id, data, hora_inicio, hora_fim, tipo, status, medicos(nome, crm, especialidade)")
           .eq("paciente_id", pacienteId)
-          .gte("data", new Date().toISOString().split("T")[0])
-          .order("data", { ascending: true })
-          .limit(20);
+          .order("data", { ascending: false })
+          .limit(50);
         result = data || [];
         break;
       }
