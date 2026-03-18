@@ -96,6 +96,9 @@ Deno.serve(async (req) => {
           .text { color: #52525b; line-height: 1.6; margin-bottom: 24px; }
           .role-badge { display: inline-block; background: #dbeafe; color: #1d4ed8; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 500; }
           .button { display: inline-block; background: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 24px 0; }
+          .code-box { background: #f4f4f5; border: 1px dashed #a1a1aa; border-radius: 8px; padding: 12px; text-align: center; margin: 16px 0; }
+          .code-value { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: #18181b; word-break: break-all; }
+          .link-box { background: #f8fafc; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 12px; color: #334155; word-break: break-all; }
           .footer { background: #f4f4f5; padding: 24px; text-align: center; color: #71717a; font-size: 12px; }
           .warning { color: #a16207; background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 16px; font-size: 14px; }
         </style>
@@ -120,6 +123,11 @@ Deno.serve(async (req) => {
             <div style="text-align: center;">
               <a href="${inviteUrl}" class="button">Aceitar Convite e Criar Conta</a>
             </div>
+            <p class="text" style="margin-bottom: 8px;"><strong>Código do convite:</strong></p>
+            <div class="code-box">
+              <div class="code-value">${inviteCode}</div>
+            </div>
+            <div class="link-box">Se o botão não abrir, use este link: ${inviteUrl}</div>
             <p class="warning">
               ⚠️ Este convite expira em 7 dias. Se você não reconhece este convite, ignore este e-mail.
             </p>
