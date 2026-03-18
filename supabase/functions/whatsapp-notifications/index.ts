@@ -119,7 +119,7 @@ async function sendAppointmentConfirmation(
 
   const { data: agendamento } = await supabase
     .from("agendamentos")
-    .select("*, pacientes(nome, telefone), medicos(crm, especialidade)")
+    .select("*, pacientes(nome, telefone), medicos(crm, nome, especialidade)")
     .eq("id", agendamento_id)
     .single();
 
@@ -132,7 +132,10 @@ async function sendAppointmentConfirmation(
     return { success: false, message: "Nenhuma sessão WhatsApp ativa" };
   }
 
-  const message = `✅ *Confirmação de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nSua consulta está confirmada:\n📅 Data: ${agendamento.data}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: Dr(a). CRM ${agendamento.medicos?.crm}\n📋 Tipo: ${agendamento.tipo || "Consulta"}\n\nResponda *SIM* para confirmar ou *NÃO* para cancelar.\n\n_EloLab Clínica_`;
+  const medicoNome = agendamento.medicos?.nome ? `Dr(a). ${agendamento.medicos.nome}` : `Dr(a). CRM ${agendamento.medicos?.crm}`;
+  const dataFormatada = formatDateBR(agendamento.data);
+
+  const message = `✅ *Confirmação de Consulta - EloLab*\n\nOlá, ${agendamento.pacientes.nome}!\n\nSua consulta está agendada:\n📅 Data: ${dataFormatada}\n🕐 Horário: ${agendamento.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n📋 Tipo: ${agendamento.tipo || "Consulta"}\n\nResponda *SIM* para confirmar ou *NÃO* para cancelar.\n\n_EloLab Clínica_`;
 
   await sendWhatsAppMessage(instanceName, agendamento.pacientes.telefone, message, evolutionApiUrl, evolutionApiKey);
 
