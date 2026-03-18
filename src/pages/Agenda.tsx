@@ -415,10 +415,20 @@ export default function Agenda() {
                   </Button>
                   <div className="flex rounded-lg border overflow-hidden">
                     <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      variant={viewMode === 'day' ? 'default' : 'ghost'}
                       size="icon"
                       className="h-9 w-9 rounded-none border-0"
+                      onClick={() => setViewMode('day')}
+                      title="Visão do dia"
+                    >
+                      <Clock className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0 border-l"
                       onClick={() => setViewMode('grid')}
+                      title="Visão semanal"
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </Button>
@@ -427,6 +437,7 @@ export default function Agenda() {
                       size="icon"
                       className="h-9 w-9 rounded-none border-0 border-l"
                       onClick={() => setViewMode('list')}
+                      title="Lista"
                     >
                       <LayoutList className="h-4 w-4" />
                     </Button>
