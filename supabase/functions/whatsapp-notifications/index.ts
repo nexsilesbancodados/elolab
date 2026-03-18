@@ -256,7 +256,7 @@ async function sendBulkReminders(
 
   const { data: agendamentos } = await supabase
     .from("agendamentos")
-    .select("id, data, hora_inicio, tipo, pacientes(nome, telefone), medicos(crm)")
+    .select("id, data, hora_inicio, tipo, pacientes(nome, telefone), medicos(crm, nome)")
     .eq("data", tomorrowStr)
     .in("status", ["agendado", "confirmado"]);
 
