@@ -477,26 +477,26 @@ export default function PortalPaciente() {
           {/* ─── Tabs ─── */}
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="consultas" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-12">
-                <TabsTrigger value="consultas" className="gap-2 data-[state=active]:bg-primary/10">
+              <TabsList className="grid w-full grid-cols-5 h-12">
+                <TabsTrigger value="consultas" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Consultas</span>
-                  <span className="sm:hidden text-xs">Consultas</span>
+                  <span className="hidden sm:inline text-sm">Consultas</span>
                 </TabsTrigger>
-                <TabsTrigger value="exames" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="exames" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <FlaskConical className="h-4 w-4" />
-                  <span className="hidden sm:inline">Exames</span>
-                  <span className="sm:hidden text-xs">Exames</span>
+                  <span className="hidden sm:inline text-sm">Exames</span>
                 </TabsTrigger>
-                <TabsTrigger value="historico" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="prescricoes" className="gap-1.5 data-[state=active]:bg-primary/10">
+                  <Pill className="h-4 w-4" />
+                  <span className="hidden sm:inline text-sm">Receitas</span>
+                </TabsTrigger>
+                <TabsTrigger value="historico" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <Heart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                  <span className="sm:hidden text-xs">Histórico</span>
+                  <span className="hidden sm:inline text-sm">Histórico</span>
                 </TabsTrigger>
-                <TabsTrigger value="financeiro" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="financeiro" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <CreditCard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Financeiro</span>
-                  <span className="sm:hidden text-xs">Financeiro</span>
+                  <span className="hidden sm:inline text-sm">Financeiro</span>
                 </TabsTrigger>
               </TabsList>
 
