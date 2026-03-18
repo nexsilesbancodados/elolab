@@ -75,6 +75,28 @@ export function AgentsTab({
         </Button>
       </div>
 
+      {/* Agent performance summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total de Agentes', value: agents.length, accent: 'text-primary bg-primary/10' },
+          { label: 'Ativos', value: agents.filter(a => a.ativo).length, accent: 'text-green-600 dark:text-green-400 bg-green-500/10' },
+          { label: 'Inativos', value: agents.filter(a => !a.ativo).length, accent: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+          { label: 'Tipos', value: new Set(agents.map(a => a.tipo)).size, accent: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
+        ].map(s => (
+          <Card key={s.label} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${s.accent}`}>
+                <Bot className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de Agentes */}
         <div className="space-y-3">
