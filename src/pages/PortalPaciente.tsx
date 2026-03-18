@@ -616,6 +616,51 @@ export default function PortalPaciente() {
                 )}
               </TabsContent>
 
+              {/* ─── Prescrições Tab ─── */}
+              <TabsContent value="prescricoes" className="mt-4 space-y-3">
+                {!prescricoes.length ? (
+                  <EmptyState icon={Pill} text="Nenhuma prescrição encontrada" />
+                ) : (
+                  prescricoes.map((p: any, i: number) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="transition-all hover:shadow-md">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-xl bg-primary/10">
+                              <Pill className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <p className="font-semibold text-sm">{p.medicamento}</p>
+                              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                {p.dosagem && <span>Dose: {p.dosagem}</span>}
+                                {p.posologia && <span>• {p.posologia}</span>}
+                                {p.quantidade && <span>• Qtd: {p.quantidade}</span>}
+                                {p.duracao && <span>• {p.duracao}</span>}
+                              </div>
+                              {p.observacoes && (
+                                <p className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded mt-1">{p.observacoes}</p>
+                              )}
+                              <p className="text-[11px] text-muted-foreground">
+                                {p.data_emissao ? format(parseISO(p.data_emissao), 'dd/MM/yyyy') : ''}
+                                {p.medicos?.nome && ` — Dr(a). ${p.medicos.nome}`}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-[10px]">
+                              {p.tipo === 'controle_especial' ? 'Especial' : p.tipo === 'antimicrobiano' ? 'Antimicro' : 'Simples'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                )}
+              </TabsContent>
+
               {/* ─── Histórico Médico Tab ─── */}
               <TabsContent value="historico" className="mt-4 space-y-3">
                 {/* Alergias */}
