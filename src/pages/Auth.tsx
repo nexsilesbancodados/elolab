@@ -171,6 +171,27 @@ export default function Auth() {
         return;
       }
 
+      // Pre-validate the invite code before creating the account
+      const { data: codeCheck } = await supabase
+        .from('registros_pendentes' as any)
+        .select('id, status, expires_at')
+        .eq('codigo_convite', data.codigoConvite)
+        .in('status', ['pendente', 'pago'])
+        .maybeSingle();
+
+      if (!codeCheck) {
+        toast.error('Código de convite inválido ou já utilizado.');
+        setIsLoading(false);
+        return;
+      }
+
+      const codeData = codeCheck as any;
+      if (new Date(codeData.expires_at) < new Date()) {
+        toast.error('Código de convite expirado.');
+        setIsLoading(false);
+        return;
+      }
+
       const result = await signUp(data.email, data.password, data.nome);
       if (result.error) {
         if (result.error.message.includes('User already registered')) toast.error('Este email já está cadastrado');
