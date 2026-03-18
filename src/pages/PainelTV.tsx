@@ -123,7 +123,6 @@ export default function PainelTV() {
         const chamado = filaData.find((f) => f.status === 'chamado');
         if (chamado && chamado.id !== chamadoAtual?.id) {
           setChamadoAtual(chamado);
-          // Play sound
           try {
             const audio = new Audio('/notification.mp3');
             await audio.play();
@@ -141,9 +140,12 @@ export default function PainelTV() {
             .in('id', agendamentoIds);
 
           if (agendamentos) {
-            const pacienteIds = agendamentos.map((a) => a.paciente_id);
-            const medicoIds = agendamentos.map((a) => a.medico_id);
-            const salaIds = agendamentos.map((a) => a.sala_id).filter(Boolean);
+            const pacienteIds = [...new Set(agendamentos.map((a) => a.paciente_id))];
+            const medicoIds = [...new Set(agendamentos.map((a) => a.medico_id))];
+            // Collect sala_ids from both fila and agendamentos
+            const filaSalaIds = filaData.map((f) => f.sala_id).filter(Boolean) as string[];
+            const agSalaIds = agendamentos.map((a) => a.sala_id).filter(Boolean) as string[];
+            const allSalaIds = [...new Set([...filaSalaIds, ...agSalaIds])];
 
             // Load pacientes
             if (pacienteIds.length > 0) {
@@ -162,26 +164,19 @@ export default function PainelTV() {
               }
             }
 
-            // Load medicos (via profiles)
+            // Load medicos - use nome directly from medicos table
             if (medicoIds.length > 0) {
               const { data: medicosData } = await supabase
                 .from('medicos')
-                .select('id, user_id, especialidade')
+                .select('id, nome, crm, especialidade')
                 .in('id', medicoIds);
 
               if (medicosData) {
-                const userIds = medicosData.map((m) => m.user_id).filter(Boolean);
-                const { data: profiles } = await supabase
-                  .from('profiles')
-                  .select('id, nome')
-                  .in('id', userIds);
-
                 const map: Record<string, string> = {};
                 agendamentos.forEach((a) => {
                   const m = medicosData.find((m) => m.id === a.medico_id);
-                  if (m && profiles) {
-                    const p = profiles.find((p) => p.id === m.user_id);
-                    if (p) map[a.id] = `Dr(a). ${p.nome}`;
+                  if (m) {
+                    map[a.id] = m.nome ? `Dr(a). ${m.nome}` : `Dr(a). CRM ${m.crm}`;
                   }
                 });
                 setMedicos(map);
@@ -189,11 +184,11 @@ export default function PainelTV() {
             }
 
             // Load salas
-            if (salaIds.length > 0) {
+            if (allSalaIds.length > 0) {
               const { data: salasData } = await supabase
                 .from('salas')
                 .select('id, nome')
-                .in('id', salaIds as string[]);
+                .in('id', allSalaIds);
 
               if (salasData) {
                 const map: Record<string, string> = {};
@@ -546,7 +541,12 @@ export default function PainelTV() {
         {/* Chamada Atual - Destaque */}
         {chamados.length > 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 md:p-8 shadow-2xl shadow-primary/20 animate-pulse">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: [1, 1.01, 1], opacity: 1 }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 md:p-8 shadow-2xl shadow-primary/20"
+              >
               <p className="text-xl md:text-2xl mb-2 text-white/80">Chamando:</p>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -563,7 +563,7 @@ export default function PainelTV() {
                   </p>
                 </div>
               </div>
-            </div>
+              </motion.div>
           </div>
         )}
 
