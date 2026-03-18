@@ -468,6 +468,7 @@ export default function Relatorios() {
       <Tabs defaultValue="financeiro" className="space-y-6">
         <TabsList className="flex-wrap">
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="dre">DRE</TabsTrigger>
           <TabsTrigger value="atendimentos">Atendimentos</TabsTrigger>
           <TabsTrigger value="medicos">Por Médico</TabsTrigger>
           <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
