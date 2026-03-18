@@ -85,7 +85,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
+const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App(_props, _ref) {
 
   // Global error handling is now initialized in main.tsx via errorTracking.ts
 
@@ -163,6 +163,8 @@ function App() {
       </QueryClientProvider>
     </ErrorBoundary>
   );
-}
+});
+
+App.displayName = 'App';
 
 export default App;
