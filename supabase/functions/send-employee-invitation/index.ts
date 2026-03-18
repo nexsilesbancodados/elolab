@@ -167,6 +167,8 @@ Deno.serve(async (req) => {
         success: true,
         message: "Convite enviado com sucesso",
         token,
+        inviteCode,
+        inviteUrl,
       }),
       {
         status: 200,
