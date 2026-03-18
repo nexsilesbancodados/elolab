@@ -252,11 +252,35 @@ export default function Fila() {
     }
   };
 
+  // TTS voice call helper
+  const chamarPacienteVoz = (pacienteNome: string, salaNome: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const texto = `Paciente ${pacienteNome}, por favor dirija-se ${salaNome === '-' ? 'à recepção' : `à ${salaNome}`}.`;
+    for (let i = 0; i < 2; i++) {
+      const utterance = new SpeechSynthesisUtterance(texto);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.9;
+      utterance.volume = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang.startsWith('pt-BR')) || voices.find(v => v.lang.startsWith('pt'));
+      if (ptVoice) utterance.voice = ptVoice;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const updateStatus = async (id: string, status: string, agendamentoId?: string) => {
     await supabase.from('fila_atendimento').update({ status }).eq('id', id);
     if (agendamentoId) {
       const agStatus = status === 'em_atendimento' ? 'em_atendimento' : status === 'finalizado' ? 'finalizado' : 'aguardando';
       await supabase.from('agendamentos').update({ status: agStatus }).eq('id', agendamentoId);
+    }
+    // Trigger voice call when status is 'chamado'
+    if (status === 'chamado' && agendamentoId) {
+      const item = fila.find(f => f.id === id);
+      const nome = getPacienteNome(agendamentoId);
+      const sala = getSalaNome(item?.sala_id ?? null);
+      chamarPacienteVoz(nome, sala);
     }
     refresh();
     const msgs: Record<string, string> = {
