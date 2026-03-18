@@ -347,14 +347,16 @@ export default function PortalPaciente() {
       setProfile(profileData);
       setAuthenticated(true);
 
-      const [ag, ex, pg] = await Promise.all([
+      const [ag, ex, pg, presc] = await Promise.all([
         fetchData(token, 'get_agendamentos'),
         fetchData(token, 'get_exames'),
         fetchData(token, 'get_pagamentos'),
+        fetchData(token, 'get_prescricoes').catch(() => []),
       ]);
       setAgendamentos(ag || []);
       setExames(ex || []);
       setPagamentos(pg || []);
+      setPrescricoes(presc || []);
     } catch (err: any) {
       setError(err.message || 'Erro ao acessar portal');
     } finally {
