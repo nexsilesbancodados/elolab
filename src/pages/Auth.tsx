@@ -114,52 +114,29 @@ export default function Auth() {
 
   const activateSubscription = async (userId: string, codigoConvite: string) => {
     try {
-      const { data: registro, error: regError } = await supabase
-        .from('registros_pendentes' as any)
-        .select('*')
-        .eq('codigo_convite', codigoConvite)
-        .in('status', ['pendente', 'pago'])
-        .single();
+      const { data: result, error: rpcError } = await supabase.rpc(
+        'activate_public_registration' as any,
+        { _user_id: userId, _codigo_convite: codigoConvite }
+      );
 
-      if (regError || !registro) {
-        toast.error('Código de convite inválido ou expirado.');
+      if (rpcError) {
+        console.error('Erro ao ativar registro:', rpcError);
+        toast.error('Erro ao ativar sua assinatura. Tente fazer login novamente.');
         return;
       }
 
-      const reg = registro as any;
-      if (new Date(reg.expires_at) < new Date()) {
-        toast.error('Código de convite expirado.');
+      const res = result as any;
+      if (!res?.success) {
+        toast.error(res?.error || 'Erro ao ativar assinatura.');
         return;
       }
 
-      await supabase
-        .from('registros_pendentes' as any)
-        .update({ status: 'ativado', user_id: userId, activated_at: new Date().toISOString() })
-        .eq('id', reg.id);
-
-      if (reg.status === 'pago') {
-        const { data: plano } = await supabase
-          .from('planos' as any)
-          .select('*')
-          .eq('slug', reg.plano_slug)
-          .single();
-
-        if (plano) {
-          const p = plano as any;
-          await supabase
-            .from('assinaturas_plano' as any)
-            .insert({
-              user_id: userId, plano_id: p.id, plano_slug: p.slug,
-              status: 'ativa', em_trial: false, data_inicio: new Date().toISOString(),
-            });
-          toast.success(`Plano ${p.nome} ativado! 🎉`);
-        }
+      if (res.mode === 'paid') {
+        toast.success(`Plano ${res.plano_nome} ativado! 🎉`);
+      } else if (res.mode === 'trial') {
+        toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
       } else {
-        const { data: result } = await supabase.rpc('start_free_trial' as any, {
-          _user_id: userId, _plano_slug: reg.plano_slug,
-        });
-        const res = result as any;
-        if (res?.success) toast.success(`Teste grátis ativado! ${res.plano_nome} por 3 dias. 🎉`);
+        toast.success(`Plano ${res.plano_nome} ativado!`);
       }
     } catch (err) {
       console.error('Erro ao ativar assinatura:', err);
