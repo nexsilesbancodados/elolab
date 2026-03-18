@@ -1012,6 +1012,76 @@ export default function Prontuarios() {
 
               {/* ─── Anamnese Tab ─── */}
               <TabsContent value="anamnese" className="space-y-6 pt-2">
+                {/* SOAP Quick Templates */}
+                {!currentProntuario.id && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Templates SOAP</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        {
+                          label: 'Consulta de Rotina',
+                          data: {
+                            queixa_principal: 'Consulta de rotina / Check-up',
+                            historia_doenca_atual: 'Paciente comparece para avaliação de rotina. Nega queixas ativas. Refere estar em bom estado geral.',
+                            conduta: 'Solicitados exames de rotina. Orientações sobre hábitos saudáveis. Retorno com resultados.',
+                          },
+                        },
+                        {
+                          label: 'Retorno',
+                          data: {
+                            queixa_principal: 'Retorno com resultados de exames',
+                            historia_doenca_atual: 'Paciente retorna para avaliação de exames previamente solicitados. Nega intercorrências desde a última consulta.',
+                            conduta: 'Avaliação dos resultados. Conduta mantida/ajustada conforme achados.',
+                          },
+                        },
+                        {
+                          label: 'Pré-Natal',
+                          data: {
+                            queixa_principal: 'Consulta pré-natal',
+                            historia_doenca_atual: 'Gestante em acompanhamento pré-natal. IG: __ semanas. DUM: __/__/____. DPP: __/__/____. Movimentação fetal: presente/ausente. Queixas: nega.',
+                            revisao_sistemas: 'Náuseas: não. Vômitos: não. Sangramento: nega. Perdas vaginais: nega. Edema: nega. Contrações: nega.',
+                          },
+                        },
+                        {
+                          label: 'Pediatria',
+                          data: {
+                            queixa_principal: 'Puericultura / Acompanhamento infantil',
+                            historia_doenca_atual: 'Criança trazida para consulta de puericultura. Peso: __kg. Comprimento/Altura: __cm. PC: __cm. Desenvolvimento neuropsicomotor: adequado para a idade.',
+                            conduta: 'Avaliação do crescimento e desenvolvimento. Vacinação em dia. Orientações alimentares. Retorno conforme calendário de puericultura.',
+                          },
+                        },
+                        {
+                          label: 'Urgência',
+                          data: {
+                            queixa_principal: '',
+                            historia_doenca_atual: 'Início: ___. Duração: ___. Localização: ___. Intensidade: ___/10. Fatores de melhora: ___. Fatores de piora: ___. Sintomas associados: ___. Medicações utilizadas: ___.',
+                          },
+                        },
+                      ].map(template => (
+                        <Button
+                          key={template.label}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 gap-1"
+                          onClick={() => {
+                            Object.entries(template.data).forEach(([field, value]) => {
+                              if (value) updateField(field, value);
+                            });
+                            toast({ title: 'Template aplicado', description: `"${template.label}" preenchido.` });
+                          }}
+                        >
+                          <Clipboard className="h-3 w-3" />
+                          {template.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <Separator />
+                  </div>
+                )}
+
                 <Section icon={AlertTriangle} title="Queixa Principal *">
                   <Textarea
                     placeholder="Descreva a queixa principal do paciente..."
