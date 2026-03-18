@@ -2671,16 +2671,18 @@ export type Database = {
       }
       triagens: {
         Row: {
-          agendamento_id: string
+          agendamento_id: string | null
           altura: number | null
           classificacao_risco:
             | Database["public"]["Enums"]["classificacao_risco"]
             | null
           created_at: string | null
           data_hora: string | null
+          dor_escala: number | null
           enfermeiro_id: string
           frequencia_cardiaca: number | null
           frequencia_respiratoria: number | null
+          glicemia: number | null
           id: string
           imc: number | null
           observacoes: string | null
@@ -2693,16 +2695,18 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          agendamento_id: string
+          agendamento_id?: string | null
           altura?: number | null
           classificacao_risco?:
             | Database["public"]["Enums"]["classificacao_risco"]
             | null
           created_at?: string | null
           data_hora?: string | null
+          dor_escala?: number | null
           enfermeiro_id: string
           frequencia_cardiaca?: number | null
           frequencia_respiratoria?: number | null
+          glicemia?: number | null
           id?: string
           imc?: number | null
           observacoes?: string | null
@@ -2715,16 +2719,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          agendamento_id?: string
+          agendamento_id?: string | null
           altura?: number | null
           classificacao_risco?:
             | Database["public"]["Enums"]["classificacao_risco"]
             | null
           created_at?: string | null
           data_hora?: string | null
+          dor_escala?: number | null
           enfermeiro_id?: string
           frequencia_cardiaca?: number | null
           frequencia_respiratoria?: number | null
+          glicemia?: number | null
           id?: string
           imc?: number | null
           observacoes?: string | null
@@ -3113,7 +3119,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "medico" | "recepcao" | "enfermagem" | "financeiro"
-      classificacao_risco: "verde" | "amarelo" | "laranja" | "vermelho"
+      classificacao_risco: "verde" | "amarelo" | "laranja" | "vermelho" | "azul"
       status_agendamento:
         | "agendado"
         | "confirmado"
@@ -3263,7 +3269,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "medico", "recepcao", "enfermagem", "financeiro"],
-      classificacao_risco: ["verde", "amarelo", "laranja", "vermelho"],
+      classificacao_risco: ["verde", "amarelo", "laranja", "vermelho", "azul"],
       status_agendamento: [
         "agendado",
         "confirmado",
