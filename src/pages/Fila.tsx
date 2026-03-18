@@ -172,13 +172,25 @@ export default function Fila() {
 
   const isLoading = loadingFila || loadingAgendamentos;
 
-  // Atualizar timer a cada 30s
+  // Realtime subscription for instant queue updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(Date.now());
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-    }, 30000);
-    return () => clearInterval(interval);
+    const channel = supabase
+      .channel('fila-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fila_atendimento' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      })
+      .subscribe();
+
+    // Timer update every 30s for wait time display
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [queryClient]);
 
   const agendamentosDisponiveis = agendamentos.filter(ag =>
