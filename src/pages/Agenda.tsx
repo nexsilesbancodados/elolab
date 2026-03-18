@@ -396,21 +396,28 @@ export default function Agenda() {
 
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, -1)) : setCurrentWeek(subWeeks(currentWeek, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <CardTitle className="text-lg">
-                    {format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} -{' '}
-                    {format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {viewMode === 'day'
+                      ? format(currentWeek, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      : `${format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} — ${format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
                   </CardTitle>
-                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, 1)) : setCurrentWeek(addWeeks(currentWeek, 1))}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
+                  <Input
+                    type="date"
+                    className="h-9 w-40 text-sm"
+                    value={format(currentWeek, 'yyyy-MM-dd')}
+                    onChange={e => e.target.value && setCurrentWeek(parseISO(e.target.value))}
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setCurrentWeek(new Date())}>
                     Hoje
                   </Button>
                   <div className="flex rounded-lg border overflow-hidden">
@@ -449,21 +456,31 @@ export default function Agenda() {
               {viewMode === 'day' ? (
                 /* ─── Day View ─── */
                 <div className="divide-y">
-                  <div className="p-4 bg-muted/30 border-b">
-                    <div className="flex items-center gap-3">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentWeek(addDays(currentWeek, -1))}>
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <div className="flex-1 text-center">
-                        <p className="text-lg font-bold">{format(currentWeek, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {filteredAgendamentos.filter(a => a.data === format(currentWeek, 'yyyy-MM-dd')).length} agendamentos
-                        </p>
-                      </div>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentWeek(addDays(currentWeek, 1))}>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  {/* Quick weekday nav */}
+                  <div className="p-3 bg-muted/20 border-b flex items-center gap-1 overflow-x-auto">
+                    {weekDays.map(d => {
+                      const isSelected = isSameDay(d, currentWeek);
+                      const dayAgCount = filteredAgendamentos.filter(a => a.data === format(d, 'yyyy-MM-dd')).length;
+                      return (
+                        <button
+                          key={d.toISOString()}
+                          onClick={() => setCurrentWeek(d)}
+                          className={cn(
+                            'flex flex-col items-center px-3 py-2 rounded-lg transition-all min-w-[52px]',
+                            isSelected ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-muted',
+                            isSameDay(d, new Date()) && !isSelected && 'ring-1 ring-primary/40',
+                          )}
+                        >
+                          <span className="text-[10px] uppercase font-medium">{format(d, 'EEE', { locale: ptBR })}</span>
+                          <span className="text-lg font-bold">{format(d, 'dd')}</span>
+                          {dayAgCount > 0 && (
+                            <span className={cn('text-[9px] font-medium', isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+                              {dayAgCount} ag.
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                   {HORARIOS.map(hora => {
                     const agendamento = getAgendamentoForSlot(currentWeek, hora);

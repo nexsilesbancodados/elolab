@@ -323,6 +323,7 @@ export default function PortalPaciente() {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [exames, setExames] = useState<any[]>([]);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const [prescricoes, setPrescricoes] = useState<any[]>([]);
 
   const fetchData = async (accessToken: string, action: string) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
@@ -346,14 +347,16 @@ export default function PortalPaciente() {
       setProfile(profileData);
       setAuthenticated(true);
 
-      const [ag, ex, pg] = await Promise.all([
+      const [ag, ex, pg, presc] = await Promise.all([
         fetchData(token, 'get_agendamentos'),
         fetchData(token, 'get_exames'),
         fetchData(token, 'get_pagamentos'),
+        fetchData(token, 'get_prescricoes').catch(() => []),
       ]);
       setAgendamentos(ag || []);
       setExames(ex || []);
       setPagamentos(pg || []);
+      setPrescricoes(presc || []);
     } catch (err: any) {
       setError(err.message || 'Erro ao acessar portal');
     } finally {
@@ -477,26 +480,26 @@ export default function PortalPaciente() {
           {/* ─── Tabs ─── */}
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="consultas" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-12">
-                <TabsTrigger value="consultas" className="gap-2 data-[state=active]:bg-primary/10">
+              <TabsList className="grid w-full grid-cols-5 h-12">
+                <TabsTrigger value="consultas" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Consultas</span>
-                  <span className="sm:hidden text-xs">Consultas</span>
+                  <span className="hidden sm:inline text-sm">Consultas</span>
                 </TabsTrigger>
-                <TabsTrigger value="exames" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="exames" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <FlaskConical className="h-4 w-4" />
-                  <span className="hidden sm:inline">Exames</span>
-                  <span className="sm:hidden text-xs">Exames</span>
+                  <span className="hidden sm:inline text-sm">Exames</span>
                 </TabsTrigger>
-                <TabsTrigger value="historico" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="prescricoes" className="gap-1.5 data-[state=active]:bg-primary/10">
+                  <Pill className="h-4 w-4" />
+                  <span className="hidden sm:inline text-sm">Receitas</span>
+                </TabsTrigger>
+                <TabsTrigger value="historico" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <Heart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                  <span className="sm:hidden text-xs">Histórico</span>
+                  <span className="hidden sm:inline text-sm">Histórico</span>
                 </TabsTrigger>
-                <TabsTrigger value="financeiro" className="gap-2 data-[state=active]:bg-primary/10">
+                <TabsTrigger value="financeiro" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <CreditCard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Financeiro</span>
-                  <span className="sm:hidden text-xs">Financeiro</span>
+                  <span className="hidden sm:inline text-sm">Financeiro</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -610,6 +613,51 @@ export default function PortalPaciente() {
                       </motion.div>
                     );
                   })
+                )}
+              </TabsContent>
+
+              {/* ─── Prescrições Tab ─── */}
+              <TabsContent value="prescricoes" className="mt-4 space-y-3">
+                {!prescricoes.length ? (
+                  <EmptyState icon={Pill} text="Nenhuma prescrição encontrada" />
+                ) : (
+                  prescricoes.map((p: any, i: number) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="transition-all hover:shadow-md">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-xl bg-primary/10">
+                              <Pill className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <p className="font-semibold text-sm">{p.medicamento}</p>
+                              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                {p.dosagem && <span>Dose: {p.dosagem}</span>}
+                                {p.posologia && <span>• {p.posologia}</span>}
+                                {p.quantidade && <span>• Qtd: {p.quantidade}</span>}
+                                {p.duracao && <span>• {p.duracao}</span>}
+                              </div>
+                              {p.observacoes && (
+                                <p className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded mt-1">{p.observacoes}</p>
+                              )}
+                              <p className="text-[11px] text-muted-foreground">
+                                {p.data_emissao ? format(parseISO(p.data_emissao), 'dd/MM/yyyy') : ''}
+                                {p.medicos?.nome && ` — Dr(a). ${p.medicos.nome}`}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-[10px]">
+                              {p.tipo === 'controle_especial' ? 'Especial' : p.tipo === 'antimicrobiano' ? 'Antimicro' : 'Simples'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
                 )}
               </TabsContent>
 
