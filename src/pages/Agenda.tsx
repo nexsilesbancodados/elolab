@@ -396,21 +396,28 @@ export default function Agenda() {
 
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, -1)) : setCurrentWeek(subWeeks(currentWeek, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <CardTitle className="text-lg">
-                    {format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} -{' '}
-                    {format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {viewMode === 'day'
+                      ? format(currentWeek, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      : `${format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} — ${format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
                   </CardTitle>
-                  <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, 1)) : setCurrentWeek(addWeeks(currentWeek, 1))}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>
+                  <Input
+                    type="date"
+                    className="h-9 w-40 text-sm"
+                    value={format(currentWeek, 'yyyy-MM-dd')}
+                    onChange={e => e.target.value && setCurrentWeek(parseISO(e.target.value))}
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setCurrentWeek(new Date())}>
                     Hoje
                   </Button>
                   <div className="flex rounded-lg border overflow-hidden">
