@@ -246,6 +246,12 @@ export default function Agenda() {
           .eq('id', formData.id);
 
         if (error) throw error;
+
+        // Send WhatsApp confirmation if status changed to confirmado
+        if (formData.status === 'confirmado') {
+          sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
+        }
+
         toast.success('Agendamento atualizado com sucesso!');
       } else {
         // Create new (possibly recurring)
@@ -262,12 +268,20 @@ export default function Agenda() {
           observacoes: formData.observacoes,
         }));
 
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('agendamentos')
-          .insert(newAgendamentos);
+          .insert(newAgendamentos)
+          .select('id');
 
         if (error) throw error;
         
+        // Send WhatsApp confirmation for each new appointment
+        if (inserted) {
+          for (const ag of inserted) {
+            sendWhatsAppNotification(ag.id, 'send_appointment_confirmation');
+          }
+        }
+
         const count = dates.length;
         toast.success(
           count > 1 
