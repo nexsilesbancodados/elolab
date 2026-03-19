@@ -260,6 +260,27 @@ export default function Financeiro() {
 
   const categorias = form.tipo === 'receita' ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
 
+  // ─── DRE data ─────────────────────────────────────────────
+  const dreData = useMemo(() => {
+    const receitasCats: Record<string, number> = {};
+    const despesasCats: Record<string, number> = {};
+    filtered.filter(l => l.tipo === 'receita' && l.status === 'pago').forEach(l => {
+      const cat = l.categoria || 'Outro';
+      receitasCats[cat] = (receitasCats[cat] || 0) + Number(l.valor);
+    });
+    filtered.filter(l => l.tipo === 'despesa' && l.status === 'pago').forEach(l => {
+      const cat = l.categoria || 'Outro';
+      despesasCats[cat] = (despesasCats[cat] || 0) + Number(l.valor);
+    });
+    const totalReceitas = Object.values(receitasCats).reduce((a, b) => a + b, 0);
+    const totalDespesas = Object.values(despesasCats).reduce((a, b) => a + b, 0);
+    const lucroLiquido = totalReceitas - totalDespesas;
+    const margem = totalReceitas > 0 ? (lucroLiquido / totalReceitas) * 100 : 0;
+    return { receitasCats, despesasCats, totalReceitas, totalDespesas, lucroLiquido, margem };
+  }, [filtered]);
+
+  const [activeTab, setActiveTab] = useState('visao_geral');
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
@@ -306,6 +327,15 @@ export default function Financeiro() {
         <KpiCard label="Saldo Líquido" value={fmtShort(kpis.saldo)} icon={DollarSign}
           color={kpis.saldo >= 0 ? 'bg-success/10 text-success ring-success/20' : 'bg-destructive/10 text-destructive ring-destructive/20'} />
       </motion.div>
+
+      {/* Tabs: Visão Geral / DRE */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="visao_geral" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" />Visão Geral</TabsTrigger>
+          <TabsTrigger value="dre" className="gap-1.5"><FileText className="h-3.5 w-3.5" />DRE</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="visao_geral" className="space-y-6 mt-4">
 
       {/* Charts */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
