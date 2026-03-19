@@ -223,6 +223,30 @@ export default function Atestados() {
     }
   };
 
+  const handleDuplicate = (atestado: Atestado) => {
+    setSelectedAtestado(null);
+    setFormData({
+      ...emptyForm,
+      tipo: atestado.tipo || 'comparecimento',
+      paciente_id: atestado.paciente_id,
+      medico_id: atestado.medico_id || medicoId || '',
+      dias: atestado.dias,
+      cid: atestado.cid || '',
+      incluirCid: !!atestado.cid,
+      motivo: atestado.motivo || '',
+      observacoes: atestado.observacoes || '',
+      data_emissao: format(new Date(), 'yyyy-MM-dd'),
+      data_inicio: format(new Date(), 'yyyy-MM-dd'),
+      data_fim: '',
+    });
+    if (atestado.dias && atestado.dias > 0) {
+      const dataFim = format(addDays(new Date(), atestado.dias - 1), 'yyyy-MM-dd');
+      setFormData(prev => ({ ...prev, data_fim: dataFim }));
+    }
+    setIsFormOpen(true);
+    toast.success('Atestado duplicado — ajuste os dados e emita.');
+  };
+
   const handleView = (atestado: Atestado) => { setSelectedAtestado(atestado); setIsViewOpen(true); };
 
   const handlePrint = (atestado: Atestado) => {
@@ -349,6 +373,7 @@ export default function Atestados() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(atestado)} aria-label="Ver atestado"><Eye className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(atestado)} aria-label="Imprimir atestado"><Printer className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDuplicate(atestado)} aria-label="Duplicar atestado" title="Duplicar atestado"><Clipboard className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>

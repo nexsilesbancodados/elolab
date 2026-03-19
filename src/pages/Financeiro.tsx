@@ -260,6 +260,27 @@ export default function Financeiro() {
 
   const categorias = form.tipo === 'receita' ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
 
+  // ─── DRE data ─────────────────────────────────────────────
+  const dreData = useMemo(() => {
+    const receitasCats: Record<string, number> = {};
+    const despesasCats: Record<string, number> = {};
+    filtered.filter(l => l.tipo === 'receita' && l.status === 'pago').forEach(l => {
+      const cat = l.categoria || 'Outro';
+      receitasCats[cat] = (receitasCats[cat] || 0) + Number(l.valor);
+    });
+    filtered.filter(l => l.tipo === 'despesa' && l.status === 'pago').forEach(l => {
+      const cat = l.categoria || 'Outro';
+      despesasCats[cat] = (despesasCats[cat] || 0) + Number(l.valor);
+    });
+    const totalReceitas = Object.values(receitasCats).reduce((a, b) => a + b, 0);
+    const totalDespesas = Object.values(despesasCats).reduce((a, b) => a + b, 0);
+    const lucroLiquido = totalReceitas - totalDespesas;
+    const margem = totalReceitas > 0 ? (lucroLiquido / totalReceitas) * 100 : 0;
+    return { receitasCats, despesasCats, totalReceitas, totalDespesas, lucroLiquido, margem };
+  }, [filtered]);
+
+  const [activeTab, setActiveTab] = useState('visao_geral');
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
@@ -306,6 +327,15 @@ export default function Financeiro() {
         <KpiCard label="Saldo Líquido" value={fmtShort(kpis.saldo)} icon={DollarSign}
           color={kpis.saldo >= 0 ? 'bg-success/10 text-success ring-success/20' : 'bg-destructive/10 text-destructive ring-destructive/20'} />
       </motion.div>
+
+      {/* Tabs: Visão Geral / DRE */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="visao_geral" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" />Visão Geral</TabsTrigger>
+          <TabsTrigger value="dre" className="gap-1.5"><FileText className="h-3.5 w-3.5" />DRE</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="visao_geral" className="space-y-6 mt-4">
 
       {/* Charts */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
@@ -471,6 +501,74 @@ export default function Financeiro() {
           </CardContent>
         </Card>
       </motion.div>
+        </TabsContent>
+
+        {/* ─── DRE Tab ─── */}
+        <TabsContent value="dre" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Demonstrativo de Resultado do Exercício (DRE)
+              </CardTitle>
+              <CardDescription>Período: {format(range.start, 'dd/MM/yyyy')} a {format(range.end, 'dd/MM/yyyy')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {/* Receitas */}
+                <div className="font-semibold text-sm text-success py-2 border-b border-border">RECEITA BRUTA</div>
+                {Object.entries(dreData.receitasCats).sort(([,a],[,b]) => b - a).map(([cat, val]) => (
+                  <div key={cat} className="flex justify-between py-1.5 px-4 text-sm hover:bg-muted/30 rounded">
+                    <span className="text-muted-foreground">{cat}</span>
+                    <span className="tabular-nums font-medium text-success">+{fmt(val)}</span>
+                  </div>
+                ))}
+                {Object.keys(dreData.receitasCats).length === 0 && (
+                  <div className="text-sm text-muted-foreground px-4 py-2">Nenhuma receita no período</div>
+                )}
+                <div className="flex justify-between py-2 px-4 font-semibold text-sm border-t border-border bg-success/5 rounded">
+                  <span>Total Receitas</span>
+                  <span className="tabular-nums text-success">{fmt(dreData.totalReceitas)}</span>
+                </div>
+
+                <div className="h-3" />
+
+                {/* Despesas */}
+                <div className="font-semibold text-sm text-destructive py-2 border-b border-border">DESPESAS OPERACIONAIS</div>
+                {Object.entries(dreData.despesasCats).sort(([,a],[,b]) => b - a).map(([cat, val]) => (
+                  <div key={cat} className="flex justify-between py-1.5 px-4 text-sm hover:bg-muted/30 rounded">
+                    <span className="text-muted-foreground">{cat}</span>
+                    <span className="tabular-nums font-medium text-destructive">-{fmt(val)}</span>
+                  </div>
+                ))}
+                {Object.keys(dreData.despesasCats).length === 0 && (
+                  <div className="text-sm text-muted-foreground px-4 py-2">Nenhuma despesa no período</div>
+                )}
+                <div className="flex justify-between py-2 px-4 font-semibold text-sm border-t border-border bg-destructive/5 rounded">
+                  <span>Total Despesas</span>
+                  <span className="tabular-nums text-destructive">-{fmt(dreData.totalDespesas)}</span>
+                </div>
+
+                <div className="h-3" />
+
+                {/* Resultado */}
+                <div className={cn(
+                  "flex justify-between py-3 px-4 font-bold text-base rounded-lg border-2",
+                  dreData.lucroLiquido >= 0
+                    ? "border-success/30 bg-success/10 text-success"
+                    : "border-destructive/30 bg-destructive/10 text-destructive"
+                )}>
+                  <span>RESULTADO LÍQUIDO</span>
+                  <div className="text-right">
+                    <span className="tabular-nums">{fmt(dreData.lucroLiquido)}</span>
+                    <span className="text-xs ml-2 opacity-70">({dreData.margem.toFixed(1)}% margem)</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

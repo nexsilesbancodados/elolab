@@ -200,6 +200,27 @@ export default function Prescricoes() {
     }
   };
 
+  const handleDuplicate = (group: Record<string, any>) => {
+    setFormData({
+      paciente_id: group.paciente_id,
+      medico_id: group.medico_id || medicoId || '',
+      tipo: group.tipo || 'simples',
+      orientacoes: group.medicamentos?.[0]?.observacoes || '',
+      cid: '',
+      data_emissao: format(new Date(), 'yyyy-MM-dd'),
+    });
+    setMedicamentos(
+      group.medicamentos.map((m: Record<string, any>) => ({
+        nome: m.medicamento || '', dosagem: m.dosagem || '', via: 'Oral',
+        frequencia: m.posologia || '1x ao dia', posologia: m.posologia || '',
+        duracao: m.duracao || '', quantidade: m.quantidade || '', observacoes: m.observacoes || '',
+      }))
+    );
+    setInteractionDismissed(false);
+    setIsFormOpen(true);
+    toast({ title: 'Prescrição duplicada', description: 'Edite os dados e salve.' });
+  };
+
   const handleView = (group: Record<string, any>) => { setSelectedPrescricao(group); setIsViewOpen(true); };
 
   const handlePrint = async (group: Record<string, any>) => {
@@ -339,6 +360,7 @@ export default function Prescricoes() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(group)} aria-label="Ver prescrição"><Eye className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(group)} aria-label="Imprimir prescrição"><Printer className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDuplicate(group)} aria-label="Duplicar prescrição" title="Duplicar prescrição"><Clipboard className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
