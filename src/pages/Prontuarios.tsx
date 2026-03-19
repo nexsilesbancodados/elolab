@@ -806,20 +806,25 @@ export default function Prontuarios() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* ─── Patient List ─── */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2"><User className="h-4 w-4" />Pacientes</CardTitle>
+        <Card className="lg:col-span-1 overflow-hidden border-border/60 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-b from-muted/30 to-transparent">
+            <CardTitle className="text-base font-bold flex items-center gap-2"><User className="h-4 w-4 text-primary" />Pacientes</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou CPF..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por nome ou CPF..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 bg-background/80 backdrop-blur-sm" />
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[550px]">
               {filteredPacientes.map(pac => (
-                <div
+                <motion.div
                   key={pac.id}
-                  className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${selectedPacienteId === pac.id ? 'bg-primary/10 border-l-2 border-l-primary' : ''}`}
+                  whileHover={{ x: 2 }}
+                  className={`p-3.5 border-b border-border/40 cursor-pointer transition-all duration-200 ${
+                    selectedPacienteId === pac.id
+                      ? 'bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-[3px] border-l-primary'
+                      : 'hover:bg-muted/40'
+                  }`}
                   onClick={() => setSelectedPacienteId(pac.id)}
                 >
                   <div className="flex items-center gap-3">
@@ -831,7 +836,7 @@ export default function Prontuarios() {
                       editable={false}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{(pac as any).nome_social || pac.nome}</p>
+                      <p className="font-semibold text-sm truncate">{(pac as any).nome_social || pac.nome}</p>
                       {(pac as any).nome_social && <p className="text-[10px] text-muted-foreground truncate">Civil: {pac.nome}</p>}
                       <p className="text-xs text-muted-foreground">
                         {calcularIdade(pac.data_nascimento)} anos
@@ -839,9 +844,12 @@ export default function Prontuarios() {
                         {pac.cpf && ` • ${pac.cpf}`}
                       </p>
                     </div>
+                    {selectedPacienteId === pac.id && (
+                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                    )}
                   </div>
                   {pac.alergias && pac.alergias.length > 0 && <AllergyAlert alergias={pac.alergias} compact className="mt-2" />}
-                </div>
+                </motion.div>
               ))}
               {filteredPacientes.length === 0 && (
                 <p className="text-center text-muted-foreground py-12 text-sm">Nenhum paciente encontrado</p>
@@ -851,15 +859,15 @@ export default function Prontuarios() {
         </Card>
 
         {/* ─── Patient Records ─── */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        <Card className="lg:col-span-2 overflow-hidden border-border/60 shadow-sm">
+          <CardHeader className="bg-gradient-to-b from-muted/30 to-transparent">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
                 {selectedPaciente && (
                   <PatientPhoto pacienteId={selectedPaciente.id} pacienteNome={selectedPaciente.nome} currentPhotoUrl={selectedPaciente.foto_url} size="md" />
                 )}
                 <div>
-                  <CardTitle className="text-lg">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
+                  <CardTitle className="text-lg font-bold">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
                   {selectedPaciente && (
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                       <span>{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
