@@ -31,6 +31,7 @@ import {
   AllergyAlert, Cid10Search, ClinicalProtocols,
   ReturnScheduler, DischargeReport, AnexosProntuario,
   VitalSignsChart, PatientTimeline, PatientPhoto, DigitalSignature,
+  DrugInteractionChecker,
 } from '@/components/clinical';
 import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
@@ -1159,6 +1160,11 @@ export default function Prontuarios() {
 
                 {/* ─── Conduta ─── */}
                 <TabsContent value="conduta" className="space-y-4 pt-1">
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)} className="text-[10px] h-6 gap-1">
+                      <CalendarCheck className="h-3 w-3" />Aplicar Protocolo Clínico
+                    </Button>
+                  </div>
                   <Section icon={FileCheck} title="Conduta">
                     <Textarea placeholder="Conduta terapêutica, exames, encaminhamentos..." value={currentProntuario.conduta || ''} onChange={e => updateField('conduta', e.target.value)} rows={4} />
                   </Section>
@@ -1187,6 +1193,15 @@ export default function Prontuarios() {
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/40 rounded-lg p-2">
                     <BadgeCheck className="h-3 w-3" />Prescrição digital — assinatura ICP-Brasil
                   </p>
+
+                  {/* Drug Interaction Checker */}
+                  {prescricoes.filter(p => p.medicamento).length > 0 && (
+                    <DrugInteractionChecker
+                      medicamentos={prescricoes.filter(p => p.medicamento).map(p => p.medicamento)}
+                      alergias={selectedPaciente?.alergias || []}
+                    />
+                  )}
+
                   {prescricoes.length === 0 ? (
                     <div className="flex flex-col items-center py-10 text-muted-foreground">
                       <Pill className="h-8 w-8 opacity-20 mb-2" />
@@ -1248,14 +1263,21 @@ export default function Prontuarios() {
                           initial={{ opacity: 0, x: -4 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.02 }}
-                          className="border border-border/40 rounded-xl p-3 space-y-1.5 hover:bg-muted/20 transition-colors"
+                          className="border border-border/40 rounded-xl p-3 space-y-1.5 hover:bg-primary/[0.03] hover:border-primary/30 transition-colors cursor-pointer group"
+                          onClick={() => {
+                            setIsProntuarioOpen(false);
+                            setTimeout(() => handleViewProntuario(ev), 150);
+                          }}
                         >
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
-                              {format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}
-                            </Badge>
-                            {ev.medicos && <span className="text-[10px] text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm}</span>}
-                            {ev.diagnostico_principal && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ev.diagnostico_principal}</Badge>}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
+                                {format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}
+                              </Badge>
+                              {ev.medicos && <span className="text-[10px] text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm}</span>}
+                              {ev.diagnostico_principal && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ev.diagnostico_principal}</Badge>}
+                            </div>
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
                           </div>
                           {ev.queixa_principal && <p className="text-xs"><strong>QP:</strong> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
                           {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
