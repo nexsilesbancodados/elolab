@@ -1691,7 +1691,7 @@ export default function Prontuarios() {
             </fieldset>
           </ScrollArea>
 
-          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+          <DialogFooter className="flex-shrink-0 pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 w-full justify-between">
               <div className="flex-1">
                 {currentProntuario.id && (
@@ -1705,9 +1705,9 @@ export default function Prontuarios() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} className="rounded-xl">Cancelar</Button>
                 {!isReadOnly && (
-                  <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+                  <Button onClick={handleSave} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90"><Save className="h-4 w-4" />Salvar Prontuário</Button>
                 )}
               </div>
             </div>
