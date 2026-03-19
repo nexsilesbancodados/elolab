@@ -551,6 +551,7 @@ export default function Prontuarios() {
     });
     setSinaisVitais(emptySinaisVitais);
     setPrescricoes([]);
+    setIsEditing(true); // New records are always editable
     setIsProntuarioOpen(true);
   };
 
