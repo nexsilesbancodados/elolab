@@ -8,12 +8,12 @@
 
 @layer base {
   :root {
-    --button-ripple-color: rgba(0, 0, 0, 0.12);
+    --button-ripple-color: rgba(0, 0, 0, 0.08);
 
     /* Brand - Fresh Green */
     --brand: 152 64% 67%;
     --brand-foreground: 152 15% 13%;
-    --brand-light: 152 30% 93%;
+    --brand-light: 152 38% 95%;
     --brand-hover: 152 64% 58%;
     --brand-glow: 152 64% 60%;
 
@@ -26,32 +26,32 @@
     --success: 152 68% 38%;
     --success-foreground: 0 0% 100%;
     
-    /* Background & Surfaces */
-    --background: 210 11% 95%;
-    --foreground: 0 0% 9%;
+    /* Background & Surfaces — warm off-white */
+    --background: 220 20% 97%;
+    --foreground: 220 14% 10%;
     
-    /* Cards */
-    --card: 210 9% 97%;
-    --card-foreground: 0 0% 9%;
+    /* Cards — crisp white for clear separation */
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 10%;
     
-    --popover: 210 9% 97%;
-    --popover-foreground: 0 0% 32%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 28%;
     
     /* Secondary */
-    --secondary: 210 9% 93%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 14% 10%;
     
-    /* Muted */
-    --muted: 210 7% 89%;
-    --muted-foreground: 0 0% 13%;
+    /* Muted — softer, less harsh */
+    --muted: 220 12% 92%;
+    --muted-foreground: 220 6% 44%;
     
     /* Accent */
-    --accent: 210 7% 89%;
-    --accent-foreground: 0 0% 13%;
+    --accent: 220 14% 94%;
+    --accent-foreground: 220 14% 10%;
     
     /* Destructive */
-    --destructive: 14 81% 44%;
-    --destructive-foreground: 0 100% 99%;
+    --destructive: 4 74% 49%;
+    --destructive-foreground: 0 0% 100%;
     
     /* Warning */
     --warning: 38 92% 50%;
@@ -61,38 +61,38 @@
     --info: 200 85% 50%;
     --info-foreground: 0 0% 100%;
     
-    /* Borders & Inputs */
-    --border: 210 8% 84%;
-    --input: 210 9% 93%;
+    /* Borders & Inputs — softer, more elegant */
+    --border: 220 13% 90%;
+    --input: 220 14% 94%;
     --ring: 152 64% 67%;
     
     --radius: 0.5rem;
 
-    /* Shadows */
-    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
-    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.04), 0 1px 2px -1px hsl(0 0% 0% / 0.03);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.06), 0 2px 4px -2px hsl(0 0% 0% / 0.03);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.04);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.04);
+    /* Shadows — warmer tones */
+    --shadow-xs: 0 1px 2px 0 hsl(220 20% 20% / 0.03);
+    --shadow-sm: 0 1px 3px 0 hsl(220 20% 20% / 0.05), 0 1px 2px -1px hsl(220 20% 20% / 0.03);
+    --shadow-md: 0 4px 6px -1px hsl(220 20% 20% / 0.07), 0 2px 4px -2px hsl(220 20% 20% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(220 20% 20% / 0.08), 0 4px 6px -4px hsl(220 20% 20% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(220 20% 20% / 0.1), 0 8px 10px -6px hsl(220 20% 20% / 0.05);
     --shadow-glow: 0 0 30px -8px hsl(var(--brand) / 0.25);
     --shadow-glow-success: 0 0 30px -8px hsl(var(--success) / 0.25);
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(152 64% 67%), hsl(152 64% 58%));
     --gradient-hero: linear-gradient(135deg, hsl(152 64% 70%) 0%, hsl(152 64% 58%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
-    --gradient-sidebar: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(0 0% 96%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 16% 97%) 100%);
     
-    /* Sidebar — matches current theme */
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 0 0% 44%;
+    /* Sidebar — clean and airy */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 10% 40%;
     --sidebar-primary: 152 64% 67%;
     --sidebar-primary-foreground: 152 15% 13%;
-    --sidebar-accent: 0 0% 93%;
-    --sidebar-accent-foreground: 0 0% 13%;
-    --sidebar-border: 0 0% 87%;
+    --sidebar-accent: 220 18% 96%;
+    --sidebar-accent-foreground: 220 14% 10%;
+    --sidebar-border: 220 13% 92%;
     --sidebar-ring: 152 64% 67%;
-    --sidebar-muted: 0 0% 93%;
+    --sidebar-muted: 220 14% 94%;
     
     /* Chart colors */
     --chart-1: 152 64% 67%;
