@@ -532,12 +532,88 @@ export default function Agenda() {
                     >
                       <LayoutList className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant={viewMode === 'month' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0 border-l"
+                      onClick={() => setViewMode('month')}
+                      title="Visão mensal"
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
+
+                {/* Doctor color legend */}
+                {selectedMedico === 'todos' && medicos.length > 1 && (
+                  <div className="flex items-center gap-2 flex-wrap px-1 mt-2">
+                    <span className="text-[10px] text-muted-foreground font-medium">Médicos:</span>
+                    {medicos.slice(0, 8).map((m) => (
+                      <span key={m.id} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <span className={cn('h-2 w-2 rounded-full', getMedicoColor(m.id))} />
+                        {(m.nome || m.crm).split(' ')[0]}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {viewMode === 'day' ? (
+              {viewMode === 'month' ? (
+                /* ─── Month View ─── */
+                <div className="p-2">
+                  <div className="grid grid-cols-7 gap-px mb-1">
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
+                      <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-px">
+                    {monthDays.map((day, idx) => {
+                      const isCurrentMonth = isSameMonth(day, currentWeek);
+                      const isToday_ = isSameDay(day, new Date());
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayAgs = filteredAgendamentos.filter(a => a.data === dayStr);
+                      return (
+                        <div
+                          key={idx}
+                          className={cn(
+                            'min-h-[80px] rounded-lg border p-1 transition-colors cursor-pointer hover:bg-muted/30',
+                            !isCurrentMonth && 'opacity-30',
+                            isToday_ && 'ring-2 ring-primary/40 bg-primary/5',
+                          )}
+                          onClick={() => {
+                            setCurrentWeek(day);
+                            setViewMode('day');
+                          }}
+                        >
+                          <p className={cn(
+                            'text-xs font-medium mb-0.5',
+                            isToday_ ? 'text-primary font-bold' : 'text-muted-foreground',
+                          )}>
+                            {format(day, 'd')}
+                          </p>
+                          <div className="space-y-0.5">
+                            {dayAgs.slice(0, 3).map(ag => (
+                              <div key={ag.id} className={cn(
+                                'text-[9px] leading-tight px-1 py-0.5 rounded truncate border',
+                                selectedMedico === 'todos' && medicos.length > 1
+                                  ? getMedicoBgColor(ag.medico_id)
+                                  : STATUS_COLORS[ag.status as StatusAgendamento || 'agendado'],
+                              )}>
+                                <span className="font-medium">{ag.hora_inicio?.slice(0, 5)}</span>{' '}
+                                {getPacienteNome(ag.paciente_id).split(' ')[0]}
+                              </div>
+                            ))}
+                            {dayAgs.length > 3 && (
+                              <p className="text-[9px] text-muted-foreground text-center">+{dayAgs.length - 3} mais</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : viewMode === 'day' ? (
                 /* ─── Day View ─── */
                 <div className="divide-y">
                   {/* Quick weekday nav */}
