@@ -594,6 +594,28 @@ export default function Prontuarios() {
 
   const handleRemovePrescricao = (i: number) => setPrescricoes(prescricoes.filter((_, idx) => idx !== i));
 
+  const isReadOnly = !!currentProntuario.id && !isEditing;
+
+  const handleRequestEdit = async () => {
+    // Log the edit request in audit trail
+    try {
+      await supabase.from('audit_log').insert({
+        action: 'edit_request',
+        collection: 'prontuarios',
+        record_id: currentProntuario.id,
+        record_name: `Solicitação de edição — ${selectedPaciente?.nome || ''}`,
+        user_id: user?.id || null,
+        user_name: user?.nome || null,
+        changes: { motivo: 'Edição solicitada pelo médico' },
+      });
+    } catch { /* silent */ }
+    setIsEditing(true);
+    toast({
+      title: 'Modo de edição ativado',
+      description: 'Todas as alterações serão registradas na trilha de auditoria.',
+    });
+  };
+
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
