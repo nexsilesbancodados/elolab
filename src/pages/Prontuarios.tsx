@@ -8,6 +8,7 @@ import {
   Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
   Phone, Mail, Building2, CreditCard, Baby, Shield, Lock, PenLine,
   TestTube, ArrowRight, UserCheck, BadgeCheck, Share2, MessageCircle, ExternalLink,
+  Hash, MapPin, Fingerprint,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -106,73 +107,67 @@ function calcularIMC(peso: string, altura: string) {
 function classificarIMC(imc: string) {
   const v = parseFloat(imc);
   if (!v) return null;
-  if (v < 18.5) return { label: 'Abaixo do peso', color: 'text-blue-500' };
+  if (v < 18.5) return { label: 'Abaixo', color: 'text-blue-500' };
   if (v < 25) return { label: 'Normal', color: 'text-green-500' };
   if (v < 30) return { label: 'Sobrepeso', color: 'text-yellow-500' };
   return { label: 'Obesidade', color: 'text-red-500' };
 }
 
-// ─── Vital Signs Input Component ───────────────────────────
+// ─── Vital Signs Grid ──────────────────────────────────────
 function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: SinaisVitais; onChange: (s: SinaisVitais) => void; disabled?: boolean }) {
   const update = (field: keyof SinaisVitais, value: string) => {
     const next = { ...sinais, [field]: value };
     if (field === 'peso' || field === 'altura') {
-      next.imc = calcularIMC(
-        field === 'peso' ? value : next.peso,
-        field === 'altura' ? value : next.altura
-      );
+      next.imc = calcularIMC(field === 'peso' ? value : next.peso, field === 'altura' ? value : next.altura);
     }
     onChange(next);
   };
 
   const imcClass = classificarIMC(sinais.imc);
 
-  const vitalCards = [
-    { key: 'pa', label: 'PA (mmHg)', icon: Heart, color: 'from-red-500/10 to-pink-500/5 dark:from-red-900/20 dark:to-pink-900/10', iconColor: 'text-red-500', dual: true },
-    { key: 'fc', label: 'FC (bpm)', icon: Heart, color: 'from-rose-500/10 to-red-500/5 dark:from-rose-900/20 dark:to-red-900/10', iconColor: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
-    { key: 'fr', label: 'FR (irpm)', icon: Activity, color: 'from-blue-500/10 to-indigo-500/5 dark:from-blue-900/20 dark:to-indigo-900/10', iconColor: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
-    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, color: 'from-orange-500/10 to-amber-500/5 dark:from-orange-900/20 dark:to-amber-900/10', iconColor: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
-    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, color: 'from-cyan-500/10 to-sky-500/5 dark:from-cyan-900/20 dark:to-sky-900/10', iconColor: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
-    { key: 'peso', label: 'Peso (kg)', icon: Scale, color: 'from-emerald-500/10 to-green-500/5 dark:from-emerald-900/20 dark:to-green-900/10', iconColor: 'text-emerald-500', field: 'peso', placeholder: '70' },
-    { key: 'altura', label: 'Altura (cm)', icon: Ruler, color: 'from-violet-500/10 to-purple-500/5 dark:from-violet-900/20 dark:to-purple-900/10', iconColor: 'text-violet-500', field: 'altura', placeholder: '170' },
-    { key: 'glasgow', label: 'Glasgow', icon: Brain, color: 'from-purple-500/10 to-fuchsia-500/5 dark:from-purple-900/20 dark:to-fuchsia-900/10', iconColor: 'text-purple-500', field: 'glasgow', placeholder: '15' },
-    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, color: 'from-yellow-500/10 to-amber-500/5 dark:from-yellow-900/20 dark:to-amber-900/10', iconColor: 'text-yellow-500', field: 'dor', placeholder: '0' },
+  const fields: { key: string; label: string; icon: any; field?: keyof SinaisVitais; placeholder?: string; dual?: boolean; accent: string }[] = [
+    { key: 'pa', label: 'PA (mmHg)', icon: Heart, accent: 'text-red-500', dual: true },
+    { key: 'fc', label: 'FC (bpm)', icon: Heart, accent: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
+    { key: 'fr', label: 'FR (irpm)', icon: Activity, accent: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
+    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, accent: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
+    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, accent: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
+    { key: 'peso', label: 'Peso (kg)', icon: Scale, accent: 'text-emerald-500', field: 'peso', placeholder: '70' },
+    { key: 'altura', label: 'Alt (cm)', icon: Ruler, accent: 'text-violet-500', field: 'altura', placeholder: '170' },
+    { key: 'glasgow', label: 'Glasgow', icon: Brain, accent: 'text-purple-500', field: 'glasgow', placeholder: '15' },
+    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, accent: 'text-yellow-500', field: 'dor', placeholder: '0' },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-          <Activity className="h-4 w-4 text-primary" />
-        </div>
-        <h3 className="text-sm font-bold text-foreground tracking-tight">Sinais Vitais</h3>
+        <Activity className="h-4 w-4 text-primary" />
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sinais Vitais</span>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
-        {vitalCards.map(card => {
-          const CardIcon = card.icon;
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {fields.map(f => {
+          const Icon = f.icon;
           return (
-            <div key={card.key} className={`rounded-xl bg-gradient-to-br ${card.color} border border-border/50 p-3 space-y-1.5 transition-all hover:shadow-sm`}>
-              <Label className={`text-[11px] font-semibold flex items-center gap-1.5 ${card.iconColor}`}>
-                <CardIcon className="h-3.5 w-3.5" />{card.label}
+            <div key={f.key} className="rounded-xl border border-border/60 bg-card p-2.5 space-y-1">
+              <Label className={`text-[10px] font-semibold flex items-center gap-1 ${f.accent}`}>
+                <Icon className="h-3 w-3" />{f.label}
               </Label>
-              {card.dual ? (
+              {f.dual ? (
                 <div className="flex gap-1 items-center">
-                  <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" disabled={disabled} />
-                  <span className="text-muted-foreground font-bold">/</span>
-                  <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+                  <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-7 text-xs px-2" disabled={disabled} />
+                  <span className="text-muted-foreground text-xs font-bold">/</span>
+                  <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-7 text-xs px-2" disabled={disabled} />
                 </div>
               ) : (
-                <Input placeholder={card.placeholder} value={(sinais as any)[card.field!]} onChange={e => update(card.field as keyof SinaisVitais, e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+                <Input placeholder={f.placeholder} value={(sinais as any)[f.field!] || ''} onChange={e => update(f.field!, e.target.value)} className="h-7 text-xs px-2" disabled={disabled} />
               )}
             </div>
           );
         })}
-        {/* IMC card - special */}
-        <div className="rounded-xl bg-gradient-to-br from-teal-500/10 to-emerald-500/5 dark:from-teal-900/20 dark:to-emerald-900/10 border border-border/50 p-3 space-y-1.5">
-          <Label className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">IMC</Label>
-          <div className="h-8 flex items-center px-3 bg-background/60 backdrop-blur-sm rounded-md text-sm font-bold border border-border/40">
+        <div className="rounded-xl border border-border/60 bg-card p-2.5 space-y-1">
+          <Label className="text-[10px] font-semibold text-teal-500">IMC</Label>
+          <div className="h-7 flex items-center px-2 text-xs font-bold">
             {sinais.imc || '—'}
-            {imcClass && <span className={`ml-1.5 text-[10px] font-semibold ${imcClass.color}`}>({imcClass.label})</span>}
+            {imcClass && <span className={`ml-1 text-[9px] ${imcClass.color}`}>({imcClass.label})</span>}
           </div>
         </div>
       </div>
@@ -180,25 +175,19 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
   );
 }
 
-// ─── Section Component ─────────────────────────────────────
+// ─── Collapsible Section ───────────────────────────────────
 function Section({ icon: Icon, title, children, collapsible = false }: {
   icon: React.ElementType; title: string; children: React.ReactNode; collapsible?: boolean;
 }) {
   const [open, setOpen] = useState(!collapsible);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden"
-    >
+    <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
       <button
         type="button"
         onClick={() => collapsible && setOpen(!open)}
-        className="flex items-center gap-2.5 px-4 py-3 w-full hover:bg-muted/30 transition-colors"
+        className="flex items-center gap-2 px-4 py-2.5 w-full hover:bg-muted/30 transition-colors"
       >
-        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
-          <Icon className="h-3.5 w-3.5 text-primary" />
-        </div>
+        <Icon className="h-3.5 w-3.5 text-primary flex-shrink-0" />
         <span className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</span>
         {collapsible && (
           <motion.div animate={{ rotate: open ? 180 : 0 }} className="ml-auto">
@@ -212,106 +201,102 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3">{children}</div>
+            <div className="px-4 pb-3 space-y-2">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
-// ─── Patient ID Card ───────────────────────────────────────
-function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome: string }) {
+// ─── Patient File Card ─────────────────────────────────────
+function FichaPaciente({ paciente, convenioNome }: { paciente: any; convenioNome: string }) {
   const idade = calcularIdade(paciente.data_nascimento);
   const isMenor = idade < 18;
 
   return (
-    <div className="rounded-2xl border border-border/60 overflow-hidden bg-card shadow-sm">
-      {/* Gradient header band */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-4">
-        <div className="flex items-start gap-4">
-          <PatientPhoto
-            pacienteId={paciente.id}
-            pacienteNome={paciente.nome}
-            currentPhotoUrl={paciente.foto_url}
-            size="lg"
-            editable={false}
-          />
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <h3 className="text-xl font-bold truncate text-foreground">
-              {paciente.nome_social || paciente.nome}
-            </h3>
-            {paciente.nome_social && (
-              <p className="text-xs text-muted-foreground">
-                Registro civil: {paciente.nome}
-              </p>
-            )}
-            <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
-              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
-                {idade} anos
-              </Badge>
-              {paciente.sexo && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  {paciente.sexo === 'masculino' ? '♂ Masculino' : paciente.sexo === 'feminino' ? '♀ Feminino' : 'Outro'}
+    <div className="space-y-4">
+      {/* Header strip */}
+      <div className="rounded-2xl overflow-hidden border border-border/60 bg-card">
+        <div className="bg-gradient-to-r from-primary/8 via-primary/4 to-transparent p-5">
+          <div className="flex items-start gap-4">
+            <PatientPhoto
+              pacienteId={paciente.id}
+              pacienteNome={paciente.nome}
+              currentPhotoUrl={paciente.foto_url}
+              size="lg"
+              editable={false}
+            />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-foreground truncate">
+                {paciente.nome_social || paciente.nome}
+              </h2>
+              {paciente.nome_social && (
+                <p className="text-[11px] text-muted-foreground">Civil: {paciente.nome}</p>
+              )}
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-2 py-0">
+                  {idade} anos
                 </Badge>
-              )}
-              {paciente.data_nascimento && (
-                <span className="text-xs">Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
-              )}
+                {paciente.sexo && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {paciente.sexo === 'masculino' ? '♂ Masc' : paciente.sexo === 'feminino' ? '♀ Fem' : 'Outro'}
+                  </Badge>
+                )}
+                {paciente.data_nascimento && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="px-5 py-3 space-y-3">
-        {/* Alergias em destaque */}
-        {paciente.alergias && paciente.alergias.length > 0 && (
-          <AllergyAlert alergias={paciente.alergias} />
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {/* Data grid */}
+        <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs border-t border-border/40">
           {paciente.cpf && (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground truncate">CPF: {paciente.cpf}</span>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Fingerprint className="h-3 w-3 flex-shrink-0" />CPF: {paciente.cpf}
             </div>
           )}
           {paciente.telefone && (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
-              <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground">{paciente.telefone}</span>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Phone className="h-3 w-3 flex-shrink-0" />{paciente.telefone}
             </div>
           )}
           {paciente.email && (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm truncate">
-              <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground truncate">{paciente.email}</span>
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate col-span-2 sm:col-span-1">
+              <Mail className="h-3 w-3 flex-shrink-0" /><span className="truncate">{paciente.email}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
-            <Building2 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="text-muted-foreground">{convenioNome}</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Building2 className="h-3 w-3 flex-shrink-0" />{convenioNome}
           </div>
           {paciente.numero_carteira && (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
-              <CreditCard className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-muted-foreground truncate">Carteira: {paciente.numero_carteira}</span>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <CreditCard className="h-3 w-3 flex-shrink-0" />{paciente.numero_carteira}
             </div>
           )}
         </div>
 
-        {/* Responsável legal (menor) */}
+        {/* Alergias */}
+        {paciente.alergias && paciente.alergias.length > 0 && (
+          <div className="px-4 pb-3">
+            <AllergyAlert alergias={paciente.alergias} />
+          </div>
+        )}
+
+        {/* Responsável */}
         {isMenor && paciente.nome_responsavel && (
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm">
-            <Baby className="h-4 w-4 text-amber-500 flex-shrink-0" />
-            <span className="font-medium text-amber-700 dark:text-amber-300">Responsável:</span>
-            <span className="text-muted-foreground">
-              {paciente.nome_responsavel}
+          <div className="mx-4 mb-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
+            <Baby className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+            <span className="text-amber-700 dark:text-amber-300">
+              <strong>Responsável:</strong> {paciente.nome_responsavel}
               {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
-              {paciente.cpf_responsavel && ` — CPF: ${paciente.cpf_responsavel}`}
             </span>
           </div>
         )}
@@ -320,7 +305,7 @@ function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome
   );
 }
 
-// ─── Audit Log Component ───────────────────────────────────
+// ─── Audit Log ─────────────────────────────────────────────
 function ProntuarioAuditLog({ prontuarioId }: { prontuarioId: string }) {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -328,57 +313,49 @@ function ProntuarioAuditLog({ prontuarioId }: { prontuarioId: string }) {
   useEffect(() => {
     if (!prontuarioId) return;
     setLoading(true);
-    supabase
-      .from('audit_log')
-      .select('*')
-      .eq('record_id', prontuarioId)
-      .eq('collection', 'prontuarios')
-      .order('timestamp', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        setLogs(data || []);
-        setLoading(false);
-      });
+    supabase.from('audit_log').select('*').eq('record_id', prontuarioId).eq('collection', 'prontuarios')
+      .order('timestamp', { ascending: false }).limit(20)
+      .then(({ data }) => { setLogs(data || []); setLoading(false); });
   }, [prontuarioId]);
 
   if (loading) return <Skeleton className="h-32" />;
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-        <Shield className="h-4 w-4" /> Trilha de Auditoria
+      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+        <Shield className="h-3.5 w-3.5" /> Trilha de Auditoria
       </h4>
       {logs.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">Nenhum registro de auditoria encontrado</p>
+        <p className="text-xs text-muted-foreground py-6 text-center">Nenhum registro de auditoria</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {logs.map(log => (
-            <div key={log.id} className="flex items-start gap-3 text-sm border-l-2 border-muted pl-3 py-1">
-              <Lock className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div key={log.id} className="flex items-start gap-2.5 text-xs border-l-2 border-muted pl-3 py-1.5">
+              <Lock className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="text-[10px]">
-                    {log.action === 'create' ? 'Criação' : log.action === 'update' ? 'Atualização' : 'Exclusão'}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                    {log.action === 'create' ? 'Criação' : log.action === 'update' ? 'Edição' : log.action === 'access' ? 'Acesso' : log.action}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {log.timestamp ? format(new Date(log.timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—'}
+                  <span className="text-[10px] text-muted-foreground">
+                    {log.timestamp ? format(new Date(log.timestamp), "dd/MM/yy HH:mm", { locale: ptBR }) : '—'}
                   </span>
                 </div>
-                {log.user_name && <p className="text-xs text-muted-foreground">por {log.user_name}</p>}
+                {log.user_name && <p className="text-[10px] text-muted-foreground">por {log.user_name}</p>}
               </div>
             </div>
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-        <ShieldCheck className="h-3.5 w-3.5" />
-        <span>Em conformidade com LGPD e normas do CFM. Todos os acessos são registrados.</span>
+      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-muted/40 rounded-lg p-2">
+        <ShieldCheck className="h-3 w-3" />
+        <span>LGPD • CFM nº 1.821/07 • Todos os acessos registrados</span>
       </div>
     </div>
   );
 }
 
-// ─── Related Records Component ─────────────────────────────
+// ─── Related Records ───────────────────────────────────────
 function RelatedRecords({ pacienteId }: { pacienteId: string }) {
   const [exames, setExames] = useState<any[]>([]);
   const [atestados, setAtestados] = useState<any[]>([]);
@@ -389,106 +366,60 @@ function RelatedRecords({ pacienteId }: { pacienteId: string }) {
     if (!pacienteId) return;
     setLoading(true);
     Promise.all([
-      supabase.from('exames').select('id, tipo_exame, status, data_solicitacao, resultado').eq('paciente_id', pacienteId).order('data_solicitacao', { ascending: false }).limit(10),
-      supabase.from('atestados').select('id, tipo, data_emissao, dias, motivo').eq('paciente_id', pacienteId).order('data_emissao', { ascending: false }).limit(10),
-      supabase.from('encaminhamentos').select('id, especialidade_destino, status, data_encaminhamento, urgencia').eq('paciente_id', pacienteId).order('data_encaminhamento', { ascending: false }).limit(10),
-    ]).then(([exRes, atRes, enRes]) => {
-      setExames(exRes.data || []);
-      setAtestados(atRes.data || []);
-      setEncaminhamentos(enRes.data || []);
+      supabase.from('exames').select('id, tipo_exame, status, data_solicitacao').eq('paciente_id', pacienteId).order('data_solicitacao', { ascending: false }).limit(10),
+      supabase.from('atestados').select('id, tipo, data_emissao, dias').eq('paciente_id', pacienteId).order('data_emissao', { ascending: false }).limit(10),
+      supabase.from('encaminhamentos').select('id, especialidade_destino, status, urgencia').eq('paciente_id', pacienteId).order('data_encaminhamento', { ascending: false }).limit(10),
+    ]).then(([ex, at, en]) => {
+      setExames(ex.data || []); setAtestados(at.data || []); setEncaminhamentos(en.data || []);
       setLoading(false);
     });
   }, [pacienteId]);
 
-  if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}</div>;
+  if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-10" />)}</div>;
 
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'laudo_disponivel': case 'concluido': return 'bg-green-500/10 text-green-700 dark:text-green-300';
-      case 'pendente': case 'solicitado': return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
-      case 'em_andamento': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
-      case 'cancelado': return 'bg-destructive/10 text-destructive';
-      default: return 'bg-muted text-muted-foreground';
-    }
+  const sc = (s: string) => {
+    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-green-500/10 text-green-700 dark:text-green-300';
+    if (s === 'pendente' || s === 'solicitado') return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
+    if (s === 'em_andamento') return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
+    return 'bg-muted text-muted-foreground';
   };
 
+  const RecordItem = ({ icon: Icon, label, sub, badge, badgeClass }: any) => (
+    <div className="flex items-center justify-between border border-border/40 rounded-lg px-3 py-2 text-xs">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+        <span className="font-medium truncate">{label}</span>
+        {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
+      </div>
+      {badge && <Badge className={`text-[9px] px-1.5 py-0 ${badgeClass}`}>{badge}</Badge>}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Exames */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <TestTube className="h-4 w-4" /> Exames ({exames.length})
-        </h4>
-        {exames.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Nenhum exame solicitado</p>
-        ) : (
-          <div className="space-y-1.5">
-            {exames.map(ex => (
-              <div key={ex.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
-                <div className="flex items-center gap-2">
-                  <TestTube className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="font-medium">{ex.tipo_exame}</span>
-                  {ex.data_solicitacao && <span className="text-xs text-muted-foreground">{format(new Date(ex.data_solicitacao), 'dd/MM/yy')}</span>}
-                </div>
-                <Badge className={`text-[10px] ${statusColor(ex.status)}`}>{ex.status?.replace(/_/g, ' ')}</Badge>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="space-y-5">
+      <div className="space-y-1.5">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><TestTube className="h-3.5 w-3.5" /> Exames ({exames.length})</h4>
+        {exames.length === 0 ? <p className="text-xs text-muted-foreground py-2">Nenhum exame</p> : exames.map(e => (
+          <RecordItem key={e.id} icon={TestTube} label={e.tipo_exame} sub={e.data_solicitacao ? format(new Date(e.data_solicitacao), 'dd/MM/yy') : ''} badge={e.status?.replace(/_/g, ' ')} badgeClass={sc(e.status)} />
+        ))}
       </div>
-
-      {/* Atestados */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <FileCheck className="h-4 w-4" /> Atestados ({atestados.length})
-        </h4>
-        {atestados.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Nenhum atestado emitido</p>
-        ) : (
-          <div className="space-y-1.5">
-            {atestados.map(at => (
-              <div key={at.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
-                <div className="flex items-center gap-2">
-                  <FileCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="font-medium">{at.tipo || 'Atestado'}</span>
-                  {at.dias && <span className="text-xs text-muted-foreground">({at.dias} dias)</span>}
-                </div>
-                {at.data_emissao && <span className="text-xs text-muted-foreground">{format(new Date(at.data_emissao), 'dd/MM/yy')}</span>}
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="space-y-1.5">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><FileCheck className="h-3.5 w-3.5" /> Atestados ({atestados.length})</h4>
+        {atestados.length === 0 ? <p className="text-xs text-muted-foreground py-2">Nenhum atestado</p> : atestados.map(a => (
+          <RecordItem key={a.id} icon={FileCheck} label={a.tipo || 'Atestado'} sub={a.dias ? `(${a.dias}d)` : ''} badge={a.data_emissao ? format(new Date(a.data_emissao), 'dd/MM/yy') : ''} badgeClass="bg-muted text-muted-foreground" />
+        ))}
       </div>
-
-      {/* Encaminhamentos */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <ArrowRight className="h-4 w-4" /> Encaminhamentos ({encaminhamentos.length})
-        </h4>
-        {encaminhamentos.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Nenhum encaminhamento</p>
-        ) : (
-          <div className="space-y-1.5">
-            {encaminhamentos.map(en => (
-              <div key={en.id} className="flex items-center justify-between border rounded p-2.5 text-sm">
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="font-medium">{en.especialidade_destino}</span>
-                  {en.urgencia && en.urgencia !== 'normal' && (
-                    <Badge variant="destructive" className="text-[10px]">{en.urgencia}</Badge>
-                  )}
-                </div>
-                <Badge className={`text-[10px] ${statusColor(en.status)}`}>{en.status}</Badge>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="space-y-1.5">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><ArrowRight className="h-3.5 w-3.5" /> Encaminhamentos ({encaminhamentos.length})</h4>
+        {encaminhamentos.length === 0 ? <p className="text-xs text-muted-foreground py-2">Nenhum encaminhamento</p> : encaminhamentos.map(e => (
+          <RecordItem key={e.id} icon={ArrowRight} label={e.especialidade_destino} badge={e.status} badgeClass={sc(e.status)} />
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── Anexos Wrapper (self-loading) ─────────────────────────
+// ─── Anexos Wrapper ────────────────────────────────────────
 function AnexosWrapper({ pacienteId, prontuarioId }: { pacienteId: string; prontuarioId: string }) {
   const [anexos, setAnexos] = useState<any[]>([]);
   const loadAnexos = useCallback(async () => {
@@ -499,7 +430,9 @@ function AnexosWrapper({ pacienteId, prontuarioId }: { pacienteId: string; pront
   return <AnexosProntuario pacienteId={pacienteId} prontuarioId={prontuarioId} anexos={anexos} onAnexoAdicionado={loadAnexos} onAnexoRemovido={loadAnexos} />;
 }
 
-// ─── Main Component ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// ─── MAIN COMPONENT ───────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
 export default function Prontuarios() {
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -560,82 +493,59 @@ export default function Prontuarios() {
       .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
   }, [prontuarios, selectedPacienteId]);
 
-  // ─── Handlers ──────────────────────────────────────────────
+  // ─── Handlers ────────────────────────────────────────────
   const handleNovoProntuario = () => {
     if (!selectedPacienteId) return;
-    const today = format(new Date(), 'yyyy-MM-dd');
     setCurrentProntuario({
       ...emptyProntuario,
       paciente_id: selectedPacienteId,
       medico_id: medicoId || user?.id || '',
-      data: today,
+      data: format(new Date(), 'yyyy-MM-dd'),
       alergias_relatadas: selectedPaciente?.alergias?.join(', ') || '',
     });
     setSinaisVitais(emptySinaisVitais);
     setPrescricoes([]);
-    setIsEditing(true); // New records are always editable
+    setIsEditing(true);
     setIsProntuarioOpen(true);
   };
 
   const handleViewProntuario = async (prontuario: Record<string, any>) => {
     setCurrentProntuario(prontuario);
-    const sv = prontuario.sinais_vitais || {};
-    setSinaisVitais({ ...emptySinaisVitais, ...sv });
-    const { data: prescricoesData } = await supabase
-      .from('prescricoes')
-      .select('*')
-      .eq('prontuario_id', prontuario.id);
-    setPrescricoes((prescricoesData || []).map((p: any) => ({
-      medicamento: p.medicamento, dosagem: p.dosagem || '',
-      posologia: p.posologia || '', duracao: p.duracao || '',
-      quantidade: p.quantidade || '', observacoes: p.observacoes || '',
+    setSinaisVitais({ ...emptySinaisVitais, ...(prontuario.sinais_vitais || {}) });
+    const { data } = await supabase.from('prescricoes').select('*').eq('prontuario_id', prontuario.id);
+    setPrescricoes((data || []).map((p: any) => ({
+      medicamento: p.medicamento, dosagem: p.dosagem || '', posologia: p.posologia || '',
+      duracao: p.duracao || '', quantidade: p.quantidade || '', observacoes: p.observacoes || '',
     })));
-    setIsEditing(false); // Existing records start read-only
+    setIsEditing(false);
     setIsProntuarioOpen(true);
-
-    // Log access for audit
     try {
       await supabase.from('audit_log').insert({
-        action: 'access',
-        collection: 'prontuarios',
-        record_id: prontuario.id,
-        record_name: selectedPaciente?.nome || '',
-        user_id: user?.id || null,
-        user_name: user?.nome || null,
+        action: 'access', collection: 'prontuarios', record_id: prontuario.id,
+        record_name: selectedPaciente?.nome || '', user_id: user?.id || null, user_name: user?.nome || null,
       });
     } catch { /* silent */ }
   };
 
-  const handleAddPrescricao = () => {
-    setPrescricoes([...prescricoes, { medicamento: '', dosagem: '', posologia: '', duracao: '', quantidade: '', observacoes: '' }]);
-  };
-
+  const handleAddPrescricao = () => setPrescricoes([...prescricoes, { medicamento: '', dosagem: '', posologia: '', duracao: '', quantidade: '', observacoes: '' }]);
   const handleUpdatePrescricao = (i: number, field: keyof PrescricaoForm, value: string) => {
     const u = [...prescricoes]; u[i] = { ...u[i], [field]: value }; setPrescricoes(u);
   };
-
   const handleRemovePrescricao = (i: number) => setPrescricoes(prescricoes.filter((_, idx) => idx !== i));
 
   const isReadOnly = !!currentProntuario.id && !isEditing;
 
   const handleRequestEdit = async () => {
-    // Log the edit request in audit trail
     try {
       await supabase.from('audit_log').insert({
-        action: 'edit_request',
-        collection: 'prontuarios',
-        record_id: currentProntuario.id,
-        record_name: `Solicitação de edição — ${selectedPaciente?.nome || ''}`,
-        user_id: user?.id || null,
-        user_name: user?.nome || null,
+        action: 'edit_request', collection: 'prontuarios', record_id: currentProntuario.id,
+        record_name: `Edição — ${selectedPaciente?.nome || ''}`,
+        user_id: user?.id || null, user_name: user?.nome || null,
         changes: { motivo: 'Edição solicitada pelo médico' },
       });
     } catch { /* silent */ }
     setIsEditing(true);
-    toast({
-      title: 'Modo de edição ativado',
-      description: 'Todas as alterações serão registradas na trilha de auditoria.',
-    });
+    toast({ title: 'Modo de edição ativado', description: 'Alterações serão auditadas.' });
   };
 
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
@@ -645,7 +555,6 @@ export default function Prontuarios() {
       toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
       return;
     }
-
     try {
       const payload = {
         queixa_principal: currentProntuario.queixa_principal,
@@ -674,66 +583,52 @@ export default function Prontuarios() {
       };
 
       let prontuarioId = currentProntuario.id;
-
       if (currentProntuario.id) {
         const { error } = await supabase.from('prontuarios').update(payload).eq('id', currentProntuario.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from('prontuarios').insert({
-          ...payload,
-          paciente_id: currentProntuario.paciente_id,
-          medico_id: currentProntuario.medico_id,
-          data: currentProntuario.data,
+          ...payload, paciente_id: currentProntuario.paciente_id,
+          medico_id: currentProntuario.medico_id, data: currentProntuario.data,
         }).select().single();
         if (error) throw error;
         prontuarioId = data.id;
       }
 
-      // Save prescriptions
       if (!currentProntuario.id) {
         for (const presc of prescricoes) {
           if (presc.medicamento) {
             await supabase.from('prescricoes').insert({
-              paciente_id: currentProntuario.paciente_id,
-              medico_id: currentProntuario.medico_id,
-              prontuario_id: prontuarioId,
-              medicamento: presc.medicamento,
-              dosagem: presc.dosagem || null,
-              posologia: presc.posologia || null,
-              duracao: presc.duracao || null,
-              quantidade: presc.quantidade || null,
+              paciente_id: currentProntuario.paciente_id, medico_id: currentProntuario.medico_id,
+              prontuario_id: prontuarioId, medicamento: presc.medicamento,
+              dosagem: presc.dosagem || null, posologia: presc.posologia || null,
+              duracao: presc.duracao || null, quantidade: presc.quantidade || null,
               observacoes: presc.observacoes || null,
-              data_emissao: format(new Date(), 'yyyy-MM-dd'),
-              tipo: 'simples',
+              data_emissao: format(new Date(), 'yyyy-MM-dd'), tipo: 'simples',
             });
           }
         }
       }
 
-      // Audit log with changes diff
       try {
         const changes = currentProntuario.id ? {
-          campos_alterados: Object.keys(payload).filter(k => {
-            const original = (currentProntuario as any)[k];
-            const updated = (payload as any)[k];
-            return JSON.stringify(original) !== JSON.stringify(updated);
-          }),
+          campos_alterados: Object.keys(payload).filter(k =>
+            JSON.stringify((currentProntuario as any)[k]) !== JSON.stringify((payload as any)[k])
+          ),
           editado_em: new Date().toISOString(),
         } : undefined;
         await supabase.from('audit_log').insert({
           action: currentProntuario.id ? 'update' : 'create',
-          collection: 'prontuarios',
-          record_id: prontuarioId,
+          collection: 'prontuarios', record_id: prontuarioId,
           record_name: selectedPaciente?.nome || '',
-          user_id: user?.id || null,
-          user_name: user?.nome || null,
+          user_id: user?.id || null, user_name: user?.nome || null,
           changes: changes || null,
         });
       } catch { /* silent */ }
 
       refetchProntuarios();
       setIsProntuarioOpen(false);
-      toast({ title: 'Prontuário salvo', description: 'Prontuário salvo com sucesso.' });
+      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
     } catch (error) {
       console.error('Error saving prontuario:', error);
       toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
@@ -755,11 +650,7 @@ export default function Prontuarios() {
   };
 
   const getDischargeReportData = () => ({
-    paciente: {
-      nome: selectedPaciente?.nome || '',
-      dataNascimento: selectedPaciente?.data_nascimento,
-      cpf: selectedPaciente?.cpf,
-    },
+    paciente: { nome: selectedPaciente?.nome || '', dataNascimento: selectedPaciente?.data_nascimento, cpf: selectedPaciente?.cpf },
     medico: { nome: user?.nome || 'Médico' },
     consulta: {
       data: currentProntuario.data || format(new Date(), 'yyyy-MM-dd'),
@@ -770,937 +661,653 @@ export default function Prontuarios() {
     prescricoes: prescricoes.filter(p => p.medicamento),
   });
 
-  // ─── Loading ─────────────────────────────────────────────
+  // ─── Loading state ───────────────────────────────────────
   if (loadingPacientes || loadingProntuarios) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Skeleton className="h-96" />
-          <Skeleton className="h-96 lg:col-span-2" />
+        <div className="grid gap-6 lg:grid-cols-12">
+          <Skeleton className="h-[600px] lg:col-span-3" />
+          <Skeleton className="h-[600px] lg:col-span-9" />
         </div>
       </div>
     );
   }
 
-  // ─── Render ──────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+  // ─── RENDER ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-sm border border-primary/10">
-            <ClipboardList className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <ClipboardList className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              Prontuário Eletrônico
-            </h1>
-            <p className="text-sm text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">Prontuário Eletrônico</h1>
+            <p className="text-xs text-muted-foreground">Registro médico completo — LGPD • CFM</p>
           </div>
         </div>
-        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1.5 text-xs px-3 py-1.5 rounded-full">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          Conforme LGPD
+        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1 text-[10px] rounded-full px-2.5 py-1">
+          <ShieldCheck className="h-3 w-3" />Conforme LGPD
         </Badge>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* ─── Patient List ─── */}
-        <Card className="lg:col-span-1 overflow-hidden border-border/60 shadow-sm">
-          <CardHeader className="pb-3 bg-gradient-to-b from-muted/30 to-transparent">
-            <CardTitle className="text-base font-bold flex items-center gap-2"><User className="h-4 w-4 text-primary" />Pacientes</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou CPF..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 bg-background/80 backdrop-blur-sm" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[550px]">
-              {filteredPacientes.map(pac => (
-                <motion.div
-                  key={pac.id}
-                  whileHover={{ x: 2 }}
-                  className={`p-3.5 border-b border-border/40 cursor-pointer transition-all duration-200 ${
-                    selectedPacienteId === pac.id
-                      ? 'bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-[3px] border-l-primary'
-                      : 'hover:bg-muted/40'
-                  }`}
-                  onClick={() => setSelectedPacienteId(pac.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <PatientPhoto
-                      pacienteId={pac.id}
-                      pacienteNome={pac.nome}
-                      currentPhotoUrl={pac.foto_url}
-                      size="sm"
-                      editable={false}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{(pac as any).nome_social || pac.nome}</p>
-                      {(pac as any).nome_social && <p className="text-[10px] text-muted-foreground truncate">Civil: {pac.nome}</p>}
-                      <p className="text-xs text-muted-foreground">
-                        {calcularIdade(pac.data_nascimento)} anos
-                        {pac.sexo && ` • ${pac.sexo === 'masculino' ? '♂' : pac.sexo === 'feminino' ? '♀' : ''}`}
-                        {pac.cpf && ` • ${pac.cpf}`}
-                      </p>
-                    </div>
-                    {selectedPacienteId === pac.id && (
-                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
-                    )}
-                  </div>
-                  {pac.alergias && pac.alergias.length > 0 && <AllergyAlert alergias={pac.alergias} compact className="mt-2" />}
-                </motion.div>
-              ))}
-              {filteredPacientes.length === 0 && (
-                <p className="text-center text-muted-foreground py-12 text-sm">Nenhum paciente encontrado</p>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* ─── Patient Records ─── */}
-        <Card className="lg:col-span-2 overflow-hidden border-border/60 shadow-sm">
-          <CardHeader className="bg-gradient-to-b from-muted/30 to-transparent">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-4">
-                {selectedPaciente && (
-                  <PatientPhoto pacienteId={selectedPaciente.id} pacienteNome={selectedPaciente.nome} currentPhotoUrl={selectedPaciente.foto_url} size="md" />
-                )}
-                <div>
-                  <CardTitle className="text-lg font-bold">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
-                  {selectedPaciente && (
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
-                      <span>{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
-                      <span>•</span>
-                      <span>{getConvenioNome(selectedPaciente.convenio_id)}</span>
-                      {selectedPaciente.telefone && <><span>•</span><span>{selectedPaciente.telefone}</span></>}
-                    </div>
-                  )}
-                  {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
-                    <AllergyAlert alergias={selectedPaciente.alergias} className="mt-2" />
-                  )}
-                </div>
+      {/* Main layout: patient list + content */}
+      <div className="grid gap-5 lg:grid-cols-12">
+        {/* ─── Patient List (Left column) ─── */}
+        <div className="lg:col-span-3">
+          <Card className="overflow-hidden border-border/50">
+            <CardHeader className="pb-2 px-3 pt-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar paciente..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-8 h-8 text-xs"
+                />
               </div>
-              {selectedPaciente && (
-                <Button onClick={handleNovoProntuario} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
-                  <Plus className="h-4 w-4" />Novo Atendimento
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!selectedPaciente ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <FileText className="h-12 w-12 mb-3 opacity-30" />
-                <p>Selecione um paciente para ver o prontuário</p>
-              </div>
-            ) : (
-              <Tabs defaultValue="evolucoes" className="w-full">
-                <TabsList className="grid w-full grid-cols-6">
-                  <TabsTrigger value="evolucoes" className="gap-1.5 text-xs"><FileText className="h-3.5 w-3.5" />Evoluções</TabsTrigger>
-                  <TabsTrigger value="solicitacoes" className="gap-1.5 text-xs"><TestTube className="h-3.5 w-3.5" />Solicitações</TabsTrigger>
-                  <TabsTrigger value="timeline" className="gap-1.5 text-xs"><History className="h-3.5 w-3.5" />Timeline</TabsTrigger>
-                  <TabsTrigger value="vitais" className="gap-1.5 text-xs"><Activity className="h-3.5 w-3.5" />Sinais</TabsTrigger>
-                  <TabsTrigger value="identificacao" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" />Ficha</TabsTrigger>
-                  <TabsTrigger value="exportar" className="gap-1.5 text-xs"><Share2 className="h-3.5 w-3.5" />Exportar</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="evolucoes" className="pt-4">
-                  {pacienteProntuarios.length === 0 ? (
-                    <div className="flex flex-col items-center py-16 text-muted-foreground">
-                      <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                        <FileText className="h-8 w-8 opacity-30" />
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[calc(100vh-240px)]">
+                {filteredPacientes.map(pac => {
+                  const isSelected = selectedPacienteId === pac.id;
+                  return (
+                    <motion.div
+                      key={pac.id}
+                      whileHover={{ backgroundColor: 'hsl(var(--muted) / 0.5)' }}
+                      className={`px-3 py-2.5 cursor-pointer transition-all border-b border-border/30 ${
+                        isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : 'border-l-2 border-l-transparent'
+                      }`}
+                      onClick={() => setSelectedPacienteId(pac.id)}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <PatientPhoto pacienteId={pac.id} pacienteNome={pac.nome} currentPhotoUrl={pac.foto_url} size="sm" editable={false} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate">{(pac as any).nome_social || pac.nome}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {calcularIdade(pac.data_nascimento)}a
+                            {pac.sexo && ` • ${pac.sexo === 'masculino' ? '♂' : '♀'}`}
+                            {pac.cpf && ` • ${pac.cpf}`}
+                          </p>
+                        </div>
+                        {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />}
                       </div>
-                      <p className="font-medium">Nenhuma evolução registrada</p>
-                      <p className="text-xs mt-1">Clique em "Novo Atendimento" para iniciar</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {pacienteProntuarios.map((p, idx) => (
-                        <motion.div
-                          key={p.id}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.03 }}
-                          className="group relative border border-border/50 rounded-xl p-4 hover:bg-gradient-to-r hover:from-primary/[0.03] hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-sm hover:border-primary/20"
-                          onClick={() => handleViewProntuario(p)}
+                      {pac.alergias && pac.alergias.length > 0 && (
+                        <div className="mt-1.5">
+                          <AllergyAlert alergias={pac.alergias} compact className="text-[9px]" />
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+                {filteredPacientes.length === 0 && (
+                  <p className="text-center text-muted-foreground py-10 text-xs">Nenhum paciente encontrado</p>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ─── Patient File + Records (Right column) ─── */}
+        <div className="lg:col-span-9 space-y-4">
+          {!selectedPaciente ? (
+            <Card className="border-border/50">
+              <CardContent className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <FileText className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-sm">Selecione um paciente à esquerda</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Patient file card */}
+              <FichaPaciente paciente={selectedPaciente} convenioNome={getConvenioNome(selectedPaciente.convenio_id)} />
+
+              {/* Actions bar */}
+              <div className="flex items-center gap-2">
+                <Button onClick={handleNovoProntuario} size="sm" className="gap-1.5 rounded-xl">
+                  <Plus className="h-3.5 w-3.5" />Novo Atendimento
+                </Button>
+                <span className="text-[10px] text-muted-foreground flex-1">
+                  {pacienteProntuarios.length} evolução(ões) registrada(s)
+                </span>
+              </div>
+
+              {/* Content tabs */}
+              <Card className="border-border/50 overflow-hidden">
+                <Tabs defaultValue="evolucoes" className="w-full">
+                  <div className="border-b border-border/40 px-4 pt-3">
+                    <TabsList className="bg-transparent h-auto p-0 gap-0">
+                      {[
+                        { val: 'evolucoes', icon: FileText, label: 'Evoluções' },
+                        { val: 'solicitacoes', icon: TestTube, label: 'Solicitações' },
+                        { val: 'timeline', icon: History, label: 'Timeline' },
+                        { val: 'vitais', icon: Activity, label: 'Sinais' },
+                        { val: 'ficha', icon: User, label: 'Ficha' },
+                        { val: 'exportar', icon: Share2, label: 'Exportar' },
+                      ].map(t => (
+                        <TabsTrigger
+                          key={t.val}
+                          value={t.val}
+                          className="gap-1 text-[11px] rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 py-2"
                         >
-                          <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b from-primary/60 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-1.5 pl-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">
-                                  {format(new Date(p.data), 'dd/MM/yyyy')}
-                                </Badge>
-                                {p.diagnostico_principal && (
-                                  <Badge variant="secondary" className="text-[11px]">{p.diagnostico_principal}</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm font-semibold text-foreground">{p.queixa_principal}</p>
-                              {p.conduta && <p className="text-xs text-muted-foreground line-clamp-1">Conduta: {p.conduta}</p>}
-                            </div>
-                            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                              <FileText className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </div>
-                          </div>
-                        </motion.div>
+                          <t.icon className="h-3 w-3" />{t.label}
+                        </TabsTrigger>
                       ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="solicitacoes" className="pt-4">
-                  <RelatedRecords pacienteId={selectedPacienteId!} />
-                </TabsContent>
-
-                <TabsContent value="timeline" className="pt-4">
-                  <PatientTimeline pacienteId={selectedPacienteId!} maxItems={30} />
-                </TabsContent>
-
-                <TabsContent value="vitais" className="pt-4">
-                  <VitalSignsChart pacienteId={selectedPacienteId!} />
-                </TabsContent>
-
-                <TabsContent value="identificacao" className="pt-4">
-                  <PatientIDCard paciente={selectedPaciente} convenioNome={getConvenioNome(selectedPaciente.convenio_id)} />
-                </TabsContent>
-
-                <TabsContent value="exportar" className="pt-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-3">
-                      <Share2 className="h-4 w-4 flex-shrink-0" />
-                      <span>Exporte os dados clínicos do paciente em formatos interoperáveis (HL7 FHIR / XML CDA) para compartilhamento com outros profissionais de saúde.</span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Card className="p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">JSON</Badge>
-                          <span className="font-medium text-sm">HL7 FHIR R4</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Formato padrão internacional para interoperabilidade em saúde. Compatível com a maioria dos sistemas modernos.</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full gap-2"
-                          onClick={() => {
-                            const exportData = {
-                              paciente: {
-                                id: selectedPaciente.id,
-                                nome: selectedPaciente.nome,
-                                nome_social: (selectedPaciente as any).nome_social,
-                                cpf: selectedPaciente.cpf || undefined,
-                                data_nascimento: selectedPaciente.data_nascimento || undefined,
-                                sexo: selectedPaciente.sexo || undefined,
-                                telefone: selectedPaciente.telefone || undefined,
-                                email: selectedPaciente.email || undefined,
-                                alergias: selectedPaciente.alergias || [],
-                              },
-                              prontuarios: historicoEvolucoes.map((p: any) => ({
-                                id: p.id,
-                                data: p.data,
-                                queixa_principal: p.queixa_principal,
-                                historia_doenca_atual: p.historia_doenca_atual,
-                                hipotese_diagnostica: p.hipotese_diagnostica,
-                                diagnostico_principal: p.diagnostico_principal,
-                                conduta: p.conduta,
-                                sinais_vitais: p.sinais_vitais,
-                                medico_nome: p.medicos?.nome,
-                                medico_crm: p.medicos?.crm,
-                              })),
-                            };
-                            const json = exportToFHIR(exportData);
-                            downloadClinicalExport(json, `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'json');
-                            toast({ title: 'Exportado', description: 'Arquivo FHIR JSON baixado com sucesso.' });
-                          }}
-                        >
-                          <FileDown className="h-4 w-4" />Exportar FHIR JSON
-                        </Button>
-                      </Card>
-                      <Card className="p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">XML</Badge>
-                          <span className="font-medium text-sm">CDA / HL7 v3</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Formato XML estruturado baseado no Clinical Document Architecture. Compatível com sistemas legados.</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full gap-2"
-                          onClick={() => {
-                            const exportData = {
-                              paciente: {
-                                id: selectedPaciente.id,
-                                nome: selectedPaciente.nome,
-                                nome_social: (selectedPaciente as any).nome_social,
-                                cpf: selectedPaciente.cpf || undefined,
-                                data_nascimento: selectedPaciente.data_nascimento || undefined,
-                                sexo: selectedPaciente.sexo || undefined,
-                                alergias: selectedPaciente.alergias || [],
-                              },
-                              prontuarios: historicoEvolucoes.map((p: any) => ({
-                                id: p.id,
-                                data: p.data,
-                                queixa_principal: p.queixa_principal,
-                                hipotese_diagnostica: p.hipotese_diagnostica,
-                                diagnostico_principal: p.diagnostico_principal,
-                                conduta: p.conduta,
-                                sinais_vitais: p.sinais_vitais,
-                                medico_nome: p.medicos?.nome,
-                                medico_crm: p.medicos?.crm,
-                              })),
-                            };
-                            const xml = exportToXML(exportData);
-                            downloadClinicalExport(xml, `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'xml');
-                            toast({ title: 'Exportado', description: 'Arquivo XML CDA baixado com sucesso.' });
-                          }}
-                        >
-                          <FileDown className="h-4 w-4" />Exportar XML CDA
-                        </Button>
-                      </Card>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>Conforme Art. 18 da LGPD — direito de portabilidade dos dados.</span>
-                    </div>
+                    </TabsList>
                   </div>
-                </TabsContent>
-              </Tabs>
-            )}
-          </CardContent>
-        </Card>
+
+                  <div className="p-4">
+                    <TabsContent value="evolucoes" className="mt-0">
+                      {pacienteProntuarios.length === 0 ? (
+                        <div className="flex flex-col items-center py-14 text-muted-foreground">
+                          <FileText className="h-8 w-8 opacity-20 mb-2" />
+                          <p className="text-xs">Nenhuma evolução registrada</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {pacienteProntuarios.map((p, idx) => (
+                            <motion.div
+                              key={p.id}
+                              initial={{ opacity: 0, y: 4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: idx * 0.02 }}
+                              className="group border border-border/40 rounded-xl p-3.5 hover:border-primary/30 cursor-pointer transition-all hover:bg-primary/[0.02]"
+                              onClick={() => handleViewProntuario(p)}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
+                                      {format(new Date(p.data), 'dd/MM/yyyy')}
+                                    </Badge>
+                                    {p.diagnostico_principal && (
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{p.diagnostico_principal}</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-xs font-semibold text-foreground truncate">{p.queixa_principal}</p>
+                                  {p.conduta && <p className="text-[11px] text-muted-foreground line-clamp-1">Conduta: {p.conduta}</p>}
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="solicitacoes" className="mt-0">
+                      <RelatedRecords pacienteId={selectedPacienteId!} />
+                    </TabsContent>
+
+                    <TabsContent value="timeline" className="mt-0">
+                      <PatientTimeline pacienteId={selectedPacienteId!} maxItems={30} />
+                    </TabsContent>
+
+                    <TabsContent value="vitais" className="mt-0">
+                      <VitalSignsChart pacienteId={selectedPacienteId!} />
+                    </TabsContent>
+
+                    <TabsContent value="ficha" className="mt-0">
+                      <FichaPaciente paciente={selectedPaciente} convenioNome={getConvenioNome(selectedPaciente.convenio_id)} />
+                    </TabsContent>
+
+                    <TabsContent value="exportar" className="mt-0">
+                      <div className="space-y-4">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <Share2 className="h-3.5 w-3.5" />
+                          Exporte dados clínicos em formatos interoperáveis (HL7 FHIR / XML CDA).
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="border rounded-xl p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px]">JSON</Badge>
+                              <span className="text-xs font-bold">HL7 FHIR R4</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">Padrão internacional para interoperabilidade em saúde.</p>
+                            <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => {
+                              const exportData = {
+                                paciente: {
+                                  id: selectedPaciente.id, nome: selectedPaciente.nome,
+                                  nome_social: (selectedPaciente as any).nome_social,
+                                  cpf: selectedPaciente.cpf || undefined, data_nascimento: selectedPaciente.data_nascimento || undefined,
+                                  sexo: selectedPaciente.sexo || undefined, telefone: selectedPaciente.telefone || undefined,
+                                  email: selectedPaciente.email || undefined, alergias: selectedPaciente.alergias || [],
+                                },
+                                prontuarios: historicoEvolucoes.map((p: any) => ({
+                                  id: p.id, data: p.data, queixa_principal: p.queixa_principal,
+                                  historia_doenca_atual: p.historia_doenca_atual, hipotese_diagnostica: p.hipotese_diagnostica,
+                                  diagnostico_principal: p.diagnostico_principal, conduta: p.conduta,
+                                  sinais_vitais: p.sinais_vitais, medico_nome: p.medicos?.nome, medico_crm: p.medicos?.crm,
+                                })),
+                              };
+                              downloadClinicalExport(exportToFHIR(exportData), `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'json');
+                              toast({ title: 'Exportado', description: 'FHIR JSON baixado.' });
+                            }}>
+                              <FileDown className="h-3.5 w-3.5" />Exportar FHIR
+                            </Button>
+                          </div>
+                          <div className="border rounded-xl p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px]">XML</Badge>
+                              <span className="text-xs font-bold">CDA / HL7 v3</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">XML baseado no Clinical Document Architecture.</p>
+                            <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => {
+                              const exportData = {
+                                paciente: {
+                                  id: selectedPaciente.id, nome: selectedPaciente.nome,
+                                  nome_social: (selectedPaciente as any).nome_social,
+                                  cpf: selectedPaciente.cpf || undefined, data_nascimento: selectedPaciente.data_nascimento || undefined,
+                                  sexo: selectedPaciente.sexo || undefined, alergias: selectedPaciente.alergias || [],
+                                },
+                                prontuarios: historicoEvolucoes.map((p: any) => ({
+                                  id: p.id, data: p.data, queixa_principal: p.queixa_principal,
+                                  hipotese_diagnostica: p.hipotese_diagnostica, diagnostico_principal: p.diagnostico_principal,
+                                  conduta: p.conduta, sinais_vitais: p.sinais_vitais,
+                                  medico_nome: p.medicos?.nome, medico_crm: p.medicos?.crm,
+                                })),
+                              };
+                              downloadClinicalExport(exportToXML(exportData), `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'xml');
+                              toast({ title: 'Exportado', description: 'XML CDA baixado.' });
+                            }}>
+                              <FileDown className="h-3.5 w-3.5" />Exportar XML
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <ShieldCheck className="h-3 w-3" />Art. 18 LGPD — direito de portabilidade dos dados.
+                        </p>
+                      </div>
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </Card>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ─── Prontuário Dialog ─── */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ─── Prontuário Dialog ─────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <Dialog open={isProntuarioOpen} onOpenChange={setIsProntuarioOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-gradient-to-b from-card to-card/95 backdrop-blur-xl">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center justify-between flex-wrap gap-2">
-              <span className="flex items-center gap-2">
-                <Stethoscope className="h-5 w-5 text-primary" />
+              <span className="flex items-center gap-2 text-base">
+                <Stethoscope className="h-4 w-4 text-primary" />
                 {currentProntuario.id ? 'Prontuário' : 'Novo Atendimento'}
-                {selectedPaciente && <span className="text-muted-foreground font-normal">— {selectedPaciente.nome}</span>}
+                {selectedPaciente && <span className="text-muted-foreground font-normal text-sm">— {selectedPaciente.nome}</span>}
               </span>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap">
                 {selectedPaciente && (medicoId || user?.id) && (
-                  <ReturnScheduler
-                    pacienteId={selectedPaciente.id}
-                    prontuarioId={currentProntuario.id}
-                    medicoId={medicoId || user!.id}
-                    compact
-                  />
+                  <ReturnScheduler pacienteId={selectedPaciente.id} prontuarioId={currentProntuario.id} medicoId={medicoId || user!.id} compact />
                 )}
                 {currentProntuario.id && (() => {
                   const buildPDF = () => {
-                    const medicoData = medicos.find((m: any) => m.id === currentProntuario.medico_id);
+                    const md = medicos.find((m: any) => m.id === currentProntuario.medico_id);
                     return gerarProntuarioPDF(
                       {
-                        nome: selectedPaciente?.nome || '',
-                        cpf: selectedPaciente?.cpf || undefined,
+                        nome: selectedPaciente?.nome || '', cpf: selectedPaciente?.cpf || undefined,
                         dataNascimento: selectedPaciente?.data_nascimento || undefined,
-                        alergias: selectedPaciente?.alergias || [],
-                        telefone: selectedPaciente?.telefone || undefined,
-                        email: selectedPaciente?.email || undefined,
-                        sexo: selectedPaciente?.sexo || undefined,
+                        alergias: selectedPaciente?.alergias || [], telefone: selectedPaciente?.telefone || undefined,
+                        email: selectedPaciente?.email || undefined, sexo: selectedPaciente?.sexo || undefined,
                         convenio: getConvenioNome(selectedPaciente?.convenio_id),
                         numeroCarteira: selectedPaciente?.numero_carteira || undefined,
                         nomeResponsavel: selectedPaciente?.nome_responsavel || undefined,
                       },
+                      { nome: md?.nome || user?.nome || 'Médico', crm: md?.crm, especialidade: md?.especialidade, rqe: md?.rqe, crmUf: md?.crm_uf },
                       {
-                        nome: medicoData?.nome || user?.nome || 'Médico',
-                        crm: medicoData?.crm,
-                        especialidade: medicoData?.especialidade,
-                        rqe: medicoData?.rqe,
-                        crmUf: medicoData?.crm_uf,
-                      },
-                      {
-                        data: currentProntuario.data,
-                        queixaPrincipal: currentProntuario.queixa_principal,
+                        data: currentProntuario.data, queixaPrincipal: currentProntuario.queixa_principal,
                         historiaDoencaAtual: currentProntuario.historia_doenca_atual,
                         historiaPatologicaPregressa: currentProntuario.historia_patologica_pregressa,
-                        historiaFamiliar: currentProntuario.historia_familiar,
-                        historiaSocial: currentProntuario.historia_social,
-                        revisaoSistemas: currentProntuario.revisao_sistemas,
-                        alergiasRelatadas: currentProntuario.alergias_relatadas,
-                        medicamentosEmUso: currentProntuario.medicamentos_em_uso,
-                        examesFisicos: currentProntuario.exames_fisicos,
-                        exameCabecaPescoco: currentProntuario.exame_cabeca_pescoco,
-                        exameTorax: currentProntuario.exame_torax,
-                        exameAbdomen: currentProntuario.exame_abdomen,
-                        exameMembros: currentProntuario.exame_membros,
-                        exameNeurologico: currentProntuario.exame_neurologico,
-                        examePele: currentProntuario.exame_pele,
-                        hipoteseDiagnostica: currentProntuario.hipotese_diagnostica,
-                        diagnosticoPrincipal: currentProntuario.diagnostico_principal,
+                        historiaFamiliar: currentProntuario.historia_familiar, historiaSocial: currentProntuario.historia_social,
+                        revisaoSistemas: currentProntuario.revisao_sistemas, alergiasRelatadas: currentProntuario.alergias_relatadas,
+                        medicamentosEmUso: currentProntuario.medicamentos_em_uso, examesFisicos: currentProntuario.exames_fisicos,
+                        exameCabecaPescoco: currentProntuario.exame_cabeca_pescoco, exameTorax: currentProntuario.exame_torax,
+                        exameAbdomen: currentProntuario.exame_abdomen, exameMembros: currentProntuario.exame_membros,
+                        exameNeurologico: currentProntuario.exame_neurologico, examePele: currentProntuario.exame_pele,
+                        hipoteseDiagnostica: currentProntuario.hipotese_diagnostica, diagnosticoPrincipal: currentProntuario.diagnostico_principal,
                         diagnosticosSecundarios: currentProntuario.diagnosticos_secundarios,
-                        conduta: currentProntuario.conduta,
-                        planoTerapeutico: currentProntuario.plano_terapeutico,
+                        conduta: currentProntuario.conduta, planoTerapeutico: currentProntuario.plano_terapeutico,
                         orientacoesPaciente: currentProntuario.orientacoes_paciente,
                         sinaisVitais: sinaisVitais as unknown as Record<string, string>,
                       },
                       prescricoes.filter(p => p.medicamento)
                     );
                   };
-                  const filename = `prontuario-${selectedPaciente?.nome?.replace(/\s+/g, '-') || 'paciente'}`;
+                  const fn = `prontuario-${selectedPaciente?.nome?.replace(/\s+/g, '-') || 'paciente'}`;
                   return (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => { openPDF(buildPDF()); }} className="gap-1.5">
-                        <ExternalLink className="h-3.5 w-3.5" />Visualizar
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => { downloadPDF(buildPDF(), filename); }} className="gap-1.5">
-                        <Printer className="h-3.5 w-3.5" />PDF
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          sharePDFWhatsApp(buildPDF(), filename, selectedPaciente?.telefone);
-                          toast({ title: 'WhatsApp', description: 'PDF baixado! Cole-o na conversa do WhatsApp que foi aberta.' });
-                        }}
-                        className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-950"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />WhatsApp
+                      <Button variant="outline" size="sm" onClick={() => openPDF(buildPDF())} className="gap-1 text-xs h-7"><ExternalLink className="h-3 w-3" />Visualizar</Button>
+                      <Button variant="outline" size="sm" onClick={() => downloadPDF(buildPDF(), fn)} className="gap-1 text-xs h-7"><Printer className="h-3 w-3" />PDF</Button>
+                      <Button variant="outline" size="sm" onClick={() => {
+                        sharePDFWhatsApp(buildPDF(), fn, selectedPaciente?.telefone);
+                        toast({ title: 'WhatsApp', description: 'PDF baixado! Cole na conversa.' });
+                      }} className="gap-1 text-xs h-7 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-950">
+                        <MessageCircle className="h-3 w-3" />WhatsApp
                       </Button>
                     </>
                   );
                 })()}
-                <Button variant="outline" size="sm" onClick={() => setShowDischargeReport(true)}>
-                  <FileCheck className="h-4 w-4 mr-1" />Alta
+                <Button variant="outline" size="sm" onClick={() => setShowDischargeReport(true)} className="text-xs h-7 gap-1">
+                  <FileCheck className="h-3 w-3" />Alta
                 </Button>
               </div>
             </DialogTitle>
           </DialogHeader>
 
-          {/* Patient ID summary in dialog */}
+          {/* Patient summary strip */}
           {selectedPaciente && (
-            <div className="flex-shrink-0 flex items-center gap-4 p-3.5 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent rounded-xl text-sm border border-primary/10">
-              <div className="flex items-center gap-2 flex-1 flex-wrap">
-                <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 font-semibold"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
-                <span className="text-muted-foreground font-medium">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
-                {selectedPaciente.cpf && <span className="text-muted-foreground">• CPF: {selectedPaciente.cpf}</span>}
-                <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
-              </div>
-              <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1 text-[10px] rounded-full px-2.5">
-                <ShieldCheck className="h-3 w-3" />LGPD
+            <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-xl text-xs border border-border/40">
+              <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 font-bold text-[10px]">
+                <User className="h-2.5 w-2.5" />{selectedPaciente.nome}
+              </Badge>
+              <span className="text-muted-foreground">{calcularIdade(selectedPaciente.data_nascimento)}a</span>
+              {selectedPaciente.cpf && <span className="text-muted-foreground">• {selectedPaciente.cpf}</span>}
+              <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
+              <Badge className="ml-auto bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 text-[9px] rounded-full px-2">
+                <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />LGPD
               </Badge>
             </div>
           )}
 
-          {selectedPaciente?.alergias && selectedPaciente.alergias.length > 0 && (
-            <AllergyAlert alergias={selectedPaciente.alergias} className="flex-shrink-0" />
-          )}
-
-          {/* Edit Lock Banner */}
+          {/* Read-only banner */}
           {isReadOnly && (
             <motion.div
-              initial={{ opacity: 0, y: -5 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex-shrink-0"
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-amber-500/8 border border-amber-500/25 rounded-xl"
             >
-              <div className="flex items-center gap-2 text-sm">
-                <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                <span className="text-amber-700 dark:text-amber-300 font-medium">
-                  Modo somente leitura — registros anteriores são protegidos por auditoria (CFM nº 1.821/07)
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRequestEdit}
-                className="gap-1.5 flex-shrink-0 border-amber-500/50 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
-              >
-                <PenLine className="h-3.5 w-3.5" />
-                Solicitar Edição
+              <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <span className="text-xs text-amber-700 dark:text-amber-300 font-medium flex-1">
+                Somente leitura — CFM nº 1.821/07
+              </span>
+              <Button variant="outline" size="sm" onClick={handleRequestEdit} className="h-6 text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10">
+                <PenLine className="h-3 w-3" />Solicitar Edição
               </Button>
             </motion.div>
           )}
 
+          {/* Scrollable content */}
           <ScrollArea className="flex-1 pr-4">
             <fieldset disabled={isReadOnly} className="contents">
-            <Tabs defaultValue="anamnese" className="w-full">
-              <TabsList className="grid w-full grid-cols-8 mb-4 bg-muted/50 backdrop-blur-sm rounded-xl p-1 h-auto">
-                <TabsTrigger value="anamnese" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><ClipboardList className="h-3.5 w-3.5" />Anamnese</TabsTrigger>
-                <TabsTrigger value="exame" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Stethoscope className="h-3.5 w-3.5" />Exame</TabsTrigger>
-                <TabsTrigger value="diagnostico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><BookOpen className="h-3.5 w-3.5" />Diagnóstico</TabsTrigger>
-                <TabsTrigger value="conduta" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><FileCheck className="h-3.5 w-3.5" />Conduta</TabsTrigger>
-                <TabsTrigger value="prescricao" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Pill className="h-3.5 w-3.5" />Prescrição</TabsTrigger>
-                <TabsTrigger value="anexos" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Paperclip className="h-3.5 w-3.5" />Anexos</TabsTrigger>
-                <TabsTrigger value="historico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><History className="h-3.5 w-3.5" />Histórico</TabsTrigger>
-                <TabsTrigger value="auditoria" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Shield className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="anamnese" className="w-full">
+                <TabsList className="grid w-full grid-cols-8 mb-3 h-auto p-0.5 bg-muted/40 rounded-xl">
+                  {[
+                    { val: 'anamnese', icon: ClipboardList, label: 'Anamnese' },
+                    { val: 'exame', icon: Stethoscope, label: 'Exame' },
+                    { val: 'diagnostico', icon: BookOpen, label: 'Diagnóstico' },
+                    { val: 'conduta', icon: FileCheck, label: 'Conduta' },
+                    { val: 'prescricao', icon: Pill, label: 'Prescrição' },
+                    { val: 'anexos', icon: Paperclip, label: 'Anexos' },
+                    { val: 'historico', icon: History, label: 'Histórico' },
+                    { val: 'auditoria', icon: Shield, label: 'Auditoria' },
+                  ].map(t => (
+                    <TabsTrigger key={t.val} value={t.val} className="text-[10px] gap-1 rounded-lg py-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                      <t.icon className="h-3 w-3" />{t.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-              {/* ─── Anamnese Tab ─── */}
-              <TabsContent value="anamnese" className="space-y-6 pt-2">
-                {/* SOAP Quick Templates */}
-                {!currentProntuario.id && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Templates SOAP</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        {
-                          label: 'Consulta de Rotina',
-                          data: {
-                            queixa_principal: 'Consulta de rotina / Check-up',
-                            historia_doenca_atual: 'Paciente comparece para avaliação de rotina. Nega queixas ativas. Refere estar em bom estado geral.',
-                            conduta: 'Solicitados exames de rotina. Orientações sobre hábitos saudáveis. Retorno com resultados.',
-                          },
-                        },
-                        {
-                          label: 'Retorno',
-                          data: {
-                            queixa_principal: 'Retorno com resultados de exames',
-                            historia_doenca_atual: 'Paciente retorna para avaliação de exames previamente solicitados. Nega intercorrências desde a última consulta.',
-                            conduta: 'Avaliação dos resultados. Conduta mantida/ajustada conforme achados.',
-                          },
-                        },
-                        {
-                          label: 'Pré-Natal',
-                          data: {
-                            queixa_principal: 'Consulta pré-natal',
-                            historia_doenca_atual: 'Gestante em acompanhamento pré-natal. IG: __ semanas. DUM: __/__/____. DPP: __/__/____. Movimentação fetal: presente/ausente. Queixas: nega.',
-                            revisao_sistemas: 'Náuseas: não. Vômitos: não. Sangramento: nega. Perdas vaginais: nega. Edema: nega. Contrações: nega.',
-                          },
-                        },
-                        {
-                          label: 'Pediatria',
-                          data: {
-                            queixa_principal: 'Puericultura / Acompanhamento infantil',
-                            historia_doenca_atual: 'Criança trazida para consulta de puericultura. Peso: __kg. Comprimento/Altura: __cm. PC: __cm. Desenvolvimento neuropsicomotor: adequado para a idade.',
-                            conduta: 'Avaliação do crescimento e desenvolvimento. Vacinação em dia. Orientações alimentares. Retorno conforme calendário de puericultura.',
-                          },
-                        },
-                        {
-                          label: 'Urgência',
-                          data: {
-                            queixa_principal: '',
-                            historia_doenca_atual: 'Início: ___. Duração: ___. Localização: ___. Intensidade: ___/10. Fatores de melhora: ___. Fatores de piora: ___. Sintomas associados: ___. Medicações utilizadas: ___.',
-                          },
-                        },
-                        {
-                          label: 'Ortopedia',
-                          data: {
-                            queixa_principal: 'Dor em ___',
-                            historia_doenca_atual: 'Paciente refere dor em ___ há ___. Mecanismo do trauma: ___. Limitação funcional: sim/não. Tratamento prévio: ___. Exames de imagem anteriores: ___.',
-                            conduta: 'Exame físico articular/muscular. Solicitar exames de imagem. Imobilização/repouso conforme necessário. Prescrição de analgesia. Fisioterapia. Retorno em ___ dias.',
-                          },
-                        },
-                        {
-                          label: 'Dermatologia',
-                          data: {
-                            queixa_principal: 'Lesão cutânea em ___',
-                            historia_doenca_atual: 'Paciente apresenta lesão em ___ há ___. Tipo: mácula/pápula/placa/nódulo/vesícula. Tamanho: ___cm. Prurido: sim/não. Dor: sim/não. Evolução: ___. Uso de produtos tópicos: ___.',
-                            conduta: 'Dermatoscopia: ___. Conduta: tratamento tópico/sistêmico/biópsia. Orientações sobre proteção solar. Retorno para reavaliação.',
-                          },
-                        },
-                      ].map(template => (
-                        <Button
-                          key={template.label}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 gap-1"
-                          onClick={() => {
-                            Object.entries(template.data).forEach(([field, value]) => {
-                              if (value) updateField(field, value);
-                            });
-                            toast({ title: 'Template aplicado', description: `"${template.label}" preenchido.` });
-                          }}
-                        >
-                          <Clipboard className="h-3 w-3" />
-                          {template.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <Separator />
-                  </div>
-                )}
-
-                <Section icon={AlertTriangle} title="Queixa Principal *">
-                  <Textarea
-                    placeholder="Descreva a queixa principal do paciente..."
-                    value={currentProntuario.queixa_principal || ''}
-                    onChange={e => updateField('queixa_principal', e.target.value)}
-                    rows={2}
-                  />
-                </Section>
-
-                <Section icon={FileText} title="História da Doença Atual (HDA)">
-                  <Textarea
-                    placeholder="Evolução cronológica dos sintomas, fatores de melhora/piora, tratamentos anteriores..."
-                    value={currentProntuario.historia_doenca_atual || ''}
-                    onChange={e => updateField('historia_doenca_atual', e.target.value)}
-                    rows={4}
-                  />
-                </Section>
-
-                <Section icon={History} title="Histórico de Doenças Pregressas (HDP)" collapsible>
-                  <Textarea
-                    placeholder="Doenças prévias, cirurgias anteriores, internações, transfusões, traumas, doenças crônicas (diabetes, hipertensão)..."
-                    value={currentProntuario.historia_patologica_pregressa || ''}
-                    onChange={e => updateField('historia_patologica_pregressa', e.target.value)}
-                    rows={3}
-                  />
-                </Section>
-
-                <Section icon={ShieldCheck} title="Alergias e Medicamentos em Uso">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 text-destructive" />
-                        Alergias Relatadas (destaque obrigatório)
-                      </Label>
-                      <Textarea
-                        placeholder="Medicamentos, alimentos, substâncias, látex..."
-                        value={currentProntuario.alergias_relatadas || ''}
-                        onChange={e => updateField('alergias_relatadas', e.target.value)}
-                        rows={2}
-                        className="border-destructive/30"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs flex items-center gap-1">
-                        <Pill className="h-3 w-3" />
-                        Medicamentos em Uso (interações)
-                      </Label>
-                      <Textarea
-                        placeholder="Nome, dose, frequência — para verificar interações medicamentosas..."
-                        value={currentProntuario.medicamentos_em_uso || ''}
-                        onChange={e => updateField('medicamentos_em_uso', e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                </Section>
-
-                <Section icon={User} title="História Familiar (HF)" collapsible>
-                  <Textarea
-                    placeholder="Doenças familiares: DM, HAS, câncer, cardiopatias, doenças psiquiátricas..."
-                    value={currentProntuario.historia_familiar || ''}
-                    onChange={e => updateField('historia_familiar', e.target.value)}
-                    rows={2}
-                  />
-                </Section>
-
-                <Section icon={Clipboard} title="História Social (HS)" collapsible>
-                  <Textarea
-                    placeholder="Tabagismo, etilismo, drogas, profissão, atividade física, moradia, alimentação..."
-                    value={currentProntuario.historia_social || ''}
-                    onChange={e => updateField('historia_social', e.target.value)}
-                    rows={2}
-                  />
-                </Section>
-
-                <Section icon={ClipboardList} title="Revisão de Sistemas" collapsible>
-                  <Textarea
-                    placeholder="Cardiovascular, respiratório, gastrointestinal, geniturinário, neurológico, musculoesquelético, endócrino..."
-                    value={currentProntuario.revisao_sistemas || ''}
-                    onChange={e => updateField('revisao_sistemas', e.target.value)}
-                    rows={3}
-                  />
-                </Section>
-              </TabsContent>
-
-              {/* ─── Exame Físico Tab ─── */}
-              <TabsContent value="exame" className="space-y-6 pt-2">
-                <VitalSignsInput sinais={sinaisVitais} onChange={setSinaisVitais} />
-
-                <Separator />
-
-                <Section icon={Stethoscope} title="Exame Físico Geral">
-                  <Textarea
-                    placeholder="Estado geral, nível de consciência, hidratação, coloração, postura..."
-                    value={currentProntuario.exames_fisicos || ''}
-                    onChange={e => updateField('exames_fisicos', e.target.value)}
-                    rows={3}
-                  />
-                </Section>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Section icon={EyeIcon} title="Cabeça e Pescoço" collapsible>
-                    <Textarea
-                      placeholder="Olhos, ouvidos, nariz, orofaringe, tireoide, linfonodos..."
-                      value={currentProntuario.exame_cabeca_pescoco || ''}
-                      onChange={e => updateField('exame_cabeca_pescoco', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-
-                  <Section icon={Heart} title="Tórax (Cardiopulmonar)" collapsible>
-                    <Textarea
-                      placeholder="Ausculta cardíaca, ausculta pulmonar, percussão, inspeção..."
-                      value={currentProntuario.exame_torax || ''}
-                      onChange={e => updateField('exame_torax', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-
-                  <Section icon={Activity} title="Abdome" collapsible>
-                    <Textarea
-                      placeholder="Inspeção, ausculta, percussão, palpação superficial e profunda..."
-                      value={currentProntuario.exame_abdomen || ''}
-                      onChange={e => updateField('exame_abdomen', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-
-                  <Section icon={Bone} title="Membros / Extremidades" collapsible>
-                    <Textarea
-                      placeholder="Edema, pulsos, varizes, deformidades, mobilidade articular..."
-                      value={currentProntuario.exame_membros || ''}
-                      onChange={e => updateField('exame_membros', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-
-                  <Section icon={Brain} title="Exame Neurológico" collapsible>
-                    <Textarea
-                      placeholder="Força, sensibilidade, reflexos, coordenação, marcha, pares cranianos..."
-                      value={currentProntuario.exame_neurologico || ''}
-                      onChange={e => updateField('exame_neurologico', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-
-                  <Section icon={Stethoscope} title="Pele / Tegumentar" collapsible>
-                    <Textarea
-                      placeholder="Lesões, coloração, umidade, turgor, cicatrizes..."
-                      value={currentProntuario.exame_pele || ''}
-                      onChange={e => updateField('exame_pele', e.target.value)}
-                      rows={3}
-                    />
-                  </Section>
-                </div>
-              </TabsContent>
-
-              {/* ─── Diagnóstico Tab ─── */}
-              <TabsContent value="diagnostico" className="space-y-6 pt-2">
-                <Section icon={BookOpen} title="Hipótese Diagnóstica (CID-10)">
-                  <Cid10Search
-                    value={currentProntuario.hipotese_diagnostica || ''}
-                    onChange={v => updateField('hipotese_diagnostica', v)}
-                  />
-                </Section>
-
-                <Section icon={FileCheck} title="Diagnóstico Principal">
-                  <Input
-                    placeholder="Diagnóstico principal confirmado ou mais provável"
-                    value={currentProntuario.diagnostico_principal || ''}
-                    onChange={e => updateField('diagnostico_principal', e.target.value)}
-                  />
-                </Section>
-
-                <Section icon={ClipboardList} title="Diagnósticos Secundários" collapsible>
-                  <Textarea
-                    placeholder="Comorbidades e diagnósticos associados, um por linha"
-                    value={(currentProntuario.diagnosticos_secundarios || []).join('\n')}
-                    onChange={e => updateField('diagnosticos_secundarios', e.target.value.split('\n').filter(Boolean))}
-                    rows={3}
-                  />
-                </Section>
-              </TabsContent>
-
-              {/* ─── Conduta Tab ─── */}
-              <TabsContent value="conduta" className="space-y-6 pt-2">
-                <Section icon={FileCheck} title="Conduta">
-                  <Textarea
-                    placeholder="Conduta terapêutica, solicitação de exames, encaminhamentos..."
-                    value={currentProntuario.conduta || ''}
-                    onChange={e => updateField('conduta', e.target.value)}
-                    rows={4}
-                  />
-                </Section>
-
-                <Section icon={ClipboardList} title="Plano Terapêutico">
-                  <Textarea
-                    placeholder="Plano detalhado: medicamentoso, dietético, reabilitação, acompanhamento..."
-                    value={currentProntuario.plano_terapeutico || ''}
-                    onChange={e => updateField('plano_terapeutico', e.target.value)}
-                    rows={3}
-                  />
-                </Section>
-
-                <Section icon={User} title="Orientações ao Paciente">
-                  <Textarea
-                    placeholder="Orientações de cuidado, retorno, sinais de alarme, dieta..."
-                    value={currentProntuario.orientacoes_paciente || ''}
-                    onChange={e => updateField('orientacoes_paciente', e.target.value)}
-                    rows={3}
-                  />
-                </Section>
-
-                <Section icon={ShieldCheck} title="Observações Internas (não imprime)" collapsible>
-                  <Textarea
-                    placeholder="Anotações internas da equipe, não compartilhadas com o paciente..."
-                    value={currentProntuario.observacoes_internas || ''}
-                    onChange={e => updateField('observacoes_internas', e.target.value)}
-                    rows={2}
-                    className="border-dashed"
-                  />
-                </Section>
-              </TabsContent>
-
-              {/* ─── Prescrição Tab ─── */}
-              <TabsContent value="prescricao" className="space-y-4 pt-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <Pill className="h-4 w-4" /> Receituário Digital
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)} className="gap-1">
-                      <CalendarCheck className="h-4 w-4" />Protocolos
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleAddPrescricao} className="gap-1">
-                      <Plus className="h-4 w-4" />Adicionar
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-                  <BadgeCheck className="h-3.5 w-3.5" />
-                  <span>Prescrição digital com validade jurídica — assinatura eletrônica ICP-Brasil via Memed</span>
-                </div>
-
-                {prescricoes.length === 0 ? (
-                  <div className="flex flex-col items-center py-12 text-muted-foreground">
-                    <Pill className="h-10 w-10 mb-2 opacity-30" />
-                    <p className="text-sm">Nenhuma prescrição adicionada</p>
-                    <Button variant="link" size="sm" onClick={handleAddPrescricao}>Adicionar medicamento</Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {prescricoes.map((presc, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm">Medicamento {i + 1}</span>
-                          <Button variant="ghost" size="sm" onClick={() => handleRemovePrescricao(i)} className="text-destructive h-7">
-                            <X className="h-3.5 w-3.5" />
+                {/* ─── Anamnese ─── */}
+                <TabsContent value="anamnese" className="space-y-4 pt-1">
+                  {!currentProntuario.id && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                        <BookOpen className="h-3 w-3" />Templates SOAP
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { label: 'Rotina', data: { queixa_principal: 'Consulta de rotina / Check-up', historia_doenca_atual: 'Paciente comparece para avaliação de rotina. Nega queixas ativas.', conduta: 'Exames de rotina. Orientações. Retorno com resultados.' } },
+                          { label: 'Retorno', data: { queixa_principal: 'Retorno com resultados', historia_doenca_atual: 'Retorna para avaliação de exames. Nega intercorrências.' } },
+                          { label: 'Pré-Natal', data: { queixa_principal: 'Consulta pré-natal', historia_doenca_atual: 'Gestante. IG: __ sem. DUM: __. Mov. fetal: presente.' } },
+                          { label: 'Pediatria', data: { queixa_principal: 'Puericultura', historia_doenca_atual: 'Acompanhamento infantil. Peso: __kg. Altura: __cm.' } },
+                          { label: 'Urgência', data: { queixa_principal: '', historia_doenca_atual: 'Início: ___. Duração: ___. Localização: ___. Intensidade: ___/10.' } },
+                          { label: 'Ortopedia', data: { queixa_principal: 'Dor em ___', historia_doenca_atual: 'Dor há ___. Mecanismo do trauma: ___. Limitação funcional: ___.' } },
+                          { label: 'Dermatologia', data: { queixa_principal: 'Lesão cutânea', historia_doenca_atual: 'Lesão em ___. Tipo: ___. Tamanho: ___cm. Prurido: ___.' } },
+                        ].map(t => (
+                          <Button key={t.label} variant="outline" size="sm" className="text-[10px] h-6 gap-1 px-2" onClick={() => {
+                            Object.entries(t.data).forEach(([f, v]) => { if (v) updateField(f, v); });
+                            toast({ title: 'Template aplicado', description: `"${t.label}" preenchido.` });
+                          }}>
+                            <Clipboard className="h-2.5 w-2.5" />{t.label}
                           </Button>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          <div className="col-span-2 md:col-span-3">
-                            <Input placeholder="Nome do medicamento *" value={presc.medicamento} onChange={e => handleUpdatePrescricao(i, 'medicamento', e.target.value)} />
-                          </div>
-                          <Input placeholder="Dosagem (ex: 500mg)" value={presc.dosagem} onChange={e => handleUpdatePrescricao(i, 'dosagem', e.target.value)} />
-                          <Input placeholder="Posologia (ex: 8/8h)" value={presc.posologia} onChange={e => handleUpdatePrescricao(i, 'posologia', e.target.value)} />
-                          <Input placeholder="Duração (ex: 7 dias)" value={presc.duracao} onChange={e => handleUpdatePrescricao(i, 'duracao', e.target.value)} />
-                          <Input placeholder="Quantidade" value={presc.quantidade} onChange={e => handleUpdatePrescricao(i, 'quantidade', e.target.value)} />
-                          <div className="col-span-2">
-                            <Input placeholder="Observações" value={presc.observacoes} onChange={e => handleUpdatePrescricao(i, 'observacoes', e.target.value)} />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* ─── Anexos Tab ─── */}
-              <TabsContent value="anexos" className="pt-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2 mb-4">
-                  <Paperclip className="h-3.5 w-3.5" />
-                  <span>Upload de PDFs, imagens e resultados de exames. Armazenamento seguro conforme LGPD.</span>
-                </div>
-                {currentProntuario.id && selectedPacienteId ? (
-                  <AnexosWrapper pacienteId={selectedPacienteId} prontuarioId={currentProntuario.id} />
-                ) : (
-                  <div className="flex flex-col items-center py-12 text-muted-foreground">
-                    <Paperclip className="h-10 w-10 mb-2 opacity-30" />
-                    <p className="text-sm">Salve o prontuário primeiro para adicionar anexos</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* ─── Histórico Tab ─── */}
-              <TabsContent value="historico" className="pt-2">
-                {loadingHistorico ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
-                  </div>
-                ) : historicoEvolucoes.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-12">Nenhum registro anterior</p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {historicoEvolucoes.map((ev, idx) => (
-                      <motion.div
-                        key={ev.id}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className="relative border border-border/50 rounded-xl p-4 space-y-2 bg-card/50 hover:bg-muted/20 transition-colors"
-                      >
-                        <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-primary/40 to-transparent" />
-                        <div className="flex items-center gap-2 pl-2 flex-wrap">
-                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">{format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}</Badge>
-                          {ev.medicos && <span className="text-xs text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm} — {ev.medicos.especialidade}</span>}
-                          {ev.diagnostico_principal && <Badge variant="secondary" className="text-[11px]">{ev.diagnostico_principal}</Badge>}
-                        </div>
-                        <div className="pl-2 space-y-1">
-                          {ev.queixa_principal && <p className="text-sm"><span className="font-semibold text-foreground">QP:</span> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
-                          {ev.hipotese_diagnostica && <p className="text-sm"><span className="font-semibold text-foreground">HD:</span> <span className="text-muted-foreground">{ev.hipotese_diagnostica}</span></p>}
-                          {ev.conduta && <p className="text-sm"><span className="font-semibold text-foreground">Conduta:</span> <span className="text-muted-foreground">{ev.conduta}</span></p>}
-                        </div>
-                        {ev.sinais_vitais && Object.keys(ev.sinais_vitais).length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pl-2 mt-1">
-                            {ev.sinais_vitais.pressao_sistolica && (
-                              <Badge className="bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20 text-[10px]">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>
-                            )}
-                            {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20 text-[10px]">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                            {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 text-[10px]">T: {ev.sinais_vitais.temperatura}°C</Badge>}
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* ─── Auditoria Tab ─── */}
-              <TabsContent value="auditoria" className="pt-2">
-                {currentProntuario.id ? (
-                  <ProntuarioAuditLog prontuarioId={currentProntuario.id} />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>Em conformidade com LGPD e normas do CFM. Todos os acessos são registrados.</span>
+                        ))}
+                      </div>
+                      <Separator />
                     </div>
-                    <div className="space-y-3 text-sm">
-                      <h4 className="font-semibold text-muted-foreground uppercase tracking-wide text-xs flex items-center gap-2">
-                        <Lock className="h-4 w-4" /> Níveis de Acesso
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 border rounded p-2.5">
-                          <Badge variant="outline" className="text-[10px]">Admin</Badge>
-                          <span className="text-muted-foreground">Acesso total ao prontuário e auditoria</span>
-                        </div>
-                        <div className="flex items-center gap-2 border rounded p-2.5">
-                          <Badge variant="outline" className="text-[10px]">Médico</Badge>
-                          <span className="text-muted-foreground">Leitura e escrita do prontuário clínico</span>
-                        </div>
-                        <div className="flex items-center gap-2 border rounded p-2.5">
-                          <Badge variant="outline" className="text-[10px]">Enfermagem</Badge>
-                          <span className="text-muted-foreground">Leitura do prontuário, triagem e sinais vitais</span>
-                        </div>
-                        <div className="flex items-center gap-2 border rounded p-2.5">
-                          <Badge variant="outline" className="text-[10px]">Recepção</Badge>
-                          <span className="text-muted-foreground">Apenas agenda e dados cadastrais — sem acesso ao histórico médico</span>
-                        </div>
-                        <div className="flex items-center gap-2 border rounded p-2.5">
-                          <Badge variant="outline" className="text-[10px]">Financeiro</Badge>
-                          <span className="text-muted-foreground">Sem acesso ao prontuário clínico</span>
-                        </div>
+                  )}
+
+                  <Section icon={AlertTriangle} title="Queixa Principal *">
+                    <Textarea placeholder="Queixa principal..." value={currentProntuario.queixa_principal || ''} onChange={e => updateField('queixa_principal', e.target.value)} rows={2} />
+                  </Section>
+                  <Section icon={FileText} title="História da Doença Atual (HDA)">
+                    <Textarea placeholder="Evolução cronológica, fatores de melhora/piora..." value={currentProntuario.historia_doenca_atual || ''} onChange={e => updateField('historia_doenca_atual', e.target.value)} rows={4} />
+                  </Section>
+                  <Section icon={History} title="Doenças Pregressas (HDP)" collapsible>
+                    <Textarea placeholder="Doenças prévias, cirurgias, internações..." value={currentProntuario.historia_patologica_pregressa || ''} onChange={e => updateField('historia_patologica_pregressa', e.target.value)} rows={3} />
+                  </Section>
+                  <Section icon={ShieldCheck} title="Alergias e Medicamentos">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5 text-destructive" />Alergias</Label>
+                        <Textarea placeholder="Medicamentos, alimentos..." value={currentProntuario.alergias_relatadas || ''} onChange={e => updateField('alergias_relatadas', e.target.value)} rows={2} className="border-destructive/30" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] flex items-center gap-1"><Pill className="h-2.5 w-2.5" />Em uso</Label>
+                        <Textarea placeholder="Medicamentos em uso..." value={currentProntuario.medicamentos_em_uso || ''} onChange={e => updateField('medicamentos_em_uso', e.target.value)} rows={2} />
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground text-center py-4">Salve o prontuário para ver a trilha de auditoria completa</p>
+                  </Section>
+                  <Section icon={User} title="História Familiar" collapsible>
+                    <Textarea placeholder="DM, HAS, câncer, cardiopatias..." value={currentProntuario.historia_familiar || ''} onChange={e => updateField('historia_familiar', e.target.value)} rows={2} />
+                  </Section>
+                  <Section icon={Clipboard} title="História Social" collapsible>
+                    <Textarea placeholder="Tabagismo, etilismo, profissão..." value={currentProntuario.historia_social || ''} onChange={e => updateField('historia_social', e.target.value)} rows={2} />
+                  </Section>
+                  <Section icon={ClipboardList} title="Revisão de Sistemas" collapsible>
+                    <Textarea placeholder="Cardiovascular, respiratório, GI, neuro..." value={currentProntuario.revisao_sistemas || ''} onChange={e => updateField('revisao_sistemas', e.target.value)} rows={3} />
+                  </Section>
+                </TabsContent>
+
+                {/* ─── Exame Físico ─── */}
+                <TabsContent value="exame" className="space-y-4 pt-1">
+                  <VitalSignsInput sinais={sinaisVitais} onChange={setSinaisVitais} />
+                  <Separator />
+                  <Section icon={Stethoscope} title="Exame Físico Geral">
+                    <Textarea placeholder="Estado geral, consciência, hidratação..." value={currentProntuario.exames_fisicos || ''} onChange={e => updateField('exames_fisicos', e.target.value)} rows={3} />
+                  </Section>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Section icon={EyeIcon} title="Cabeça e Pescoço" collapsible>
+                      <Textarea placeholder="Olhos, ouvidos, tireoide..." value={currentProntuario.exame_cabeca_pescoco || ''} onChange={e => updateField('exame_cabeca_pescoco', e.target.value)} rows={3} />
+                    </Section>
+                    <Section icon={Heart} title="Tórax" collapsible>
+                      <Textarea placeholder="Ausculta cardíaca/pulmonar..." value={currentProntuario.exame_torax || ''} onChange={e => updateField('exame_torax', e.target.value)} rows={3} />
+                    </Section>
+                    <Section icon={Activity} title="Abdome" collapsible>
+                      <Textarea placeholder="Inspeção, palpação..." value={currentProntuario.exame_abdomen || ''} onChange={e => updateField('exame_abdomen', e.target.value)} rows={3} />
+                    </Section>
+                    <Section icon={Bone} title="Membros" collapsible>
+                      <Textarea placeholder="Edema, pulsos, mobilidade..." value={currentProntuario.exame_membros || ''} onChange={e => updateField('exame_membros', e.target.value)} rows={3} />
+                    </Section>
+                    <Section icon={Brain} title="Neurológico" collapsible>
+                      <Textarea placeholder="Força, sensibilidade, reflexos..." value={currentProntuario.exame_neurologico || ''} onChange={e => updateField('exame_neurologico', e.target.value)} rows={3} />
+                    </Section>
+                    <Section icon={Stethoscope} title="Pele / Tegumentar" collapsible>
+                      <Textarea placeholder="Lesões, coloração, turgor..." value={currentProntuario.exame_pele || ''} onChange={e => updateField('exame_pele', e.target.value)} rows={3} />
+                    </Section>
                   </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                </TabsContent>
+
+                {/* ─── Diagnóstico ─── */}
+                <TabsContent value="diagnostico" className="space-y-4 pt-1">
+                  <Section icon={BookOpen} title="Hipótese Diagnóstica (CID-10)">
+                    <Cid10Search value={currentProntuario.hipotese_diagnostica || ''} onChange={v => updateField('hipotese_diagnostica', v)} />
+                  </Section>
+                  <Section icon={FileCheck} title="Diagnóstico Principal">
+                    <Input placeholder="Diagnóstico principal" value={currentProntuario.diagnostico_principal || ''} onChange={e => updateField('diagnostico_principal', e.target.value)} />
+                  </Section>
+                  <Section icon={ClipboardList} title="Diagnósticos Secundários" collapsible>
+                    <Textarea placeholder="Comorbidades, um por linha" value={(currentProntuario.diagnosticos_secundarios || []).join('\n')} onChange={e => updateField('diagnosticos_secundarios', e.target.value.split('\n').filter(Boolean))} rows={3} />
+                  </Section>
+                </TabsContent>
+
+                {/* ─── Conduta ─── */}
+                <TabsContent value="conduta" className="space-y-4 pt-1">
+                  <Section icon={FileCheck} title="Conduta">
+                    <Textarea placeholder="Conduta terapêutica, exames, encaminhamentos..." value={currentProntuario.conduta || ''} onChange={e => updateField('conduta', e.target.value)} rows={4} />
+                  </Section>
+                  <Section icon={ClipboardList} title="Plano Terapêutico">
+                    <Textarea placeholder="Plano detalhado..." value={currentProntuario.plano_terapeutico || ''} onChange={e => updateField('plano_terapeutico', e.target.value)} rows={3} />
+                  </Section>
+                  <Section icon={User} title="Orientações ao Paciente">
+                    <Textarea placeholder="Cuidados, retorno, sinais de alarme..." value={currentProntuario.orientacoes_paciente || ''} onChange={e => updateField('orientacoes_paciente', e.target.value)} rows={3} />
+                  </Section>
+                  <Section icon={ShieldCheck} title="Observações Internas" collapsible>
+                    <Textarea placeholder="Anotações internas (não imprime)..." value={currentProntuario.observacoes_internas || ''} onChange={e => updateField('observacoes_internas', e.target.value)} rows={2} className="border-dashed" />
+                  </Section>
+                </TabsContent>
+
+                {/* ─── Prescrição ─── */}
+                <TabsContent value="prescricao" className="space-y-3 pt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Pill className="h-3.5 w-3.5" />Receituário Digital
+                    </span>
+                    <div className="flex gap-1.5">
+                      <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)} className="text-[10px] h-6 gap-1"><CalendarCheck className="h-3 w-3" />Protocolos</Button>
+                      <Button variant="outline" size="sm" onClick={handleAddPrescricao} className="text-[10px] h-6 gap-1"><Plus className="h-3 w-3" />Adicionar</Button>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/40 rounded-lg p-2">
+                    <BadgeCheck className="h-3 w-3" />Prescrição digital — assinatura ICP-Brasil
+                  </p>
+                  {prescricoes.length === 0 ? (
+                    <div className="flex flex-col items-center py-10 text-muted-foreground">
+                      <Pill className="h-8 w-8 opacity-20 mb-2" />
+                      <p className="text-xs">Nenhuma prescrição</p>
+                      <Button variant="link" size="sm" onClick={handleAddPrescricao} className="text-xs">Adicionar medicamento</Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {prescricoes.map((presc, i) => (
+                        <div key={i} className="border rounded-xl p-3 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold">Medicamento {i + 1}</span>
+                            <Button variant="ghost" size="sm" onClick={() => handleRemovePrescricao(i)} className="text-destructive h-6 w-6 p-0"><X className="h-3 w-3" /></Button>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                            <div className="col-span-2 md:col-span-3">
+                              <Input placeholder="Nome do medicamento *" value={presc.medicamento} onChange={e => handleUpdatePrescricao(i, 'medicamento', e.target.value)} className="text-xs h-8" />
+                            </div>
+                            <Input placeholder="Dosagem" value={presc.dosagem} onChange={e => handleUpdatePrescricao(i, 'dosagem', e.target.value)} className="text-xs h-8" />
+                            <Input placeholder="Posologia" value={presc.posologia} onChange={e => handleUpdatePrescricao(i, 'posologia', e.target.value)} className="text-xs h-8" />
+                            <Input placeholder="Duração" value={presc.duracao} onChange={e => handleUpdatePrescricao(i, 'duracao', e.target.value)} className="text-xs h-8" />
+                            <Input placeholder="Quantidade" value={presc.quantidade} onChange={e => handleUpdatePrescricao(i, 'quantidade', e.target.value)} className="text-xs h-8" />
+                            <div className="col-span-2">
+                              <Input placeholder="Observações" value={presc.observacoes} onChange={e => handleUpdatePrescricao(i, 'observacoes', e.target.value)} className="text-xs h-8" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ─── Anexos ─── */}
+                <TabsContent value="anexos" className="pt-1">
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/40 rounded-lg p-2 mb-3">
+                    <Paperclip className="h-3 w-3" />Upload de PDFs, imagens e exames — LGPD.
+                  </p>
+                  {currentProntuario.id && selectedPacienteId ? (
+                    <AnexosWrapper pacienteId={selectedPacienteId} prontuarioId={currentProntuario.id} />
+                  ) : (
+                    <div className="flex flex-col items-center py-10 text-muted-foreground">
+                      <Paperclip className="h-8 w-8 opacity-20 mb-2" />
+                      <p className="text-xs">Salve primeiro para anexar</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ─── Histórico ─── */}
+                <TabsContent value="historico" className="pt-1">
+                  {loadingHistorico ? (
+                    <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}</div>
+                  ) : historicoEvolucoes.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-10 text-xs">Nenhum registro anterior</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {historicoEvolucoes.map((ev, idx) => (
+                        <motion.div
+                          key={ev.id}
+                          initial={{ opacity: 0, x: -4 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.02 }}
+                          className="border border-border/40 rounded-xl p-3 space-y-1.5 hover:bg-muted/20 transition-colors"
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
+                              {format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}
+                            </Badge>
+                            {ev.medicos && <span className="text-[10px] text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm}</span>}
+                            {ev.diagnostico_principal && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ev.diagnostico_principal}</Badge>}
+                          </div>
+                          {ev.queixa_principal && <p className="text-xs"><strong>QP:</strong> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
+                          {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
+                          {ev.sinais_vitais && Object.keys(ev.sinais_vitais).some(k => ev.sinais_vitais[k]) && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
+                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                              {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ─── Auditoria ─── */}
+                <TabsContent value="auditoria" className="pt-1">
+                  {currentProntuario.id ? (
+                    <ProntuarioAuditLog prontuarioId={currentProntuario.id} />
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/40 rounded-lg p-2">
+                        <ShieldCheck className="h-3 w-3" />LGPD • CFM — Acessos registrados automaticamente.
+                      </p>
+                      <div className="space-y-1.5 text-xs">
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          <Lock className="h-3 w-3" />Níveis de Acesso
+                        </h4>
+                        {[
+                          { role: 'Admin', desc: 'Acesso total ao prontuário e auditoria' },
+                          { role: 'Médico', desc: 'Leitura e escrita do prontuário' },
+                          { role: 'Enfermagem', desc: 'Triagem e sinais vitais' },
+                          { role: 'Recepção', desc: 'Agenda e cadastro — sem histórico médico' },
+                          { role: 'Financeiro', desc: 'Sem acesso ao prontuário clínico' },
+                        ].map(r => (
+                          <div key={r.role} className="flex items-center gap-2 border border-border/40 rounded-lg px-2.5 py-1.5">
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0">{r.role}</Badge>
+                            <span className="text-muted-foreground text-[11px]">{r.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground text-center py-4">Salve para ver a trilha de auditoria</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </fieldset>
           </ScrollArea>
 
-          <DialogFooter className="flex-shrink-0 pt-4 border-t border-border/50">
+          {/* Footer */}
+          <DialogFooter className="flex-shrink-0 pt-3 border-t border-border/40">
             <div className="flex items-center gap-2 w-full justify-between">
               <div className="flex-1">
                 {currentProntuario.id && (
@@ -1714,9 +1321,9 @@ export default function Prontuarios() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} className="rounded-xl">Cancelar</Button>
+                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} size="sm" className="rounded-xl text-xs">Cancelar</Button>
                 {!isReadOnly && (
-                  <Button onClick={handleSave} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+                  <Button onClick={handleSave} size="sm" className="gap-1.5 rounded-xl text-xs"><Save className="h-3.5 w-3.5" />Salvar Prontuário</Button>
                 )}
               </div>
             </div>
@@ -1724,7 +1331,7 @@ export default function Prontuarios() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── Protocols Dialog ─── */}
+      {/* Protocols Dialog */}
       <Dialog open={showProtocols} onOpenChange={setShowProtocols}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Protocolos Clínicos</DialogTitle></DialogHeader>
