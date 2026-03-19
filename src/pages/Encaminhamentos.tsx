@@ -49,7 +49,6 @@ interface EncaminhamentoData {
   contra_referencia: string | null;
   data_contra_referencia: string | null;
   created_at: string | null;
-  created_at: string | null;
   paciente?: { nome: string } | null;
   medico_origem?: { nome: string | null; crm: string } | null;
 }
