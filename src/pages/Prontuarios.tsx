@@ -882,7 +882,7 @@ export default function Prontuarios() {
                 </div>
               </div>
               {selectedPaciente && (
-                <Button onClick={handleNovoProntuario} className="gap-2">
+                <Button onClick={handleNovoProntuario} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
                   <Plus className="h-4 w-4" />Novo Atendimento
                 </Button>
               )}
