@@ -1172,15 +1172,15 @@ export default function Prontuarios() {
 
           {/* Patient ID summary in dialog */}
           {selectedPaciente && (
-            <div className="flex-shrink-0 flex items-center gap-4 p-3 bg-muted/30 rounded-lg text-sm border">
+            <div className="flex-shrink-0 flex items-center gap-4 p-3.5 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent rounded-xl text-sm border border-primary/10">
               <div className="flex items-center gap-2 flex-1 flex-wrap">
-                <Badge variant="outline" className="gap-1"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
-                <span className="text-muted-foreground">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
+                <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 font-semibold"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
+                <span className="text-muted-foreground font-medium">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
                 {selectedPaciente.cpf && <span className="text-muted-foreground">• CPF: {selectedPaciente.cpf}</span>}
                 <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
               </div>
-              <Badge variant="outline" className="gap-1 text-[10px]">
-                <ShieldCheck className="h-3 w-3 text-green-500" />LGPD
+              <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1 text-[10px] rounded-full px-2.5">
+                <ShieldCheck className="h-3 w-3" />LGPD
               </Badge>
             </div>
           )}
