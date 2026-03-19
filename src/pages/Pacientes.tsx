@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePacientes } from '@/hooks/useSupabaseData';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
+import { PatientStats, PatientListTable } from '@/components/patients';
 import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert, Cid10Search, ClinicalProtocols, AnexosProntuario, DigitalSignature } from '@/components/clinical';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
