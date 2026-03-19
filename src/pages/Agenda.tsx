@@ -363,10 +363,6 @@ export default function Agenda() {
     return medico ? `Dr(a). ${medico.nome || medico.crm}` : 'Desconhecido';
   };
 
-  if (isLoading) {
-    return <AgendaSkeleton />;
-  }
-
   // Doctor color mapping
   const medicoColorMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -379,19 +375,21 @@ export default function Agenda() {
 
   // Monthly calendar data
   const monthDays = useMemo(() => {
-    const monthStart = startOfMonth(currentWeek);
-    const monthEnd = endOfMonth(currentWeek);
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
-    // Pad start to Monday
-    const startDay = getDay(monthStart);
-    const paddingBefore = (startDay === 0 ? 6 : startDay - 1);
-    const paddedStart = Array.from({ length: paddingBefore }, (_, i) => addDays(monthStart, -(paddingBefore - i)));
-    // Pad end to fill grid
-    const totalCells = Math.ceil((paddedStart.length + days.length) / 7) * 7;
-    const paddingAfter = totalCells - paddedStart.length - days.length;
-    const paddedEnd = Array.from({ length: paddingAfter }, (_, i) => addDays(monthEnd, i + 1));
-    return [...paddedStart, ...days, ...paddedEnd];
+    const ms = startOfMonth(currentWeek);
+    const me = endOfMonth(currentWeek);
+    const ds = eachDayOfInterval({ start: ms, end: me });
+    const sd = getDay(ms);
+    const pb = (sd === 0 ? 6 : sd - 1);
+    const paddedStart = Array.from({ length: pb }, (_, i) => addDays(ms, -(pb - i)));
+    const tc = Math.ceil((paddedStart.length + ds.length) / 7) * 7;
+    const pa = tc - paddedStart.length - ds.length;
+    const paddedEnd = Array.from({ length: pa }, (_, i) => addDays(me, i + 1));
+    return [...paddedStart, ...ds, ...paddedEnd];
   }, [currentWeek]);
+
+  if (isLoading) {
+    return <AgendaSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
