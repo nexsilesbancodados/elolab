@@ -114,7 +114,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
