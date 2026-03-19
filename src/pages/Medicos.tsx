@@ -167,7 +167,7 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
               <p className="text-sm font-semibold text-foreground">Portal do Médico</p>
             </div>
             <p className="text-[11px] text-muted-foreground mb-2.5">
-              Link de acesso ao portal exclusivo do médico com dashboard, agenda e prontuários.
+              Ao fazer login, o médico é redirecionado automaticamente para seu portal exclusivo com dashboard pessoal, agenda e prontuários.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -175,9 +175,9 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
                 variant="outline"
                 className="gap-1.5 text-xs"
                 onClick={() => {
-                  const portalUrl = `${window.location.origin}/dashboard`;
+                  const portalUrl = `${window.location.origin}/auth`;
                   navigator.clipboard.writeText(portalUrl);
-                  toast.success('Link do portal copiado!', { description: portalUrl });
+                  toast.success('Link de acesso copiado!', { description: portalUrl });
                 }}
               >
                 <Copy className="h-3 w-3" /> Copiar Link
@@ -188,13 +188,19 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
                   variant="default"
                   className="gap-1.5 text-xs"
                   onClick={() => {
-                    const portalUrl = `${window.location.origin}/dashboard`;
-                    const subject = encodeURIComponent('Acesso ao Portal do Médico — EloLab');
+                    const portalUrl = `${window.location.origin}/auth`;
+                    const subject = encodeURIComponent('Seu acesso ao Portal do Médico — EloLab');
                     const body = encodeURIComponent(
                       `Olá Dr(a). ${medico.nome || ''},\n\n` +
-                      `Segue o link de acesso ao seu Portal do Médico na plataforma EloLab:\n\n` +
-                      `${portalUrl}\n\n` +
-                      `Utilize suas credenciais de acesso para entrar.\n\n` +
+                      `Você possui acesso ao Portal do Médico na plataforma EloLab.\n\n` +
+                      `Para acessar seu portal exclusivo, entre pelo link abaixo com suas credenciais:\n\n` +
+                      `🔗 ${portalUrl}\n\n` +
+                      `Ao fazer login, você será direcionado automaticamente para seu dashboard pessoal, onde poderá:\n` +
+                      `• Consultar sua agenda do dia\n` +
+                      `• Acessar prontuários dos seus pacientes\n` +
+                      `• Emitir prescrições e atestados\n` +
+                      `• Visualizar suas estatísticas de atendimento\n\n` +
+                      `Caso ainda não tenha recebido suas credenciais, entre em contato com a administração da clínica.\n\n` +
                       `Atenciosamente,\nEquipe EloLab`
                     );
                     window.open(`mailto:${medico.email}?subject=${subject}&body=${body}`, '_blank');
@@ -203,6 +209,9 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
                 >
                   <Send className="h-3 w-3" /> Enviar por E-mail
                 </Button>
+              )}
+            </div>
+          </div>
               )}
             </div>
           </div>
