@@ -568,6 +568,7 @@ export default function Prontuarios() {
       posologia: p.posologia || '', duracao: p.duracao || '',
       quantidade: p.quantidade || '', observacoes: p.observacoes || '',
     })));
+    setIsEditing(false); // Existing records start read-only
     setIsProntuarioOpen(true);
 
     // Log access for audit
