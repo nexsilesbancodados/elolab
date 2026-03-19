@@ -1159,6 +1159,11 @@ export default function Prontuarios() {
 
                 {/* ─── Conduta ─── */}
                 <TabsContent value="conduta" className="space-y-4 pt-1">
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setShowProtocols(true)} className="text-[10px] h-6 gap-1">
+                      <CalendarCheck className="h-3 w-3" />Aplicar Protocolo Clínico
+                    </Button>
+                  </div>
                   <Section icon={FileCheck} title="Conduta">
                     <Textarea placeholder="Conduta terapêutica, exames, encaminhamentos..." value={currentProntuario.conduta || ''} onChange={e => updateField('conduta', e.target.value)} rows={4} />
                   </Section>
