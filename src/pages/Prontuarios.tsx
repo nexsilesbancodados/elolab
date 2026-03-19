@@ -1132,6 +1132,31 @@ export default function Prontuarios() {
             <AllergyAlert alergias={selectedPaciente.alergias} className="flex-shrink-0" />
           )}
 
+          {/* Edit Lock Banner */}
+          {isReadOnly && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex-shrink-0"
+            >
+              <div className="flex items-center gap-2 text-sm">
+                <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <span className="text-amber-700 dark:text-amber-300 font-medium">
+                  Modo somente leitura — registros anteriores são protegidos por auditoria (CFM nº 1.821/07)
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRequestEdit}
+                className="gap-1.5 flex-shrink-0 border-amber-500/50 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                Solicitar Edição
+              </Button>
+            </motion.div>
+          )}
+
           <ScrollArea className="flex-1 pr-4">
             <Tabs defaultValue="anamnese" className="w-full">
               <TabsList className="grid w-full grid-cols-8 mb-4">
