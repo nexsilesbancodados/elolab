@@ -141,7 +141,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api/, /^\/supabase/],
+        navigateFallbackDenylist: [/^\/api/, /^\/supabase/, /^\/~oauth/],
       },
     }),
   ].filter(Boolean),
