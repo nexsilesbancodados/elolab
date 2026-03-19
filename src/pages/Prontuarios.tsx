@@ -136,7 +136,7 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
         <div className="space-y-1">
           <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive" />PA (mmHg)</Label>
           <div className="flex gap-1 items-center">
-            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" />
+            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" disabled={disabled} />
             <span className="text-muted-foreground">/</span>
             <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm" />
           </div>
