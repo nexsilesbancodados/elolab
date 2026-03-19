@@ -229,88 +229,93 @@ function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome
   const isMenor = idade < 18;
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-      <div className="flex items-start gap-4">
-        <PatientPhoto
-          pacienteId={paciente.id}
-          pacienteNome={paciente.nome}
-          currentPhotoUrl={paciente.foto_url}
-          size="lg"
-          editable={false}
-        />
-        <div className="flex-1 min-w-0 space-y-1">
-          <h3 className="text-lg font-bold truncate">
-            {paciente.nome_social || paciente.nome}
-          </h3>
-          {paciente.nome_social && (
-            <p className="text-xs text-muted-foreground">
-              Registro civil: {paciente.nome}
-            </p>
-          )}
-          <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
-            <span>{idade} anos</span>
-            {paciente.sexo && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                {paciente.sexo === 'masculino' ? 'Masculino' : paciente.sexo === 'feminino' ? 'Feminino' : 'Outro'}
+    <div className="rounded-2xl border border-border/60 overflow-hidden bg-card shadow-sm">
+      {/* Gradient header band */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-4">
+        <div className="flex items-start gap-4">
+          <PatientPhoto
+            pacienteId={paciente.id}
+            pacienteNome={paciente.nome}
+            currentPhotoUrl={paciente.foto_url}
+            size="lg"
+            editable={false}
+          />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <h3 className="text-xl font-bold truncate text-foreground">
+              {paciente.nome_social || paciente.nome}
+            </h3>
+            {paciente.nome_social && (
+              <p className="text-xs text-muted-foreground">
+                Registro civil: {paciente.nome}
+              </p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
+                {idade} anos
               </Badge>
-            )}
-            {paciente.data_nascimento && (
-              <span>• Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
-            )}
+              {paciente.sexo && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  {paciente.sexo === 'masculino' ? '♂ Masculino' : paciente.sexo === 'feminino' ? '♀ Feminino' : 'Outro'}
+                </Badge>
+              )}
+              {paciente.data_nascimento && (
+                <span className="text-xs">Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
+              )}
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-3 space-y-3">
+        {/* Alergias em destaque */}
+        {paciente.alergias && paciente.alergias.length > 0 && (
+          <AllergyAlert alergias={paciente.alergias} />
+        )}
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {paciente.cpf && (
-            <div className="flex items-center gap-1.5 text-sm">
-              <FileText className="h-3 w-3 text-muted-foreground" />
-              <span>CPF: {paciente.cpf}</span>
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">CPF: {paciente.cpf}</span>
+            </div>
+          )}
+          {paciente.telefone && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground">{paciente.telefone}</span>
+            </div>
+          )}
+          {paciente.email && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm truncate">
+              <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">{paciente.email}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+            <Building2 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+            <span className="text-muted-foreground">{convenioNome}</span>
+          </div>
+          {paciente.numero_carteira && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <CreditCard className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">Carteira: {paciente.numero_carteira}</span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Alergias em destaque */}
-      {paciente.alergias && paciente.alergias.length > 0 && (
-        <AllergyAlert alergias={paciente.alergias} />
-      )}
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-        {paciente.telefone && (
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Phone className="h-3.5 w-3.5" />
-            <span>{paciente.telefone}</span>
-          </div>
-        )}
-        {paciente.email && (
-          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-            <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate">{paciente.email}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Building2 className="h-3.5 w-3.5" />
-          <span>{convenioNome}</span>
-        </div>
-        {paciente.numero_carteira && (
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <CreditCard className="h-3.5 w-3.5" />
-            <span>Carteira: {paciente.numero_carteira}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Responsável legal (menor) */}
-      {isMenor && paciente.nome_responsavel && (
-        <div className="border-t pt-2 mt-2">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Baby className="h-3.5 w-3.5 text-amber-500" />
-            <span className="font-medium">Responsável:</span>
+        {/* Responsável legal (menor) */}
+        {isMenor && paciente.nome_responsavel && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm">
+            <Baby className="h-4 w-4 text-amber-500 flex-shrink-0" />
+            <span className="font-medium text-amber-700 dark:text-amber-300">Responsável:</span>
             <span className="text-muted-foreground">
               {paciente.nome_responsavel}
               {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
               {paciente.cpf_responsavel && ` — CPF: ${paciente.cpf_responsavel}`}
             </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
