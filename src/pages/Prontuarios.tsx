@@ -186,18 +186,40 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
 }) {
   const [open, setOpen] = useState(!collapsible);
   return (
-    <div className="space-y-2">
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden"
+    >
       <button
         type="button"
         onClick={() => collapsible && setOpen(!open)}
-        className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide w-full"
+        className="flex items-center gap-2.5 px-4 py-3 w-full hover:bg-muted/30 transition-colors"
       >
-        <Icon className="h-4 w-4" />
-        {title}
-        {collapsible && (open ? <ChevronDown className="h-3 w-3 ml-auto" /> : <ChevronRight className="h-3 w-3 ml-auto" />)}
+        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</span>
+        {collapsible && (
+          <motion.div animate={{ rotate: open ? 180 : 0 }} className="ml-auto">
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </motion.div>
+        )}
       </button>
-      {open && <div className="space-y-3">{children}</div>}
-    </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
