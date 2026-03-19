@@ -40,11 +40,11 @@ export function MainLayout() {
         <Navbar onMenuClick={() => setMobileMenuOpen(true)} />
         <main 
           id="main-content" 
-          className="flex-1 overflow-auto"
+          className="flex-1 overflow-auto overscroll-contain"
           role="main"
           tabIndex={-1}
         >
-          <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+          <div className="container mx-auto p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl">
             <Breadcrumbs />
             <div className="animate-fade-in">
               <Outlet />
