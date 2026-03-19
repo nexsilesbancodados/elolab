@@ -120,11 +120,12 @@ export default function Agenda() {
   };
 
   // Auto-set filter to own doctor when logged in as medico-only
-  useMemo(() => {
+  // Using useEffect instead of useMemo for side effects
+  useState(() => {
     if (isMedicoOnly && medicoId) {
       setSelectedMedico(medicoId);
     }
-  }, [isMedicoOnly, medicoId]);
+  });
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
