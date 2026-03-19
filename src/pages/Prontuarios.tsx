@@ -907,27 +907,41 @@ export default function Prontuarios() {
 
                 <TabsContent value="evolucoes" className="pt-4">
                   {pacienteProntuarios.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-12">Nenhuma evolução registrada</p>
+                    <div className="flex flex-col items-center py-16 text-muted-foreground">
+                      <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                        <FileText className="h-8 w-8 opacity-30" />
+                      </div>
+                      <p className="font-medium">Nenhuma evolução registrada</p>
+                      <p className="text-xs mt-1">Clique em "Novo Atendimento" para iniciar</p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
-                      {pacienteProntuarios.map(p => (
+                    <div className="space-y-2.5">
+                      {pacienteProntuarios.map((p, idx) => (
                         <motion.div
                           key={p.id}
-                          initial={{ opacity: 0, y: 5 }}
+                          initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="border rounded-lg p-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                          transition={{ delay: idx * 0.03 }}
+                          className="group relative border border-border/50 rounded-xl p-4 hover:bg-gradient-to-r hover:from-primary/[0.03] hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-sm hover:border-primary/20"
                           onClick={() => handleViewProntuario(p)}
                         >
+                          <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b from-primary/60 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">{format(new Date(p.data), 'dd/MM/yyyy')}</Badge>
-                                {p.diagnostico_principal && <Badge variant="secondary" className="text-xs">{p.diagnostico_principal}</Badge>}
+                            <div className="space-y-1.5 pl-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">
+                                  {format(new Date(p.data), 'dd/MM/yyyy')}
+                                </Badge>
+                                {p.diagnostico_principal && (
+                                  <Badge variant="secondary" className="text-[11px]">{p.diagnostico_principal}</Badge>
+                                )}
                               </div>
-                              <p className="text-sm font-medium">{p.queixa_principal}</p>
+                              <p className="text-sm font-semibold text-foreground">{p.queixa_principal}</p>
                               {p.conduta && <p className="text-xs text-muted-foreground line-clamp-1">Conduta: {p.conduta}</p>}
                             </div>
-                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+                              <FileText className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </div>
                           </div>
                         </motion.div>
                       ))}
