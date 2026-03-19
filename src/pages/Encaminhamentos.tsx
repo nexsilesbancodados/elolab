@@ -40,6 +40,9 @@ interface EncaminhamentoData {
   motivo: string;
   hipotese_diagnostica: string | null;
   cid_principal: string | null;
+  exames_realizados: string | null;
+  tratamento_atual: string | null;
+  informacoes_adicionais: string | null;
   status: string | null;
   data_encaminhamento: string | null;
   contra_referencia: string | null;
