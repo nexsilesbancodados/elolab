@@ -654,6 +654,13 @@ export default function Pacientes() {
                     <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Nome completo" />
                   </div>
                   <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      Nome Social
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 font-normal">Opcional</Badge>
+                    </Label>
+                    <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
+                  </div>
+                  <div className="space-y-2">
                     <Label>CPF *</Label>
                     <Input value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" />
                   </div>
