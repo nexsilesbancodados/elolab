@@ -828,12 +828,13 @@ export default function Prontuarios() {
               </div>
             ) : (
               <Tabs defaultValue="evolucoes" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                   <TabsTrigger value="evolucoes" className="gap-1.5 text-xs"><FileText className="h-3.5 w-3.5" />Evoluções</TabsTrigger>
                   <TabsTrigger value="solicitacoes" className="gap-1.5 text-xs"><TestTube className="h-3.5 w-3.5" />Solicitações</TabsTrigger>
                   <TabsTrigger value="timeline" className="gap-1.5 text-xs"><History className="h-3.5 w-3.5" />Timeline</TabsTrigger>
                   <TabsTrigger value="vitais" className="gap-1.5 text-xs"><Activity className="h-3.5 w-3.5" />Sinais</TabsTrigger>
                   <TabsTrigger value="identificacao" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" />Ficha</TabsTrigger>
+                  <TabsTrigger value="exportar" className="gap-1.5 text-xs"><Share2 className="h-3.5 w-3.5" />Exportar</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="evolucoes" className="pt-4">
