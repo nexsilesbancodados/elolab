@@ -373,6 +373,7 @@ export default function Atestados() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(atestado)} aria-label="Ver atestado"><Eye className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(atestado)} aria-label="Imprimir atestado"><Printer className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDuplicate(atestado)} aria-label="Duplicar atestado" title="Duplicar atestado"><Clipboard className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>

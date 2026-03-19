@@ -501,6 +501,74 @@ export default function Financeiro() {
           </CardContent>
         </Card>
       </motion.div>
+        </TabsContent>
+
+        {/* ─── DRE Tab ─── */}
+        <TabsContent value="dre" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Demonstrativo de Resultado do Exercício (DRE)
+              </CardTitle>
+              <CardDescription>Período: {format(range.start, 'dd/MM/yyyy')} a {format(range.end, 'dd/MM/yyyy')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {/* Receitas */}
+                <div className="font-semibold text-sm text-success py-2 border-b border-border">RECEITA BRUTA</div>
+                {Object.entries(dreData.receitasCats).sort(([,a],[,b]) => b - a).map(([cat, val]) => (
+                  <div key={cat} className="flex justify-between py-1.5 px-4 text-sm hover:bg-muted/30 rounded">
+                    <span className="text-muted-foreground">{cat}</span>
+                    <span className="tabular-nums font-medium text-success">+{fmt(val)}</span>
+                  </div>
+                ))}
+                {Object.keys(dreData.receitasCats).length === 0 && (
+                  <div className="text-sm text-muted-foreground px-4 py-2">Nenhuma receita no período</div>
+                )}
+                <div className="flex justify-between py-2 px-4 font-semibold text-sm border-t border-border bg-success/5 rounded">
+                  <span>Total Receitas</span>
+                  <span className="tabular-nums text-success">{fmt(dreData.totalReceitas)}</span>
+                </div>
+
+                <div className="h-3" />
+
+                {/* Despesas */}
+                <div className="font-semibold text-sm text-destructive py-2 border-b border-border">DESPESAS OPERACIONAIS</div>
+                {Object.entries(dreData.despesasCats).sort(([,a],[,b]) => b - a).map(([cat, val]) => (
+                  <div key={cat} className="flex justify-between py-1.5 px-4 text-sm hover:bg-muted/30 rounded">
+                    <span className="text-muted-foreground">{cat}</span>
+                    <span className="tabular-nums font-medium text-destructive">-{fmt(val)}</span>
+                  </div>
+                ))}
+                {Object.keys(dreData.despesasCats).length === 0 && (
+                  <div className="text-sm text-muted-foreground px-4 py-2">Nenhuma despesa no período</div>
+                )}
+                <div className="flex justify-between py-2 px-4 font-semibold text-sm border-t border-border bg-destructive/5 rounded">
+                  <span>Total Despesas</span>
+                  <span className="tabular-nums text-destructive">-{fmt(dreData.totalDespesas)}</span>
+                </div>
+
+                <div className="h-3" />
+
+                {/* Resultado */}
+                <div className={cn(
+                  "flex justify-between py-3 px-4 font-bold text-base rounded-lg border-2",
+                  dreData.lucroLiquido >= 0
+                    ? "border-success/30 bg-success/10 text-success"
+                    : "border-destructive/30 bg-destructive/10 text-destructive"
+                )}>
+                  <span>RESULTADO LÍQUIDO</span>
+                  <div className="text-right">
+                    <span className="tabular-nums">{fmt(dreData.lucroLiquido)}</span>
+                    <span className="text-xs ml-2 opacity-70">({dreData.margem.toFixed(1)}% margem)</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
