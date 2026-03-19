@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
   Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
-  Key, RefreshCw,
+  Key, RefreshCw, CloudOff, Cloud,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,18 +15,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { getItem, setItem } from '@/lib/localStorage';
 import { BackupRestore } from '@/components/BackupRestore';
 import { AuditLog } from '@/components/AuditLog';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface ConfiguracaoClinica {
   nomeClinica: string;
@@ -53,12 +49,33 @@ interface ConfiguracaoNotificacoes {
   notificarAniversario: boolean;
 }
 
+const DEFAULT_CLINICA: ConfiguracaoClinica = {
+  nomeClinica: 'EloLab Clínica',
+  cnpj: '',
+  endereco: '',
+  telefone: '',
+  email: '',
+  website: '',
+  horarioAbertura: '08:00',
+  horarioFechamento: '18:00',
+  duracaoConsulta: 30,
+  intervaloConsultas: 5,
+  diasFuncionamento: ['seg', 'ter', 'qua', 'qui', 'sex'],
+};
+
+const DEFAULT_NOTIFICACOES: ConfiguracaoNotificacoes = {
+  emailLembrete: true,
+  smsLembrete: false,
+  whatsappLembrete: false,
+  antecedenciaLembrete: 24,
+  notificarCancelamento: true,
+  notificarNovoAgendamento: true,
+  notificarResultadoExame: true,
+  notificarAniversario: false,
+};
 
 function SettingRow({ icon: Icon, title, description, children }: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  children: React.ReactNode;
+  icon: React.ElementType; title: string; description: string; children: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-4">
@@ -76,66 +93,86 @@ function SettingRow({ icon: Icon, title, description, children }: {
   );
 }
 
-
-
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
-  
-  const [configClinica, setConfigClinica] = useState<ConfiguracaoClinica>(() => 
-    getItem('config_clinica') || {
-      nomeClinica: 'EloLab Clínica',
-      cnpj: '',
-      endereco: '',
-      telefone: '',
-      email: '',
-      website: '',
-      horarioAbertura: '08:00',
-      horarioFechamento: '18:00',
-      duracaoConsulta: 30,
-      intervaloConsultas: 5,
-      diasFuncionamento: ['seg', 'ter', 'qua', 'qui', 'sex'],
-    }
-  );
-
-  const [configNotificacoes, setConfigNotificacoes] = useState<ConfiguracaoNotificacoes>(() =>
-    getItem('config_notificacoes') || {
-      emailLembrete: true,
-      smsLembrete: false,
-      whatsappLembrete: false,
-      antecedenciaLembrete: 24,
-      notificarCancelamento: true,
-      notificarNovoAgendamento: true,
-      notificarResultadoExame: true,
-      notificarAniversario: false,
-    }
-  );
-
+  const { user } = useSupabaseAuth();
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+  const [configClinica, setConfigClinica] = useState<ConfiguracaoClinica>(DEFAULT_CLINICA);
+  const [configNotificacoes, setConfigNotificacoes] = useState<ConfiguracaoNotificacoes>(DEFAULT_NOTIFICACOES);
   const [savingClinica, setSavingClinica] = useState(false);
   const [savingNotif, setSavingNotif] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  // Load configs from Supabase
+  const loadConfigs = useCallback(async () => {
+    if (!user?.id) return;
+    setLoadingConfig(true);
+    try {
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('chave, valor')
+        .eq('user_id', user.id);
+
+      if (data && data.length > 0) {
+        setIsCloudSynced(true);
+        const clinicaRow = data.find(d => d.chave === 'config_clinica');
+        const notifRow = data.find(d => d.chave === 'config_notificacoes');
+        if (clinicaRow) setConfigClinica({ ...DEFAULT_CLINICA, ...(clinicaRow.valor as any) });
+        if (notifRow) setConfigNotificacoes({ ...DEFAULT_NOTIFICACOES, ...(notifRow.valor as any) });
+      }
+    } catch (error) {
+      console.error('Error loading configs:', error);
+    } finally {
+      setLoadingConfig(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => { loadConfigs(); }, [loadConfigs]);
+
+  const saveToSupabase = async (chave: string, valor: any) => {
+    if (!user?.id) return;
+
+    const { error } = await supabase
+      .from('configuracoes_clinica')
+      .upsert(
+        { user_id: user.id, chave, valor, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,chave' }
+      );
+
+    if (error) throw error;
+    setIsCloudSynced(true);
+  };
 
   const handleSaveClinica = async () => {
     setSavingClinica(true);
-    setItem('config_clinica', configClinica);
-    await new Promise(r => setTimeout(r, 400));
-    setSavingClinica(false);
-    toast.success('Configurações da clínica salvas com sucesso!');
+    try {
+      await saveToSupabase('config_clinica', configClinica);
+      toast.success('Configurações da clínica salvas na nuvem!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao salvar configurações. Tente novamente.');
+    } finally {
+      setSavingClinica(false);
+    }
   };
 
   const handleSaveNotificacoes = async () => {
     setSavingNotif(true);
-    setItem('config_notificacoes', configNotificacoes);
-    await new Promise(r => setTimeout(r, 400));
-    setSavingNotif(false);
-    toast.success('Configurações de notificações salvas!');
+    try {
+      await saveToSupabase('config_notificacoes', configNotificacoes);
+      toast.success('Configurações de notificações salvas na nuvem!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao salvar configurações.');
+    } finally {
+      setSavingNotif(false);
+    }
   };
 
   const diasSemana = [
-    { value: 'seg', label: 'Seg' },
-    { value: 'ter', label: 'Ter' },
-    { value: 'qua', label: 'Qua' },
-    { value: 'qui', label: 'Qui' },
-    { value: 'sex', label: 'Sex' },
-    { value: 'sab', label: 'Sáb' },
+    { value: 'seg', label: 'Seg' }, { value: 'ter', label: 'Ter' },
+    { value: 'qua', label: 'Qua' }, { value: 'qui', label: 'Qui' },
+    { value: 'sex', label: 'Sex' }, { value: 'sab', label: 'Sáb' },
     { value: 'dom', label: 'Dom' },
   ];
 
@@ -160,9 +197,15 @@ export default function Configuracoes() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Gerencie todas as configurações do sistema</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
+          <p className="text-sm text-muted-foreground">Gerencie todas as configurações do sistema</p>
+        </div>
+        <Badge variant={isCloudSynced ? 'default' : 'secondary'} className="gap-1.5">
+          {isCloudSynced ? <Cloud className="h-3 w-3" /> : <CloudOff className="h-3 w-3" />}
+          {isCloudSynced ? 'Sincronizado' : 'Local'}
+        </Badge>
       </div>
 
       <Tabs defaultValue="clinica" className="space-y-6">
@@ -190,59 +233,33 @@ export default function Configuracoes() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Nome da Clínica</Label>
-                    <Input
-                      value={configClinica.nomeClinica}
-                      onChange={(e) => setConfigClinica({ ...configClinica, nomeClinica: e.target.value })}
-                      placeholder="Nome da clínica"
-                    />
+                    <Input value={configClinica.nomeClinica} onChange={(e) => setConfigClinica({ ...configClinica, nomeClinica: e.target.value })} placeholder="Nome da clínica" />
                   </div>
                   <div className="space-y-2">
                     <Label>CNPJ</Label>
-                    <Input
-                      value={configClinica.cnpj}
-                      onChange={(e) => setConfigClinica({ ...configClinica, cnpj: e.target.value })}
-                      placeholder="00.000.000/0000-00"
-                    />
+                    <Input value={configClinica.cnpj} onChange={(e) => setConfigClinica({ ...configClinica, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label>Endereço Completo</Label>
-                    <Textarea
-                      value={configClinica.endereco}
-                      onChange={(e) => setConfigClinica({ ...configClinica, endereco: e.target.value })}
-                      rows={2}
-                      placeholder="Rua, número, bairro, cidade - UF"
-                    />
+                    <Textarea value={configClinica.endereco} onChange={(e) => setConfigClinica({ ...configClinica, endereco: e.target.value })} rows={2} placeholder="Rua, número, bairro, cidade - UF" />
                   </div>
                   <div className="space-y-2">
                     <Label>Telefone</Label>
-                    <Input
-                      value={configClinica.telefone}
-                      onChange={(e) => setConfigClinica({ ...configClinica, telefone: e.target.value })}
-                      placeholder="(00) 0000-0000"
-                    />
+                    <Input value={configClinica.telefone} onChange={(e) => setConfigClinica({ ...configClinica, telefone: e.target.value })} placeholder="(00) 0000-0000" />
                   </div>
                   <div className="space-y-2">
                     <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={configClinica.email}
-                      onChange={(e) => setConfigClinica({ ...configClinica, email: e.target.value })}
-                      placeholder="contato@clinica.com"
-                    />
+                    <Input type="email" value={configClinica.email} onChange={(e) => setConfigClinica({ ...configClinica, email: e.target.value })} placeholder="contato@clinica.com" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label>Website</Label>
-                    <Input
-                      value={configClinica.website}
-                      onChange={(e) => setConfigClinica({ ...configClinica, website: e.target.value })}
-                      placeholder="https://www.clinica.com.br"
-                    />
+                    <Input value={configClinica.website} onChange={(e) => setConfigClinica({ ...configClinica, website: e.target.value })} placeholder="https://www.clinica.com.br" />
                   </div>
                 </div>
                 <Separator />
                 <Button onClick={handleSaveClinica} disabled={savingClinica} className="gap-2">
                   {savingClinica ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Salvar Alterações
+                  Salvar na Nuvem
                 </Button>
               </CardContent>
             </Card>
@@ -254,36 +271,22 @@ export default function Configuracoes() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Horários de Funcionamento
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary" />Horários de Funcionamento</CardTitle>
                 <CardDescription>Configure os horários e dias de atendimento</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
                     <Label>Abertura</Label>
-                    <Input
-                      type="time"
-                      value={configClinica.horarioAbertura}
-                      onChange={(e) => setConfigClinica({ ...configClinica, horarioAbertura: e.target.value })}
-                    />
+                    <Input type="time" value={configClinica.horarioAbertura} onChange={(e) => setConfigClinica({ ...configClinica, horarioAbertura: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label>Fechamento</Label>
-                    <Input
-                      type="time"
-                      value={configClinica.horarioFechamento}
-                      onChange={(e) => setConfigClinica({ ...configClinica, horarioFechamento: e.target.value })}
-                    />
+                    <Input type="time" value={configClinica.horarioFechamento} onChange={(e) => setConfigClinica({ ...configClinica, horarioFechamento: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label>Duração Consulta</Label>
-                    <Select
-                      value={configClinica.duracaoConsulta.toString()}
-                      onValueChange={(v) => setConfigClinica({ ...configClinica, duracaoConsulta: parseInt(v) })}
-                    >
+                    <Select value={configClinica.duracaoConsulta.toString()} onValueChange={(v) => setConfigClinica({ ...configClinica, duracaoConsulta: parseInt(v) })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="15">15 minutos</SelectItem>
@@ -296,10 +299,7 @@ export default function Configuracoes() {
                   </div>
                   <div className="space-y-2">
                     <Label>Intervalo entre Consultas</Label>
-                    <Select
-                      value={configClinica.intervaloConsultas.toString()}
-                      onValueChange={(v) => setConfigClinica({ ...configClinica, intervaloConsultas: parseInt(v) })}
-                    >
+                    <Select value={configClinica.intervaloConsultas.toString()} onValueChange={(v) => setConfigClinica({ ...configClinica, intervaloConsultas: parseInt(v) })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Sem intervalo</SelectItem>
@@ -310,28 +310,20 @@ export default function Configuracoes() {
                     </Select>
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label>Dias de Funcionamento</Label>
                   <div className="flex flex-wrap gap-2">
                     {diasSemana.map((dia) => (
-                      <Button
-                        key={dia.value}
-                        variant={configClinica.diasFuncionamento.includes(dia.value) ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => toggleDia(dia.value)}
-                        className="min-w-[48px]"
-                      >
+                      <Button key={dia.value} variant={configClinica.diasFuncionamento.includes(dia.value) ? 'default' : 'outline'} size="sm" onClick={() => toggleDia(dia.value)} className="min-w-[48px]">
                         {dia.label}
                       </Button>
                     ))}
                   </div>
                 </div>
-
                 <Separator />
                 <Button onClick={handleSaveClinica} disabled={savingClinica} className="gap-2">
                   {savingClinica ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Salvar Alterações
+                  Salvar na Nuvem
                 </Button>
               </CardContent>
             </Card>
@@ -343,70 +335,36 @@ export default function Configuracoes() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-primary" />
-                  Notificações
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />Notificações</CardTitle>
                 <CardDescription>Configure os canais e tipos de notificações automáticas</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="divide-y">
                   <SettingRow icon={Mail} title="Lembrete por Email" description="Enviar lembrete de consulta por email para o paciente">
-                    <Switch
-                      checked={configNotificacoes.emailLembrete}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, emailLembrete: checked })}
-                    />
+                    <Switch checked={configNotificacoes.emailLembrete} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, emailLembrete: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={Smartphone} title="Lembrete por SMS" description="Enviar lembrete de consulta por SMS">
-                    <Switch
-                      checked={configNotificacoes.smsLembrete}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, smsLembrete: checked })}
-                    />
+                    <Switch checked={configNotificacoes.smsLembrete} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, smsLembrete: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={MessageSquare} title="Lembrete por WhatsApp" description="Enviar lembrete via WhatsApp (requer Evolution API configurada)">
-                    <Switch
-                      checked={configNotificacoes.whatsappLembrete}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, whatsappLembrete: checked })}
-                    />
+                    <Switch checked={configNotificacoes.whatsappLembrete} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, whatsappLembrete: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={Bell} title="Notificar Cancelamentos" description="Notificar equipe quando uma consulta for cancelada">
-                    <Switch
-                      checked={configNotificacoes.notificarCancelamento}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarCancelamento: checked })}
-                    />
+                    <Switch checked={configNotificacoes.notificarCancelamento} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarCancelamento: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={Bell} title="Novos Agendamentos" description="Notificar equipe sobre novos agendamentos">
-                    <Switch
-                      checked={configNotificacoes.notificarNovoAgendamento}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarNovoAgendamento: checked })}
-                    />
+                    <Switch checked={configNotificacoes.notificarNovoAgendamento} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarNovoAgendamento: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={Database} title="Resultado de Exames" description="Notificar paciente quando resultado de exame estiver disponível">
-                    <Switch
-                      checked={configNotificacoes.notificarResultadoExame}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarResultadoExame: checked })}
-                    />
+                    <Switch checked={configNotificacoes.notificarResultadoExame} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarResultadoExame: checked })} />
                   </SettingRow>
-
                   <SettingRow icon={Bell} title="Aniversário do Paciente" description="Enviar felicitação automática no aniversário">
-                    <Switch
-                      checked={configNotificacoes.notificarAniversario}
-                      onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarAniversario: checked })}
-                    />
+                    <Switch checked={configNotificacoes.notificarAniversario} onCheckedChange={(checked) => setConfigNotificacoes({ ...configNotificacoes, notificarAniversario: checked })} />
                   </SettingRow>
                 </div>
-
                 <div className="mt-6 space-y-2 max-w-xs">
                   <Label>Antecedência do Lembrete</Label>
-                  <Select
-                    value={configNotificacoes.antecedenciaLembrete.toString()}
-                    onValueChange={(v) => setConfigNotificacoes({ ...configNotificacoes, antecedenciaLembrete: parseInt(v) })}
-                  >
+                  <Select value={configNotificacoes.antecedenciaLembrete.toString()} onValueChange={(v) => setConfigNotificacoes({ ...configNotificacoes, antecedenciaLembrete: parseInt(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">1 hora antes</SelectItem>
@@ -417,11 +375,10 @@ export default function Configuracoes() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <Separator className="my-6" />
                 <Button onClick={handleSaveNotificacoes} disabled={savingNotif} className="gap-2">
                   {savingNotif ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Salvar Configurações
+                  Salvar na Nuvem
                 </Button>
               </CardContent>
             </Card>
@@ -432,10 +389,7 @@ export default function Configuracoes() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="h-5 w-5 text-primary" />
-                  Aparência
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" />Aparência</CardTitle>
                 <CardDescription>Personalize a aparência do sistema</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -446,24 +400,15 @@ export default function Configuracoes() {
                       { value: 'light' as const, label: 'Claro', desc: 'Fundo branco e cores suaves' },
                       { value: 'dark' as const, label: 'Escuro', desc: 'Fundo escuro, ideal para baixa luz' },
                     ] satisfies { value: 'light' | 'dark'; label: string; desc: string }[]).map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setTheme(opt.value)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          theme === opt.value
-                            ? 'border-primary bg-primary/5 shadow-sm'
-                            : 'border-border hover:border-primary/30'
-                        }`}
-                      >
+                      <button key={opt.value} onClick={() => setTheme(opt.value)}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${theme === opt.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/30'}`}>
                         <p className="font-semibold text-sm">{opt.label}</p>
                         <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
                       </button>
                     ))}
                   </div>
                 </div>
-
                 <Separator />
-
                 <div className="p-4 rounded-xl border bg-muted/30">
                   <h4 className="font-medium text-sm mb-2">Prévia das Cores</h4>
                   <div className="flex gap-2 flex-wrap">
@@ -491,10 +436,7 @@ export default function Configuracoes() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Segurança e Privacidade
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary" />Segurança e Privacidade</CardTitle>
                 <CardDescription>Configurações de segurança do sistema</CardDescription>
               </CardHeader>
               <CardContent>
@@ -510,20 +452,16 @@ export default function Configuracoes() {
                       </SelectContent>
                     </Select>
                   </SettingRow>
-
                   <SettingRow icon={Shield} title="Mascarar CPF" description="Exibir CPF mascarado na listagem de pacientes">
                     <Switch defaultChecked />
                   </SettingRow>
-
                   <SettingRow icon={Shield} title="Log de Auditoria" description="Registrar todas as ações dos usuários no sistema">
                     <Switch defaultChecked />
                   </SettingRow>
-
                   <SettingRow icon={Globe} title="Conformidade LGPD" description="Exigir consentimento do paciente para coleta de dados">
                     <Switch defaultChecked />
                   </SettingRow>
                 </div>
-
                 <div className="mt-6 p-4 rounded-xl border bg-primary/5">
                   <div className="flex gap-3">
                     <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -541,14 +479,12 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Backup ─── */}
         <TabsContent value="backup">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <BackupRestore />
           </motion.div>
         </TabsContent>
 
-        {/* ─── Auditoria ─── */}
         <TabsContent value="historico">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <AuditLog />
