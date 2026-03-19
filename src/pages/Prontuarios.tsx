@@ -882,6 +882,106 @@ export default function Prontuarios() {
                 <TabsContent value="identificacao" className="pt-4">
                   <PatientIDCard paciente={selectedPaciente} convenioNome={getConvenioNome(selectedPaciente.convenio_id)} />
                 </TabsContent>
+
+                <TabsContent value="exportar" className="pt-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-3">
+                      <Share2 className="h-4 w-4 flex-shrink-0" />
+                      <span>Exporte os dados clínicos do paciente em formatos interoperáveis (HL7 FHIR / XML CDA) para compartilhamento com outros profissionais de saúde.</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Card className="p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">JSON</Badge>
+                          <span className="font-medium text-sm">HL7 FHIR R4</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Formato padrão internacional para interoperabilidade em saúde. Compatível com a maioria dos sistemas modernos.</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={() => {
+                            const exportData = {
+                              paciente: {
+                                id: selectedPaciente.id,
+                                nome: selectedPaciente.nome,
+                                nome_social: (selectedPaciente as any).nome_social,
+                                cpf: selectedPaciente.cpf || undefined,
+                                data_nascimento: selectedPaciente.data_nascimento || undefined,
+                                sexo: selectedPaciente.sexo || undefined,
+                                telefone: selectedPaciente.telefone || undefined,
+                                email: selectedPaciente.email || undefined,
+                                alergias: selectedPaciente.alergias || [],
+                              },
+                              prontuarios: historicoEvolucoes.map((p: any) => ({
+                                id: p.id,
+                                data: p.data,
+                                queixa_principal: p.queixa_principal,
+                                historia_doenca_atual: p.historia_doenca_atual,
+                                hipotese_diagnostica: p.hipotese_diagnostica,
+                                diagnostico_principal: p.diagnostico_principal,
+                                conduta: p.conduta,
+                                sinais_vitais: p.sinais_vitais,
+                                medico_nome: p.medicos?.nome,
+                                medico_crm: p.medicos?.crm,
+                              })),
+                            };
+                            const json = exportToFHIR(exportData);
+                            downloadClinicalExport(json, `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'json');
+                            toast({ title: 'Exportado', description: 'Arquivo FHIR JSON baixado com sucesso.' });
+                          }}
+                        >
+                          <FileDown className="h-4 w-4" />Exportar FHIR JSON
+                        </Button>
+                      </Card>
+                      <Card className="p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">XML</Badge>
+                          <span className="font-medium text-sm">CDA / HL7 v3</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Formato XML estruturado baseado no Clinical Document Architecture. Compatível com sistemas legados.</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={() => {
+                            const exportData = {
+                              paciente: {
+                                id: selectedPaciente.id,
+                                nome: selectedPaciente.nome,
+                                nome_social: (selectedPaciente as any).nome_social,
+                                cpf: selectedPaciente.cpf || undefined,
+                                data_nascimento: selectedPaciente.data_nascimento || undefined,
+                                sexo: selectedPaciente.sexo || undefined,
+                                alergias: selectedPaciente.alergias || [],
+                              },
+                              prontuarios: historicoEvolucoes.map((p: any) => ({
+                                id: p.id,
+                                data: p.data,
+                                queixa_principal: p.queixa_principal,
+                                hipotese_diagnostica: p.hipotese_diagnostica,
+                                diagnostico_principal: p.diagnostico_principal,
+                                conduta: p.conduta,
+                                sinais_vitais: p.sinais_vitais,
+                                medico_nome: p.medicos?.nome,
+                                medico_crm: p.medicos?.crm,
+                              })),
+                            };
+                            const xml = exportToXML(exportData);
+                            downloadClinicalExport(xml, `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'xml');
+                            toast({ title: 'Exportado', description: 'Arquivo XML CDA baixado com sucesso.' });
+                          }}
+                        >
+                          <FileDown className="h-4 w-4" />Exportar XML CDA
+                        </Button>
+                      </Card>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>Conforme Art. 18 da LGPD — direito de portabilidade dos dados.</span>
+                    </div>
+                  </div>
+                </TabsContent>
               </Tabs>
             )}
           </CardContent>
