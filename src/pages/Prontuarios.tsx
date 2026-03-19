@@ -787,15 +787,19 @@ export default function Prontuarios() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <ClipboardList className="h-8 w-8 text-primary" />
-            Prontuário Eletrônico
-          </h1>
-          <p className="text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-sm border border-primary/10">
+            <ClipboardList className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              Prontuário Eletrônico
+            </h1>
+            <p className="text-sm text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
+          </div>
         </div>
-        <Badge variant="outline" className="gap-1.5 text-xs">
-          <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
+        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1.5 text-xs px-3 py-1.5 rounded-full">
+          <ShieldCheck className="h-3.5 w-3.5" />
           Conforme LGPD
         </Badge>
       </div>
