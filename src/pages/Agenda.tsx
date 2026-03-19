@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2, LayoutList, LayoutGrid, Users, CalendarCheck, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2, LayoutList, LayoutGrid, Users, CalendarCheck, AlertTriangle, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -52,6 +52,26 @@ const STATUS_COLORS: Record<StatusAgendamento, string> = {
   faltou: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
+// Color palette for doctors
+const MEDICO_COLORS = [
+  'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
+  'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-teal-500',
+  'bg-indigo-500', 'bg-orange-500',
+];
+
+const MEDICO_BG_COLORS = [
+  'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+  'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
+  'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800',
+  'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+  'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
+  'bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800',
+  'bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800',
+  'bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800',
+  'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800',
+  'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
+];
+
 const STATUS_LABELS: Record<StatusAgendamento, string> = {
   agendado: 'Agendado',
   confirmado: 'Confirmado',
@@ -94,7 +114,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
@@ -343,6 +363,30 @@ export default function Agenda() {
     return medico ? `Dr(a). ${medico.nome || medico.crm}` : 'Desconhecido';
   };
 
+  // Doctor color mapping
+  const medicoColorMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    medicos.forEach((m, i) => { map[m.id] = i % MEDICO_COLORS.length; });
+    return map;
+  }, [medicos]);
+
+  const getMedicoColor = (medicoId: string) => MEDICO_COLORS[medicoColorMap[medicoId] ?? 0];
+  const getMedicoBgColor = (medicoId: string) => MEDICO_BG_COLORS[medicoColorMap[medicoId] ?? 0];
+
+  // Monthly calendar data
+  const monthDays = useMemo(() => {
+    const ms = startOfMonth(currentWeek);
+    const me = endOfMonth(currentWeek);
+    const ds = eachDayOfInterval({ start: ms, end: me });
+    const sd = getDay(ms);
+    const pb = (sd === 0 ? 6 : sd - 1);
+    const paddedStart = Array.from({ length: pb }, (_, i) => addDays(ms, -(pb - i)));
+    const tc = Math.ceil((paddedStart.length + ds.length) / 7) * 7;
+    const pa = tc - paddedStart.length - ds.length;
+    const paddedEnd = Array.from({ length: pa }, (_, i) => addDays(me, i + 1));
+    return [...paddedStart, ...ds, ...paddedEnd];
+  }, [currentWeek]);
+
   if (isLoading) {
     return <AgendaSkeleton />;
   }
@@ -428,15 +472,25 @@ export default function Agenda() {
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, -1)) : setCurrentWeek(subWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => {
+                    if (viewMode === 'month') setCurrentWeek(subMonths(currentWeek, 1));
+                    else if (viewMode === 'day') setCurrentWeek(addDays(currentWeek, -1));
+                    else setCurrentWeek(subWeeks(currentWeek, 1));
+                  }}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <CardTitle className="text-lg">
-                    {viewMode === 'day'
+                    {viewMode === 'month'
+                      ? format(currentWeek, "MMMM 'de' yyyy", { locale: ptBR })
+                      : viewMode === 'day'
                       ? format(currentWeek, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
                       : `${format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} — ${format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
                   </CardTitle>
-                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, 1)) : setCurrentWeek(addWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => {
+                    if (viewMode === 'month') setCurrentWeek(addMonths(currentWeek, 1));
+                    else if (viewMode === 'day') setCurrentWeek(addDays(currentWeek, 1));
+                    else setCurrentWeek(addWeeks(currentWeek, 1));
+                  }}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -478,12 +532,88 @@ export default function Agenda() {
                     >
                       <LayoutList className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant={viewMode === 'month' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="h-9 w-9 rounded-none border-0 border-l"
+                      onClick={() => setViewMode('month')}
+                      title="Visão mensal"
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
+
+                {/* Doctor color legend */}
+                {selectedMedico === 'todos' && medicos.length > 1 && (
+                  <div className="flex items-center gap-2 flex-wrap px-1 mt-2">
+                    <span className="text-[10px] text-muted-foreground font-medium">Médicos:</span>
+                    {medicos.slice(0, 8).map((m) => (
+                      <span key={m.id} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <span className={cn('h-2 w-2 rounded-full', getMedicoColor(m.id))} />
+                        {(m.nome || m.crm).split(' ')[0]}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {viewMode === 'day' ? (
+              {viewMode === 'month' ? (
+                /* ─── Month View ─── */
+                <div className="p-2">
+                  <div className="grid grid-cols-7 gap-px mb-1">
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
+                      <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-px">
+                    {monthDays.map((day, idx) => {
+                      const isCurrentMonth = isSameMonth(day, currentWeek);
+                      const isToday_ = isSameDay(day, new Date());
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayAgs = filteredAgendamentos.filter(a => a.data === dayStr);
+                      return (
+                        <div
+                          key={idx}
+                          className={cn(
+                            'min-h-[80px] rounded-lg border p-1 transition-colors cursor-pointer hover:bg-muted/30',
+                            !isCurrentMonth && 'opacity-30',
+                            isToday_ && 'ring-2 ring-primary/40 bg-primary/5',
+                          )}
+                          onClick={() => {
+                            setCurrentWeek(day);
+                            setViewMode('day');
+                          }}
+                        >
+                          <p className={cn(
+                            'text-xs font-medium mb-0.5',
+                            isToday_ ? 'text-primary font-bold' : 'text-muted-foreground',
+                          )}>
+                            {format(day, 'd')}
+                          </p>
+                          <div className="space-y-0.5">
+                            {dayAgs.slice(0, 3).map(ag => (
+                              <div key={ag.id} className={cn(
+                                'text-[9px] leading-tight px-1 py-0.5 rounded truncate border',
+                                selectedMedico === 'todos' && medicos.length > 1
+                                  ? getMedicoBgColor(ag.medico_id)
+                                  : STATUS_COLORS[ag.status as StatusAgendamento || 'agendado'],
+                              )}>
+                                <span className="font-medium">{ag.hora_inicio?.slice(0, 5)}</span>{' '}
+                                {getPacienteNome(ag.paciente_id).split(' ')[0]}
+                              </div>
+                            ))}
+                            {dayAgs.length > 3 && (
+                              <p className="text-[9px] text-muted-foreground text-center">+{dayAgs.length - 3} mais</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : viewMode === 'day' ? (
                 /* ─── Day View ─── */
                 <div className="divide-y">
                   {/* Quick weekday nav */}
@@ -570,12 +700,14 @@ export default function Agenda() {
                           <p className="text-xs text-muted-foreground">{format(parseISO(ag.data), 'EEE', { locale: ptBR })}</p>
                           <p className="font-bold text-sm">{format(parseISO(ag.data), 'dd/MM')}</p>
                         </div>
-                        <div className={`w-2 h-10 rounded-full shrink-0 ${
-                          ag.status === 'confirmado' ? 'bg-success' :
-                          ag.status === 'cancelado' ? 'bg-destructive' :
-                          ag.status === 'finalizado' ? 'bg-muted-foreground' :
-                          ag.status === 'em_atendimento' ? 'bg-purple-500' : 'bg-info'
-                        }`} />
+                        <div className={cn('w-2 h-10 rounded-full shrink-0',
+                          selectedMedico === 'todos' && medicos.length > 1
+                            ? getMedicoColor(ag.medico_id)
+                            : ag.status === 'confirmado' ? 'bg-success' :
+                              ag.status === 'cancelado' ? 'bg-destructive' :
+                              ag.status === 'finalizado' ? 'bg-muted-foreground' :
+                              ag.status === 'em_atendimento' ? 'bg-purple-500' : 'bg-info'
+                        )} />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{getPacienteNome(ag.paciente_id)}</p>
                           <p className="text-xs text-muted-foreground truncate">{getMedicoNome(ag.medico_id)}</p>

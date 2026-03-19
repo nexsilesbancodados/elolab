@@ -1,39 +1,52 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, Legend,
 } from 'recharts';
-import { 
-  TrendingUp, 
-  Users, 
-  Clock, 
-  Calendar,
-  DollarSign,
-  Activity,
-  Stethoscope,
-  ArrowUp,
-  ArrowDown,
+import {
+  TrendingUp, Users, Calendar as CalendarIcon, DollarSign, Activity, Stethoscope,
+  ArrowUp, ArrowDown, Filter, Download,
 } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--info))', 'hsl(var(--destructive))'];
+
+const PERIOD_PRESETS = [
+  { label: 'Últimos 7 dias', value: '7d', days: 7 },
+  { label: 'Últimos 30 dias', value: '30d', days: 30 },
+  { label: 'Últimos 90 dias', value: '90d', days: 90 },
+  { label: 'Mês atual', value: 'month', days: 0 },
+  { label: 'Mês anterior', value: 'prev_month', days: 0 },
+  { label: 'Personalizado', value: 'custom', days: 0 },
+];
+
+function getDateRange(preset: string, customFrom?: Date, customTo?: Date): { from: Date; to: Date } {
+  const now = new Date();
+  switch (preset) {
+    case '7d': return { from: subDays(now, 7), to: now };
+    case '30d': return { from: subDays(now, 30), to: now };
+    case '90d': return { from: subDays(now, 90), to: now };
+    case 'month': return { from: startOfMonth(now), to: endOfMonth(now) };
+    case 'prev_month': {
+      const prev = subMonths(now, 1);
+      return { from: startOfMonth(prev), to: endOfMonth(prev) };
+    }
+    case 'custom': return { from: customFrom || subDays(now, 30), to: customTo || now };
+    default: return { from: subDays(now, 30), to: now };
+  }
+}
 
 interface KPICardProps {
   title: string;
@@ -45,113 +58,152 @@ interface KPICardProps {
 
 function KPICard({ title, value, change, icon, description }: KPICardProps) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-            {change !== undefined && (
-              <div className={`flex items-center gap-1 text-sm mt-1 ${change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {change >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                {Math.abs(change)}% vs mês anterior
-              </div>
-            )}
-            {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            )}
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">{title}</p>
+              <p className="text-3xl font-bold mt-1 tabular-nums">{value}</p>
+              {change !== undefined && (
+                <div className={cn('flex items-center gap-1 text-sm mt-1', change >= 0 ? 'text-success' : 'text-destructive')}>
+                  {change >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                  {Math.abs(change)}% vs período anterior
+                </div>
+              )}
+              {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+            </div>
+            <div className="p-3 bg-primary/10 rounded-full">{icon}</div>
           </div>
-          <div className="p-3 bg-primary/10 rounded-full">
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
 export default function Analytics() {
-  // Buscar dados para análise
+  const [periodPreset, setPeriodPreset] = useState('30d');
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [showComparison, setShowComparison] = useState(false);
+
+  const range = useMemo(() => getDateRange(periodPreset, customFrom, customTo), [periodPreset, customFrom, customTo]);
+  const rangeDays = differenceInDays(range.to, range.from) || 1;
+  const prevRange = useMemo(() => ({
+    from: subDays(range.from, rangeDays),
+    to: subDays(range.to, rangeDays),
+  }), [range, rangeDays]);
+
+  // ─── Data queries ───────────────────────────────────────
   const { data: agendamentos = [] } = useQuery({
-    queryKey: ['analytics-agendamentos'],
+    queryKey: ['analytics-ag', range.from.toISOString(), range.to.toISOString()],
     queryFn: async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-      const { data, error } = await supabase
-        .from('agendamentos')
+      const { data } = await supabase.from('agendamentos')
+        .select('*, medicos(nome, especialidade)')
+        .gte('data', format(range.from, 'yyyy-MM-dd'))
+        .lte('data', format(range.to, 'yyyy-MM-dd'));
+      return data || [];
+    },
+  });
+
+  const { data: prevAgendamentos = [] } = useQuery({
+    queryKey: ['analytics-ag-prev', prevRange.from.toISOString(), prevRange.to.toISOString()],
+    enabled: showComparison,
+    queryFn: async () => {
+      const { data } = await supabase.from('agendamentos')
         .select('*')
-        .gte('created_at', thirtyDaysAgo);
-      if (error) throw error;
-      return data;
+        .gte('data', format(prevRange.from, 'yyyy-MM-dd'))
+        .lte('data', format(prevRange.to, 'yyyy-MM-dd'));
+      return data || [];
     },
   });
 
   const { data: lancamentos = [] } = useQuery({
-    queryKey: ['analytics-lancamentos'],
+    queryKey: ['analytics-lanc', range.from.toISOString(), range.to.toISOString()],
     queryFn: async () => {
-      const start = startOfMonth(new Date()).toISOString();
-      const end = endOfMonth(new Date()).toISOString();
-      const { data, error } = await supabase
-        .from('lancamentos')
+      const { data } = await supabase.from('lancamentos')
         .select('*')
-        .gte('data', start.split('T')[0])
-        .lte('data', end.split('T')[0]);
-      if (error) throw error;
-      return data;
+        .gte('data', format(range.from, 'yyyy-MM-dd'))
+        .lte('data', format(range.to, 'yyyy-MM-dd'));
+      return data || [];
+    },
+  });
+
+  const { data: prevLancamentos = [] } = useQuery({
+    queryKey: ['analytics-lanc-prev', prevRange.from.toISOString(), prevRange.to.toISOString()],
+    enabled: showComparison,
+    queryFn: async () => {
+      const { data } = await supabase.from('lancamentos')
+        .select('*')
+        .gte('data', format(prevRange.from, 'yyyy-MM-dd'))
+        .lte('data', format(prevRange.to, 'yyyy-MM-dd'));
+      return data || [];
     },
   });
 
   const { data: triagens = [] } = useQuery({
-    queryKey: ['analytics-triagens'],
+    queryKey: ['analytics-tri', range.from.toISOString(), range.to.toISOString()],
     queryFn: async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-      const { data, error } = await supabase
-        .from('triagens')
+      const { data } = await supabase.from('triagens')
         .select('*')
-        .gte('created_at', thirtyDaysAgo);
-      if (error) throw error;
-      return data;
+        .gte('created_at', range.from.toISOString())
+        .lte('created_at', range.to.toISOString());
+      return data || [];
     },
   });
 
-  const { data: retornos = [] } = useQuery({
-    queryKey: ['analytics-retornos'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('retornos')
-        .select('*')
-        .eq('status', 'agendado');
-      if (error) throw error;
-      return data;
-    },
-  });
+  // ─── KPI calculations ──────────────────────────────────
+  const totalAg = agendamentos.length;
+  const finalizados = agendamentos.filter(a => a.status === 'finalizado').length;
+  const taxaComparecimento = totalAg > 0 ? Math.round((finalizados / totalAg) * 100) : 0;
 
-  // Calcular KPIs
-  const totalAgendamentos = agendamentos.length;
-  const agendamentosFinalizados = agendamentos.filter(a => a.status === 'finalizado').length;
-  const taxaComparecimento = totalAgendamentos > 0 
-    ? Math.round((agendamentosFinalizados / totalAgendamentos) * 100) 
-    : 0;
+  const prevTotalAg = prevAgendamentos.length;
+  const prevFinalizados = prevAgendamentos.filter((a: any) => a.status === 'finalizado').length;
+  const prevTaxaComp = prevTotalAg > 0 ? Math.round((prevFinalizados / prevTotalAg) * 100) : 0;
 
-  const receitaTotal = lancamentos
-    .filter(l => l.tipo === 'receita' && l.status === 'pago')
-    .reduce((acc, l) => acc + Number(l.valor), 0);
+  const receitaTotal = lancamentos.filter(l => l.tipo === 'receita' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
+  const despesaTotal = lancamentos.filter(l => l.tipo === 'despesa' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
 
-  const despesaTotal = lancamentos
-    .filter(l => l.tipo === 'despesa' && l.status === 'pago')
-    .reduce((acc, l) => acc + Number(l.valor), 0);
+  const prevReceita = prevLancamentos.filter((l: any) => l.tipo === 'receita' && l.status === 'pago').reduce((acc: number, l: any) => acc + Number(l.valor), 0);
 
-  const taxaRetorno = retornos.length;
+  const calcChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
 
-  // Dados para gráficos
-  const agendamentosPorDia = Array.from({ length: 7 }, (_, i) => {
-    const date = subDays(new Date(), 6 - i);
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const count = agendamentos.filter(a => a.data === dateStr).length;
-    return {
-      dia: format(date, 'EEE', { locale: ptBR }),
-      agendamentos: count,
-    };
-  });
+  // ─── Productivity per doctor ────────────────────────────
+  const produtividade = useMemo(() => {
+    const map: Record<string, { nome: string; especialidade: string; total: number; finalizados: number }> = {};
+    agendamentos.forEach((a: any) => {
+      const medicoNome = a.medicos?.nome || 'Desconhecido';
+      const esp = a.medicos?.especialidade || 'Geral';
+      if (!map[a.medico_id]) map[a.medico_id] = { nome: medicoNome, especialidade: esp, total: 0, finalizados: 0 };
+      map[a.medico_id].total++;
+      if (a.status === 'finalizado') map[a.medico_id].finalizados++;
+    });
+    return Object.values(map).sort((a, b) => b.total - a.total);
+  }, [agendamentos]);
+
+  // ─── Chart data ─────────────────────────────────────────
+  const days = eachDayOfInterval({ start: range.from, end: range.to });
+  const chartInterval = days.length > 60 ? 'week' : 'day';
+
+  const agPorDia = useMemo(() => {
+    const slice = chartInterval === 'week' ? days.filter((_, i) => i % 7 === 0) : days.slice(-14);
+    return slice.map(d => {
+      const ds = format(d, 'yyyy-MM-dd');
+      return {
+        dia: format(d, chartInterval === 'week' ? 'dd/MM' : 'EEE dd', { locale: ptBR }),
+        agendamentos: agendamentos.filter(a => a.data === ds).length,
+        ...(showComparison ? {
+          anterior: prevAgendamentos.filter((a: any) => {
+            const pd = format(subDays(d, rangeDays), 'yyyy-MM-dd');
+            return a.data === pd;
+          }).length,
+        } : {}),
+      };
+    });
+  }, [agendamentos, prevAgendamentos, days, showComparison, rangeDays, chartInterval]);
 
   const statusAgendamentos = [
     { name: 'Finalizados', value: agendamentos.filter(a => a.status === 'finalizado').length },
@@ -168,33 +220,86 @@ export default function Analytics() {
     { name: 'Vermelho', value: triagens.filter(t => t.classificacao_risco === 'vermelho').length, color: '#ef4444' },
   ].filter(c => c.value > 0);
 
-  const fluxoCaixaDiario = Array.from({ length: 7 }, (_, i) => {
-    const date = subDays(new Date(), 6 - i);
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const receitas = lancamentos
-      .filter(l => l.data === dateStr && l.tipo === 'receita' && l.status === 'pago')
-      .reduce((acc, l) => acc + Number(l.valor), 0);
-    const despesas = lancamentos
-      .filter(l => l.data === dateStr && l.tipo === 'despesa' && l.status === 'pago')
-      .reduce((acc, l) => acc + Number(l.valor), 0);
-    return {
-      dia: format(date, 'dd/MM'),
-      receitas,
-      despesas,
-      saldo: receitas - despesas,
-    };
-  });
+  const fluxoCaixa = useMemo(() => {
+    const slice = chartInterval === 'week' ? days.filter((_, i) => i % 7 === 0) : days.slice(-14);
+    return slice.map(d => {
+      const ds = format(d, 'yyyy-MM-dd');
+      const receitas = lancamentos.filter(l => l.data === ds && l.tipo === 'receita' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
+      const despesas = lancamentos.filter(l => l.data === ds && l.tipo === 'despesa' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
+      return { dia: format(d, 'dd/MM'), receitas, despesas, saldo: receitas - despesas };
+    });
+  }, [lancamentos, days, chartInterval]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Activity className="h-8 w-8 text-primary" />
-          Dashboard Analytics
-        </h1>
-        <p className="text-muted-foreground">
-          Métricas e indicadores de desempenho da clínica
-        </p>
+    <div className="space-y-6 pb-8">
+      {/* Header + Period Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-display tracking-tight flex items-center gap-2">
+            <Activity className="h-6 w-6 text-primary" /> Dashboard Analytics
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Métricas e indicadores de desempenho da clínica</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={periodPreset} onValueChange={setPeriodPreset}>
+            <SelectTrigger className="w-[180px] h-9">
+              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_PRESETS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          {periodPreset === 'custom' && (
+            <div className="flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {customFrom ? format(customFrom, 'dd/MM/yy') : 'De'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground text-xs">→</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {customTo ? format(customTo, 'dd/MM/yy') : 'Até'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={customTo} onSelect={setCustomTo} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          <Button
+            variant={showComparison ? 'default' : 'outline'}
+            size="sm" className="h-9 text-xs gap-1"
+            onClick={() => setShowComparison(!showComparison)}
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+            Comparar
+          </Button>
+        </div>
+      </div>
+
+      {/* Period indicator */}
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-xs">
+          {format(range.from, 'dd/MM/yyyy')} — {format(range.to, 'dd/MM/yyyy')}
+        </Badge>
+        {showComparison && (
+          <Badge variant="secondary" className="text-xs">
+            vs {format(prevRange.from, 'dd/MM')} — {format(prevRange.to, 'dd/MM')}
+          </Badge>
+        )}
       </div>
 
       {/* KPIs */}
@@ -202,33 +307,35 @@ export default function Analytics() {
         <KPICard
           title="Taxa de Comparecimento"
           value={`${taxaComparecimento}%`}
-          change={5}
+          change={showComparison ? calcChange(taxaComparecimento, prevTaxaComp) : undefined}
           icon={<Users className="h-6 w-6 text-primary" />}
-          description={`${agendamentosFinalizados} de ${totalAgendamentos} consultas`}
+          description={`${finalizados} de ${totalAg} consultas`}
         />
         <KPICard
-          title="Receita do Mês"
+          title="Receita do Período"
           value={receitaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          change={12}
+          change={showComparison ? calcChange(receitaTotal, prevReceita) : undefined}
           icon={<DollarSign className="h-6 w-6 text-primary" />}
         />
         <KPICard
-          title="Retornos Agendados"
-          value={taxaRetorno}
-          icon={<Calendar className="h-6 w-6 text-primary" />}
-          description="Pacientes com retorno marcado"
+          title="Total Agendamentos"
+          value={totalAg}
+          change={showComparison ? calcChange(totalAg, prevTotalAg) : undefined}
+          icon={<CalendarIcon className="h-6 w-6 text-primary" />}
+          description={`${rangeDays} dias de período`}
         />
         <KPICard
           title="Triagens Realizadas"
           value={triagens.length}
           icon={<Stethoscope className="h-6 w-6 text-primary" />}
-          description="Últimos 30 dias"
+          description="No período selecionado"
         />
       </div>
 
       <Tabs defaultValue="atendimento" className="space-y-4">
         <TabsList>
           <TabsTrigger value="atendimento">Atendimento</TabsTrigger>
+          <TabsTrigger value="produtividade">Produtividade</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="triagem">Triagem</TabsTrigger>
         </TabsList>
@@ -238,21 +345,20 @@ export default function Analytics() {
             <Card>
               <CardHeader>
                 <CardTitle>Agendamentos por Dia</CardTitle>
-                <CardDescription>Últimos 7 dias</CardDescription>
+                <CardDescription>{showComparison ? 'Atual vs Período Anterior' : `Últimos ${Math.min(14, rangeDays)} dias`}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={agendamentosPorDia}>
+                  <BarChart data={agPorDia}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="dia" className="text-xs" />
                     <YAxis className="text-xs" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))', 
-                        border: '1px solid hsl(var(--border))' 
-                      }} 
-                    />
-                    <Bar dataKey="agendamentos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="agendamentos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Atual" />
+                    {showComparison && (
+                      <Bar dataKey="anterior" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} opacity={0.4} name="Anterior" />
+                    )}
+                    {showComparison && <Legend />}
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -266,19 +372,10 @@ export default function Analytics() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie
-                      data={statusAgendamentos}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
+                    <Pie data={statusAgendamentos} cx="50%" cy="50%" labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {statusAgendamentos.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                      outerRadius={100} dataKey="value">
+                      {statusAgendamentos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip />
                   </PieChart>
@@ -288,60 +385,91 @@ export default function Analytics() {
           </div>
         </TabsContent>
 
+        {/* ─── Produtividade Tab ─── */}
+        <TabsContent value="produtividade" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Produtividade por Médico</CardTitle>
+              <CardDescription>Atendimentos no período selecionado</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {produtividade.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum dado disponível</p>
+              ) : (
+                <div className="space-y-3">
+                  {produtividade.map((med, i) => {
+                    const taxa = med.total > 0 ? Math.round((med.finalizados / med.total) * 100) : 0;
+                    return (
+                      <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-4 p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow"
+                      >
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                          {i + 1}º
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">Dr(a). {med.nome}</p>
+                          <p className="text-xs text-muted-foreground">{med.especialidade}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-lg tabular-nums">{med.total}</p>
+                          <p className="text-[10px] text-muted-foreground">consultas</p>
+                        </div>
+                        <div className="w-20 shrink-0">
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${taxa}%` }}
+                              transition={{ duration: 0.8, delay: i * 0.05 }}
+                              className="h-full bg-primary rounded-full"
+                            />
+                          </div>
+                          <p className="text-[10px] text-center text-muted-foreground mt-0.5">{taxa}% finaliz.</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="financeiro" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Receita Total</p>
-                  <p className="text-3xl font-bold text-success">
-                    {receitaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Despesa Total</p>
-                  <p className="text-3xl font-bold text-destructive">
-                    {despesaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Saldo</p>
-                  <p className={`text-3xl font-bold ${receitaTotal - despesaTotal >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {(receitaTotal - despesaTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {[
+              { label: 'Receita Total', value: receitaTotal, color: 'text-success' },
+              { label: 'Despesa Total', value: despesaTotal, color: 'text-destructive' },
+              { label: 'Saldo', value: receitaTotal - despesaTotal, color: receitaTotal - despesaTotal >= 0 ? 'text-success' : 'text-destructive' },
+            ].map(item => (
+              <Card key={item.label}>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">{item.label}</p>
+                    <p className={cn('text-3xl font-bold tabular-nums', item.color)}>
+                      {item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle>Fluxo de Caixa</CardTitle>
-              <CardDescription>Receitas vs Despesas - Últimos 7 dias</CardDescription>
+              <CardDescription>Receitas vs Despesas</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={fluxoCaixaDiario}>
+                <AreaChart data={fluxoCaixa}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="dia" className="text-xs" />
                   <YAxis className="text-xs" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))' 
-                    }}
-                    formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  />
-                  <Area type="monotone" dataKey="receitas" stackId="1" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.6} />
-                  <Area type="monotone" dataKey="despesas" stackId="2" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.6} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                    formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+                  <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.6} />
+                  <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.6} />
+                  <Legend />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -353,24 +481,15 @@ export default function Analytics() {
             <Card>
               <CardHeader>
                 <CardTitle>Classificação de Risco</CardTitle>
-                <CardDescription>Protocolo Manchester - Últimos 30 dias</CardDescription>
+                <CardDescription>Protocolo Manchester</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                    <Pie
-                      data={classificacaoRisco}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
+                    <Pie data={classificacaoRisco} cx="50%" cy="50%" labelLine={false}
                       label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {classificacaoRisco.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                      outerRadius={100} dataKey="value">
+                      {classificacaoRisco.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Pie>
                     <Tooltip />
                   </PieChart>
@@ -384,28 +503,17 @@ export default function Analytics() {
                 <CardDescription>Estatísticas do período</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                  <span>Total de Triagens</span>
-                  <span className="font-bold">{triagens.length}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-success/10 rounded-lg">
-                  <span>Risco Baixo (Verde)</span>
-                  <span className="font-bold text-success">
-                    {triagens.filter(t => t.classificacao_risco === 'verde').length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-warning/10 rounded-lg">
-                  <span>Risco Médio (Amarelo)</span>
-                  <span className="font-bold text-warning">
-                    {triagens.filter(t => t.classificacao_risco === 'amarelo').length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-destructive/10 rounded-lg">
-                  <span>Risco Alto (Laranja/Vermelho)</span>
-                  <span className="font-bold text-destructive">
-                    {triagens.filter(t => ['laranja', 'vermelho'].includes(t.classificacao_risco || '')).length}
-                  </span>
-                </div>
+                {[
+                  { label: 'Total de Triagens', value: triagens.length, bg: 'bg-muted', color: '' },
+                  { label: 'Risco Baixo (Verde)', value: triagens.filter(t => t.classificacao_risco === 'verde').length, bg: 'bg-success/10', color: 'text-success' },
+                  { label: 'Risco Médio (Amarelo)', value: triagens.filter(t => t.classificacao_risco === 'amarelo').length, bg: 'bg-warning/10', color: 'text-warning' },
+                  { label: 'Risco Alto', value: triagens.filter(t => ['laranja', 'vermelho'].includes(t.classificacao_risco || '')).length, bg: 'bg-destructive/10', color: 'text-destructive' },
+                ].map(item => (
+                  <div key={item.label} className={cn('flex justify-between items-center p-3 rounded-lg', item.bg)}>
+                    <span>{item.label}</span>
+                    <span className={cn('font-bold', item.color)}>{item.value}</span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
