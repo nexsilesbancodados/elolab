@@ -87,8 +87,6 @@ const queryClient = new QueryClient({
 
 const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App(_props, _ref) {
 
-  // Global error handling is now initialized in main.tsx via errorTracking.ts
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -114,43 +112,54 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                         </SupabaseProtectedRoute>
                       }
                     >
+                      {/* Accessible to all authenticated roles */}
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/pacientes" element={<Pacientes />} />
                       <Route path="/agenda" element={<Agenda />} />
-                      <Route path="/fila" element={<Fila />} />
-                      <Route path="/prontuarios" element={<Prontuarios />} />
-                      <Route path="/prescricoes" element={<Prescricoes />} />
-                      <Route path="/atestados" element={<Atestados />} />
-                      <Route path="/medicos" element={<Medicos />} />
-                      <Route path="/funcionarios" element={<Funcionarios />} />
-                      <Route path="/exames" element={<Exames />} />
-                      <Route path="/triagem" element={<Triagem />} />
-                      <Route path="/salas" element={<Salas />} />
-                      <Route path="/lista-espera" element={<ListaEspera />} />
-                      <Route path="/templates" element={<Templates />} />
-                      <Route path="/encaminhamentos" element={<Encaminhamentos />} />
-                      <Route path="/financeiro" element={<Financeiro />} />
-                      <Route path="/contas-receber" element={<ContasReceber />} />
-                      <Route path="/contas-pagar" element={<ContasPagar />} />
-                      <Route path="/fluxo-caixa" element={<FluxoCaixa />} />
-                      <Route path="/pagamentos" element={<Pagamentos />} />
-                      <Route path="/relatorios" element={<Relatorios />} />
-                      <Route path="/estoque" element={<Estoque />} />
-                      <Route path="/convenios" element={<Convenios />} />
-                      <Route path="/usuarios" element={<Usuarios />} />
-                      <Route path="/configuracoes" element={<Configuracoes />} />
-                      <Route path="/automacoes" element={<Automacoes />} />
-                      <Route path="/agente-ia" element={<AgenteIA />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/planos" element={<Planos />} />
-                      <Route path="/laboratorio" element={<Laboratorio />} />
-                      <Route path="/precos-exames" element={<PrecosExames />} />
-                      <Route path="/tarefas" element={<Tarefas />} />
-                      <Route path="/retornos" element={<Retornos />} />
-                      <Route path="/mapa-coleta" element={<MapaColeta />} />
-                      <Route path="/laudos-lab" element={<LaudosLab />} />
-                      <Route path="/documentacao" element={<Documentacao />} />
-                      <Route path="/painel-admin" element={<PainelAdmin />} />
+
+                      {/* Clinical — medico + admin + enfermagem */}
+                      <Route path="/prontuarios" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Prontuarios /></SupabaseProtectedRoute>} />
+                      <Route path="/prescricoes" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Prescricoes /></SupabaseProtectedRoute>} />
+                      <Route path="/atestados" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Atestados /></SupabaseProtectedRoute>} />
+                      <Route path="/exames" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'enfermagem']}><Exames /></SupabaseProtectedRoute>} />
+                      <Route path="/triagem" element={<SupabaseProtectedRoute allowedRoles={['admin', 'enfermagem']}><Triagem /></SupabaseProtectedRoute>} />
+                      <Route path="/encaminhamentos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Encaminhamentos /></SupabaseProtectedRoute>} />
+                      <Route path="/retornos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'recepcao']}><Retornos /></SupabaseProtectedRoute>} />
+
+                      {/* Lab */}
+                      <Route path="/laboratorio" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'enfermagem']}><Laboratorio /></SupabaseProtectedRoute>} />
+                      <Route path="/mapa-coleta" element={<SupabaseProtectedRoute allowedRoles={['admin', 'enfermagem']}><MapaColeta /></SupabaseProtectedRoute>} />
+                      <Route path="/laudos-lab" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'enfermagem']}><LaudosLab /></SupabaseProtectedRoute>} />
+
+                      {/* Operational — NOT for doctors */}
+                      <Route path="/pacientes" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem']}><Pacientes /></SupabaseProtectedRoute>} />
+                      <Route path="/fila" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem']}><Fila /></SupabaseProtectedRoute>} />
+                      <Route path="/medicos" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Medicos /></SupabaseProtectedRoute>} />
+                      <Route path="/funcionarios" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Funcionarios /></SupabaseProtectedRoute>} />
+                      <Route path="/salas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Salas /></SupabaseProtectedRoute>} />
+                      <Route path="/estoque" element={<SupabaseProtectedRoute allowedRoles={['admin', 'enfermagem']}><Estoque /></SupabaseProtectedRoute>} />
+                      <Route path="/convenios" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Convenios /></SupabaseProtectedRoute>} />
+                      <Route path="/templates" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Templates /></SupabaseProtectedRoute>} />
+                      <Route path="/lista-espera" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><ListaEspera /></SupabaseProtectedRoute>} />
+                      <Route path="/tarefas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem', 'financeiro']}><Tarefas /></SupabaseProtectedRoute>} />
+
+                      {/* Financial — admin + financeiro only */}
+                      <Route path="/financeiro" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Financeiro /></SupabaseProtectedRoute>} />
+                      <Route path="/contas-receber" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasReceber /></SupabaseProtectedRoute>} />
+                      <Route path="/contas-pagar" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasPagar /></SupabaseProtectedRoute>} />
+                      <Route path="/fluxo-caixa" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><FluxoCaixa /></SupabaseProtectedRoute>} />
+                      <Route path="/pagamentos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Pagamentos /></SupabaseProtectedRoute>} />
+                      <Route path="/precos-exames" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><PrecosExames /></SupabaseProtectedRoute>} />
+                      <Route path="/relatorios" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Relatorios /></SupabaseProtectedRoute>} />
+
+                      {/* Admin only */}
+                      <Route path="/usuarios" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Usuarios /></SupabaseProtectedRoute>} />
+                      <Route path="/configuracoes" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Configuracoes /></SupabaseProtectedRoute>} />
+                      <Route path="/automacoes" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Automacoes /></SupabaseProtectedRoute>} />
+                      <Route path="/agente-ia" element={<SupabaseProtectedRoute allowedRoles={['admin']}><AgenteIA /></SupabaseProtectedRoute>} />
+                      <Route path="/analytics" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Analytics /></SupabaseProtectedRoute>} />
+                      <Route path="/planos" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Planos /></SupabaseProtectedRoute>} />
+                      <Route path="/documentacao" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Documentacao /></SupabaseProtectedRoute>} />
+                      <Route path="/painel-admin" element={<SupabaseProtectedRoute allowedRoles={['admin']}><PainelAdmin /></SupabaseProtectedRoute>} />
                     </Route>
                     
                     <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
