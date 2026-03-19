@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 
 interface PacienteFormData {
   nome: string;
+  nome_social: string;
   cpf: string;
   data_nascimento: string;
   telefone: string;
@@ -57,7 +58,7 @@ interface PacienteFormData {
 }
 
 const initialFormData: PacienteFormData = {
-  nome: '', cpf: '', data_nascimento: '', telefone: '', email: '',
+  nome: '', nome_social: '', cpf: '', data_nascimento: '', telefone: '', email: '',
   sexo: '', estado_civil: '', profissao: '', tipo_sanguineo: '',
   cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '',
   convenio_id: '', numero_carteira: '', validade_carteira: '',
