@@ -486,7 +486,11 @@ export default function Agenda() {
                       ? format(currentWeek, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
                       : `${format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} — ${format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
                   </CardTitle>
-                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, 1)) : setCurrentWeek(addWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => {
+                    if (viewMode === 'month') setCurrentWeek(addMonths(currentWeek, 1));
+                    else if (viewMode === 'day') setCurrentWeek(addDays(currentWeek, 1));
+                    else setCurrentWeek(addWeeks(currentWeek, 1));
+                  }}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
