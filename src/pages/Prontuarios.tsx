@@ -1620,27 +1620,36 @@ export default function Prontuarios() {
                 ) : historicoEvolucoes.length === 0 ? (
                   <p className="text-center text-muted-foreground py-12">Nenhum registro anterior</p>
                 ) : (
-                  <div className="space-y-3">
-                    {historicoEvolucoes.map(ev => (
-                      <div key={ev.id} className="border rounded-lg p-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}</Badge>
+                  <div className="space-y-2.5">
+                    {historicoEvolucoes.map((ev, idx) => (
+                      <motion.div
+                        key={ev.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="relative border border-border/50 rounded-xl p-4 space-y-2 bg-card/50 hover:bg-muted/20 transition-colors"
+                      >
+                        <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-primary/40 to-transparent" />
+                        <div className="flex items-center gap-2 pl-2 flex-wrap">
+                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">{format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}</Badge>
                           {ev.medicos && <span className="text-xs text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm} — {ev.medicos.especialidade}</span>}
-                          {ev.diagnostico_principal && <Badge variant="secondary" className="text-xs">{ev.diagnostico_principal}</Badge>}
+                          {ev.diagnostico_principal && <Badge variant="secondary" className="text-[11px]">{ev.diagnostico_principal}</Badge>}
                         </div>
-                        {ev.queixa_principal && <p className="text-sm"><strong>QP:</strong> {ev.queixa_principal}</p>}
-                        {ev.hipotese_diagnostica && <p className="text-sm"><strong>HD:</strong> {ev.hipotese_diagnostica}</p>}
-                        {ev.conduta && <p className="text-sm"><strong>Conduta:</strong> {ev.conduta}</p>}
+                        <div className="pl-2 space-y-1">
+                          {ev.queixa_principal && <p className="text-sm"><span className="font-semibold text-foreground">QP:</span> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
+                          {ev.hipotese_diagnostica && <p className="text-sm"><span className="font-semibold text-foreground">HD:</span> <span className="text-muted-foreground">{ev.hipotese_diagnostica}</span></p>}
+                          {ev.conduta && <p className="text-sm"><span className="font-semibold text-foreground">Conduta:</span> <span className="text-muted-foreground">{ev.conduta}</span></p>}
+                        </div>
                         {ev.sinais_vitais && Object.keys(ev.sinais_vitais).length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-1">
+                          <div className="flex flex-wrap gap-1.5 pl-2 mt-1">
                             {ev.sinais_vitais.pressao_sistolica && (
-                              <Badge variant="outline" className="text-xs">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>
+                              <Badge className="bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20 text-[10px]">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>
                             )}
-                            {ev.sinais_vitais.frequencia_cardiaca && <Badge variant="outline" className="text-xs">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                            {ev.sinais_vitais.temperatura && <Badge variant="outline" className="text-xs">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                            {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20 text-[10px]">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                            {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 text-[10px]">T: {ev.sinais_vitais.temperatura}°C</Badge>}
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
