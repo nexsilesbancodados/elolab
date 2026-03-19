@@ -127,58 +127,53 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
 
   const imcClass = classificarIMC(sinais.imc);
 
+  const vitalCards = [
+    { key: 'pa', label: 'PA (mmHg)', icon: Heart, color: 'from-red-500/10 to-pink-500/5 dark:from-red-900/20 dark:to-pink-900/10', iconColor: 'text-red-500', dual: true },
+    { key: 'fc', label: 'FC (bpm)', icon: Heart, color: 'from-rose-500/10 to-red-500/5 dark:from-rose-900/20 dark:to-red-900/10', iconColor: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
+    { key: 'fr', label: 'FR (irpm)', icon: Activity, color: 'from-blue-500/10 to-indigo-500/5 dark:from-blue-900/20 dark:to-indigo-900/10', iconColor: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
+    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, color: 'from-orange-500/10 to-amber-500/5 dark:from-orange-900/20 dark:to-amber-900/10', iconColor: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
+    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, color: 'from-cyan-500/10 to-sky-500/5 dark:from-cyan-900/20 dark:to-sky-900/10', iconColor: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
+    { key: 'peso', label: 'Peso (kg)', icon: Scale, color: 'from-emerald-500/10 to-green-500/5 dark:from-emerald-900/20 dark:to-green-900/10', iconColor: 'text-emerald-500', field: 'peso', placeholder: '70' },
+    { key: 'altura', label: 'Altura (cm)', icon: Ruler, color: 'from-violet-500/10 to-purple-500/5 dark:from-violet-900/20 dark:to-purple-900/10', iconColor: 'text-violet-500', field: 'altura', placeholder: '170' },
+    { key: 'glasgow', label: 'Glasgow', icon: Brain, color: 'from-purple-500/10 to-fuchsia-500/5 dark:from-purple-900/20 dark:to-fuchsia-900/10', iconColor: 'text-purple-500', field: 'glasgow', placeholder: '15' },
+    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, color: 'from-yellow-500/10 to-amber-500/5 dark:from-yellow-900/20 dark:to-amber-900/10', iconColor: 'text-yellow-500', field: 'dor', placeholder: '0' },
+  ];
+
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-        <Activity className="h-4 w-4" /> Sinais Vitais
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive" />PA (mmHg)</Label>
-          <div className="flex gap-1 items-center">
-            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" disabled={disabled} />
-            <span className="text-muted-foreground">/</span>
-            <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm" />
-          </div>
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <Activity className="h-4 w-4 text-primary" />
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive/70" />FC (bpm)</Label>
-          <Input placeholder="72" value={sinais.frequencia_cardiaca} onChange={e => update('frequencia_cardiaca', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Activity className="h-3 w-3 text-primary" />FR (irpm)</Label>
-          <Input placeholder="16" value={sinais.frequencia_respiratoria} onChange={e => update('frequencia_respiratoria', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Thermometer className="h-3 w-3 text-orange-500" />Temp (°C)</Label>
-          <Input placeholder="36.5" value={sinais.temperatura} onChange={e => update('temperatura', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Droplets className="h-3 w-3 text-primary" />SpO₂ (%)</Label>
-          <Input placeholder="98" value={sinais.saturacao} onChange={e => update('saturacao', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Scale className="h-3 w-3" />Peso (kg)</Label>
-          <Input placeholder="70" value={sinais.peso} onChange={e => update('peso', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Ruler className="h-3 w-3" />Altura (cm)</Label>
-          <Input placeholder="170" value={sinais.altura} onChange={e => update('altura', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">IMC</Label>
-          <div className="h-8 flex items-center px-3 bg-muted rounded-md text-sm font-medium">
+        <h3 className="text-sm font-bold text-foreground tracking-tight">Sinais Vitais</h3>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {vitalCards.map(card => {
+          const CardIcon = card.icon;
+          return (
+            <div key={card.key} className={`rounded-xl bg-gradient-to-br ${card.color} border border-border/50 p-3 space-y-1.5 transition-all hover:shadow-sm`}>
+              <Label className={`text-[11px] font-semibold flex items-center gap-1.5 ${card.iconColor}`}>
+                <CardIcon className="h-3.5 w-3.5" />{card.label}
+              </Label>
+              {card.dual ? (
+                <div className="flex gap-1 items-center">
+                  <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" disabled={disabled} />
+                  <span className="text-muted-foreground font-bold">/</span>
+                  <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+                </div>
+              ) : (
+                <Input placeholder={card.placeholder} value={(sinais as any)[card.field!]} onChange={e => update(card.field as keyof SinaisVitais, e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+              )}
+            </div>
+          );
+        })}
+        {/* IMC card - special */}
+        <div className="rounded-xl bg-gradient-to-br from-teal-500/10 to-emerald-500/5 dark:from-teal-900/20 dark:to-emerald-900/10 border border-border/50 p-3 space-y-1.5">
+          <Label className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">IMC</Label>
+          <div className="h-8 flex items-center px-3 bg-background/60 backdrop-blur-sm rounded-md text-sm font-bold border border-border/40">
             {sinais.imc || '—'}
-            {imcClass && <span className={`ml-1.5 text-xs ${imcClass.color}`}>({imcClass.label})</span>}
+            {imcClass && <span className={`ml-1.5 text-[10px] font-semibold ${imcClass.color}`}>({imcClass.label})</span>}
           </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Brain className="h-3 w-3 text-purple-500" />Glasgow</Label>
-          <Input placeholder="15" value={sinais.glasgow} onChange={e => update('glasgow', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-yellow-500" />Dor (0-10)</Label>
-          <Input placeholder="0" value={sinais.dor} onChange={e => update('dor', e.target.value)} className="h-8 text-sm" />
         </div>
       </div>
     </div>
