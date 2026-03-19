@@ -503,6 +503,77 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          participante_1_id: string
+          participante_2_id: string
+          preview: string | null
+          ultima_mensagem_em: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          participante_1_id: string
+          participante_2_id: string
+          preview?: string | null
+          ultima_mensagem_em?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          participante_1_id?: string
+          participante_2_id?: string
+          preview?: string | null
+          ultima_mensagem_em?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          conversa_id: string
+          created_at: string | null
+          destinatario_id: string
+          id: string
+          lida_em: string | null
+          remetente_id: string
+          texto: string
+          urgente: boolean | null
+        }
+        Insert: {
+          conversa_id: string
+          created_at?: string | null
+          destinatario_id: string
+          id?: string
+          lida_em?: string | null
+          remetente_id: string
+          texto: string
+          urgente?: boolean | null
+        }
+        Update: {
+          conversa_id?: string
+          created_at?: string | null
+          destinatario_id?: string
+          id?: string
+          lida_em?: string | null
+          remetente_id?: string
+          texto?: string
+          urgente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cid10: {
         Row: {
           categoria: string | null
