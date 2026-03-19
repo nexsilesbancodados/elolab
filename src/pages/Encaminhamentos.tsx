@@ -1,30 +1,32 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowRightLeft, Filter, FileText , Clock, CheckCircle2, AlertTriangle, Plus} from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Search, ArrowRightLeft, Filter, FileText, Clock, CheckCircle2,
+  AlertTriangle, Plus, Eye, Loader2, Stethoscope, User,
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { usePacientes, useMedicos } from '@/hooks/useSupabaseData';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 import { EncaminhamentoMedico } from '@/components/clinical/EncaminhamentoMedico';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface EncaminhamentoData {
   id: string;
@@ -47,148 +49,160 @@ interface EncaminhamentoData {
   contra_referencia: string | null;
   data_contra_referencia: string | null;
   created_at: string | null;
-  paciente?: { nome: string };
-  medico_origem?: { crm: string };
+  paciente?: { nome: string } | null;
+  medico_origem?: { nome: string | null; crm: string } | null;
 }
 
-interface Paciente {
-  id: string;
-  nome: string;
-}
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  pendente: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20' },
+  em_andamento: { label: 'Em Andamento', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20' },
+  concluido: { label: 'Concluído', className: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20' },
+  cancelado: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
+};
 
-
-const URGENCIA_CONFIG = {
-  eletiva: { label: 'Eletiva', color: 'bg-muted text-muted-foreground' },
-  prioritaria: { label: 'Prioritária', color: 'bg-warning/10 text-warning border-warning/20' },
-  urgente: { label: 'Urgente', color: 'bg-destructive/10 text-destructive border-destructive/20' },
+const URGENCIA_CONFIG: Record<string, { label: string; className: string }> = {
+  eletivo: { label: 'Eletivo', className: 'bg-muted text-muted-foreground' },
+  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700 dark:text-green-300' },
+  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+  emergencia: { label: 'Emergência', className: 'bg-destructive/10 text-destructive' },
 };
 
 export default function Encaminhamentos() {
-  const [encaminhamentos, setEncaminhamentos] = useState<EncaminhamentoData[]>([]);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null);
-  const [medicoId, setMedicoId] = useState<string | null>(null);
-  const { profile, user } = useSupabaseAuth();
-  const { toast } = useToast();
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [selectedEnc, setSelectedEnc] = useState<EncaminhamentoData | null>(null);
 
-  useEffect(() => {
-    loadData();
-    loadMedicoId();
-  }, [user]);
+  const queryClient = useQueryClient();
+  const { medicoId } = useCurrentMedico();
+  const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
+  const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
 
-  const loadMedicoId = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('medicos')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    if (data) {
-      setMedicoId(data.id);
-    }
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      // Load encaminhamentos
-      const { data: encData, error: encError } = await supabase
+  const { data: encaminhamentos = [], isLoading: loadingEnc } = useQuery({
+    queryKey: ['encaminhamentos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('encaminhamentos')
-        .select(`
-          *,
-          paciente:pacientes(nome),
-          medico_origem:medicos!encaminhamentos_medico_origem_id_fkey(crm)
-        `)
+        .select(`*, paciente:pacientes(nome), medico_origem:medicos!encaminhamentos_medico_origem_id_fkey(nome, crm)`)
         .order('created_at', { ascending: false });
-
-      if (encError) throw encError;
-      setEncaminhamentos(encData || []);
-
-      // Load pacientes
-      const { data: pacData } = await supabase
-        .from('pacientes')
-        .select('id, nome')
-        .order('nome');
-
-      setPacientes(pacData || []);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os encaminhamentos.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredEncaminhamentos = encaminhamentos.filter((enc) => {
-    const matchesSearch = 
-      enc.paciente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enc.especialidade_destino.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enc.motivo.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'todos' || enc.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+      if (error) throw error;
+      return (data || []) as EncaminhamentoData[];
+    },
   });
 
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case 'pendente':
-        return <Badge variant="secondary">Pendente</Badge>;
-      case 'em_andamento':
-        return <Badge className="bg-blue-100 text-blue-800">Em Andamento</Badge>;
-      case 'concluido':
-        return <Badge className="bg-green-100 text-green-800">Concluído</Badge>;
-      case 'cancelado':
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="outline">{status || 'N/A'}</Badge>;
-    }
+  const isLoading = loadingEnc || loadingPacientes || loadingMedicos;
+
+  const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || '—';
+  const getMedicoNome = (id: string) => {
+    const m = medicos.find(m => m.id === id);
+    return m ? `Dr(a). ${m.nome || m.crm}` : '—';
   };
 
-  const getUrgenciaBadge = (urgencia: string | null) => {
-    switch (urgencia) {
-      case 'eletivo':
-        return <Badge className="bg-blue-100 text-blue-800">Eletivo</Badge>;
-      case 'normal':
-        return <Badge className="bg-green-100 text-green-800">Normal</Badge>;
-      case 'urgente':
-        return <Badge className="bg-yellow-100 text-yellow-800">Urgente</Badge>;
-      case 'emergencia':
-        return <Badge className="bg-red-100 text-red-800">Emergência</Badge>;
-      default:
-        return null;
-    }
-  };
+  const filteredEncaminhamentos = useMemo(() => {
+    return encaminhamentos.filter(enc => {
+      const matchesSearch = !searchTerm.trim() ||
+        enc.paciente?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enc.especialidade_destino.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        enc.motivo.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'todos' || enc.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [encaminhamentos, searchTerm, statusFilter]);
 
-  const selectedPaciente = selectedPacienteId 
-    ? pacientes.find(p => p.id === selectedPacienteId) 
-    : null;
+  // Stats
+  const stats = useMemo(() => ({
+    total: encaminhamentos.length,
+    pendentes: encaminhamentos.filter(e => e.status === 'pendente').length,
+    emAndamento: encaminhamentos.filter(e => e.status === 'em_andamento').length,
+    concluidos: encaminhamentos.filter(e => e.status === 'concluido').length,
+  }), [encaminhamentos]);
 
+  // Pacientes with encaminhamentos for sidebar
+  const pacientesComEnc = useMemo(() => {
+    const countMap = new Map<string, number>();
+    encaminhamentos.forEach(e => countMap.set(e.paciente_id, (countMap.get(e.paciente_id) || 0) + 1));
+    return pacientes
+      .filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => {
+        const ca = countMap.get(a.id) || 0;
+        const cb = countMap.get(b.id) || 0;
+        return cb - ca;
+      });
+  }, [pacientes, encaminhamentos, searchTerm]);
+
+  const selectedPaciente = selectedPacienteId ? pacientes.find(p => p.id === selectedPacienteId) : null;
   const pacienteEncaminhamentos = selectedPacienteId
     ? encaminhamentos.filter(e => e.paciente_id === selectedPacienteId)
     : [];
 
+  const handleView = (enc: EncaminhamentoData) => {
+    setSelectedEnc(enc);
+    setIsViewOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Encaminhamentos</h1>
-        <p className="text-muted-foreground">Referências e contra-referências médicas</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <ArrowRightLeft className="h-8 w-8 text-primary" />
+            Encaminhamentos
+          </h1>
+          <p className="text-muted-foreground">Referências e contra-referências médicas</p>
+        </div>
       </div>
 
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="kpi-card cursor-pointer" onClick={() => setStatusFilter('todos')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold tabular-nums">{stats.total}</div>
+            <p className="text-xs text-muted-foreground">Total</p>
+          </CardContent>
+        </Card>
+        <Card className={cn("kpi-card cursor-pointer", statusFilter === 'pendente' && "ring-2 ring-amber-500")} onClick={() => setStatusFilter('pendente')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold tabular-nums text-amber-600">{stats.pendentes}</div>
+            <p className="text-xs text-muted-foreground">Pendentes</p>
+          </CardContent>
+        </Card>
+        <Card className={cn("kpi-card cursor-pointer", statusFilter === 'em_andamento' && "ring-2 ring-blue-500")} onClick={() => setStatusFilter('em_andamento')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold tabular-nums text-blue-600">{stats.emAndamento}</div>
+            <p className="text-xs text-muted-foreground">Em Andamento</p>
+          </CardContent>
+        </Card>
+        <Card className={cn("kpi-card cursor-pointer", statusFilter === 'concluido' && "ring-2 ring-green-500")} onClick={() => setStatusFilter('concluido')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold tabular-nums text-green-600">{stats.concluidos}</div>
+            <p className="text-xs text-muted-foreground">Concluídos</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Lista de Pacientes */}
+        {/* Patient List */}
         <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Pacientes</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="h-4 w-4 text-primary" />
+              Pacientes
+            </CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -200,38 +214,32 @@ export default function Encaminhamentos() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="max-h-[500px] overflow-y-auto">
-              {pacientes
-                .filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
-                .map((paciente) => {
-                  const qtdEncaminhamentos = encaminhamentos.filter(
-                    e => e.paciente_id === paciente.id
-                  ).length;
-
-                  return (
-                    <div
-                      key={paciente.id}
-                      className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
-                        selectedPacienteId === paciente.id ? 'bg-primary/10' : ''
-                      }`}
-                      onClick={() => setSelectedPacienteId(paciente.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium">{paciente.nome}</p>
-                        {qtdEncaminhamentos > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {qtdEncaminhamentos}
-                          </Badge>
-                        )}
-                      </div>
+            <ScrollArea className="h-[500px]">
+              {pacientesComEnc.map((paciente) => {
+                const qtd = encaminhamentos.filter(e => e.paciente_id === paciente.id).length;
+                return (
+                  <div
+                    key={paciente.id}
+                    className={cn(
+                      'p-3 border-b cursor-pointer hover:bg-muted/50 transition-colors',
+                      selectedPacienteId === paciente.id && 'bg-primary/10 border-l-2 border-l-primary',
+                    )}
+                    onClick={() => setSelectedPacienteId(paciente.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm truncate">{paciente.nome}</p>
+                      {qtd > 0 && (
+                        <Badge variant="secondary" className="text-[10px] tabular-nums">{qtd}</Badge>
+                      )}
                     </div>
-                  );
-                })}
-            </div>
+                  </div>
+                );
+              })}
+            </ScrollArea>
           </CardContent>
         </Card>
 
-        {/* Encaminhamentos do Paciente */}
+        {/* Referral Panel */}
         <div className="lg:col-span-2">
           {selectedPaciente && medicoId ? (
             <EncaminhamentoMedico
@@ -239,14 +247,18 @@ export default function Encaminhamentos() {
               pacienteNome={selectedPaciente.nome}
               medicoOrigemId={medicoId}
               encaminhamentos={pacienteEncaminhamentos}
-              onEncaminhamentoCriado={loadData}
+              onEncaminhamentoCriado={() => queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] })}
             />
           ) : (
             <Card>
-              <CardContent className="py-12">
+              <CardContent className="py-16">
                 <div className="text-center text-muted-foreground">
-                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>Selecione um paciente para gerenciar encaminhamentos</p>
+                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                  <p className="font-medium">
+                    {!medicoId
+                      ? 'Seu perfil não está vinculado a um médico. Encaminhamentos requerem perfil médico.'
+                      : 'Selecione um paciente para gerenciar encaminhamentos'}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -254,15 +266,24 @@ export default function Encaminhamentos() {
         </div>
       </div>
 
-      {/* Tabela Geral de Encaminhamentos */}
+      {/* All Referrals Table */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Todos os Encaminhamentos
+              <FileText className="h-5 w-5 text-primary" />
+              Todos os Encaminhamentos ({filteredEncaminhamentos.length})
             </CardTitle>
             <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-56"
+                />
+              </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[150px]">
                   <Filter className="h-4 w-4 mr-2" />
@@ -287,56 +308,133 @@ export default function Encaminhamentos() {
                   <TableHead>Data</TableHead>
                   <TableHead>Paciente</TableHead>
                   <TableHead>Especialidade</TableHead>
+                  <TableHead className="hidden md:table-cell">Médico Origem</TableHead>
                   <TableHead className="hidden md:table-cell">Urgência</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden lg:table-cell">Contra-ref.</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {filteredEncaminhamentos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Carregando...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredEncaminhamentos.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Nenhum encaminhamento encontrado
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <ArrowRightLeft className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                      <p>Nenhum encaminhamento encontrado</p>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredEncaminhamentos.map((enc) => (
-                    <TableRow key={enc.id}>
-                      <TableCell>
-                        {enc.data_encaminhamento 
-                          ? format(new Date(enc.data_encaminhamento), 'dd/MM/yyyy')
-                          : 'N/A'
-                        }
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {enc.paciente?.nome || 'N/A'}
-                      </TableCell>
-                      <TableCell>{enc.especialidade_destino}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {getUrgenciaBadge(enc.urgencia)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(enc.status)}</TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {enc.contra_referencia ? (
-                          <Badge className="bg-green-100 text-green-800">Sim</Badge>
-                        ) : (
-                          <Badge variant="outline">Não</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredEncaminhamentos.map((enc) => {
+                    const statusCfg = STATUS_CONFIG[enc.status || 'pendente'] || STATUS_CONFIG.pendente;
+                    const urgCfg = URGENCIA_CONFIG[enc.urgencia || 'normal'] || URGENCIA_CONFIG.normal;
+                    return (
+                      <TableRow key={enc.id}>
+                        <TableCell className="text-sm">
+                          {enc.data_encaminhamento
+                            ? format(new Date(enc.data_encaminhamento), 'dd/MM/yyyy')
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="font-medium">{enc.paciente?.nome || getPacienteNome(enc.paciente_id)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm">{enc.especialidade_destino}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {enc.medico_origem?.nome ? `Dr(a). ${enc.medico_origem.nome}` : getMedicoNome(enc.medico_origem_id)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge className={cn(urgCfg.className)}>{urgCfg.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={cn(statusCfg.className)}>{statusCfg.label}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {enc.contra_referencia ? (
+                            <Badge className="bg-green-500/10 text-green-700 dark:text-green-300">Sim</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">Não</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleView(enc)} aria-label="Ver encaminhamento">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+
+      {/* View Detail Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              Detalhes do Encaminhamento
+            </DialogTitle>
+          </DialogHeader>
+          {selectedEnc && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-muted-foreground text-xs">Paciente</p>
+                  <p className="font-medium">{selectedEnc.paciente?.nome || getPacienteNome(selectedEnc.paciente_id)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Especialidade</p>
+                  <p className="font-medium">{selectedEnc.especialidade_destino}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Data</p>
+                  <p>{selectedEnc.data_encaminhamento ? format(new Date(selectedEnc.data_encaminhamento), 'dd/MM/yyyy') : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Urgência</p>
+                  <Badge className={cn(URGENCIA_CONFIG[selectedEnc.urgencia || 'normal']?.className)}>
+                    {URGENCIA_CONFIG[selectedEnc.urgencia || 'normal']?.label}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Status</p>
+                  <Badge className={cn(STATUS_CONFIG[selectedEnc.status || 'pendente']?.className)}>
+                    {STATUS_CONFIG[selectedEnc.status || 'pendente']?.label}
+                  </Badge>
+                </div>
+                {selectedEnc.cid_principal && (
+                  <div>
+                    <p className="text-muted-foreground text-xs">CID Principal</p>
+                    <p>{selectedEnc.cid_principal}</p>
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs mb-1">Motivo</p>
+                <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.motivo}</p>
+              </div>
+              {selectedEnc.hipotese_diagnostica && (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">Hipótese Diagnóstica</p>
+                  <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.hipotese_diagnostica}</p>
+                </div>
+              )}
+              {selectedEnc.contra_referencia && (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">Contra-referência</p>
+                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,31 +1,24 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import { format, parseISO, isPast, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { CalendarClock, AlertTriangle, CheckCircle2, Phone, Clock, Filter , Search, Bell} from 'lucide-react';
+import {
+  CalendarClock, AlertTriangle, CheckCircle2, Phone, Clock, Filter, Search,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Retorno {
@@ -47,17 +40,19 @@ export default function RetornosControl() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const queryClient = useQueryClient();
 
-  const { data: retornos = [], isLoading } = useSupabaseQuery<Retorno>('retornos', {
+  const { data: retornos = [], isLoading: loadingRetornos } = useSupabaseQuery<Retorno>('retornos', {
     orderBy: { column: 'data_retorno_prevista', ascending: true },
   });
 
-  const { data: pacientes = [] } = useSupabaseQuery<{ id: string; nome: string; telefone: string | null }>('pacientes', {
+  const { data: pacientes = [], isLoading: loadingPacientes } = useSupabaseQuery<{ id: string; nome: string; telefone: string | null }>('pacientes', {
     select: 'id, nome, telefone',
   });
 
-  const { data: medicos = [] } = useSupabaseQuery<{ id: string; nome: string | null; crm: string; especialidade: string | null }>('medicos', {
+  const { data: medicos = [], isLoading: loadingMedicos } = useSupabaseQuery<{ id: string; nome: string | null; crm: string; especialidade: string | null }>('medicos', {
     select: 'id, nome, crm, especialidade',
   });
+
+  const isLoading = loadingRetornos || loadingPacientes || loadingMedicos;
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
   const getPacienteTelefone = (id: string) => pacientes.find(p => p.id === id)?.telefone || null;
@@ -67,21 +62,30 @@ export default function RetornosControl() {
   };
 
   const hoje = new Date();
-  const retornosComStatus = retornos.map(r => {
+  const retornosComStatus = useMemo(() => retornos.map(r => {
     const dataRetorno = parseISO(r.data_retorno_prevista);
     const diasAtraso = differenceInDays(hoje, dataRetorno);
     let statusCalculado = r.status || 'pendente';
-    
     if (statusCalculado === 'pendente' && isPast(dataRetorno)) {
       statusCalculado = 'atrasado';
     }
-
     return { ...r, statusCalculado, diasAtraso, dataRetorno };
-  });
+  }), [retornos]);
 
-  const filtrados = filtroStatus === 'todos' 
-    ? retornosComStatus 
-    : retornosComStatus.filter(r => r.statusCalculado === filtroStatus);
+  const filtrados = useMemo(() => {
+    return retornosComStatus.filter(r => {
+      // Status filter
+      if (filtroStatus !== 'todos' && r.statusCalculado !== filtroStatus) return false;
+      // Search filter
+      if (searchTerm.trim()) {
+        const nome = getPacienteNome(r.paciente_id).toLowerCase();
+        const medico = getMedicoNome(r.medico_id).toLowerCase();
+        const term = searchTerm.toLowerCase();
+        if (!nome.includes(term) && !medico.includes(term) && !(r.motivo || '').toLowerCase().includes(term)) return false;
+      }
+      return true;
+    });
+  }, [retornosComStatus, filtroStatus, searchTerm, pacientes, medicos]);
 
   const pendentes = retornosComStatus.filter(r => r.statusCalculado === 'pendente').length;
   const atrasados = retornosComStatus.filter(r => r.statusCalculado === 'atrasado').length;
@@ -92,7 +96,7 @@ export default function RetornosControl() {
       .from('retornos')
       .update({ status: 'realizado' } as any)
       .eq('id', id);
-    
+
     if (error) {
       toast.error('Erro ao atualizar retorno');
     } else {
@@ -116,36 +120,61 @@ export default function RetornosControl() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 sm:grid-cols-3"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Controle de Retornos</h1>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <CalendarClock className="h-8 w-8 text-primary" />
+            Controle de Retornos
+          </h1>
           <p className="text-muted-foreground">Acompanhe retornos pendentes e atrasados</p>
         </div>
-        <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="w-44">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="atrasado">Atrasados</SelectItem>
-            <SelectItem value="pendente">Pendentes</SelectItem>
-            <SelectItem value="realizado">Realizados</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar paciente, médico..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-9 w-64"
+            />
+          </div>
+          <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+            <SelectTrigger className="w-44">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="atrasado">Atrasados</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+              <SelectItem value="realizado">Realizados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <Card className={cn("cursor-pointer transition-all hover:shadow-md", filtroStatus === 'atrasado' && "ring-2 ring-destructive")}
-              onClick={() => setFiltroStatus('atrasado')}>
+        <Card className={cn("kpi-card cursor-pointer transition-all", filtroStatus === 'atrasado' && "ring-2 ring-destructive")}
+              onClick={() => setFiltroStatus(filtroStatus === 'atrasado' ? 'todos' : 'atrasado')}>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">Atrasados</p>
-                <p className="text-3xl font-bold text-destructive">{atrasados}</p>
+                <p className="text-3xl font-bold tabular-nums text-destructive">{atrasados}</p>
               </div>
               <div className="h-11 w-11 rounded-xl bg-destructive/10 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -153,13 +182,13 @@ export default function RetornosControl() {
             </div>
           </CardContent>
         </Card>
-        <Card className={cn("cursor-pointer transition-all hover:shadow-md", filtroStatus === 'pendente' && "ring-2 ring-warning")}
-              onClick={() => setFiltroStatus('pendente')}>
+        <Card className={cn("kpi-card cursor-pointer transition-all", filtroStatus === 'pendente' && "ring-2 ring-warning")}
+              onClick={() => setFiltroStatus(filtroStatus === 'pendente' ? 'todos' : 'pendente')}>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">Pendentes</p>
-                <p className="text-3xl font-bold text-warning">{pendentes}</p>
+                <p className="text-3xl font-bold tabular-nums text-warning">{pendentes}</p>
               </div>
               <div className="h-11 w-11 rounded-xl bg-warning/10 flex items-center justify-center">
                 <CalendarClock className="h-5 w-5 text-warning" />
@@ -167,13 +196,13 @@ export default function RetornosControl() {
             </div>
           </CardContent>
         </Card>
-        <Card className={cn("cursor-pointer transition-all hover:shadow-md", filtroStatus === 'realizado' && "ring-2 ring-success")}
-              onClick={() => setFiltroStatus('realizado')}>
+        <Card className={cn("kpi-card cursor-pointer transition-all", filtroStatus === 'realizado' && "ring-2 ring-success")}
+              onClick={() => setFiltroStatus(filtroStatus === 'realizado' ? 'todos' : 'realizado')}>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">Realizados</p>
-                <p className="text-3xl font-bold text-success">{realizados}</p>
+                <p className="text-3xl font-bold tabular-nums text-success">{realizados}</p>
               </div>
               <div className="h-11 w-11 rounded-xl bg-success/10 flex items-center justify-center">
                 <CheckCircle2 className="h-5 w-5 text-success" />
@@ -192,56 +221,60 @@ export default function RetornosControl() {
         <CardContent>
           {filtrados.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              <CalendarClock className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <CalendarClock className="h-10 w-10 mx-auto mb-3 opacity-20" />
               <p>Nenhum retorno encontrado</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Paciente</TableHead>
-                  <TableHead>Médico</TableHead>
-                  <TableHead>Data Retorno</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtrados.map((r) => (
-                  <TableRow key={r.id} className={cn(r.statusCalculado === 'atrasado' && 'bg-destructive/5')}>
-                    <TableCell className="font-medium">{getPacienteNome(r.paciente_id)}</TableCell>
-                    <TableCell>{getMedicoNome(r.medico_id)}</TableCell>
-                    <TableCell>
-                      <div>
-                        {format(r.dataRetorno, "dd/MM/yyyy", { locale: ptBR })}
-                        {r.statusCalculado === 'atrasado' && (
-                          <p className="text-xs text-destructive">{r.diasAtraso} dia(s) de atraso</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{r.motivo || '-'}</TableCell>
-                    <TableCell>{getStatusBadge(r.statusCalculado)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-1 justify-end">
-                        {r.statusCalculado !== 'realizado' && (
-                          <Button size="sm" variant="outline" onClick={() => marcarRealizado(r.id)}>
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> Realizado
-                          </Button>
-                        )}
-                        {getPacienteTelefone(r.paciente_id) && (
-                          <Button size="sm" variant="ghost" asChild>
-                            <a href={`https://wa.me/55${getPacienteTelefone(r.paciente_id)?.replace(/\D/g, '')}`} target="_blank" rel="noopener">
-                              <Phone className="h-3 w-3" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Médico</TableHead>
+                    <TableHead>Data Retorno</TableHead>
+                    <TableHead className="hidden md:table-cell">Motivo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filtrados.map((r) => (
+                    <TableRow key={r.id} className={cn(r.statusCalculado === 'atrasado' && 'bg-destructive/5')}>
+                      <TableCell className="font-medium">{getPacienteNome(r.paciente_id)}</TableCell>
+                      <TableCell className="text-sm">{getMedicoNome(r.medico_id)}</TableCell>
+                      <TableCell>
+                        <div>
+                          <span className="text-sm">{format(r.dataRetorno, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                          {r.statusCalculado === 'atrasado' && (
+                            <p className="text-xs text-destructive font-medium">{r.diasAtraso} dia(s) de atraso</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
+                        {r.motivo || '—'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(r.statusCalculado)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          {r.statusCalculado !== 'realizado' && (
+                            <Button size="sm" variant="outline" onClick={() => marcarRealizado(r.id)} className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> Realizado
+                            </Button>
+                          )}
+                          {getPacienteTelefone(r.paciente_id) && (
+                            <Button size="sm" variant="ghost" asChild aria-label="Contatar via WhatsApp">
+                              <a href={`https://wa.me/55${getPacienteTelefone(r.paciente_id)?.replace(/\D/g, '')}`} target="_blank" rel="noopener">
+                                <Phone className="h-3 w-3" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
