@@ -472,11 +472,17 @@ export default function Agenda() {
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={() => viewMode === 'day' ? setCurrentWeek(addDays(currentWeek, -1)) : setCurrentWeek(subWeeks(currentWeek, 1))}>
+                  <Button variant="outline" size="icon" onClick={() => {
+                    if (viewMode === 'month') setCurrentWeek(subMonths(currentWeek, 1));
+                    else if (viewMode === 'day') setCurrentWeek(addDays(currentWeek, -1));
+                    else setCurrentWeek(subWeeks(currentWeek, 1));
+                  }}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <CardTitle className="text-lg">
-                    {viewMode === 'day'
+                    {viewMode === 'month'
+                      ? format(currentWeek, "MMMM 'de' yyyy", { locale: ptBR })
+                      : viewMode === 'day'
                       ? format(currentWeek, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
                       : `${format(weekDays[0], "dd 'de' MMMM", { locale: ptBR })} — ${format(weekDays[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`}
                   </CardTitle>
