@@ -1,163 +1,145 @@
-# Plano de Automações para o EloLab
 
-## ✅ TODAS AS AUTOMAÇÕES IMPLEMENTADAS
 
-| Automação | Status | Implementação |
-|-----------|--------|---------------|
-| **FASE 1** | ✅ 100% | |
-| Lembretes de consulta (24h/2h) | ✅ | Edge Function `send-appointment-reminder` |
-| Faturamento automático | ✅ | Trigger `auto_billing_on_appointment_complete` |
-| Alertas de estoque | ✅ | Edge Function `stock-alert` + Trigger |
-| **FASE 2** | ✅ 100% | |
-| Notificação de exames | ✅ | Trigger `notify_exam_result_available` |
-| Relatórios mensais | ✅ | Edge Function `monthly-report-generator` |
-| **FASE 3** | ✅ 100% | |
-| Aniversariantes | ✅ | Edge Function `birthday-greetings` |
-| Processador de fila | ✅ | Edge Function `process-notification-queue` |
-| **FASE 4** | ✅ 100% | |
-| Assistente IA Médico | ✅ | Edge Function `ai-medical-assistant` |
+# Analise Completa dos Modulos - EloLab
+
+## Visao Geral
+
+Apos analise de todos os 40+ modulos do sistema, identifiquei melhorias organizadas por prioridade e impacto.
 
 ---
 
-## Edge Functions Disponíveis
+## Modulos com Maior Potencial de Melhoria
 
-| Função | Descrição | Testada |
-|--------|-----------|---------|
-| `send-employee-invitation` | Convites de funcionários | ✅ |
-| `send-appointment-reminder` | Lembretes 24h e 2h | ✅ |
-| `stock-alert` | Alertas de estoque crítico | ✅ |
-| `process-notification-queue` | Processa fila de notificações | ✅ |
-| `monthly-report-generator` | Relatórios mensais com métricas | ✅ |
-| `birthday-greetings` | Mensagens de aniversário | ✅ |
-| `ai-medical-assistant` | IA para diagnósticos e interações | ✅ |
+### 1. Retornos (283 linhas) - BASICO DEMAIS
+**Problema**: Modulo mais simples do sistema. Apenas uma tabela com filtros basicos, sem KPIs, sem acoes em lote, sem integracao com agenda.
+**Melhorias**:
+- Dashboard com KPIs (retornos atrasados, taxa de comparecimento, proximos 7 dias)
+- Botao "Agendar Retorno" que cria agendamento automaticamente
+- Envio de lembrete via WhatsApp/SMS
+- Cards visuais ao inves de tabela pura
+- Alertas visuais para retornos vencidos ha mais de X dias
 
----
+### 2. Analytics (416 linhas) - SUBUTILIZADO
+**Problema**: KPIs basicos sem filtros de periodo customizaveis, sem comparativos, sem exportacao.
+**Melhorias**:
+- Seletor de periodo customizado (date range picker)
+- Comparativo mes a mes lado a lado
+- Metricas de produtividade por medico
+- Taxa de ocupacao de salas
+- Funil de conversao (agendamento -> atendimento -> retorno)
+- Export PDF/Excel dos dashboards
 
-## Triggers Automáticos no Banco
+### 3. Configuracoes (560 linhas) - USA localStorage
+**Problema**: Salva configuracoes em localStorage ao inves de Supabase. Dados se perdem ao trocar de navegador.
+**Melhorias**:
+- Migrar todas as configuracoes para tabela `configuracoes_clinica` no Supabase
+- Adicionar configuracao de logo/marca da clinica
+- Personalizar modelos de PDF (receita, atestado)
+- Configurar horarios por dia da semana
+- Gerenciamento de feriados
 
-| Trigger | Tabela | Ação |
-|---------|--------|------|
-| `trigger_auto_billing` | `agendamentos` | Cria lançamento ao finalizar |
-| `trigger_check_critical_stock` | `estoque` | Alerta quando estoque baixo |
-| `trigger_notify_exam_result` | `exames` | Notifica quando laudo disponível |
+### 4. Usuarios (431 linhas) - FALTA GESTAO
+**Problema**: CRUD basico sem logs de ultimo acesso, sem gestao de sessoes, sem 2FA.
+**Melhorias**:
+- Mostrar ultimo login e status online/offline
+- Historico de acessos do usuario
+- Bloqueio temporario de conta
+- Reset de senha pelo admin
+- Visao de permissoes em formato matrix (usuario x modulo)
 
----
+### 5. Tarefas (435 linhas) - FALTA COLABORACAO
+**Problema**: Tarefas individuais sem atribuicao a equipe, sem Kanban, sem subtarefas.
+**Melhorias**:
+- Visao Kanban (drag and drop entre colunas)
+- Atribuicao de tarefas a funcionarios
+- Subtarefas/checklist
+- Comentarios nas tarefas
+- Notificacao quando tarefa e atribuida
 
-## Configurações de Automação
+### 6. Agenda (874 linhas) - FALTA DRAG & DROP
+**Problema**: Grade visual basica sem arrastar para reagendar, sem visao mensal, sem integracao Google Calendar.
+**Melhorias**:
+- Drag and drop para mover agendamentos
+- Visao mensal com mini-preview
+- Confirmacao automatica via WhatsApp (24h antes)
+- Cores por tipo de consulta/medico
+- Impressao da agenda do dia
 
-As configurações estão em `automation_settings`:
-- `lembrete_consulta_24h` - Ativo
-- `lembrete_consulta_2h` - Ativo
-- `alerta_estoque_critico` - Ativo
-- `faturamento_automatico` - Ativo
-- `aniversariantes` - Ativo
+### 7. Estoque (568 linhas) - FALTA RASTREABILIDADE
+**Problema**: Controle basico sem historico de movimentacoes visivel, sem leitura de codigo de barras, sem relatorios de consumo.
+**Melhorias**:
+- Historico/timeline de movimentacoes por item
+- Grafico de consumo mensal
+- Alertas de validade proxima (30/60/90 dias)
+- Relatorio de curva ABC
+- Sugestao automatica de pedido de compra
 
----
-
-## Como Agendar Execução Automática (Cron)
-
-Execute este SQL no Supabase SQL Editor para agendar as automações:
-
-```sql
--- Habilitar extensões
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
-
--- Lembretes de consulta: a cada hora
-SELECT cron.schedule(
-  'appointment-reminders',
-  '0 * * * *',
-  $$SELECT net.http_post(
-    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/send-appointment-reminder',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb
-  );$$
-);
-
--- Alertas de estoque: diário às 8h
-SELECT cron.schedule(
-  'stock-alerts',
-  '0 8 * * *',
-  $$SELECT net.http_post(
-    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/stock-alert',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb
-  );$$
-);
-
--- Processar fila: a cada 5 minutos
-SELECT cron.schedule(
-  'process-notifications',
-  '*/5 * * * *',
-  $$SELECT net.http_post(
-    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/process-notification-queue',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb
-  );$$
-);
-
--- Aniversariantes: diário às 9h
-SELECT cron.schedule(
-  'birthday-greetings',
-  '0 9 * * *',
-  $$SELECT net.http_post(
-    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/birthday-greetings',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb
-  );$$
-);
-
--- Relatório mensal: dia 1 às 6h
-SELECT cron.schedule(
-  'monthly-report',
-  '0 6 1 * *',
-  $$SELECT net.http_post(
-    url := 'https://gebygucrpipaufrlyqqj.supabase.co/functions/v1/monthly-report-generator',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlYnlndWNycGlwYXVmcmx5cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTQ2ODAsImV4cCI6MjA4NTM5MDY4MH0.WURCBXjBiAZpk-Qyb3SMu3XQGVvRG07BuCJSURbmouI"}'::jsonb
-  );$$
-);
-```
+### 8. Painel TV (657 linhas) - FALTA PERSONALIDADE
+**Problema**: Funcional mas visual sem destaque, sem temas personalizaveis.
+**Melhorias**:
+- Temas visuais (moderno, classico, infantil)
+- Exibir mensagens de aniversariantes do dia
+- Previsao do tempo
+- Tempo medio de espera estimado
+- Animacoes de transicao mais fluidas
 
 ---
 
-## Assistente IA Médico
+## Modulos com Melhorias Pontuais
 
-O `ai-medical-assistant` oferece 3 funcionalidades:
+### 9. Financeiro / Contas a Pagar / Contas a Receber
+- Conciliacao bancaria (upload de extrato OFX)
+- DRE (Demonstrativo de Resultado)
+- Dashboard unificado entre os 3 modulos financeiros
+- Parcelamento de pagamentos
 
-### 1. Sugestão de Diagnóstico
-```json
-{
-  "action": "suggest_diagnosis",
-  "data": {
-    "queixa_principal": "Dor de cabeça intensa",
-    "historia_doenca_atual": "Cefaleia frontal, pulsátil, com fotofobia",
-    "exames_fisicos": "PA 120/80, FC 78"
-  }
-}
-```
+### 10. Laboratorio / Laudos / Mapa de Coleta
+- Integracao entre os 3 modulos (coleta -> analise -> laudo em pipeline visual)
+- Dashboard unificado do lab com metricas de TAT (turnaround time)
+- Impressao em lote de etiquetas
 
-### 2. Verificação de Interações
-```json
-{
-  "action": "check_interactions",
-  "data": {
-    "medicamentos": ["Dipirona 500mg", "Ibuprofeno 600mg"],
-    "alergias": ["AAS"]
-  }
-}
-```
+### 11. Prescricoes / Atestados
+- Favoritos/templates rapidos por medico
+- Duplicar prescricao anterior com 1 clique
+- Preview do PDF antes de gerar
+- Envio direto por WhatsApp ao paciente
 
-### 3. Sugestão de Prescrição
-```json
-{
-  "action": "fill_prescription",
-  "data": {
-    "diagnostico": "Migrânea sem aura"
-  }
-}
-```
+### 12. Pacientes (1457 linhas) - MUITO GRANDE
+- Refatorar em componentes menores (PatientList, PatientForm, PatientDetail)
+- Performance: virtualizar lista para clinicas com 1000+ pacientes
+- Fusao de cadastros duplicados
 
 ---
 
-## Próximas Melhorias (Opcionais)
+## Melhorias Transversais (afetam todos os modulos)
 
-1. **WhatsApp Business**: Integrar com Twilio ou Z-API para notificações via WhatsApp
-2. **Backup Automático**: Exportar dados diariamente para storage seguro
-3. **Dashboard de Automações**: Criar tela para visualizar logs e configurações
-4. **Mais Templates**: Adicionar templates personalizados de notificação
+| Melhoria | Impacto |
+|----------|---------|
+| Paginacao server-side | Performance com volume alto de dados |
+| Filtros salvos/favoritos | Produtividade do usuario |
+| Exportacao unificada (Excel/PDF) em todos os modulos | Consistencia |
+| Notificacoes in-app (sino no navbar) com contagem | UX |
+| Atalhos de teclado globais documentados | Power users |
+| Tour guiado por modulo (onboarding contextual) | Onboarding |
+
+---
+
+## Plano de Implementacao Sugerido
+
+**Fase 1 - Quick Wins (alto impacto, baixo esforco)**:
+1. Retornos: adicionar KPIs e botao de agendamento
+2. Configuracoes: migrar para Supabase
+3. Usuarios: mostrar ultimo acesso
+
+**Fase 2 - Experiencia Premium**:
+4. Tarefas: visao Kanban
+5. Agenda: visao mensal + cores por medico
+6. Analytics: filtros de periodo + comparativos
+
+**Fase 3 - Operacional Avancado**:
+7. Estoque: timeline de movimentacoes + curva ABC
+8. Lab pipeline unificado
+9. Pacientes: refatoracao em componentes
+
+Qual grupo de melhorias voce gostaria de implementar primeiro?
+
