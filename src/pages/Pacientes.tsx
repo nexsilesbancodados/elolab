@@ -290,14 +290,16 @@ export default function Pacientes() {
         }
       }
 
-      await supabase.from('audit_log').insert({
-        action: activeProntuario?.id ? 'update' : 'create',
-        collection: 'prontuarios',
-        record_id: prontuarioId,
-        record_name: pacientes.find(p => p.id === selectedPacienteId)?.nome || '',
-        user_id: authProfile?.id || null,
-        user_name: authProfile?.nome || null,
-      }).catch(() => {});
+      try {
+        await supabase.from('audit_log').insert({
+          action: activeProntuario?.id ? 'update' : 'create',
+          collection: 'prontuarios',
+          record_id: prontuarioId,
+          record_name: pacientes.find(p => p.id === selectedPacienteId)?.nome || '',
+          user_id: authProfile?.id || null,
+          user_name: authProfile?.nome || null,
+        });
+      } catch { /* silent */ }
 
       toast({ title: 'Prontuário salvo com sucesso!' });
       if (selectedPacienteId) loadProntuarios(selectedPacienteId);
