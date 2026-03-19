@@ -285,6 +285,7 @@ export default function Pacientes() {
     try {
       const dataToSave: any = {
         nome: formData.nome,
+        nome_social: formData.nome_social || null,
         cpf: formData.cpf,
         data_nascimento: formData.data_nascimento,
         telefone: formData.telefone,
