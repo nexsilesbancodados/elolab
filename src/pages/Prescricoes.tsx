@@ -202,11 +202,11 @@ export default function Prescricoes() {
 
   const handleView = (group: Record<string, any>) => { setSelectedPrescricao(group); setIsViewOpen(true); };
 
-  const handlePrint = (group: Record<string, any>) => {
+  const handlePrint = async (group: Record<string, any>) => {
     const paciente = pacientes.find(p => p.id === group.paciente_id);
     const medico = medicos.find(m => m.id === group.medico_id);
     if (!paciente || !medico) return;
-    const doc = gerarReceita(
+    const doc = await gerarReceita(
       { nome: paciente.nome, cpf: paciente.cpf || '', dataNascimento: paciente.data_nascimento || '' },
       { nome: medico.nome || medico.crm, crm: medico.crm, especialidade: medico.especialidade || '' },
       group.medicamentos.map((m: Record<string, any>) => ({

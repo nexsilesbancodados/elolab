@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 
 interface PacienteFormData {
   nome: string;
+  nome_social: string;
   cpf: string;
   data_nascimento: string;
   telefone: string;
@@ -57,7 +58,7 @@ interface PacienteFormData {
 }
 
 const initialFormData: PacienteFormData = {
-  nome: '', cpf: '', data_nascimento: '', telefone: '', email: '',
+  nome: '', nome_social: '', cpf: '', data_nascimento: '', telefone: '', email: '',
   sexo: '', estado_civil: '', profissao: '', tipo_sanguineo: '',
   cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '',
   convenio_id: '', numero_carteira: '', validade_carteira: '',
@@ -217,6 +218,7 @@ export default function Pacientes() {
     setSelectedPacienteId(paciente.id);
     setFormData({
       nome: paciente.nome,
+      nome_social: paciente.nome_social || '',
       cpf: paciente.cpf || '',
       data_nascimento: paciente.data_nascimento || '',
       telefone: paciente.telefone || '',
@@ -284,6 +286,7 @@ export default function Pacientes() {
     try {
       const dataToSave: any = {
         nome: formData.nome,
+        nome_social: formData.nome_social || null,
         cpf: formData.cpf,
         data_nascimento: formData.data_nascimento,
         telefone: formData.telefone,
@@ -650,6 +653,13 @@ export default function Pacientes() {
                   <div className="space-y-2">
                     <Label>Nome Completo *</Label>
                     <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Nome completo" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      Nome Social
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 font-normal">Opcional</Badge>
+                    </Label>
+                    <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
                   </div>
                   <div className="space-y-2">
                     <Label>CPF *</Label>
