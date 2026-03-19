@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,6 +42,12 @@ export function useChatInterno() {
   const [conversaAtiva, setConversaAtiva] = useState<ChatConversa | null>(null);
   const [loading, setLoading] = useState(false);
   const [totalNaoLidas, setTotalNaoLidas] = useState(0);
+  const conversaAtivaRef = useRef<ChatConversa | null>(null);
+  const usuariosRef = useRef<ChatUsuario[]>([]);
+
+  // Keep refs in sync
+  useEffect(() => { conversaAtivaRef.current = conversaAtiva; }, [conversaAtiva]);
+  useEffect(() => { usuariosRef.current = usuarios; }, [usuarios]);
 
   // Fetch all users (profiles) except current user
   const fetchUsuarios = useCallback(async () => {
@@ -54,13 +60,15 @@ export function useChatInterno() {
       .order('nome');
 
     if (data) {
-      setUsuarios(data.map(p => ({
+      const mapped = data.map(p => ({
         id: p.id,
         user_id: p.id,
         nome: p.nome,
         email: p.email,
         avatar_url: p.avatar,
-      })));
+      }));
+      setUsuarios(mapped);
+      usuariosRef.current = mapped;
     }
   }, [user]);
 
@@ -73,49 +81,48 @@ export function useChatInterno() {
       .or(`participante_1_id.eq.${user.id},participante_2_id.eq.${user.id}`)
       .order('ultima_mensagem_em', { ascending: false });
 
-    if (data) {
-      // For each conversation, count unread messages and attach the other user
-      const enriched: ChatConversa[] = await Promise.all(
-        data.map(async (conv: any) => {
-          const outroId = conv.participante_1_id === user.id
-            ? conv.participante_2_id
-            : conv.participante_1_id;
+    if (!data) return;
 
-          // Count unread
-          const { count } = await supabase
+    // Batch unread counts in parallel
+    const enriched: ChatConversa[] = await Promise.all(
+      data.map(async (conv: any) => {
+        const outroId = conv.participante_1_id === user.id
+          ? conv.participante_2_id
+          : conv.participante_1_id;
+
+        const [{ count }, { count: urgCount }] = await Promise.all([
+          supabase
             .from('chat_messages')
             .select('*', { count: 'exact', head: true })
             .eq('conversa_id', conv.id)
             .eq('destinatario_id', user.id)
-            .is('lida_em', null);
-
-          // Check urgent unread
-          const { count: urgCount } = await supabase
+            .is('lida_em', null),
+          supabase
             .from('chat_messages')
             .select('*', { count: 'exact', head: true })
             .eq('conversa_id', conv.id)
             .eq('destinatario_id', user.id)
             .eq('urgente', true)
-            .is('lida_em', null);
+            .is('lida_em', null),
+        ]);
 
-          const outroUsuario = usuarios.find(u => u.id === outroId);
+        const outroUsuario = usuariosRef.current.find(u => u.id === outroId);
 
-          return {
-            id: conv.id,
-            participante_1_id: conv.participante_1_id,
-            participante_2_id: conv.participante_2_id,
-            ultima_mensagem_em: conv.ultima_mensagem_em,
-            preview: conv.preview,
-            outro_usuario: outroUsuario,
-            nao_lidas: count || 0,
-            urgente_nao_lida: (urgCount || 0) > 0,
-          };
-        })
-      );
-      setConversas(enriched);
-      setTotalNaoLidas(enriched.reduce((sum, c) => sum + c.nao_lidas, 0));
-    }
-  }, [user, usuarios]);
+        return {
+          id: conv.id,
+          participante_1_id: conv.participante_1_id,
+          participante_2_id: conv.participante_2_id,
+          ultima_mensagem_em: conv.ultima_mensagem_em,
+          preview: conv.preview,
+          outro_usuario: outroUsuario,
+          nao_lidas: count || 0,
+          urgente_nao_lida: (urgCount || 0) > 0,
+        };
+      })
+    );
+    setConversas(enriched);
+    setTotalNaoLidas(enriched.reduce((sum, c) => sum + c.nao_lidas, 0));
+  }, [user]);
 
   // Fetch messages for a specific conversation
   const fetchMensagens = useCallback(async (conversaId: string) => {
@@ -130,15 +137,22 @@ export function useChatInterno() {
     if (data) {
       setMensagens(data as ChatMensagem[]);
       // Mark unread messages as read
-      await supabase
-        .from('chat_messages')
-        .update({ lida_em: new Date().toISOString() })
-        .eq('conversa_id', conversaId)
-        .eq('destinatario_id', user.id)
-        .is('lida_em', null);
+      const unread = data.filter(
+        (m: any) => m.destinatario_id === user.id && !m.lida_em
+      );
+      if (unread.length > 0) {
+        await supabase
+          .from('chat_messages')
+          .update({ lida_em: new Date().toISOString() })
+          .eq('conversa_id', conversaId)
+          .eq('destinatario_id', user.id)
+          .is('lida_em', null);
+        // Refresh unread counts
+        fetchConversas();
+      }
     }
     setLoading(false);
-  }, [user]);
+  }, [user, fetchConversas]);
 
   // Start or find existing conversation
   const iniciarConversa = useCallback(async (outroUserId: string): Promise<ChatConversa | null> => {
@@ -154,7 +168,7 @@ export function useChatInterno() {
       .maybeSingle();
 
     if (existing) {
-      const outroUsuario = usuarios.find(u => u.id === outroUserId);
+      const outroUsuario = usuariosRef.current.find(u => u.id === outroUserId);
       const conv: ChatConversa = {
         id: existing.id,
         participante_1_id: existing.participante_1_id,
@@ -181,7 +195,7 @@ export function useChatInterno() {
 
     if (error || !newConv) return null;
 
-    const outroUsuario = usuarios.find(u => u.id === outroUserId);
+    const outroUsuario = usuariosRef.current.find(u => u.id === outroUserId);
     const conv: ChatConversa = {
       id: newConv.id,
       participante_1_id: newConv.participante_1_id,
@@ -193,22 +207,23 @@ export function useChatInterno() {
       urgente_nao_lida: false,
     };
     setConversaAtiva(conv);
-    await fetchConversas();
+    fetchConversas();
     return conv;
-  }, [user, usuarios, fetchConversas]);
+  }, [user, fetchConversas]);
 
   // Send a message
   const enviarMensagem = useCallback(async (texto: string, urgente = false) => {
-    if (!user || !conversaAtiva || !texto.trim()) return;
+    if (!user || !conversaAtivaRef.current || !texto.trim()) return;
+    const conv = conversaAtivaRef.current;
 
-    const outroId = conversaAtiva.participante_1_id === user.id
-      ? conversaAtiva.participante_2_id
-      : conversaAtiva.participante_1_id;
+    const outroId = conv.participante_1_id === user.id
+      ? conv.participante_2_id
+      : conv.participante_1_id;
 
     const { data: msg, error } = await supabase
       .from('chat_messages')
       .insert({
-        conversa_id: conversaAtiva.id,
+        conversa_id: conv.id,
         remetente_id: user.id,
         destinatario_id: outroId,
         texto: texto.trim(),
@@ -226,13 +241,25 @@ export function useChatInterno() {
         ultima_mensagem_em: new Date().toISOString(),
         preview: texto.trim().slice(0, 100),
       })
-      .eq('id', conversaAtiva.id);
+      .eq('id', conv.id);
 
     if (msg) {
       setMensagens(prev => [...prev, msg as ChatMensagem]);
     }
-    await fetchConversas();
-  }, [user, conversaAtiva, fetchConversas]);
+    fetchConversas();
+  }, [user, fetchConversas]);
+
+  // Marcar todas mensagens de uma conversa como lidas
+  const marcarComoLida = useCallback(async (conversaId: string) => {
+    if (!user) return;
+    await supabase
+      .from('chat_messages')
+      .update({ lida_em: new Date().toISOString() })
+      .eq('conversa_id', conversaId)
+      .eq('destinatario_id', user.id)
+      .is('lida_em', null);
+    fetchConversas();
+  }, [user, fetchConversas]);
 
   // Initial data fetch
   useEffect(() => {
@@ -254,8 +281,9 @@ export function useChatInterno() {
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
         (payload) => {
           const newMsg = payload.new as ChatMensagem;
+          const activeConv = conversaAtivaRef.current;
           // If this message is for the active conversation, add it
-          if (conversaAtiva && newMsg.conversa_id === conversaAtiva.id) {
+          if (activeConv && newMsg.conversa_id === activeConv.id) {
             setMensagens(prev => {
               if (prev.find(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
@@ -272,12 +300,20 @@ export function useChatInterno() {
           fetchConversas();
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_messages' },
+        () => {
+          // Refresh on read receipts
+          fetchConversas();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, conversaAtiva, fetchConversas]);
+  }, [user, fetchConversas]);
 
   return {
     usuarios,
@@ -290,5 +326,6 @@ export function useChatInterno() {
     fetchMensagens,
     iniciarConversa,
     enviarMensagem,
+    marcarComoLida,
   };
 }
