@@ -1,10 +1,16 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Edit, Trash2, Eye, Tag, Link, Loader2, MapPin,
   Phone, Mail, Calendar, Filter, Users, UserCheck, Baby, Heart,
   FileText, ChevronDown, ChevronUp, User2, Building2, CreditCard,
-  Droplets, Briefcase, X,
+  Droplets, Briefcase, X, Stethoscope, Save, Pill, ClipboardList,
+  AlertTriangle, Activity, ChevronRight, History, PenLine, Lock,
+  ShieldCheck, BookOpen, FileCheck, Brain, Bone, Eye as EyeIcon,
+  Thermometer, Scale, Ruler, Paperclip, Shield, Clipboard,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,15 +24,19 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { usePacientes } from '@/hooks/useSupabaseData';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
-import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert } from '@/components/clinical';
+import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert, Cid10Search, ClinicalProtocols, AnexosProntuario, DigitalSignature } from '@/components/clinical';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { Paciente } from '@/types';
 import { cn } from '@/lib/utils';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { gerarProntuarioPDF, downloadPDF, openPDF } from '@/lib/pdfGenerator';
 
 interface PacienteFormData {
   nome: string;
@@ -125,10 +135,195 @@ export default function Pacientes() {
   const [filterConvenio, setFilterConvenio] = useState<string>('todos');
   const [filterIdade, setFilterIdade] = useState<string>('todos');
   const [formSection, setFormSection] = useState<string>('pessoal');
+  // Prontuário inline state
+  const [prontuarioList, setProntuarioList] = useState<any[]>([]);
+  const [loadingProntuarios, setLoadingProntuarios] = useState(false);
+  const [activeProntuario, setActiveProntuario] = useState<any>(null);
+  const [isEditingProntuario, setIsEditingProntuario] = useState(false);
+  const [prontuarioForm, setProntuarioForm] = useState<Record<string, any>>({});
+  const [prontuarioSinais, setProntuarioSinais] = useState<Record<string, string>>({});
+  const [prontuarioPrescricoes, setProntuarioPrescricoes] = useState<any[]>([]);
+  const [prontuarioTab, setProntuarioTab] = useState('lista');
+  const [savingProntuario, setSavingProntuario] = useState(false);
 
   const { toast } = useToast();
+  const { profile: authProfile } = useSupabaseAuth();
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
   const { data: pacientes = [], isLoading, refetch } = usePacientes();
   const { data: convenios = [] } = useSupabaseQuery<any>('convenios', { orderBy: { column: 'nome', ascending: true } });
+  const { data: medicos = [] } = useSupabaseQuery<any>('medicos', { orderBy: { column: 'nome', ascending: true } });
+
+  // Load prontuários when patient changes
+  const loadProntuarios = useCallback(async (pacienteId: string) => {
+    setLoadingProntuarios(true);
+    const { data } = await supabase
+      .from('prontuarios')
+      .select('id, data, queixa_principal, hipotese_diagnostica, diagnostico_principal, conduta, sinais_vitais, plano_terapeutico, historia_doenca_atual, historia_patologica_pregressa, historia_familiar, historia_social, revisao_sistemas, alergias_relatadas, medicamentos_em_uso, exames_fisicos, exame_cabeca_pescoco, exame_torax, exame_abdomen, exame_membros, exame_neurologico, exame_pele, orientacoes_paciente, observacoes_internas, diagnosticos_secundarios, medico_id, paciente_id, medicos(nome, crm, especialidade)')
+      .eq('paciente_id', pacienteId)
+      .order('data', { ascending: false })
+      .limit(50);
+    setProntuarioList(data || []);
+    setLoadingProntuarios(false);
+  }, []);
+
+  // Reset prontuário state when view opens
+  const handleViewWithProntuario = useCallback((paciente: any) => {
+    setSelectedPacienteId(paciente.id);
+    setViewTab('dados');
+    setProntuarioTab('lista');
+    setActiveProntuario(null);
+    setIsEditingProntuario(false);
+    setIsViewOpen(true);
+    loadProntuarios(paciente.id);
+  }, [loadProntuarios]);
+
+  const handleNewProntuario = () => {
+    const paciente = pacientes.find(p => p.id === selectedPacienteId);
+    setProntuarioForm({
+      paciente_id: selectedPacienteId,
+      medico_id: medicoId || authProfile?.id || '',
+      data: format(new Date(), 'yyyy-MM-dd'),
+      queixa_principal: '',
+      historia_doenca_atual: '',
+      historia_patologica_pregressa: '',
+      historia_familiar: '',
+      historia_social: '',
+      revisao_sistemas: '',
+      alergias_relatadas: paciente?.alergias?.join(', ') || '',
+      medicamentos_em_uso: '',
+      exames_fisicos: '',
+      exame_cabeca_pescoco: '', exame_torax: '', exame_abdomen: '',
+      exame_membros: '', exame_neurologico: '', exame_pele: '',
+      hipotese_diagnostica: '',
+      diagnostico_principal: '',
+      diagnosticos_secundarios: [],
+      conduta: '',
+      plano_terapeutico: '',
+      orientacoes_paciente: '',
+      observacoes_internas: '',
+    });
+    setProntuarioSinais({});
+    setProntuarioPrescricoes([]);
+    setActiveProntuario(null);
+    setIsEditingProntuario(true);
+    setProntuarioTab('editor');
+  };
+
+  const handleOpenProntuario = async (pront: any) => {
+    setProntuarioForm(pront);
+    setProntuarioSinais(pront.sinais_vitais || {});
+    const { data: prescs } = await supabase.from('prescricoes').select('*').eq('prontuario_id', pront.id);
+    setProntuarioPrescricoes((prescs || []).map((p: any) => ({
+      medicamento: p.medicamento, dosagem: p.dosagem || '', posologia: p.posologia || '',
+      duracao: p.duracao || '', quantidade: p.quantidade || '', observacoes: p.observacoes || '',
+    })));
+    setActiveProntuario(pront);
+    setIsEditingProntuario(false);
+    setProntuarioTab('editor');
+  };
+
+  const handleSaveProntuario = async () => {
+    if (!prontuarioForm.queixa_principal) {
+      toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      return;
+    }
+    setSavingProntuario(true);
+    try {
+      const payload = {
+        queixa_principal: prontuarioForm.queixa_principal,
+        historia_doenca_atual: prontuarioForm.historia_doenca_atual,
+        historia_patologica_pregressa: prontuarioForm.historia_patologica_pregressa,
+        historia_familiar: prontuarioForm.historia_familiar,
+        historia_social: prontuarioForm.historia_social,
+        revisao_sistemas: prontuarioForm.revisao_sistemas,
+        alergias_relatadas: prontuarioForm.alergias_relatadas,
+        medicamentos_em_uso: prontuarioForm.medicamentos_em_uso,
+        sinais_vitais: JSON.parse(JSON.stringify(prontuarioSinais)),
+        exames_fisicos: prontuarioForm.exames_fisicos,
+        exame_cabeca_pescoco: prontuarioForm.exame_cabeca_pescoco,
+        exame_torax: prontuarioForm.exame_torax,
+        exame_abdomen: prontuarioForm.exame_abdomen,
+        exame_membros: prontuarioForm.exame_membros,
+        exame_neurologico: prontuarioForm.exame_neurologico,
+        exame_pele: prontuarioForm.exame_pele,
+        hipotese_diagnostica: prontuarioForm.hipotese_diagnostica,
+        diagnostico_principal: prontuarioForm.diagnostico_principal,
+        diagnosticos_secundarios: prontuarioForm.diagnosticos_secundarios || [],
+        conduta: prontuarioForm.conduta,
+        plano_terapeutico: prontuarioForm.plano_terapeutico,
+        orientacoes_paciente: prontuarioForm.orientacoes_paciente,
+        observacoes_internas: prontuarioForm.observacoes_internas,
+      };
+
+      let prontuarioId = activeProntuario?.id;
+      if (activeProntuario?.id) {
+        const { error } = await supabase.from('prontuarios').update(payload).eq('id', activeProntuario.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('prontuarios').insert({
+          ...payload,
+          paciente_id: prontuarioForm.paciente_id,
+          medico_id: prontuarioForm.medico_id,
+          data: prontuarioForm.data,
+        }).select().single();
+        if (error) throw error;
+        prontuarioId = data.id;
+      }
+
+      if (!activeProntuario?.id) {
+        for (const presc of prontuarioPrescricoes) {
+          if (presc.medicamento) {
+            await supabase.from('prescricoes').insert({
+              paciente_id: prontuarioForm.paciente_id,
+              medico_id: prontuarioForm.medico_id,
+              prontuario_id: prontuarioId,
+              medicamento: presc.medicamento,
+              dosagem: presc.dosagem || null,
+              posologia: presc.posologia || null,
+              duracao: presc.duracao || null,
+              quantidade: presc.quantidade || null,
+              observacoes: presc.observacoes || null,
+              data_emissao: format(new Date(), 'yyyy-MM-dd'),
+              tipo: 'simples',
+            });
+          }
+        }
+      }
+
+      try {
+        await supabase.from('audit_log').insert({
+          action: activeProntuario?.id ? 'update' : 'create',
+          collection: 'prontuarios',
+          record_id: prontuarioId,
+          record_name: pacientes.find(p => p.id === selectedPacienteId)?.nome || '',
+          user_id: authProfile?.id || null,
+          user_name: authProfile?.nome || null,
+        });
+      } catch { /* silent */ }
+
+      toast({ title: 'Prontuário salvo com sucesso!' });
+      if (selectedPacienteId) loadProntuarios(selectedPacienteId);
+      setProntuarioTab('lista');
+      setIsEditingProntuario(false);
+      setActiveProntuario(null);
+    } catch (error) {
+      console.error('Error saving prontuario:', error);
+      toast({ title: 'Erro ao salvar prontuário', variant: 'destructive' });
+    } finally {
+      setSavingProntuario(false);
+    }
+  };
+
+  const updateProntuarioField = (field: string, value: any) => setProntuarioForm(prev => ({ ...prev, [field]: value }));
+  const updateSinal = (field: string, value: string) => {
+    const next = { ...prontuarioSinais, [field]: value };
+    if (field === 'peso' || field === 'altura') {
+      const p = parseFloat(field === 'peso' ? value : next.peso || '0');
+      const a = parseFloat(field === 'altura' ? value : next.altura || '0');
+      if (p && a) { const altM = a > 3 ? a / 100 : a; next.imc = (p / (altM * altM)).toFixed(1); }
+    }
+    setProntuarioSinais(next);
+  };
 
   const buscarCep = useCallback(async (cep: string) => {
     const cleaned = cep.replace(/\D/g, '');
@@ -248,11 +443,7 @@ export default function Pacientes() {
     setIsFormOpen(true);
   };
 
-  const handleView = (paciente: any) => {
-    setSelectedPacienteId(paciente.id);
-    setViewTab('dados');
-    setIsViewOpen(true);
-  };
+  const handleView = handleViewWithProntuario;
 
   const handleDeleteClick = (paciente: any) => {
     setSelectedPacienteId(paciente.id);
@@ -882,101 +1073,348 @@ export default function Pacientes() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── View Dialog ─── */}
+      {/* ─── View Dialog (with Prontuário) ─── */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Paciente</DialogTitle>
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <User2 className="h-5 w-5 text-primary" />
+              Ficha do Paciente
+            </DialogTitle>
           </DialogHeader>
           {selectedPaciente && (
-            <Tabs value={viewTab} onValueChange={setViewTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="dados">Dados</TabsTrigger>
-                <TabsTrigger value="endereco">Endereço</TabsTrigger>
-                <TabsTrigger value="historico">Histórico</TabsTrigger>
-                <TabsTrigger value="sinais">Sinais Vitais</TabsTrigger>
-              </TabsList>
-
-              {/* Tab: Dados */}
-              <TabsContent value="dados" className="space-y-6 pt-4">
-                <div className="flex items-start gap-6">
-                  <PatientPhoto
-                    pacienteId={selectedPaciente.id}
-                    pacienteNome={selectedPaciente.nome}
-                    currentPhotoUrl={selectedPaciente.foto_url}
-                    size="xl"
-                    editable={true}
-                  />
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <h3 className="text-xl font-bold">{selectedPaciente.nome}</h3>
-                      <p className="text-muted-foreground">
-                        {calcularIdade(selectedPaciente.data_nascimento)} anos
-                        {selectedPaciente.sexo && ` • ${selectedPaciente.sexo === 'masculino' ? 'Masculino' : selectedPaciente.sexo === 'feminino' ? 'Feminino' : 'Outro'}`}
-                      </p>
-                    </div>
-                    {selectedPaciente.alergias && selectedPaciente.alergias.length > 0 && (
-                      <AllergyAlert alergias={selectedPaciente.alergias} />
-                    )}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              {/* Patient header summary */}
+              <div className="flex items-center gap-3 px-1 py-2 flex-shrink-0">
+                <PatientPhoto
+                  pacienteId={selectedPaciente.id}
+                  pacienteNome={selectedPaciente.nome}
+                  currentPhotoUrl={selectedPaciente.foto_url}
+                  size="md"
+                  editable={false}
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold truncate">{(selectedPaciente as any).nome_social || selectedPaciente.nome}</h3>
+                  <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+                    <span>{calcularIdade(selectedPaciente.data_nascimento)}a</span>
+                    {selectedPaciente.sexo && <span>• {selectedPaciente.sexo === 'masculino' ? '♂' : '♀'}</span>}
+                    {selectedPaciente.cpf && <span>• {selectedPaciente.cpf}</span>}
+                    <span>• {getConvenioNome(selectedPaciente.convenio_id)}</span>
                   </div>
                 </div>
+                {selectedPaciente.alergias && selectedPaciente.alergias.length > 0 && (
+                  <AllergyAlert alergias={selectedPaciente.alergias} compact />
+                )}
+              </div>
 
-                <Separator />
+              <Tabs value={viewTab} onValueChange={setViewTab} className="flex-1 overflow-hidden flex flex-col">
+                <TabsList className="flex-shrink-0 grid w-full grid-cols-5 h-auto p-0.5 bg-muted/40 rounded-xl">
+                  <TabsTrigger value="dados" className="text-[11px] gap-1 py-1.5 rounded-lg"><User2 className="h-3 w-3" />Dados</TabsTrigger>
+                  <TabsTrigger value="prontuario" className="text-[11px] gap-1 py-1.5 rounded-lg"><Stethoscope className="h-3 w-3" />Prontuário</TabsTrigger>
+                  <TabsTrigger value="endereco" className="text-[11px] gap-1 py-1.5 rounded-lg"><MapPin className="h-3 w-3" />Endereço</TabsTrigger>
+                  <TabsTrigger value="historico" className="text-[11px] gap-1 py-1.5 rounded-lg"><History className="h-3 w-3" />Timeline</TabsTrigger>
+                  <TabsTrigger value="sinais" className="text-[11px] gap-1 py-1.5 rounded-lg"><Activity className="h-3 w-3" />Sinais</TabsTrigger>
+                </TabsList>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf} />
-                  <InfoField icon={Calendar} label="Nascimento" value={selectedPaciente.data_nascimento ? new Date(selectedPaciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR') : null} />
-                  <InfoField icon={Phone} label="Telefone" value={selectedPaciente.telefone} />
-                  <InfoField icon={Mail} label="Email" value={selectedPaciente.email} />
-                  <InfoField icon={Building2} label="Convênio" value={getConvenioNome(selectedPaciente.convenio_id)} />
-                  <InfoField icon={CreditCard} label="Carteira" value={selectedPaciente.numero_carteira} />
-                </div>
+                <ScrollArea className="flex-1 mt-3">
+                  {/* Tab: Dados */}
+                  <TabsContent value="dados" className="space-y-5 pt-1 mt-0">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf} />
+                      <InfoField icon={Calendar} label="Nascimento" value={selectedPaciente.data_nascimento ? new Date(selectedPaciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR') : null} />
+                      <InfoField icon={Phone} label="Telefone" value={selectedPaciente.telefone} />
+                      <InfoField icon={Mail} label="Email" value={selectedPaciente.email} />
+                      <InfoField icon={Building2} label="Convênio" value={getConvenioNome(selectedPaciente.convenio_id)} />
+                      <InfoField icon={CreditCard} label="Carteira" value={selectedPaciente.numero_carteira} />
+                    </div>
+                    {selectedPaciente.nome_responsavel && (
+                      <>
+                        <Separator />
+                        <div>
+                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <InfoField icon={User2} label="Nome" value={selectedPaciente.nome_responsavel} />
+                            <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf_responsavel} />
+                            <InfoField icon={Users} label="Parentesco" value={selectedPaciente.parentesco_responsavel} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {selectedPaciente.observacoes && (
+                      <>
+                        <Separator />
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Observações</h4>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedPaciente.observacoes}</p>
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
 
-                {selectedPaciente.nome_responsavel && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <InfoField icon={User2} label="Nome" value={selectedPaciente.nome_responsavel} />
-                        <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf_responsavel} />
-                        <InfoField icon={Users} label="Parentesco" value={selectedPaciente.parentesco_responsavel} />
+                  {/* Tab: Prontuário */}
+                  <TabsContent value="prontuario" className="mt-0 space-y-3">
+                    {prontuarioTab === 'lista' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <ClipboardList className="h-3.5 w-3.5" />
+                            Evoluções ({prontuarioList.length})
+                          </span>
+                          <Button size="sm" onClick={handleNewProntuario} className="gap-1.5 rounded-xl text-xs">
+                            <Plus className="h-3.5 w-3.5" />Novo Atendimento
+                          </Button>
+                        </div>
+
+                        {loadingProntuarios ? (
+                          <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
+                        ) : prontuarioList.length === 0 ? (
+                          <div className="flex flex-col items-center py-14 text-muted-foreground">
+                            <FileText className="h-8 w-8 opacity-20 mb-2" />
+                            <p className="text-xs">Nenhuma evolução registrada</p>
+                            <Button variant="link" size="sm" onClick={handleNewProntuario} className="text-xs mt-1">Iniciar primeiro atendimento</Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {prontuarioList.map((p, idx) => (
+                              <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.02 }}
+                                className="group border border-border/40 rounded-xl p-3.5 hover:border-primary/30 cursor-pointer transition-all hover:bg-primary/[0.02]"
+                                onClick={() => handleOpenProntuario(p)}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="space-y-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
+                                        {format(new Date(p.data), 'dd/MM/yyyy')}
+                                      </Badge>
+                                      {p.diagnostico_principal && (
+                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{p.diagnostico_principal}</Badge>
+                                      )}
+                                      {p.medicos && (
+                                        <span className="text-[10px] text-muted-foreground">Dr(a). {p.medicos.nome || p.medicos.crm}</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-semibold text-foreground truncate">{p.queixa_principal}</p>
+                                    {p.conduta && <p className="text-[11px] text-muted-foreground line-clamp-1">Conduta: {p.conduta}</p>}
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
                       </div>
+                    )}
+
+                    {prontuarioTab === 'editor' && (
+                      <div className="space-y-4">
+                        {/* Editor header */}
+                        <div className="flex items-center justify-between">
+                          <Button variant="ghost" size="sm" onClick={() => { setProntuarioTab('lista'); setIsEditingProntuario(false); }} className="gap-1 text-xs">
+                            ← Voltar
+                          </Button>
+                          <div className="flex items-center gap-2">
+                            {activeProntuario && !isEditingProntuario && (
+                              <Button variant="outline" size="sm" onClick={() => setIsEditingProntuario(true)} className="gap-1 text-xs h-7">
+                                <PenLine className="h-3 w-3" />Editar
+                              </Button>
+                            )}
+                            {isEditingProntuario && (
+                              <LoadingButton
+                                onClick={handleSaveProntuario}
+                                isLoading={savingProntuario}
+                                loadingText="Salvando..."
+                                size="sm"
+                                className="gap-1 text-xs h-7 rounded-xl"
+                              >
+                                <Save className="h-3 w-3" />Salvar
+                              </LoadingButton>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Read-only banner */}
+                        {activeProntuario && !isEditingProntuario && (
+                          <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border border-border/40 rounded-xl text-xs text-muted-foreground">
+                            <Lock className="h-3 w-3 flex-shrink-0" />
+                            Somente leitura — CFM nº 1.821/07
+                          </div>
+                        )}
+
+                        <fieldset disabled={activeProntuario ? !isEditingProntuario : false} className="space-y-4">
+                          {/* Queixa Principal */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><AlertTriangle className="h-3 w-3 text-destructive" />Queixa Principal *</Label>
+                            <Textarea placeholder="Queixa principal..." value={prontuarioForm.queixa_principal || ''} onChange={e => updateProntuarioField('queixa_principal', e.target.value)} rows={2} />
+                          </div>
+
+                          {/* HDA */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><FileText className="h-3 w-3" />História da Doença Atual</Label>
+                            <Textarea placeholder="Evolução cronológica..." value={prontuarioForm.historia_doenca_atual || ''} onChange={e => updateProntuarioField('historia_doenca_atual', e.target.value)} rows={3} />
+                          </div>
+
+                          {/* Sinais Vitais */}
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><Activity className="h-3 w-3 text-primary" />Sinais Vitais</Label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                              {[
+                                { label: 'PA Sist.', field: 'pressao_sistolica', placeholder: '120', icon: Heart, accent: 'text-red-500' },
+                                { label: 'PA Diast.', field: 'pressao_diastolica', placeholder: '80', icon: Heart, accent: 'text-red-500' },
+                                { label: 'FC (bpm)', field: 'frequencia_cardiaca', placeholder: '72', icon: Heart, accent: 'text-rose-500' },
+                                { label: 'FR (irpm)', field: 'frequencia_respiratoria', placeholder: '16', icon: Activity, accent: 'text-blue-500' },
+                                { label: 'Temp (°C)', field: 'temperatura', placeholder: '36.5', icon: Thermometer, accent: 'text-orange-500' },
+                                { label: 'SpO₂ (%)', field: 'saturacao', placeholder: '98', icon: Droplets, accent: 'text-cyan-500' },
+                                { label: 'Peso (kg)', field: 'peso', placeholder: '70', icon: Scale, accent: 'text-emerald-500' },
+                                { label: 'Alt (cm)', field: 'altura', placeholder: '170', icon: Ruler, accent: 'text-violet-500' },
+                                { label: 'Glasgow', field: 'glasgow', placeholder: '15', icon: Brain, accent: 'text-purple-500' },
+                                { label: 'Dor (0-10)', field: 'dor', placeholder: '0', icon: AlertTriangle, accent: 'text-yellow-500' },
+                              ].map(f => {
+                                const Icon = f.icon;
+                                return (
+                                  <div key={f.field} className="rounded-xl border border-border/60 bg-card p-2 space-y-0.5">
+                                    <Label className={`text-[9px] font-semibold flex items-center gap-0.5 ${f.accent}`}>
+                                      <Icon className="h-2.5 w-2.5" />{f.label}
+                                    </Label>
+                                    <Input
+                                      placeholder={f.placeholder}
+                                      value={prontuarioSinais[f.field] || ''}
+                                      onChange={e => updateSinal(f.field, e.target.value)}
+                                      className="h-7 text-xs px-2"
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Exame Físico */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><Stethoscope className="h-3 w-3" />Exame Físico</Label>
+                            <Textarea placeholder="Estado geral, ausculta..." value={prontuarioForm.exames_fisicos || ''} onChange={e => updateProntuarioField('exames_fisicos', e.target.value)} rows={3} />
+                          </div>
+
+                          {/* Alergias + Medicamentos */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><AlertTriangle className="h-3 w-3 text-destructive" />Alergias Relatadas</Label>
+                              <Textarea placeholder="Alergias..." value={prontuarioForm.alergias_relatadas || ''} onChange={e => updateProntuarioField('alergias_relatadas', e.target.value)} rows={2} className="border-destructive/30" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><Pill className="h-3 w-3" />Medicamentos em Uso</Label>
+                              <Textarea placeholder="Medicamentos..." value={prontuarioForm.medicamentos_em_uso || ''} onChange={e => updateProntuarioField('medicamentos_em_uso', e.target.value)} rows={2} />
+                            </div>
+                          </div>
+
+                          {/* Hipótese + Diagnóstico */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><BookOpen className="h-3 w-3" />Hipótese Diagnóstica</Label>
+                              <Input placeholder="CID-10 / Hipótese" value={prontuarioForm.hipotese_diagnostica || ''} onChange={e => updateProntuarioField('hipotese_diagnostica', e.target.value)} />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><FileCheck className="h-3 w-3" />Diagnóstico Principal</Label>
+                              <Input placeholder="Diagnóstico" value={prontuarioForm.diagnostico_principal || ''} onChange={e => updateProntuarioField('diagnostico_principal', e.target.value)} />
+                            </div>
+                          </div>
+
+                          {/* Conduta */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><FileCheck className="h-3 w-3" />Conduta</Label>
+                            <Textarea placeholder="Conduta terapêutica, exames, encaminhamentos..." value={prontuarioForm.conduta || ''} onChange={e => updateProntuarioField('conduta', e.target.value)} rows={3} />
+                          </div>
+
+                          {/* Plano + Orientações */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><ClipboardList className="h-3 w-3" />Plano Terapêutico</Label>
+                              <Textarea placeholder="Plano detalhado..." value={prontuarioForm.plano_terapeutico || ''} onChange={e => updateProntuarioField('plano_terapeutico', e.target.value)} rows={2} />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><User2 className="h-3 w-3" />Orientações ao Paciente</Label>
+                              <Textarea placeholder="Cuidados, retorno, sinais de alarme..." value={prontuarioForm.orientacoes_paciente || ''} onChange={e => updateProntuarioField('orientacoes_paciente', e.target.value)} rows={2} />
+                            </div>
+                          </div>
+
+                          {/* Prescrições */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label className="text-xs font-bold flex items-center gap-1.5"><Pill className="h-3 w-3" />Prescrições ({prontuarioPrescricoes.length})</Label>
+                              {isEditingProntuario && (
+                                <Button variant="outline" size="sm" onClick={() => setProntuarioPrescricoes([...prontuarioPrescricoes, { medicamento: '', dosagem: '', posologia: '', duracao: '', quantidade: '', observacoes: '' }])} className="text-[10px] h-6 gap-1">
+                                  <Plus className="h-3 w-3" />Adicionar
+                                </Button>
+                              )}
+                            </div>
+                            {prontuarioPrescricoes.length === 0 ? (
+                              <p className="text-xs text-muted-foreground py-3 text-center">Nenhuma prescrição</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {prontuarioPrescricoes.map((presc, i) => (
+                                  <div key={i} className="border rounded-lg p-2.5 space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-semibold">#{i + 1}</span>
+                                      {isEditingProntuario && (
+                                        <Button variant="ghost" size="sm" onClick={() => setProntuarioPrescricoes(prontuarioPrescricoes.filter((_, idx) => idx !== i))} className="text-destructive h-5 w-5 p-0">
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                                      <div className="col-span-2 md:col-span-3">
+                                        <Input placeholder="Medicamento *" value={presc.medicamento} onChange={e => { const u = [...prontuarioPrescricoes]; u[i] = { ...u[i], medicamento: e.target.value }; setProntuarioPrescricoes(u); }} className="text-xs h-7" />
+                                      </div>
+                                      <Input placeholder="Dosagem" value={presc.dosagem} onChange={e => { const u = [...prontuarioPrescricoes]; u[i] = { ...u[i], dosagem: e.target.value }; setProntuarioPrescricoes(u); }} className="text-xs h-7" />
+                                      <Input placeholder="Posologia" value={presc.posologia} onChange={e => { const u = [...prontuarioPrescricoes]; u[i] = { ...u[i], posologia: e.target.value }; setProntuarioPrescricoes(u); }} className="text-xs h-7" />
+                                      <Input placeholder="Duração" value={presc.duracao} onChange={e => { const u = [...prontuarioPrescricoes]; u[i] = { ...u[i], duracao: e.target.value }; setProntuarioPrescricoes(u); }} className="text-xs h-7" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Observações internas */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold flex items-center gap-1.5"><Shield className="h-3 w-3" />Observações Internas</Label>
+                            <Textarea placeholder="Anotações internas (não imprime)..." value={prontuarioForm.observacoes_internas || ''} onChange={e => updateProntuarioField('observacoes_internas', e.target.value)} rows={2} className="border-dashed" />
+                          </div>
+                        </fieldset>
+
+                        {/* LGPD badge */}
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-muted/40 rounded-lg p-2">
+                          <ShieldCheck className="h-3 w-3" />
+                          <span>LGPD • CFM nº 1.821/07 • Todos os acessos registrados</span>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Tab: Endereço */}
+                  <TabsContent value="endereco" className="pt-1 mt-0">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <InfoField icon={MapPin} label="CEP" value={selectedPaciente.cep} />
+                      <InfoField icon={MapPin} label="Logradouro" value={selectedPaciente.logradouro} />
+                      <InfoField icon={MapPin} label="Número" value={selectedPaciente.numero} />
+                      <InfoField icon={MapPin} label="Complemento" value={(selectedPaciente as any).complemento} />
+                      <InfoField icon={MapPin} label="Bairro" value={selectedPaciente.bairro} />
+                      <InfoField icon={MapPin} label="Cidade" value={selectedPaciente.cidade} />
+                      <InfoField icon={MapPin} label="Estado" value={selectedPaciente.estado} />
                     </div>
-                  </>
-                )}
+                  </TabsContent>
 
-                {selectedPaciente.observacoes && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Observações</h4>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedPaciente.observacoes}</p>
-                    </div>
-                  </>
-                )}
-              </TabsContent>
-
-              {/* Tab: Endereço */}
-              <TabsContent value="endereco" className="pt-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <InfoField icon={MapPin} label="CEP" value={selectedPaciente.cep} />
-                  <InfoField icon={MapPin} label="Logradouro" value={selectedPaciente.logradouro} />
-                  <InfoField icon={MapPin} label="Número" value={selectedPaciente.numero} />
-                  <InfoField icon={MapPin} label="Complemento" value={(selectedPaciente as any).complemento} />
-                  <InfoField icon={MapPin} label="Bairro" value={selectedPaciente.bairro} />
-                  <InfoField icon={MapPin} label="Cidade" value={selectedPaciente.cidade} />
-                  <InfoField icon={MapPin} label="Estado" value={selectedPaciente.estado} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="historico" className="pt-4">
-                <PatientTimeline pacienteId={selectedPaciente.id} />
-              </TabsContent>
-              <TabsContent value="sinais" className="pt-4">
-                <VitalSignsChart pacienteId={selectedPaciente.id} />
-              </TabsContent>
-            </Tabs>
+                  <TabsContent value="historico" className="pt-1 mt-0">
+                    <PatientTimeline pacienteId={selectedPaciente.id} />
+                  </TabsContent>
+                  <TabsContent value="sinais" className="pt-1 mt-0">
+                    <VitalSignsChart pacienteId={selectedPaciente.id} />
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
           )}
         </DialogContent>
       </Dialog>
