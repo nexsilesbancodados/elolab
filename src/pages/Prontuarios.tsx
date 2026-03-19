@@ -1158,8 +1158,8 @@ export default function Prontuarios() {
           )}
 
           <ScrollArea className="flex-1 pr-4">
+            <fieldset disabled={isReadOnly} className="contents">
             <Tabs defaultValue="anamnese" className="w-full">
-              <TabsList className="grid w-full grid-cols-8 mb-4">
                 <TabsTrigger value="anamnese" className="text-xs gap-1"><ClipboardList className="h-3 w-3" />Anamnese</TabsTrigger>
                 <TabsTrigger value="exame" className="text-xs gap-1"><Stethoscope className="h-3 w-3" />Exame</TabsTrigger>
                 <TabsTrigger value="diagnostico" className="text-xs gap-1"><BookOpen className="h-3 w-3" />Diagnóstico</TabsTrigger>
