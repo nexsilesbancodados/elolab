@@ -1257,14 +1257,21 @@ export default function Prontuarios() {
                           initial={{ opacity: 0, x: -4 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.02 }}
-                          className="border border-border/40 rounded-xl p-3 space-y-1.5 hover:bg-muted/20 transition-colors"
+                          className="border border-border/40 rounded-xl p-3 space-y-1.5 hover:bg-primary/[0.03] hover:border-primary/30 transition-colors cursor-pointer group"
+                          onClick={() => {
+                            setIsProntuarioOpen(false);
+                            setTimeout(() => handleViewProntuario(ev), 150);
+                          }}
                         >
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
-                              {format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}
-                            </Badge>
-                            {ev.medicos && <span className="text-[10px] text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm}</span>}
-                            {ev.diagnostico_principal && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ev.diagnostico_principal}</Badge>}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-1.5 py-0">
+                                {format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}
+                              </Badge>
+                              {ev.medicos && <span className="text-[10px] text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm}</span>}
+                              {ev.diagnostico_principal && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ev.diagnostico_principal}</Badge>}
+                            </div>
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
                           </div>
                           {ev.queixa_principal && <p className="text-xs"><strong>QP:</strong> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
                           {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
