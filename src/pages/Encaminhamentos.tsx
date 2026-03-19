@@ -45,7 +45,10 @@ interface EncaminhamentoData {
   informacoes_adicionais: string | null;
   status: string | null;
   data_encaminhamento: string | null;
+  data_atendimento: string | null;
   contra_referencia: string | null;
+  data_contra_referencia: string | null;
+  created_at: string | null;
   created_at: string | null;
   paciente?: { nome: string } | null;
   medico_origem?: { nome: string | null; crm: string } | null;
