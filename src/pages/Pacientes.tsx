@@ -1,10 +1,16 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Edit, Trash2, Eye, Tag, Link, Loader2, MapPin,
   Phone, Mail, Calendar, Filter, Users, UserCheck, Baby, Heart,
   FileText, ChevronDown, ChevronUp, User2, Building2, CreditCard,
-  Droplets, Briefcase, X,
+  Droplets, Briefcase, X, Stethoscope, Save, Pill, ClipboardList,
+  AlertTriangle, Activity, ChevronRight, History, PenLine, Lock,
+  ShieldCheck, BookOpen, FileCheck, Brain, Bone, Eye as EyeIcon,
+  Thermometer, Scale, Ruler, Paperclip, Shield, Clipboard,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,15 +24,19 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { usePacientes } from '@/hooks/useSupabaseData';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
-import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert } from '@/components/clinical';
+import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert, Cid10Search, ClinicalProtocols, AnexosProntuario, DigitalSignature } from '@/components/clinical';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { Paciente } from '@/types';
 import { cn } from '@/lib/utils';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { gerarProntuarioPDF, downloadPDF, openPDF } from '@/lib/pdfGenerator';
 
 interface PacienteFormData {
   nome: string;
