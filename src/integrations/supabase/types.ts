@@ -702,6 +702,33 @@ export type Database = {
           },
         ]
       }
+      configuracoes_clinica: {
+        Row: {
+          chave: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          valor?: Json
+        }
+        Update: {
+          chave?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       consentimentos_lgpd: {
         Row: {
           aceito: boolean
@@ -2076,6 +2103,7 @@ export type Database = {
           id: string
           nome: string
           telefone: string | null
+          ultimo_acesso: string | null
           updated_at: string | null
         }
         Insert: {
@@ -2086,6 +2114,7 @@ export type Database = {
           id: string
           nome: string
           telefone?: string | null
+          ultimo_acesso?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -2096,6 +2125,7 @@ export type Database = {
           id?: string
           nome?: string
           telefone?: string | null
+          ultimo_acesso?: string | null
           updated_at?: string | null
         }
         Relationships: []
