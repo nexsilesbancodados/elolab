@@ -6,7 +6,7 @@ import {
   Stethoscope, Brain, Bone, Eye as EyeIcon, Pill, Paperclip,
   ClipboardList, AlertTriangle, User, Clock, ChevronDown, ChevronRight,
   Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
-  Phone, Mail, Building2, CreditCard, Baby, Shield, Lock,
+  Phone, Mail, Building2, CreditCard, Baby, Shield, Lock, PenLine,
   TestTube, ArrowRight, UserCheck, BadgeCheck, Share2, MessageCircle, ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
