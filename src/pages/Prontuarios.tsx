@@ -127,58 +127,53 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
 
   const imcClass = classificarIMC(sinais.imc);
 
+  const vitalCards = [
+    { key: 'pa', label: 'PA (mmHg)', icon: Heart, color: 'from-red-500/10 to-pink-500/5 dark:from-red-900/20 dark:to-pink-900/10', iconColor: 'text-red-500', dual: true },
+    { key: 'fc', label: 'FC (bpm)', icon: Heart, color: 'from-rose-500/10 to-red-500/5 dark:from-rose-900/20 dark:to-red-900/10', iconColor: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
+    { key: 'fr', label: 'FR (irpm)', icon: Activity, color: 'from-blue-500/10 to-indigo-500/5 dark:from-blue-900/20 dark:to-indigo-900/10', iconColor: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
+    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, color: 'from-orange-500/10 to-amber-500/5 dark:from-orange-900/20 dark:to-amber-900/10', iconColor: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
+    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, color: 'from-cyan-500/10 to-sky-500/5 dark:from-cyan-900/20 dark:to-sky-900/10', iconColor: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
+    { key: 'peso', label: 'Peso (kg)', icon: Scale, color: 'from-emerald-500/10 to-green-500/5 dark:from-emerald-900/20 dark:to-green-900/10', iconColor: 'text-emerald-500', field: 'peso', placeholder: '70' },
+    { key: 'altura', label: 'Altura (cm)', icon: Ruler, color: 'from-violet-500/10 to-purple-500/5 dark:from-violet-900/20 dark:to-purple-900/10', iconColor: 'text-violet-500', field: 'altura', placeholder: '170' },
+    { key: 'glasgow', label: 'Glasgow', icon: Brain, color: 'from-purple-500/10 to-fuchsia-500/5 dark:from-purple-900/20 dark:to-fuchsia-900/10', iconColor: 'text-purple-500', field: 'glasgow', placeholder: '15' },
+    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, color: 'from-yellow-500/10 to-amber-500/5 dark:from-yellow-900/20 dark:to-amber-900/10', iconColor: 'text-yellow-500', field: 'dor', placeholder: '0' },
+  ];
+
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-        <Activity className="h-4 w-4" /> Sinais Vitais
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive" />PA (mmHg)</Label>
-          <div className="flex gap-1 items-center">
-            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" disabled={disabled} />
-            <span className="text-muted-foreground">/</span>
-            <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm" />
-          </div>
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <Activity className="h-4 w-4 text-primary" />
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive/70" />FC (bpm)</Label>
-          <Input placeholder="72" value={sinais.frequencia_cardiaca} onChange={e => update('frequencia_cardiaca', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Activity className="h-3 w-3 text-primary" />FR (irpm)</Label>
-          <Input placeholder="16" value={sinais.frequencia_respiratoria} onChange={e => update('frequencia_respiratoria', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Thermometer className="h-3 w-3 text-orange-500" />Temp (°C)</Label>
-          <Input placeholder="36.5" value={sinais.temperatura} onChange={e => update('temperatura', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Droplets className="h-3 w-3 text-primary" />SpO₂ (%)</Label>
-          <Input placeholder="98" value={sinais.saturacao} onChange={e => update('saturacao', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Scale className="h-3 w-3" />Peso (kg)</Label>
-          <Input placeholder="70" value={sinais.peso} onChange={e => update('peso', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Ruler className="h-3 w-3" />Altura (cm)</Label>
-          <Input placeholder="170" value={sinais.altura} onChange={e => update('altura', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">IMC</Label>
-          <div className="h-8 flex items-center px-3 bg-muted rounded-md text-sm font-medium">
+        <h3 className="text-sm font-bold text-foreground tracking-tight">Sinais Vitais</h3>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {vitalCards.map(card => {
+          const CardIcon = card.icon;
+          return (
+            <div key={card.key} className={`rounded-xl bg-gradient-to-br ${card.color} border border-border/50 p-3 space-y-1.5 transition-all hover:shadow-sm`}>
+              <Label className={`text-[11px] font-semibold flex items-center gap-1.5 ${card.iconColor}`}>
+                <CardIcon className="h-3.5 w-3.5" />{card.label}
+              </Label>
+              {card.dual ? (
+                <div className="flex gap-1 items-center">
+                  <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" disabled={disabled} />
+                  <span className="text-muted-foreground font-bold">/</span>
+                  <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+                </div>
+              ) : (
+                <Input placeholder={card.placeholder} value={(sinais as any)[card.field!]} onChange={e => update(card.field as keyof SinaisVitais, e.target.value)} className="h-8 text-sm bg-background/60 backdrop-blur-sm border-border/40" />
+              )}
+            </div>
+          );
+        })}
+        {/* IMC card - special */}
+        <div className="rounded-xl bg-gradient-to-br from-teal-500/10 to-emerald-500/5 dark:from-teal-900/20 dark:to-emerald-900/10 border border-border/50 p-3 space-y-1.5">
+          <Label className="text-[11px] font-semibold text-teal-600 dark:text-teal-400">IMC</Label>
+          <div className="h-8 flex items-center px-3 bg-background/60 backdrop-blur-sm rounded-md text-sm font-bold border border-border/40">
             {sinais.imc || '—'}
-            {imcClass && <span className={`ml-1.5 text-xs ${imcClass.color}`}>({imcClass.label})</span>}
+            {imcClass && <span className={`ml-1.5 text-[10px] font-semibold ${imcClass.color}`}>({imcClass.label})</span>}
           </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><Brain className="h-3 w-3 text-purple-500" />Glasgow</Label>
-          <Input placeholder="15" value={sinais.glasgow} onChange={e => update('glasgow', e.target.value)} className="h-8 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-yellow-500" />Dor (0-10)</Label>
-          <Input placeholder="0" value={sinais.dor} onChange={e => update('dor', e.target.value)} className="h-8 text-sm" />
         </div>
       </div>
     </div>
@@ -191,18 +186,40 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
 }) {
   const [open, setOpen] = useState(!collapsible);
   return (
-    <div className="space-y-2">
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden"
+    >
       <button
         type="button"
         onClick={() => collapsible && setOpen(!open)}
-        className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide w-full"
+        className="flex items-center gap-2.5 px-4 py-3 w-full hover:bg-muted/30 transition-colors"
       >
-        <Icon className="h-4 w-4" />
-        {title}
-        {collapsible && (open ? <ChevronDown className="h-3 w-3 ml-auto" /> : <ChevronRight className="h-3 w-3 ml-auto" />)}
+        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</span>
+        {collapsible && (
+          <motion.div animate={{ rotate: open ? 180 : 0 }} className="ml-auto">
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </motion.div>
+        )}
       </button>
-      {open && <div className="space-y-3">{children}</div>}
-    </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -212,88 +229,93 @@ function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome
   const isMenor = idade < 18;
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-      <div className="flex items-start gap-4">
-        <PatientPhoto
-          pacienteId={paciente.id}
-          pacienteNome={paciente.nome}
-          currentPhotoUrl={paciente.foto_url}
-          size="lg"
-          editable={false}
-        />
-        <div className="flex-1 min-w-0 space-y-1">
-          <h3 className="text-lg font-bold truncate">
-            {paciente.nome_social || paciente.nome}
-          </h3>
-          {paciente.nome_social && (
-            <p className="text-xs text-muted-foreground">
-              Registro civil: {paciente.nome}
-            </p>
-          )}
-          <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
-            <span>{idade} anos</span>
-            {paciente.sexo && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                {paciente.sexo === 'masculino' ? 'Masculino' : paciente.sexo === 'feminino' ? 'Feminino' : 'Outro'}
+    <div className="rounded-2xl border border-border/60 overflow-hidden bg-card shadow-sm">
+      {/* Gradient header band */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-4">
+        <div className="flex items-start gap-4">
+          <PatientPhoto
+            pacienteId={paciente.id}
+            pacienteNome={paciente.nome}
+            currentPhotoUrl={paciente.foto_url}
+            size="lg"
+            editable={false}
+          />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <h3 className="text-xl font-bold truncate text-foreground">
+              {paciente.nome_social || paciente.nome}
+            </h3>
+            {paciente.nome_social && (
+              <p className="text-xs text-muted-foreground">
+                Registro civil: {paciente.nome}
+              </p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold">
+                {idade} anos
               </Badge>
-            )}
-            {paciente.data_nascimento && (
-              <span>• Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
-            )}
+              {paciente.sexo && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  {paciente.sexo === 'masculino' ? '♂ Masculino' : paciente.sexo === 'feminino' ? '♀ Feminino' : 'Outro'}
+                </Badge>
+              )}
+              {paciente.data_nascimento && (
+                <span className="text-xs">Nasc: {new Date(paciente.data_nascimento + 'T12:00').toLocaleDateString('pt-BR')}</span>
+              )}
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-3 space-y-3">
+        {/* Alergias em destaque */}
+        {paciente.alergias && paciente.alergias.length > 0 && (
+          <AllergyAlert alergias={paciente.alergias} />
+        )}
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {paciente.cpf && (
-            <div className="flex items-center gap-1.5 text-sm">
-              <FileText className="h-3 w-3 text-muted-foreground" />
-              <span>CPF: {paciente.cpf}</span>
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">CPF: {paciente.cpf}</span>
+            </div>
+          )}
+          {paciente.telefone && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground">{paciente.telefone}</span>
+            </div>
+          )}
+          {paciente.email && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm truncate">
+              <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">{paciente.email}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+            <Building2 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+            <span className="text-muted-foreground">{convenioNome}</span>
+          </div>
+          {paciente.numero_carteira && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+              <CreditCard className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate">Carteira: {paciente.numero_carteira}</span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Alergias em destaque */}
-      {paciente.alergias && paciente.alergias.length > 0 && (
-        <AllergyAlert alergias={paciente.alergias} />
-      )}
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-        {paciente.telefone && (
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Phone className="h-3.5 w-3.5" />
-            <span>{paciente.telefone}</span>
-          </div>
-        )}
-        {paciente.email && (
-          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-            <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate">{paciente.email}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Building2 className="h-3.5 w-3.5" />
-          <span>{convenioNome}</span>
-        </div>
-        {paciente.numero_carteira && (
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <CreditCard className="h-3.5 w-3.5" />
-            <span>Carteira: {paciente.numero_carteira}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Responsável legal (menor) */}
-      {isMenor && paciente.nome_responsavel && (
-        <div className="border-t pt-2 mt-2">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Baby className="h-3.5 w-3.5 text-amber-500" />
-            <span className="font-medium">Responsável:</span>
+        {/* Responsável legal (menor) */}
+        {isMenor && paciente.nome_responsavel && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm">
+            <Baby className="h-4 w-4 text-amber-500 flex-shrink-0" />
+            <span className="font-medium text-amber-700 dark:text-amber-300">Responsável:</span>
             <span className="text-muted-foreground">
               {paciente.nome_responsavel}
               {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
               {paciente.cpf_responsavel && ` — CPF: ${paciente.cpf_responsavel}`}
             </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -765,35 +787,44 @@ export default function Prontuarios() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <ClipboardList className="h-8 w-8 text-primary" />
-            Prontuário Eletrônico
-          </h1>
-          <p className="text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-sm border border-primary/10">
+            <ClipboardList className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              Prontuário Eletrônico
+            </h1>
+            <p className="text-sm text-muted-foreground">Prontuário médico completo — LGPD e CFM</p>
+          </div>
         </div>
-        <Badge variant="outline" className="gap-1.5 text-xs">
-          <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
+        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1.5 text-xs px-3 py-1.5 rounded-full">
+          <ShieldCheck className="h-3.5 w-3.5" />
           Conforme LGPD
         </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* ─── Patient List ─── */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2"><User className="h-4 w-4" />Pacientes</CardTitle>
+        <Card className="lg:col-span-1 overflow-hidden border-border/60 shadow-sm">
+          <CardHeader className="pb-3 bg-gradient-to-b from-muted/30 to-transparent">
+            <CardTitle className="text-base font-bold flex items-center gap-2"><User className="h-4 w-4 text-primary" />Pacientes</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou CPF..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por nome ou CPF..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 bg-background/80 backdrop-blur-sm" />
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[550px]">
               {filteredPacientes.map(pac => (
-                <div
+                <motion.div
                   key={pac.id}
-                  className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${selectedPacienteId === pac.id ? 'bg-primary/10 border-l-2 border-l-primary' : ''}`}
+                  whileHover={{ x: 2 }}
+                  className={`p-3.5 border-b border-border/40 cursor-pointer transition-all duration-200 ${
+                    selectedPacienteId === pac.id
+                      ? 'bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-[3px] border-l-primary'
+                      : 'hover:bg-muted/40'
+                  }`}
                   onClick={() => setSelectedPacienteId(pac.id)}
                 >
                   <div className="flex items-center gap-3">
@@ -805,7 +836,7 @@ export default function Prontuarios() {
                       editable={false}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{(pac as any).nome_social || pac.nome}</p>
+                      <p className="font-semibold text-sm truncate">{(pac as any).nome_social || pac.nome}</p>
                       {(pac as any).nome_social && <p className="text-[10px] text-muted-foreground truncate">Civil: {pac.nome}</p>}
                       <p className="text-xs text-muted-foreground">
                         {calcularIdade(pac.data_nascimento)} anos
@@ -813,9 +844,12 @@ export default function Prontuarios() {
                         {pac.cpf && ` • ${pac.cpf}`}
                       </p>
                     </div>
+                    {selectedPacienteId === pac.id && (
+                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                    )}
                   </div>
                   {pac.alergias && pac.alergias.length > 0 && <AllergyAlert alergias={pac.alergias} compact className="mt-2" />}
-                </div>
+                </motion.div>
               ))}
               {filteredPacientes.length === 0 && (
                 <p className="text-center text-muted-foreground py-12 text-sm">Nenhum paciente encontrado</p>
@@ -825,15 +859,15 @@ export default function Prontuarios() {
         </Card>
 
         {/* ─── Patient Records ─── */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        <Card className="lg:col-span-2 overflow-hidden border-border/60 shadow-sm">
+          <CardHeader className="bg-gradient-to-b from-muted/30 to-transparent">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
                 {selectedPaciente && (
                   <PatientPhoto pacienteId={selectedPaciente.id} pacienteNome={selectedPaciente.nome} currentPhotoUrl={selectedPaciente.foto_url} size="md" />
                 )}
                 <div>
-                  <CardTitle className="text-lg">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
+                  <CardTitle className="text-lg font-bold">{selectedPaciente?.nome || 'Selecione um paciente'}</CardTitle>
                   {selectedPaciente && (
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                       <span>{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
@@ -848,7 +882,7 @@ export default function Prontuarios() {
                 </div>
               </div>
               {selectedPaciente && (
-                <Button onClick={handleNovoProntuario} className="gap-2">
+                <Button onClick={handleNovoProntuario} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
                   <Plus className="h-4 w-4" />Novo Atendimento
                 </Button>
               )}
@@ -873,27 +907,41 @@ export default function Prontuarios() {
 
                 <TabsContent value="evolucoes" className="pt-4">
                   {pacienteProntuarios.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-12">Nenhuma evolução registrada</p>
+                    <div className="flex flex-col items-center py-16 text-muted-foreground">
+                      <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                        <FileText className="h-8 w-8 opacity-30" />
+                      </div>
+                      <p className="font-medium">Nenhuma evolução registrada</p>
+                      <p className="text-xs mt-1">Clique em "Novo Atendimento" para iniciar</p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
-                      {pacienteProntuarios.map(p => (
+                    <div className="space-y-2.5">
+                      {pacienteProntuarios.map((p, idx) => (
                         <motion.div
                           key={p.id}
-                          initial={{ opacity: 0, y: 5 }}
+                          initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="border rounded-lg p-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                          transition={{ delay: idx * 0.03 }}
+                          className="group relative border border-border/50 rounded-xl p-4 hover:bg-gradient-to-r hover:from-primary/[0.03] hover:to-transparent cursor-pointer transition-all duration-200 hover:shadow-sm hover:border-primary/20"
                           onClick={() => handleViewProntuario(p)}
                         >
+                          <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b from-primary/60 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">{format(new Date(p.data), 'dd/MM/yyyy')}</Badge>
-                                {p.diagnostico_principal && <Badge variant="secondary" className="text-xs">{p.diagnostico_principal}</Badge>}
+                            <div className="space-y-1.5 pl-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">
+                                  {format(new Date(p.data), 'dd/MM/yyyy')}
+                                </Badge>
+                                {p.diagnostico_principal && (
+                                  <Badge variant="secondary" className="text-[11px]">{p.diagnostico_principal}</Badge>
+                                )}
                               </div>
-                              <p className="text-sm font-medium">{p.queixa_principal}</p>
+                              <p className="text-sm font-semibold text-foreground">{p.queixa_principal}</p>
                               {p.conduta && <p className="text-xs text-muted-foreground line-clamp-1">Conduta: {p.conduta}</p>}
                             </div>
-                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+                              <FileText className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </div>
                           </div>
                         </motion.div>
                       ))}
@@ -1024,7 +1072,7 @@ export default function Prontuarios() {
 
       {/* ─── Prontuário Dialog ─── */}
       <Dialog open={isProntuarioOpen} onOpenChange={setIsProntuarioOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-gradient-to-b from-card to-card/95 backdrop-blur-xl">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center justify-between flex-wrap gap-2">
               <span className="flex items-center gap-2">
@@ -1124,15 +1172,15 @@ export default function Prontuarios() {
 
           {/* Patient ID summary in dialog */}
           {selectedPaciente && (
-            <div className="flex-shrink-0 flex items-center gap-4 p-3 bg-muted/30 rounded-lg text-sm border">
+            <div className="flex-shrink-0 flex items-center gap-4 p-3.5 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent rounded-xl text-sm border border-primary/10">
               <div className="flex items-center gap-2 flex-1 flex-wrap">
-                <Badge variant="outline" className="gap-1"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
-                <span className="text-muted-foreground">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
+                <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 font-semibold"><User className="h-3 w-3" />{selectedPaciente.nome}</Badge>
+                <span className="text-muted-foreground font-medium">{calcularIdade(selectedPaciente.data_nascimento)} anos</span>
                 {selectedPaciente.cpf && <span className="text-muted-foreground">• CPF: {selectedPaciente.cpf}</span>}
                 <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
               </div>
-              <Badge variant="outline" className="gap-1 text-[10px]">
-                <ShieldCheck className="h-3 w-3 text-green-500" />LGPD
+              <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1 text-[10px] rounded-full px-2.5">
+                <ShieldCheck className="h-3 w-3" />LGPD
               </Badge>
             </div>
           )}
@@ -1169,15 +1217,15 @@ export default function Prontuarios() {
           <ScrollArea className="flex-1 pr-4">
             <fieldset disabled={isReadOnly} className="contents">
             <Tabs defaultValue="anamnese" className="w-full">
-              <TabsList className="grid w-full grid-cols-8 mb-4">
-                <TabsTrigger value="anamnese" className="text-xs gap-1"><ClipboardList className="h-3 w-3" />Anamnese</TabsTrigger>
-                <TabsTrigger value="exame" className="text-xs gap-1"><Stethoscope className="h-3 w-3" />Exame</TabsTrigger>
-                <TabsTrigger value="diagnostico" className="text-xs gap-1"><BookOpen className="h-3 w-3" />Diagnóstico</TabsTrigger>
-                <TabsTrigger value="conduta" className="text-xs gap-1"><FileCheck className="h-3 w-3" />Conduta</TabsTrigger>
-                <TabsTrigger value="prescricao" className="text-xs gap-1"><Pill className="h-3 w-3" />Prescrição</TabsTrigger>
-                <TabsTrigger value="anexos" className="text-xs gap-1"><Paperclip className="h-3 w-3" />Anexos</TabsTrigger>
-                <TabsTrigger value="historico" className="text-xs gap-1"><History className="h-3 w-3" />Histórico</TabsTrigger>
-                <TabsTrigger value="auditoria" className="text-xs gap-1"><Shield className="h-3 w-3" />Auditoria</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-8 mb-4 bg-muted/50 backdrop-blur-sm rounded-xl p-1 h-auto">
+                <TabsTrigger value="anamnese" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><ClipboardList className="h-3.5 w-3.5" />Anamnese</TabsTrigger>
+                <TabsTrigger value="exame" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Stethoscope className="h-3.5 w-3.5" />Exame</TabsTrigger>
+                <TabsTrigger value="diagnostico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><BookOpen className="h-3.5 w-3.5" />Diagnóstico</TabsTrigger>
+                <TabsTrigger value="conduta" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><FileCheck className="h-3.5 w-3.5" />Conduta</TabsTrigger>
+                <TabsTrigger value="prescricao" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Pill className="h-3.5 w-3.5" />Prescrição</TabsTrigger>
+                <TabsTrigger value="anexos" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Paperclip className="h-3.5 w-3.5" />Anexos</TabsTrigger>
+                <TabsTrigger value="historico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><History className="h-3.5 w-3.5" />Histórico</TabsTrigger>
+                <TabsTrigger value="auditoria" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Shield className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
               </TabsList>
 
               {/* ─── Anamnese Tab ─── */}
@@ -1572,27 +1620,36 @@ export default function Prontuarios() {
                 ) : historicoEvolucoes.length === 0 ? (
                   <p className="text-center text-muted-foreground py-12">Nenhum registro anterior</p>
                 ) : (
-                  <div className="space-y-3">
-                    {historicoEvolucoes.map(ev => (
-                      <div key={ev.id} className="border rounded-lg p-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}</Badge>
+                  <div className="space-y-2.5">
+                    {historicoEvolucoes.map((ev, idx) => (
+                      <motion.div
+                        key={ev.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="relative border border-border/50 rounded-xl p-4 space-y-2 bg-card/50 hover:bg-muted/20 transition-colors"
+                      >
+                        <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-primary/40 to-transparent" />
+                        <div className="flex items-center gap-2 pl-2 flex-wrap">
+                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold">{format(new Date(ev.data), 'dd/MM/yyyy', { locale: ptBR })}</Badge>
                           {ev.medicos && <span className="text-xs text-muted-foreground">Dr(a). {ev.medicos.nome || ev.medicos.crm} — {ev.medicos.especialidade}</span>}
-                          {ev.diagnostico_principal && <Badge variant="secondary" className="text-xs">{ev.diagnostico_principal}</Badge>}
+                          {ev.diagnostico_principal && <Badge variant="secondary" className="text-[11px]">{ev.diagnostico_principal}</Badge>}
                         </div>
-                        {ev.queixa_principal && <p className="text-sm"><strong>QP:</strong> {ev.queixa_principal}</p>}
-                        {ev.hipotese_diagnostica && <p className="text-sm"><strong>HD:</strong> {ev.hipotese_diagnostica}</p>}
-                        {ev.conduta && <p className="text-sm"><strong>Conduta:</strong> {ev.conduta}</p>}
+                        <div className="pl-2 space-y-1">
+                          {ev.queixa_principal && <p className="text-sm"><span className="font-semibold text-foreground">QP:</span> <span className="text-muted-foreground">{ev.queixa_principal}</span></p>}
+                          {ev.hipotese_diagnostica && <p className="text-sm"><span className="font-semibold text-foreground">HD:</span> <span className="text-muted-foreground">{ev.hipotese_diagnostica}</span></p>}
+                          {ev.conduta && <p className="text-sm"><span className="font-semibold text-foreground">Conduta:</span> <span className="text-muted-foreground">{ev.conduta}</span></p>}
+                        </div>
                         {ev.sinais_vitais && Object.keys(ev.sinais_vitais).length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-1">
+                          <div className="flex flex-wrap gap-1.5 pl-2 mt-1">
                             {ev.sinais_vitais.pressao_sistolica && (
-                              <Badge variant="outline" className="text-xs">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>
+                              <Badge className="bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20 text-[10px]">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>
                             )}
-                            {ev.sinais_vitais.frequencia_cardiaca && <Badge variant="outline" className="text-xs">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                            {ev.sinais_vitais.temperatura && <Badge variant="outline" className="text-xs">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                            {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20 text-[10px]">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                            {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 text-[10px]">T: {ev.sinais_vitais.temperatura}°C</Badge>}
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -1643,7 +1700,7 @@ export default function Prontuarios() {
             </fieldset>
           </ScrollArea>
 
-          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+          <DialogFooter className="flex-shrink-0 pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 w-full justify-between">
               <div className="flex-1">
                 {currentProntuario.id && (
@@ -1657,9 +1714,9 @@ export default function Prontuarios() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} className="rounded-xl">Cancelar</Button>
                 {!isReadOnly && (
-                  <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+                  <Button onClick={handleSave} className="gap-2 rounded-xl shadow-sm bg-gradient-to-r from-primary to-primary/90"><Save className="h-4 w-4" />Salvar Prontuário</Button>
                 )}
               </div>
             </div>
