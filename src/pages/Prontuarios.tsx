@@ -31,6 +31,7 @@ import {
   AllergyAlert, Cid10Search, ClinicalProtocols,
   ReturnScheduler, DischargeReport, AnexosProntuario,
   VitalSignsChart, PatientTimeline, PatientPhoto, DigitalSignature,
+  DrugInteractionChecker,
 } from '@/components/clinical';
 import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
