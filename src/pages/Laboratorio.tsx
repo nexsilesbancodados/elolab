@@ -234,24 +234,38 @@ export default function Laboratorio() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Pendentes', value: stats.pendentes, icon: Clock, color: 'text-yellow-500' },
-          { label: 'Coletados', value: stats.coletados, icon: TestTube, color: 'text-blue-500' },
-          { label: 'Em Análise', value: stats.emAnalise, icon: ClipboardCheck, color: 'text-purple-500' },
-          { label: 'Liberados', value: stats.liberados, icon: CheckCircle2, color: 'text-green-500' },
-        ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="pt-4 flex items-center gap-3">
-              <s.icon className={`h-8 w-8 ${s.color}`} />
-              <div>
-                <p className="text-2xl font-bold tabular-nums">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* ─── Visual Pipeline ─── */}
+      <div className="relative">
+        <div className="absolute top-1/2 left-0 right-0 h-1 bg-muted -translate-y-1/2 hidden md:block" />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: 'Pendente', value: stats.pendentes, icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', step: 1 },
+            { label: 'Coletado', value: stats.coletados, icon: TestTube, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30', step: 2 },
+            { label: 'Em Análise', value: stats.emAnalise, icon: ClipboardCheck, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/30', step: 3 },
+            { label: 'Validado', value: coletas?.filter((c: any) => c.status === 'validado').length || 0, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30', step: 4 },
+            { label: 'Liberado', value: stats.liberados, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', step: 5 },
+          ].map((s) => (
+            <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: s.step * 0.05 }}>
+              <Card className={cn('relative border-2', s.border, 'hover:shadow-md transition-shadow')}>
+                <CardContent className="pt-4 pb-3 flex items-center gap-3">
+                  <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>
+                    <s.icon className={cn('h-5 w-5', s.color)} />
+                  </div>
+                  <div>
+                    <p className={cn('text-2xl font-bold tabular-nums', s.color)}>{s.value}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{s.label}</p>
+                  </div>
+                </CardContent>
+                {/* Arrow connector */}
+                {s.step < 5 && (
+                  <div className="absolute -right-2 top-1/2 -translate-y-1/2 hidden md:block z-10 text-muted-foreground/40">
+                    →
+                  </div>
+                )}
+              </Card>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Search */}
