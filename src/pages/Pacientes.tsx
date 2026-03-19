@@ -217,6 +217,7 @@ export default function Pacientes() {
     setSelectedPacienteId(paciente.id);
     setFormData({
       nome: paciente.nome,
+      nome_social: paciente.nome_social || '',
       cpf: paciente.cpf || '',
       data_nascimento: paciente.data_nascimento || '',
       telefone: paciente.telefone || '',
