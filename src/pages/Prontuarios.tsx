@@ -487,6 +487,7 @@ export default function Prontuarios() {
   const [showProtocols, setShowProtocols] = useState(false);
   const [showDischargeReport, setShowDischargeReport] = useState(false);
   const [sinaisVitais, setSinaisVitais] = useState<SinaisVitais>(emptySinaisVitais);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
