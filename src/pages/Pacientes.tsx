@@ -135,10 +135,193 @@ export default function Pacientes() {
   const [filterConvenio, setFilterConvenio] = useState<string>('todos');
   const [filterIdade, setFilterIdade] = useState<string>('todos');
   const [formSection, setFormSection] = useState<string>('pessoal');
+  // Prontuário inline state
+  const [prontuarioList, setProntuarioList] = useState<any[]>([]);
+  const [loadingProntuarios, setLoadingProntuarios] = useState(false);
+  const [activeProntuario, setActiveProntuario] = useState<any>(null);
+  const [isEditingProntuario, setIsEditingProntuario] = useState(false);
+  const [prontuarioForm, setProntuarioForm] = useState<Record<string, any>>({});
+  const [prontuarioSinais, setProntuarioSinais] = useState<Record<string, string>>({});
+  const [prontuarioPrescricoes, setProntuarioPrescricoes] = useState<any[]>([]);
+  const [prontuarioTab, setProntuarioTab] = useState('lista');
+  const [savingProntuario, setSavingProntuario] = useState(false);
 
   const { toast } = useToast();
+  const { profile: authProfile } = useSupabaseAuth();
+  const { medicoId, isMedicoOnly } = useCurrentMedico();
   const { data: pacientes = [], isLoading, refetch } = usePacientes();
   const { data: convenios = [] } = useSupabaseQuery<any>('convenios', { orderBy: { column: 'nome', ascending: true } });
+  const { data: medicos = [] } = useSupabaseQuery<any>('medicos', { orderBy: { column: 'nome', ascending: true } });
+
+  // Load prontuários when patient changes
+  const loadProntuarios = useCallback(async (pacienteId: string) => {
+    setLoadingProntuarios(true);
+    const { data } = await supabase
+      .from('prontuarios')
+      .select('id, data, queixa_principal, hipotese_diagnostica, diagnostico_principal, conduta, sinais_vitais, plano_terapeutico, historia_doenca_atual, historia_patologica_pregressa, historia_familiar, historia_social, revisao_sistemas, alergias_relatadas, medicamentos_em_uso, exames_fisicos, exame_cabeca_pescoco, exame_torax, exame_abdomen, exame_membros, exame_neurologico, exame_pele, orientacoes_paciente, observacoes_internas, diagnosticos_secundarios, medico_id, paciente_id, medicos(nome, crm, especialidade)')
+      .eq('paciente_id', pacienteId)
+      .order('data', { ascending: false })
+      .limit(50);
+    setProntuarioList(data || []);
+    setLoadingProntuarios(false);
+  }, []);
+
+  // Reset prontuário state when view opens
+  const handleViewWithProntuario = useCallback((paciente: any) => {
+    setSelectedPacienteId(paciente.id);
+    setViewTab('dados');
+    setProntuarioTab('lista');
+    setActiveProntuario(null);
+    setIsEditingProntuario(false);
+    setIsViewOpen(true);
+    loadProntuarios(paciente.id);
+  }, [loadProntuarios]);
+
+  const handleNewProntuario = () => {
+    const paciente = pacientes.find(p => p.id === selectedPacienteId);
+    setProntuarioForm({
+      paciente_id: selectedPacienteId,
+      medico_id: medicoId || authProfile?.id || '',
+      data: format(new Date(), 'yyyy-MM-dd'),
+      queixa_principal: '',
+      historia_doenca_atual: '',
+      historia_patologica_pregressa: '',
+      historia_familiar: '',
+      historia_social: '',
+      revisao_sistemas: '',
+      alergias_relatadas: paciente?.alergias?.join(', ') || '',
+      medicamentos_em_uso: '',
+      exames_fisicos: '',
+      exame_cabeca_pescoco: '', exame_torax: '', exame_abdomen: '',
+      exame_membros: '', exame_neurologico: '', exame_pele: '',
+      hipotese_diagnostica: '',
+      diagnostico_principal: '',
+      diagnosticos_secundarios: [],
+      conduta: '',
+      plano_terapeutico: '',
+      orientacoes_paciente: '',
+      observacoes_internas: '',
+    });
+    setProntuarioSinais({});
+    setProntuarioPrescricoes([]);
+    setActiveProntuario(null);
+    setIsEditingProntuario(true);
+    setProntuarioTab('editor');
+  };
+
+  const handleOpenProntuario = async (pront: any) => {
+    setProntuarioForm(pront);
+    setProntuarioSinais(pront.sinais_vitais || {});
+    const { data: prescs } = await supabase.from('prescricoes').select('*').eq('prontuario_id', pront.id);
+    setProntuarioPrescricoes((prescs || []).map((p: any) => ({
+      medicamento: p.medicamento, dosagem: p.dosagem || '', posologia: p.posologia || '',
+      duracao: p.duracao || '', quantidade: p.quantidade || '', observacoes: p.observacoes || '',
+    })));
+    setActiveProntuario(pront);
+    setIsEditingProntuario(false);
+    setProntuarioTab('editor');
+  };
+
+  const handleSaveProntuario = async () => {
+    if (!prontuarioForm.queixa_principal) {
+      toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      return;
+    }
+    setSavingProntuario(true);
+    try {
+      const payload = {
+        queixa_principal: prontuarioForm.queixa_principal,
+        historia_doenca_atual: prontuarioForm.historia_doenca_atual,
+        historia_patologica_pregressa: prontuarioForm.historia_patologica_pregressa,
+        historia_familiar: prontuarioForm.historia_familiar,
+        historia_social: prontuarioForm.historia_social,
+        revisao_sistemas: prontuarioForm.revisao_sistemas,
+        alergias_relatadas: prontuarioForm.alergias_relatadas,
+        medicamentos_em_uso: prontuarioForm.medicamentos_em_uso,
+        sinais_vitais: JSON.parse(JSON.stringify(prontuarioSinais)),
+        exames_fisicos: prontuarioForm.exames_fisicos,
+        exame_cabeca_pescoco: prontuarioForm.exame_cabeca_pescoco,
+        exame_torax: prontuarioForm.exame_torax,
+        exame_abdomen: prontuarioForm.exame_abdomen,
+        exame_membros: prontuarioForm.exame_membros,
+        exame_neurologico: prontuarioForm.exame_neurologico,
+        exame_pele: prontuarioForm.exame_pele,
+        hipotese_diagnostica: prontuarioForm.hipotese_diagnostica,
+        diagnostico_principal: prontuarioForm.diagnostico_principal,
+        diagnosticos_secundarios: prontuarioForm.diagnosticos_secundarios || [],
+        conduta: prontuarioForm.conduta,
+        plano_terapeutico: prontuarioForm.plano_terapeutico,
+        orientacoes_paciente: prontuarioForm.orientacoes_paciente,
+        observacoes_internas: prontuarioForm.observacoes_internas,
+      };
+
+      let prontuarioId = activeProntuario?.id;
+      if (activeProntuario?.id) {
+        const { error } = await supabase.from('prontuarios').update(payload).eq('id', activeProntuario.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('prontuarios').insert({
+          ...payload,
+          paciente_id: prontuarioForm.paciente_id,
+          medico_id: prontuarioForm.medico_id,
+          data: prontuarioForm.data,
+        }).select().single();
+        if (error) throw error;
+        prontuarioId = data.id;
+      }
+
+      if (!activeProntuario?.id) {
+        for (const presc of prontuarioPrescricoes) {
+          if (presc.medicamento) {
+            await supabase.from('prescricoes').insert({
+              paciente_id: prontuarioForm.paciente_id,
+              medico_id: prontuarioForm.medico_id,
+              prontuario_id: prontuarioId,
+              medicamento: presc.medicamento,
+              dosagem: presc.dosagem || null,
+              posologia: presc.posologia || null,
+              duracao: presc.duracao || null,
+              quantidade: presc.quantidade || null,
+              observacoes: presc.observacoes || null,
+              data_emissao: format(new Date(), 'yyyy-MM-dd'),
+              tipo: 'simples',
+            });
+          }
+        }
+      }
+
+      await supabase.from('audit_log').insert({
+        action: activeProntuario?.id ? 'update' : 'create',
+        collection: 'prontuarios',
+        record_id: prontuarioId,
+        record_name: pacientes.find(p => p.id === selectedPacienteId)?.nome || '',
+        user_id: authProfile?.id || null,
+        user_name: authProfile?.nome || null,
+      }).catch(() => {});
+
+      toast({ title: 'Prontuário salvo com sucesso!' });
+      if (selectedPacienteId) loadProntuarios(selectedPacienteId);
+      setProntuarioTab('lista');
+      setIsEditingProntuario(false);
+      setActiveProntuario(null);
+    } catch (error) {
+      console.error('Error saving prontuario:', error);
+      toast({ title: 'Erro ao salvar prontuário', variant: 'destructive' });
+    } finally {
+      setSavingProntuario(false);
+    }
+  };
+
+  const updateProntuarioField = (field: string, value: any) => setProntuarioForm(prev => ({ ...prev, [field]: value }));
+  const updateSinal = (field: string, value: string) => {
+    const next = { ...prontuarioSinais, [field]: value };
+    if (field === 'peso' || field === 'altura') {
+      const p = parseFloat(field === 'peso' ? value : next.peso || '0');
+      const a = parseFloat(field === 'altura' ? value : next.altura || '0');
+      if (p && a) { const altM = a > 3 ? a / 100 : a; next.imc = (p / (altM * altM)).toFixed(1); }
+    }
+    setProntuarioSinais(next);
+  };
 
   const buscarCep = useCallback(async (cep: string) => {
     const cleaned = cep.replace(/\D/g, '');
