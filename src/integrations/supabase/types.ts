@@ -1672,6 +1672,7 @@ export type Database = {
           logradouro: string | null
           nome: string
           nome_responsavel: string | null
+          nome_social: string | null
           numero: string | null
           numero_carteira: string | null
           observacoes: string | null
@@ -1699,6 +1700,7 @@ export type Database = {
           logradouro?: string | null
           nome: string
           nome_responsavel?: string | null
+          nome_social?: string | null
           numero?: string | null
           numero_carteira?: string | null
           observacoes?: string | null
@@ -1726,6 +1728,7 @@ export type Database = {
           logradouro?: string | null
           nome?: string
           nome_responsavel?: string | null
+          nome_social?: string | null
           numero?: string | null
           numero_carteira?: string | null
           observacoes?: string | null
