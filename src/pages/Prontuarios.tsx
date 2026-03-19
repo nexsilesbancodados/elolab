@@ -770,7 +770,8 @@ export default function Prontuarios() {
                       editable={false}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{pac.nome}</p>
+                      <p className="font-medium truncate">{pac.nome_social || pac.nome}</p>
+                      {pac.nome_social && <p className="text-[10px] text-muted-foreground truncate">Civil: {pac.nome}</p>}
                       <p className="text-xs text-muted-foreground">
                         {calcularIdade(pac.data_nascimento)} anos
                         {pac.sexo && ` • ${pac.sexo === 'masculino' ? '♂' : pac.sexo === 'feminino' ? '♀' : ''}`}
