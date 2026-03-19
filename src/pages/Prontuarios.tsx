@@ -1633,8 +1633,25 @@ export default function Prontuarios() {
           </ScrollArea>
 
           <DialogFooter className="flex-shrink-0 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+            <div className="flex items-center gap-2 w-full justify-between">
+              <div className="flex-1">
+                {currentProntuario.id && (
+                  <DigitalSignature
+                    documentId={currentProntuario.id}
+                    documentType="prontuario"
+                    signerName={user?.nome || 'Médico'}
+                    signerCRM={medicos.find((m: any) => m.id === currentProntuario.medico_id)?.crm}
+                    compact
+                  />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
+                {!isReadOnly && (
+                  <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+                )}
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
