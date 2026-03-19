@@ -1072,7 +1072,7 @@ export default function Prontuarios() {
 
       {/* ─── Prontuário Dialog ─── */}
       <Dialog open={isProntuarioOpen} onOpenChange={setIsProntuarioOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-gradient-to-b from-card to-card/95 backdrop-blur-xl">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center justify-between flex-wrap gap-2">
               <span className="flex items-center gap-2">
