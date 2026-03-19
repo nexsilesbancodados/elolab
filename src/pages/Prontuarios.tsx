@@ -1630,6 +1630,7 @@ export default function Prontuarios() {
                 )}
               </TabsContent>
             </Tabs>
+            </fieldset>
           </ScrollArea>
 
           <DialogFooter className="flex-shrink-0 pt-4 border-t">
