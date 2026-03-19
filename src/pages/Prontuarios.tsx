@@ -1217,15 +1217,15 @@ export default function Prontuarios() {
           <ScrollArea className="flex-1 pr-4">
             <fieldset disabled={isReadOnly} className="contents">
             <Tabs defaultValue="anamnese" className="w-full">
-              <TabsList className="grid w-full grid-cols-8 mb-4">
-                <TabsTrigger value="anamnese" className="text-xs gap-1"><ClipboardList className="h-3 w-3" />Anamnese</TabsTrigger>
-                <TabsTrigger value="exame" className="text-xs gap-1"><Stethoscope className="h-3 w-3" />Exame</TabsTrigger>
-                <TabsTrigger value="diagnostico" className="text-xs gap-1"><BookOpen className="h-3 w-3" />Diagnóstico</TabsTrigger>
-                <TabsTrigger value="conduta" className="text-xs gap-1"><FileCheck className="h-3 w-3" />Conduta</TabsTrigger>
-                <TabsTrigger value="prescricao" className="text-xs gap-1"><Pill className="h-3 w-3" />Prescrição</TabsTrigger>
-                <TabsTrigger value="anexos" className="text-xs gap-1"><Paperclip className="h-3 w-3" />Anexos</TabsTrigger>
-                <TabsTrigger value="historico" className="text-xs gap-1"><History className="h-3 w-3" />Histórico</TabsTrigger>
-                <TabsTrigger value="auditoria" className="text-xs gap-1"><Shield className="h-3 w-3" />Auditoria</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-8 mb-4 bg-muted/50 backdrop-blur-sm rounded-xl p-1 h-auto">
+                <TabsTrigger value="anamnese" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><ClipboardList className="h-3.5 w-3.5" />Anamnese</TabsTrigger>
+                <TabsTrigger value="exame" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Stethoscope className="h-3.5 w-3.5" />Exame</TabsTrigger>
+                <TabsTrigger value="diagnostico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><BookOpen className="h-3.5 w-3.5" />Diagnóstico</TabsTrigger>
+                <TabsTrigger value="conduta" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><FileCheck className="h-3.5 w-3.5" />Conduta</TabsTrigger>
+                <TabsTrigger value="prescricao" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Pill className="h-3.5 w-3.5" />Prescrição</TabsTrigger>
+                <TabsTrigger value="anexos" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Paperclip className="h-3.5 w-3.5" />Anexos</TabsTrigger>
+                <TabsTrigger value="historico" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><History className="h-3.5 w-3.5" />Histórico</TabsTrigger>
+                <TabsTrigger value="auditoria" className="text-xs gap-1.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2"><Shield className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
               </TabsList>
 
               {/* ─── Anamnese Tab ─── */}
