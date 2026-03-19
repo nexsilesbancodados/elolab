@@ -688,8 +688,16 @@ export default function Prontuarios() {
         }
       }
 
-      // Audit log
+      // Audit log with changes diff
       try {
+        const changes = currentProntuario.id ? {
+          campos_alterados: Object.keys(payload).filter(k => {
+            const original = (currentProntuario as any)[k];
+            const updated = (payload as any)[k];
+            return JSON.stringify(original) !== JSON.stringify(updated);
+          }),
+          editado_em: new Date().toISOString(),
+        } : undefined;
         await supabase.from('audit_log').insert({
           action: currentProntuario.id ? 'update' : 'create',
           collection: 'prontuarios',
@@ -697,6 +705,7 @@ export default function Prontuarios() {
           record_name: selectedPaciente?.nome || '',
           user_id: user?.id || null,
           user_name: user?.nome || null,
+          changes: changes || null,
         });
       } catch { /* silent */ }
 
