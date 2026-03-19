@@ -443,11 +443,7 @@ export default function Pacientes() {
     setIsFormOpen(true);
   };
 
-  const handleView = (paciente: any) => {
-    setSelectedPacienteId(paciente.id);
-    setViewTab('dados');
-    setIsViewOpen(true);
-  };
+  const handleView = handleViewWithProntuario;
 
   const handleDeleteClick = (paciente: any) => {
     setSelectedPacienteId(paciente.id);
