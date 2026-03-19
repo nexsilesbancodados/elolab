@@ -5,6 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, Stethoscope, Phone, Mail, BadgeCheck, Award,
   FileText, Clock, User, Upload, Image, Calendar, ClipboardList, Pill,
   ChevronRight, X, Activity, Users, Eye, Filter, Heart, ShieldCheck,
+  ExternalLink, Copy, Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
