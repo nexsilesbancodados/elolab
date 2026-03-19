@@ -52,7 +52,7 @@ function addFooter(doc: jsPDF, pageNum: number = 1) {
 }
 
 // Gerar receita médica
-export function gerarReceita(
+export async function gerarReceita(
   paciente: { nome: string; cpf?: string; dataNascimento?: string },
   medico: { nome: string; crm?: string; especialidade?: string },
   medicamentos: Array<{
