@@ -700,12 +700,14 @@ export default function Agenda() {
                           <p className="text-xs text-muted-foreground">{format(parseISO(ag.data), 'EEE', { locale: ptBR })}</p>
                           <p className="font-bold text-sm">{format(parseISO(ag.data), 'dd/MM')}</p>
                         </div>
-                        <div className={`w-2 h-10 rounded-full shrink-0 ${
-                          ag.status === 'confirmado' ? 'bg-success' :
-                          ag.status === 'cancelado' ? 'bg-destructive' :
-                          ag.status === 'finalizado' ? 'bg-muted-foreground' :
-                          ag.status === 'em_atendimento' ? 'bg-purple-500' : 'bg-info'
-                        }`} />
+                        <div className={cn('w-2 h-10 rounded-full shrink-0',
+                          selectedMedico === 'todos' && medicos.length > 1
+                            ? getMedicoColor(ag.medico_id)
+                            : ag.status === 'confirmado' ? 'bg-success' :
+                              ag.status === 'cancelado' ? 'bg-destructive' :
+                              ag.status === 'finalizado' ? 'bg-muted-foreground' :
+                              ag.status === 'em_atendimento' ? 'bg-purple-500' : 'bg-info'
+                        )} />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{getPacienteNome(ag.paciente_id)}</p>
                           <p className="text-xs text-muted-foreground truncate">{getMedicoNome(ag.medico_id)}</p>
