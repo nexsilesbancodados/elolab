@@ -5,6 +5,7 @@ import {
   Plus, Search, Pencil, Trash2, Stethoscope, Phone, Mail, BadgeCheck, Award,
   FileText, Clock, User, Upload, Image, Calendar, ClipboardList, Pill,
   ChevronRight, X, Activity, Users, Eye, Filter, Heart, ShieldCheck,
+  ExternalLink, Copy, Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -157,6 +158,53 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => navigate('/agenda')}><Calendar className="h-3 w-3" /> Agenda</Button>
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => navigate('/prontuarios')}><ClipboardList className="h-3 w-3" /> Prontuários</Button>
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => navigate('/prescricoes')}><Pill className="h-3 w-3" /> Prescrições</Button>
+          </div>
+
+          {/* Portal do Médico */}
+          <div className="mt-4 p-3 rounded-xl border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink className="h-4 w-4 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Portal do Médico</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-2.5">
+              Link de acesso ao portal exclusivo do médico com dashboard, agenda e prontuários.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={() => {
+                  const portalUrl = `${window.location.origin}/dashboard`;
+                  navigator.clipboard.writeText(portalUrl);
+                  toast.success('Link do portal copiado!', { description: portalUrl });
+                }}
+              >
+                <Copy className="h-3 w-3" /> Copiar Link
+              </Button>
+              {medico.email && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="gap-1.5 text-xs"
+                  onClick={() => {
+                    const portalUrl = `${window.location.origin}/dashboard`;
+                    const subject = encodeURIComponent('Acesso ao Portal do Médico — EloLab');
+                    const body = encodeURIComponent(
+                      `Olá Dr(a). ${medico.nome || ''},\n\n` +
+                      `Segue o link de acesso ao seu Portal do Médico na plataforma EloLab:\n\n` +
+                      `${portalUrl}\n\n` +
+                      `Utilize suas credenciais de acesso para entrar.\n\n` +
+                      `Atenciosamente,\nEquipe EloLab`
+                    );
+                    window.open(`mailto:${medico.email}?subject=${subject}&body=${body}`, '_blank');
+                    toast.success('E-mail preparado!', { description: `Para: ${medico.email}` });
+                  }}
+                >
+                  <Send className="h-3 w-3" /> Enviar por E-mail
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
