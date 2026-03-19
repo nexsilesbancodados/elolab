@@ -627,4 +627,33 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Safe area insets for PWA / notched devices */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Touch-friendly tap targets */
+  @media (pointer: coarse) {
+    button, a, [role="button"], input, select, textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Except small inline badges/icons */
+    .badge, [class*="Badge"], .h-2, .w-2, .h-3, .w-3 {
+      min-height: unset;
+      min-width: unset;
+    }
+  }
+
+  /* Prevent pull-to-refresh in PWA standalone mode */
+  @media (display-mode: standalone) {
+    body {
+      overscroll-behavior-y: contain;
+    }
+  }
 }
