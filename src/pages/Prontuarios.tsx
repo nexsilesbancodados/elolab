@@ -1187,6 +1187,15 @@ export default function Prontuarios() {
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted/40 rounded-lg p-2">
                     <BadgeCheck className="h-3 w-3" />Prescrição digital — assinatura ICP-Brasil
                   </p>
+
+                  {/* Drug Interaction Checker */}
+                  {prescricoes.filter(p => p.medicamento).length > 0 && (
+                    <DrugInteractionChecker
+                      medicamentos={prescricoes.filter(p => p.medicamento).map(p => p.medicamento)}
+                      alergias={selectedPaciente?.alergias || []}
+                    />
+                  )}
+
                   {prescricoes.length === 0 ? (
                     <div className="flex flex-col items-center py-10 text-muted-foreground">
                       <Pill className="h-8 w-8 opacity-20 mb-2" />
