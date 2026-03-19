@@ -52,6 +52,26 @@ const STATUS_COLORS: Record<StatusAgendamento, string> = {
   faltou: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
+// Color palette for doctors
+const MEDICO_COLORS = [
+  'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
+  'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-teal-500',
+  'bg-indigo-500', 'bg-orange-500',
+];
+
+const MEDICO_BG_COLORS = [
+  'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+  'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
+  'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800',
+  'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+  'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
+  'bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800',
+  'bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800',
+  'bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800',
+  'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800',
+  'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
+];
+
 const STATUS_LABELS: Record<StatusAgendamento, string> = {
   agendado: 'Agendado',
   confirmado: 'Confirmado',
