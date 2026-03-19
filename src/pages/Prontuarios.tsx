@@ -35,6 +35,7 @@ import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/h
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { exportToFHIR, exportToXML, downloadClinicalExport } from '@/lib/clinicalExport';
 
 // ─── Types ─────────────────────────────────────────────────
 interface PrescricaoForm {
