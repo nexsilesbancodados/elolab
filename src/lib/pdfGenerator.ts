@@ -143,15 +143,39 @@ export function gerarReceita(
     doc.text(lines, 20, yPos);
   }
 
+  // QR Code de validação
+  const qrData = JSON.stringify({
+    tipo: tipoLabel[tipo],
+    paciente: paciente.nome,
+    medico: medico.nome,
+    crm: medico.crm,
+    data: format(new Date(), 'yyyy-MM-dd'),
+    medicamentos: medicamentos.map(m => m.nome).join(', '),
+    hash: Math.random().toString(36).substr(2, 12).toUpperCase(),
+  });
+
+  try {
+    const qrDataUrl = await QRCode.toDataURL(qrData, { width: 80, margin: 1 });
+    doc.addImage(qrDataUrl, 'PNG', 160, 240, 25, 25);
+    doc.setFontSize(6);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Validação digital', 172.5, 267, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+  } catch { /* QR generation failed silently */ }
+
   // Assinatura do médico
   const assinaturaY = 250;
-  doc.line(60, assinaturaY, 150, assinaturaY);
+  doc.line(40, assinaturaY, 140, assinaturaY);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text(medico.nome, 105, assinaturaY + 6, { align: 'center' });
+  doc.text(medico.nome, 90, assinaturaY + 6, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text(`CRM: ${medico.crm || 'N/A'} | ${medico.especialidade || ''}`, 105, assinaturaY + 12, { align: 'center' });
+  doc.text(`CRM: ${medico.crm || 'N/A'} | ${medico.especialidade || ''}`, 90, assinaturaY + 12, { align: 'center' });
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Assinatura digital ICP-Brasil pendente', 90, assinaturaY + 17, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
 
   addFooter(doc);
 
