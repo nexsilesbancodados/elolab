@@ -367,6 +367,32 @@ export default function Agenda() {
     return <AgendaSkeleton />;
   }
 
+  // Doctor color mapping
+  const medicoColorMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    medicos.forEach((m, i) => { map[m.id] = i % MEDICO_COLORS.length; });
+    return map;
+  }, [medicos]);
+
+  const getMedicoColor = (medicoId: string) => MEDICO_COLORS[medicoColorMap[medicoId] ?? 0];
+  const getMedicoBgColor = (medicoId: string) => MEDICO_BG_COLORS[medicoColorMap[medicoId] ?? 0];
+
+  // Monthly calendar data
+  const monthDays = useMemo(() => {
+    const monthStart = startOfMonth(currentWeek);
+    const monthEnd = endOfMonth(currentWeek);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    // Pad start to Monday
+    const startDay = getDay(monthStart);
+    const paddingBefore = (startDay === 0 ? 6 : startDay - 1);
+    const paddedStart = Array.from({ length: paddingBefore }, (_, i) => addDays(monthStart, -(paddingBefore - i)));
+    // Pad end to fill grid
+    const totalCells = Math.ceil((paddedStart.length + days.length) / 7) * 7;
+    const paddingAfter = totalCells - paddedStart.length - days.length;
+    const paddedEnd = Array.from({ length: paddingAfter }, (_, i) => addDays(monthEnd, i + 1));
+    return [...paddedStart, ...days, ...paddedEnd];
+  }, [currentWeek]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
