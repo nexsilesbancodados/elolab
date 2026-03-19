@@ -6,7 +6,7 @@ import {
   Stethoscope, Brain, Bone, Eye as EyeIcon, Pill, Paperclip,
   ClipboardList, AlertTriangle, User, Clock, ChevronDown, ChevronRight,
   Printer, BookOpen, ShieldCheck, FileCheck, X, Clipboard,
-  Phone, Mail, Building2, CreditCard, Baby, Shield, Lock,
+  Phone, Mail, Building2, CreditCard, Baby, Shield, Lock, PenLine,
   TestTube, ArrowRight, UserCheck, BadgeCheck, Share2, MessageCircle, ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -29,7 +29,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   AllergyAlert, Cid10Search, ClinicalProtocols,
   ReturnScheduler, DischargeReport, AnexosProntuario,
-  VitalSignsChart, PatientTimeline, PatientPhoto,
+  VitalSignsChart, PatientTimeline, PatientPhoto, DigitalSignature,
 } from '@/components/clinical';
 import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
@@ -113,7 +113,7 @@ function classificarIMC(imc: string) {
 }
 
 // ─── Vital Signs Input Component ───────────────────────────
-function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange: (s: SinaisVitais) => void }) {
+function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: SinaisVitais; onChange: (s: SinaisVitais) => void; disabled?: boolean }) {
   const update = (field: keyof SinaisVitais, value: string) => {
     const next = { ...sinais, [field]: value };
     if (field === 'peso' || field === 'altura') {
@@ -136,7 +136,7 @@ function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange:
         <div className="space-y-1">
           <Label className="text-xs flex items-center gap-1"><Heart className="h-3 w-3 text-destructive" />PA (mmHg)</Label>
           <div className="flex gap-1 items-center">
-            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" />
+            <Input placeholder="120" value={sinais.pressao_sistolica} onChange={e => update('pressao_sistolica', e.target.value)} className="h-8 text-sm" disabled={disabled} />
             <span className="text-muted-foreground">/</span>
             <Input placeholder="80" value={sinais.pressao_diastolica} onChange={e => update('pressao_diastolica', e.target.value)} className="h-8 text-sm" />
           </div>
@@ -487,6 +487,7 @@ export default function Prontuarios() {
   const [showProtocols, setShowProtocols] = useState(false);
   const [showDischargeReport, setShowDischargeReport] = useState(false);
   const [sinaisVitais, setSinaisVitais] = useState<SinaisVitais>(emptySinaisVitais);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
@@ -550,6 +551,7 @@ export default function Prontuarios() {
     });
     setSinaisVitais(emptySinaisVitais);
     setPrescricoes([]);
+    setIsEditing(true); // New records are always editable
     setIsProntuarioOpen(true);
   };
 
@@ -566,6 +568,7 @@ export default function Prontuarios() {
       posologia: p.posologia || '', duracao: p.duracao || '',
       quantidade: p.quantidade || '', observacoes: p.observacoes || '',
     })));
+    setIsEditing(false); // Existing records start read-only
     setIsProntuarioOpen(true);
 
     // Log access for audit
@@ -590,6 +593,28 @@ export default function Prontuarios() {
   };
 
   const handleRemovePrescricao = (i: number) => setPrescricoes(prescricoes.filter((_, idx) => idx !== i));
+
+  const isReadOnly = !!currentProntuario.id && !isEditing;
+
+  const handleRequestEdit = async () => {
+    // Log the edit request in audit trail
+    try {
+      await supabase.from('audit_log').insert({
+        action: 'edit_request',
+        collection: 'prontuarios',
+        record_id: currentProntuario.id,
+        record_name: `Solicitação de edição — ${selectedPaciente?.nome || ''}`,
+        user_id: user?.id || null,
+        user_name: user?.nome || null,
+        changes: { motivo: 'Edição solicitada pelo médico' },
+      });
+    } catch { /* silent */ }
+    setIsEditing(true);
+    toast({
+      title: 'Modo de edição ativado',
+      description: 'Todas as alterações serão registradas na trilha de auditoria.',
+    });
+  };
 
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
 
@@ -663,8 +688,16 @@ export default function Prontuarios() {
         }
       }
 
-      // Audit log
+      // Audit log with changes diff
       try {
+        const changes = currentProntuario.id ? {
+          campos_alterados: Object.keys(payload).filter(k => {
+            const original = (currentProntuario as any)[k];
+            const updated = (payload as any)[k];
+            return JSON.stringify(original) !== JSON.stringify(updated);
+          }),
+          editado_em: new Date().toISOString(),
+        } : undefined;
         await supabase.from('audit_log').insert({
           action: currentProntuario.id ? 'update' : 'create',
           collection: 'prontuarios',
@@ -672,6 +705,7 @@ export default function Prontuarios() {
           record_name: selectedPaciente?.nome || '',
           user_id: user?.id || null,
           user_name: user?.nome || null,
+          changes: changes || null,
         });
       } catch { /* silent */ }
 
@@ -1107,7 +1141,33 @@ export default function Prontuarios() {
             <AllergyAlert alergias={selectedPaciente.alergias} className="flex-shrink-0" />
           )}
 
+          {/* Edit Lock Banner */}
+          {isReadOnly && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex-shrink-0"
+            >
+              <div className="flex items-center gap-2 text-sm">
+                <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <span className="text-amber-700 dark:text-amber-300 font-medium">
+                  Modo somente leitura — registros anteriores são protegidos por auditoria (CFM nº 1.821/07)
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRequestEdit}
+                className="gap-1.5 flex-shrink-0 border-amber-500/50 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                Solicitar Edição
+              </Button>
+            </motion.div>
+          )}
+
           <ScrollArea className="flex-1 pr-4">
+            <fieldset disabled={isReadOnly} className="contents">
             <Tabs defaultValue="anamnese" className="w-full">
               <TabsList className="grid w-full grid-cols-8 mb-4">
                 <TabsTrigger value="anamnese" className="text-xs gap-1"><ClipboardList className="h-3 w-3" />Anamnese</TabsTrigger>
@@ -1580,11 +1640,29 @@ export default function Prontuarios() {
                 )}
               </TabsContent>
             </Tabs>
+            </fieldset>
           </ScrollArea>
 
           <DialogFooter className="flex-shrink-0 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+            <div className="flex items-center gap-2 w-full justify-between">
+              <div className="flex-1">
+                {currentProntuario.id && (
+                  <DigitalSignature
+                    documentId={currentProntuario.id}
+                    documentType="prontuario"
+                    signerName={user?.nome || 'Médico'}
+                    signerCRM={medicos.find((m: any) => m.id === currentProntuario.medico_id)?.crm}
+                    compact
+                  />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setIsProntuarioOpen(false)}>Cancelar</Button>
+                {!isReadOnly && (
+                  <Button onClick={handleSave} className="gap-2"><Save className="h-4 w-4" />Salvar Prontuário</Button>
+                )}
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
