@@ -221,7 +221,14 @@ function PatientIDCard({ paciente, convenioNome }: { paciente: any; convenioNome
           editable={false}
         />
         <div className="flex-1 min-w-0 space-y-1">
-          <h3 className="text-lg font-bold truncate">{paciente.nome}</h3>
+          <h3 className="text-lg font-bold truncate">
+            {paciente.nome_social || paciente.nome}
+          </h3>
+          {paciente.nome_social && (
+            <p className="text-xs text-muted-foreground">
+              Registro civil: {paciente.nome}
+            </p>
+          )}
           <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
             <span>{idade} anos</span>
             {paciente.sexo && (
