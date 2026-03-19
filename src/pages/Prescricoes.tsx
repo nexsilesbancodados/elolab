@@ -339,6 +339,7 @@ export default function Prescricoes() {
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(group)} aria-label="Ver prescrição"><Eye className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(group)} aria-label="Imprimir prescrição"><Printer className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDuplicate(group)} aria-label="Duplicar prescrição" title="Duplicar prescrição"><Clipboard className="h-4 w-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
