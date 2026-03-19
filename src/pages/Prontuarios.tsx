@@ -29,7 +29,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   AllergyAlert, Cid10Search, ClinicalProtocols,
   ReturnScheduler, DischargeReport, AnexosProntuario,
-  VitalSignsChart, PatientTimeline, PatientPhoto,
+  VitalSignsChart, PatientTimeline, PatientPhoto, DigitalSignature,
 } from '@/components/clinical';
 import { usePacientes, useMedicos, useAgendamentos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
