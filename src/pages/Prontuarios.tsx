@@ -113,7 +113,7 @@ function classificarIMC(imc: string) {
 }
 
 // ─── Vital Signs Input Component ───────────────────────────
-function VitalSignsInput({ sinais, onChange }: { sinais: SinaisVitais; onChange: (s: SinaisVitais) => void }) {
+function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: SinaisVitais; onChange: (s: SinaisVitais) => void; disabled?: boolean }) {
   const update = (field: keyof SinaisVitais, value: string) => {
     const next = { ...sinais, [field]: value };
     if (field === 'peso' || field === 'altura') {
