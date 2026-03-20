@@ -454,14 +454,32 @@ export default function Exames() {
         data_solicitacao: formData.data_solicitacao,
       }));
 
-      const { error } = await supabase.from('exames').insert(inserts);
+      const { data: inserted, error } = await supabase.from('exames').insert(inserts).select('id, tipo_exame');
       if (error) throw error;
 
+      // Auto-create coleta records for lab exams
+      if (inserted) {
+        const coletaResults = await Promise.all(
+          inserted.map(ex => autoCreateColeta({
+            exameId: ex.id,
+            pacienteId: formData.paciente_id,
+            medicoId: formData.medico_solicitante_id,
+            tipoExame: ex.tipo_exame,
+            urgente: formData.urgencia === 'urgente' || formData.urgencia === 'emergencia',
+          }))
+        );
+        const coletasCriadas = coletaResults.filter(r => r.actions.length > 0).length;
+        if (coletasCriadas > 0) {
+          toast.info(`${coletasCriadas} coleta(s) de laboratório criada(s) automaticamente.`);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['exames'] });
+      queryClient.invalidateQueries({ queryKey: ['coletas_laboratorio'] });
       setIsDialogOpen(false);
 
       if (emitir) {
-        toast.success(`${examesSelecionados.length} exame(s) emitidos e prontos para assinatura digital.`);
+        toast.success(`${examesSelecionados.length} exame(s) emitidos — coletas de lab criadas automaticamente.`);
       } else {
         toast.success(`${examesSelecionados.length} exame(s) solicitados com sucesso!`);
       }
