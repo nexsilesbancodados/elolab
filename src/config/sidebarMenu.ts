@@ -117,6 +117,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Fluxo de Caixa', icon: Wallet, href: '/fluxo-caixa' },
       { label: 'Pagamentos', icon: CreditCard, href: '/pagamentos' },
       { label: 'Preços Exames', icon: DollarSign, href: '/precos-exames' },
+      { label: 'Tipos de Consulta', icon: Stethoscope, href: '/tipos-consulta' },
       { label: 'Relatórios', icon: BarChart3, href: '/relatorios' },
     ],
   },
