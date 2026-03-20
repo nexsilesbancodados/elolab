@@ -53,12 +53,11 @@ export function AuditLog() {
   const [showClearDialog, setShowClearDialog] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+  const loadEntries = () => {
     const filters: Record<string, string> = {};
     if (filterCollection !== 'all') filters.collection = filterCollection;
     if (filterAction !== 'all') filters.action = filterAction;
 
-    // Date filters: interpret as local day boundaries
     if (filterStartDate) {
       const start = new Date(`${filterStartDate}T00:00:00`);
       filters.startDate = start.toISOString();
@@ -69,6 +68,10 @@ export function AuditLog() {
     }
 
     setEntries(getAuditLog(filters));
+  };
+
+  useEffect(() => {
+    loadEntries();
   }, [filterCollection, filterAction, filterStartDate, filterEndDate]);
 
   const handleClear = () => {
