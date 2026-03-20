@@ -334,6 +334,7 @@ export default function ContasPagar() {
               <DollarSign className="h-5 w-5 text-primary" />
               Nova Conta a Pagar
             </DialogTitle>
+            <DialogDescription>Cadastre uma nova despesa ou conta a pagar.</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto space-y-5 pr-2">
             {/* Dados principais */}
