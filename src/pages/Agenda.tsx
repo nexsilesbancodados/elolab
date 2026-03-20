@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
+import { autoConfirmarAgendamento, autoCancelarAgendamento, autoMarcarFaltasHoje } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { useQueryClient } from '@tanstack/react-query';
@@ -398,20 +399,19 @@ export default function Agenda() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .delete()
-        .eq('id', formData.id);
+      const result = await autoCancelarAgendamento({
+        agendamentoId: formData.id,
+        motivo: 'cancelado',
+      });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.message);
       
-      toast.success('Agendamento excluído!');
+      toast.success('Agendamento cancelado!', { description: result.actions.join(' • ') });
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
     } catch (error: any) {
-      if (import.meta.env.DEV) console.error('Error deleting agendamento:', error);
-      const msg = error?.message || '';
-      toast.error(msg.includes('row-level security') ? 'Apenas administradores e recepção podem excluir agendamentos.' : 'Erro ao excluir agendamento.');
+      if (import.meta.env.DEV) console.error('Error cancelling agendamento:', error);
+      toast.error('Erro ao cancelar agendamento.');
     } finally {
       setIsSaving(false);
     }
@@ -516,14 +516,30 @@ export default function Agenda() {
                 className="ml-auto h-7 text-xs border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
                 onClick={async () => {
                   const ids = agendamentosHoje.filter(a => a.status === 'agendado').map(a => a.id);
-                  const { error } = await supabase.from('agendamentos').update({ status: 'confirmado' as StatusAgendamento }).in('id', ids);
-                  if (!error) {
-                    toast.success(`${ids.length} agendamento(s) confirmado(s)!`);
+                  let count = 0;
+                  for (const id of ids) {
+                    const r = await autoConfirmarAgendamento(id);
+                    if (r.success) count++;
+                  }
+                  toast.success(`${count} agendamento(s) confirmado(s) com notificações!`);
+                  queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                }}
+              >
+                Confirmar todos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-500/10"
+                onClick={async () => {
+                  const result = await autoMarcarFaltasHoje();
+                  if (result.success) {
+                    toast.success(result.message, { description: result.actions.join(' • ') });
                     queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
                   }
                 }}
               >
-                Confirmar todos
+                Marcar faltas
               </Button>
             </motion.div>
           )}
@@ -1040,9 +1056,27 @@ export default function Agenda() {
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {formData.id && (
-              <Button variant="destructive" onClick={handleDelete} disabled={isSaving}>
-                Excluir
+            {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
+              <Button
+                variant="outline"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                disabled={isSaving}
+                onClick={async () => {
+                  if (!formData.id) return;
+                  setIsSaving(true);
+                  const result = await autoCancelarAgendamento({ agendamentoId: formData.id, motivo: 'faltou' });
+                  toast.success('Falta registrada!', { description: result.actions.join(' • ') });
+                  queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                  setIsFormOpen(false);
+                  setIsSaving(false);
+                }}
+              >
+                Faltou
+              </Button>
+            )}
+            {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
+              <Button variant="destructive" disabled={isSaving} onClick={handleDelete}>
+                Cancelar Consulta
               </Button>
             )}
             <div className="flex-1" />

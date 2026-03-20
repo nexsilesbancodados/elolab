@@ -95,9 +95,8 @@ export async function autoIniciarAtendimento(
         paciente_id: pacienteId,
         medico_id: medicoId,
         agendamento_id: agendamentoId,
-        data_consulta: today,
+        data: today,
         queixa_principal: '',
-        evolucao: '',
       });
       actions.push('Prontuário criado automaticamente');
     }
@@ -552,7 +551,6 @@ export async function autoConfirmarPagamento(params: {
     }).eq('id', params.lancamentoId);
     actions.push('Pagamento confirmado');
 
-    // Get lancamento details for MercadoPago record
     const { data: lanc } = await supabase
       .from('lancamentos')
       .select('valor, paciente_id, agendamento_id, descricao')
@@ -562,7 +560,6 @@ export async function autoConfirmarPagamento(params: {
     if (lanc) {
       const valorFinal = lanc.valor - (params.desconto || 0) + (params.acrescimo || 0);
 
-      // Create payment record
       await supabase.from('pagamentos_mercadopago').insert({
         valor: valorFinal,
         valor_pago: valorFinal,
@@ -581,6 +578,417 @@ export async function autoConfirmarPagamento(params: {
     }
 
     return { success: true, message: 'Pagamento processado com sucesso', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 10. Confirmar Agendamento + Notificar ──────────────
+/** Confirm appointment and send notification to patient */
+export async function autoConfirmarAgendamento(agendamentoId: string): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    await supabase.from('agendamentos').update({ status: 'confirmado' }).eq('id', agendamentoId);
+    actions.push('Agendamento confirmado');
+
+    // Get patient info for notification
+    const { data: ag } = await supabase
+      .from('agendamentos')
+      .select('data, hora_inicio, paciente_id, medico_id')
+      .eq('id', agendamentoId)
+      .maybeSingle();
+
+    if (ag) {
+      const { data: pac } = await supabase
+        .from('pacientes')
+        .select('nome, email, telefone')
+        .eq('id', ag.paciente_id)
+        .maybeSingle();
+      const { data: med } = await supabase
+        .from('medicos')
+        .select('nome')
+        .eq('id', ag.medico_id)
+        .maybeSingle();
+
+      if (pac?.email) {
+        await supabase.from('notification_queue').insert({
+          tipo: 'email',
+          destinatario_id: ag.paciente_id,
+          destinatario_email: pac.email,
+          destinatario_nome: pac.nome,
+          assunto: `Consulta confirmada — ${format(new Date(ag.data + 'T12:00:00'), 'dd/MM/yyyy')}`,
+          conteudo: `Olá ${pac.nome}, sua consulta com Dr(a). ${med?.nome || 'médico'} no dia ${format(new Date(ag.data + 'T12:00:00'), 'dd/MM/yyyy')} às ${ag.hora_inicio?.slice(0, 5)} está confirmada.`,
+          status: 'pendente',
+        });
+        actions.push('Notificação de confirmação enviada por e-mail');
+      }
+
+      if (pac?.telefone) {
+        await supabase.from('notification_queue').insert({
+          tipo: 'whatsapp',
+          destinatario_id: ag.paciente_id,
+          destinatario_telefone: pac.telefone,
+          destinatario_nome: pac.nome,
+          assunto: 'Confirmação de Consulta',
+          conteudo: `Olá ${pac.nome}! Sua consulta do dia ${format(new Date(ag.data + 'T12:00:00'), 'dd/MM/yyyy')} às ${ag.hora_inicio?.slice(0, 5)} com Dr(a). ${med?.nome || ''} está confirmada. ✅`,
+          status: 'pendente',
+        });
+        actions.push('Notificação WhatsApp enfileirada');
+      }
+    }
+
+    return { success: true, message: 'Agendamento confirmado com notificação', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 11. Cancelar / No-Show + Convocar Lista de Espera ──
+/** Cancel or mark no-show, then auto-notify waiting list */
+export async function autoCancelarAgendamento(params: {
+  agendamentoId: string;
+  motivo: 'cancelado' | 'faltou';
+}): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    // Get appointment details before cancelling
+    const { data: ag } = await supabase
+      .from('agendamentos')
+      .select('data, hora_inicio, medico_id, paciente_id')
+      .eq('id', params.agendamentoId)
+      .maybeSingle();
+
+    await supabase.from('agendamentos').update({ status: params.motivo }).eq('id', params.agendamentoId);
+    actions.push(`Agendamento marcado como ${params.motivo === 'faltou' ? 'falta' : 'cancelado'}`);
+
+    // Remove from queue if present
+    await supabase.from('fila_atendimento').delete().eq('agendamento_id', params.agendamentoId);
+    actions.push('Removido da fila (se estava)');
+
+    // Auto-convoke waiting list
+    if (ag) {
+      const { data: espera } = await supabase
+        .from('lista_espera')
+        .select('id, paciente_id, medico_id')
+        .eq('status', 'aguardando')
+        .or(`medico_id.eq.${ag.medico_id},medico_id.is.null`)
+        .order('prioridade', { ascending: true })
+        .order('created_at', { ascending: true })
+        .limit(3);
+
+      if (espera && espera.length > 0) {
+        for (const item of espera) {
+          const { data: pacEspera } = await supabase
+            .from('pacientes')
+            .select('nome, email, telefone')
+            .eq('id', item.paciente_id)
+            .maybeSingle();
+
+          if (pacEspera?.telefone || pacEspera?.email) {
+            const { data: med } = await supabase
+              .from('medicos')
+              .select('nome')
+              .eq('id', ag.medico_id)
+              .maybeSingle();
+
+            const msg = `Olá ${pacEspera.nome}! Uma vaga abriu na agenda de Dr(a). ${med?.nome || ''} para o dia ${format(new Date(ag.data + 'T12:00:00'), 'dd/MM/yyyy')} às ${ag.hora_inicio?.slice(0, 5)}. Deseja agendar? Responda SIM para confirmar.`;
+
+            if (pacEspera.telefone) {
+              await supabase.from('notification_queue').insert({
+                tipo: 'whatsapp',
+                destinatario_id: item.paciente_id,
+                destinatario_telefone: pacEspera.telefone,
+                destinatario_nome: pacEspera.nome,
+                assunto: 'Vaga Disponível',
+                conteudo: msg,
+                status: 'pendente',
+              });
+            }
+            if (pacEspera.email) {
+              await supabase.from('notification_queue').insert({
+                tipo: 'email',
+                destinatario_id: item.paciente_id,
+                destinatario_email: pacEspera.email,
+                destinatario_nome: pacEspera.nome,
+                assunto: 'Vaga disponível na agenda',
+                conteudo: msg,
+                status: 'pendente',
+              });
+            }
+
+            await supabase.from('lista_espera').update({ status: 'notificado' }).eq('id', item.id);
+            actions.push(`Lista de espera: ${pacEspera.nome} notificado sobre vaga`);
+          }
+        }
+      }
+    }
+
+    return { success: true, message: 'Agendamento cancelado e lista de espera notificada', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 12. Progresso automático de Exame ──────────────────
+/** Advance exam through pipeline and trigger side effects */
+export async function autoProgressExame(params: {
+  exameId: string;
+  novoStatus: string;
+  pacienteId: string;
+  pacienteNome: string;
+  medicoId: string;
+  tipoExame: string;
+  convenioId?: string | null;
+  resultado?: string;
+}): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    const updateData: any = { status: params.novoStatus };
+    if (params.novoStatus === 'realizado') {
+      updateData.data_realizacao = format(new Date(), 'yyyy-MM-dd');
+    }
+    if (params.novoStatus === 'laudo_disponivel' && params.resultado) {
+      updateData.resultado = params.resultado;
+    }
+
+    await supabase.from('exames').update(updateData).eq('id', params.exameId);
+    actions.push(`Status do exame → ${params.novoStatus}`);
+
+    // Auto-create coleta when exam is ordered
+    if (params.novoStatus === 'solicitado') {
+      const coletaResult = await autoCreateColeta({
+        exameId: params.exameId,
+        pacienteId: params.pacienteId,
+        medicoId: params.medicoId,
+        tipoExame: params.tipoExame,
+      });
+      actions.push(...coletaResult.actions);
+    }
+
+    // Auto-update coleta status when exam progresses
+    if (params.novoStatus === 'realizado') {
+      await supabase
+        .from('coletas_laboratorio')
+        .update({ status: 'em_analise' })
+        .eq('exame_id', params.exameId)
+        .in('status', ['pendente', 'coletado']);
+      actions.push('Coleta → Em Análise');
+    }
+
+    // Auto-billing + notify when report is ready
+    if (params.novoStatus === 'laudo_disponivel') {
+      await supabase
+        .from('coletas_laboratorio')
+        .update({ status: 'liberado' })
+        .eq('exame_id', params.exameId);
+      actions.push('Coleta → Liberada');
+
+      const billingResult = await autoBillingExame({
+        exameId: params.exameId,
+        pacienteId: params.pacienteId,
+        pacienteNome: params.pacienteNome,
+        tipoExame: params.tipoExame,
+        convenioId: params.convenioId,
+      });
+      actions.push(...billingResult.actions);
+    }
+
+    // Log automation
+    await supabase.from('automation_logs').insert({
+      tipo: 'exame',
+      nome: `Progresso Exame: ${params.tipoExame}`,
+      status: 'sucesso',
+      registros_processados: 1,
+      registros_sucesso: 1,
+      detalhes: { exame_id: params.exameId, novo_status: params.novoStatus },
+    });
+
+    return { success: true, message: `Exame atualizado para ${params.novoStatus}`, actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 13. Vincular Resultado ao Prontuário ───────────────
+/** Auto-attach exam result to patient's latest prontuario */
+export async function autoVincularResultadoProntuario(params: {
+  exameId: string;
+  pacienteId: string;
+  tipoExame: string;
+  resultado: string;
+}): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    // Find the latest prontuario for this patient
+    const { data: prontuario } = await supabase
+      .from('prontuarios')
+      .select('id, observacoes_internas')
+      .eq('paciente_id', params.pacienteId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (prontuario) {
+      const novaObs = (prontuario.observacoes_internas || '') +
+        `\n\n--- Resultado de Exame (${format(new Date(), 'dd/MM/yyyy HH:mm')}) ---\n` +
+        `Exame: ${params.tipoExame}\n${params.resultado}`;
+
+      await supabase.from('prontuarios').update({
+        observacoes_internas: novaObs,
+      }).eq('id', prontuario.id);
+
+      actions.push(`Resultado vinculado ao prontuário ${prontuario.id.slice(0, 8)}`);
+    } else {
+      actions.push('Nenhum prontuário encontrado — resultado não vinculado');
+    }
+
+    return { success: true, message: 'Resultado vinculado ao prontuário', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 14. Auto Notificar Médico ──────────────────────────
+/** Notify the doctor when patient is ready (triage done or called) */
+export async function autoNotificarMedico(params: {
+  medicoId: string;
+  pacienteNome: string;
+  motivo: string;
+  sala?: string;
+}): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    const { data: med } = await supabase
+      .from('medicos')
+      .select('email, nome, user_id')
+      .eq('id', params.medicoId)
+      .maybeSingle();
+
+    if (med?.email) {
+      await supabase.from('notification_queue').insert({
+        tipo: 'email',
+        destinatario_id: med.user_id || params.medicoId,
+        destinatario_email: med.email,
+        destinatario_nome: med.nome || 'Médico',
+        assunto: `Paciente pronto: ${params.pacienteNome}`,
+        conteudo: `Dr(a). ${med.nome}, o paciente ${params.pacienteNome} está pronto para atendimento. ${params.motivo}${params.sala ? ` Sala: ${params.sala}.` : ''}`,
+        status: 'pendente',
+      });
+      actions.push(`Médico ${med.nome} notificado por e-mail`);
+    }
+
+    return { success: true, message: 'Médico notificado', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 15. Auto Agendar a partir da Lista de Espera ───────
+/** Convert a waiting list entry into a real appointment */
+export async function autoAgendarListaEspera(params: {
+  listaEsperaId: string;
+  pacienteId: string;
+  medicoId: string;
+  data: string;
+  horaInicio: string;
+  horaFim?: string;
+}): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    // Create appointment
+    const { data: ag, error } = await supabase.from('agendamentos').insert({
+      paciente_id: params.pacienteId,
+      medico_id: params.medicoId,
+      data: params.data,
+      hora_inicio: params.horaInicio,
+      hora_fim: params.horaFim || null,
+      status: 'agendado',
+      observacoes: 'Agendado a partir da lista de espera',
+    }).select('id').single();
+
+    if (error) throw error;
+    actions.push('Agendamento criado');
+
+    // Update waiting list status
+    await supabase.from('lista_espera').update({ status: 'agendado' }).eq('id', params.listaEsperaId);
+    actions.push('Lista de espera → Agendado');
+
+    // Notify patient
+    const { data: pac } = await supabase
+      .from('pacientes')
+      .select('nome, email, telefone')
+      .eq('id', params.pacienteId)
+      .maybeSingle();
+
+    if (pac?.email) {
+      const { data: med } = await supabase
+        .from('medicos')
+        .select('nome')
+        .eq('id', params.medicoId)
+        .maybeSingle();
+
+      await supabase.from('notification_queue').insert({
+        tipo: 'email',
+        destinatario_id: params.pacienteId,
+        destinatario_email: pac.email,
+        destinatario_nome: pac.nome,
+        assunto: 'Sua consulta foi agendada!',
+        conteudo: `Olá ${pac.nome}! Sua consulta com Dr(a). ${med?.nome || ''} foi agendada para ${format(new Date(params.data + 'T12:00:00'), 'dd/MM/yyyy')} às ${params.horaInicio.slice(0, 5)}. Nos vemos lá! 🎉`,
+        status: 'pendente',
+      });
+      actions.push('Paciente notificado por e-mail');
+    }
+
+    return { success: true, message: 'Paciente agendado a partir da lista de espera', actions };
+  } catch (e: any) {
+    return { success: false, message: e.message, actions };
+  }
+}
+
+// ─── 16. Auto No-Show em Lote ───────────────────────────
+/** Mark all past unconfirmed appointments as no-show */
+export async function autoMarcarFaltasHoje(): Promise<WorkflowResult> {
+  const actions: string[] = [];
+
+  try {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const agora = format(new Date(), 'HH:mm');
+
+    const { data: faltas } = await supabase
+      .from('agendamentos')
+      .select('id, paciente_id, hora_inicio')
+      .eq('data', today)
+      .in('status', ['agendado'])
+      .lt('hora_inicio', agora);
+
+    if (!faltas || faltas.length === 0) {
+      return { success: true, message: 'Nenhuma falta detectada', actions: [] };
+    }
+
+    for (const ag of faltas) {
+      await autoCancelarAgendamento({
+        agendamentoId: ag.id,
+        motivo: 'faltou',
+      });
+      actions.push(`Falta registrada: ${ag.hora_inicio}`);
+    }
+
+    await supabase.from('automation_logs').insert({
+      tipo: 'agenda',
+      nome: 'Auto No-Show',
+      status: 'sucesso',
+      registros_processados: faltas.length,
+      registros_sucesso: faltas.length,
+      detalhes: { data: today, total_faltas: faltas.length },
+    });
+
+    return { success: true, message: `${faltas.length} falta(s) registrada(s)`, actions };
   } catch (e: any) {
     return { success: false, message: e.message, actions };
   }
