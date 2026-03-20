@@ -635,7 +635,11 @@ export default function Exames() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredExames.map(exame => (
+                  filteredExames.map(exame => {
+                    const step = getExameStep(exame.status || 'solicitado');
+                    const nextStatus = getNextStatus(exame.status || 'solicitado');
+                    const nextLabel = getNextStatusLabel(exame.status || 'solicitado');
+                    return (
                     <TableRow key={exame.id}>
                       <TableCell className="font-medium">{getPacienteNome(exame)}</TableCell>
                       <TableCell>
@@ -646,18 +650,44 @@ export default function Exames() {
                         {exame.data_solicitacao && format(new Date(exame.data_solicitacao), 'dd/MM/yyyy')}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[exame.status || 'solicitado'])}>{STATUS_LABELS[exame.status || 'solicitado']}</Badge>
+                        {/* Pipeline visual */}
+                        <div className="flex items-center gap-0.5">
+                          {PIPELINE_STEPS.map((label, i) => (
+                            <div key={i} className="flex items-center gap-0.5">
+                              <div className={cn(
+                                'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
+                                i < step && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
+                                i > step && 'bg-muted text-muted-foreground/40',
+                                step === -1 && 'bg-muted text-muted-foreground line-through',
+                              )}>
+                                {i < step ? '✓' : label}
+                              </div>
+                              {i < PIPELINE_STEPS.length - 1 && (
+                                <div className={cn('w-2 h-px', i < step ? 'bg-emerald-400' : 'bg-border')} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleView(exame.id)}><Eye className="h-4 w-4" /></Button>
-                          {exame.status === 'solicitado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'agendado')}>Agendar</Button>}
-                          {exame.status === 'agendado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'realizado')}>Realizado</Button>}
-                          {exame.status === 'realizado' && <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(exame.id, 'laudo_disponivel')}>Laudo OK</Button>}
+                          {nextStatus && (
+                            <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => handleUpdateStatus(exame.id, nextStatus)}>
+                              {nextLabel}
+                            </Button>
+                          )}
+                          {exame.status !== 'cancelado' && exame.status !== 'laudo_disponivel' && (
+                            <Button variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive" onClick={() => handleUpdateStatus(exame.id, 'cancelado')}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
