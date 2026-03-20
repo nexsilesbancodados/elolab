@@ -323,7 +323,7 @@ export default function Tarefas() {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
     if (!taskId) return;
-    const task = tarefas?.find((t: any) => t.id === taskId);
+    const task = enrichedTarefas.find((t: any) => t.id === taskId);
     if (task && task.status !== newStatus) {
       updateTarefa.mutate({ id: taskId, status: newStatus });
     }
