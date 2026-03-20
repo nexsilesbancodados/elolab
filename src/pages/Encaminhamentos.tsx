@@ -395,9 +395,21 @@ export default function Encaminhamentos() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleView(enc)} aria-label="Ver encaminhamento">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleView(enc)} aria-label="Ver">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {enc.status === 'pendente' && (
+                              <Button variant="outline" size="sm" className="text-xs" onClick={() => handleUpdateEncStatus(enc.id, 'em_andamento')} disabled={isUpdating}>
+                                Iniciar
+                              </Button>
+                            )}
+                            {enc.status === 'em_andamento' && (
+                              <Button variant="outline" size="sm" className="text-xs" onClick={() => { handleView(enc); }} disabled={isUpdating}>
+                                <Edit className="h-3 w-3 mr-1" />Contra-ref.
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
