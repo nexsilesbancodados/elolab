@@ -68,7 +68,7 @@ function patientStep(ag: any, filaItem: any, lancamento: any): number {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
