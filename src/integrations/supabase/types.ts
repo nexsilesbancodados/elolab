@@ -1965,6 +1965,51 @@ export type Database = {
         }
         Relationships: []
       }
+      precos_consulta_convenio: {
+        Row: {
+          ativo: boolean | null
+          convenio_id: string
+          created_at: string | null
+          id: string
+          tipo_consulta_id: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          convenio_id: string
+          created_at?: string | null
+          id?: string
+          tipo_consulta_id: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Update: {
+          ativo?: boolean | null
+          convenio_id?: string
+          created_at?: string | null
+          id?: string
+          tipo_consulta_id?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precos_consulta_convenio_convenio_id_fkey"
+            columns: ["convenio_id"]
+            isOneToOne: false
+            referencedRelation: "convenios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precos_consulta_convenio_tipo_consulta_id_fkey"
+            columns: ["tipo_consulta_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_consulta"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       precos_exames_convenio: {
         Row: {
           ativo: boolean | null
@@ -2746,6 +2791,42 @@ export type Database = {
           observacoes_gerais?: string | null
           tipo?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tipos_consulta: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          duracao_minutos: number | null
+          id: string
+          nome: string
+          updated_at: string | null
+          valor_particular: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao_minutos?: number | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+          valor_particular?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao_minutos?: number | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+          valor_particular?: number | null
         }
         Relationships: []
       }
