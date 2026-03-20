@@ -358,7 +358,7 @@ export async function autoNotificarRetornos(): Promise<WorkflowResult> {
     const { data: retornos } = await supabase
       .from('retornos')
       .select('*, pacientes(nome, email, telefone)')
-      .eq('data_prevista', amanhaStr)
+      .eq('data_retorno_prevista', amanhaStr)
       .eq('status', 'pendente');
 
     if (!retornos || retornos.length === 0) {
