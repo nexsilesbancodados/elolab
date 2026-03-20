@@ -58,22 +58,6 @@ import PainelTV from "@/pages/PainelTV";
 import PortalPaciente from "@/pages/PortalPaciente";
 import NotFound from "@/pages/NotFound";
 
-// Loading fallback component
-function PageLoader() {
-  return (
-    <div className="flex flex-col gap-4 p-6">
-      <Skeleton className="h-8 w-64" />
-      <Skeleton className="h-4 w-48" />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-4">
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-      </div>
-      <Skeleton className="h-96 mt-4" />
-    </div>
-  );
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
