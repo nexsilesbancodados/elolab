@@ -234,10 +234,14 @@ export default function Tarefas() {
         .order('created_at', { ascending: false });
       if (error) {
         console.error('Erro ao buscar tarefas:', error);
+        toast.error('Erro ao carregar tarefas: ' + error.message);
         throw error;
       }
+      console.log('Tarefas carregadas:', data?.length || 0);
       return data || [];
     },
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
   });
 
   const createTarefa = useMutation({
