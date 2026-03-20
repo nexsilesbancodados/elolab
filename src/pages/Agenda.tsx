@@ -1056,9 +1056,22 @@ export default function Agenda() {
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {formData.id && (
-              <Button variant="destructive" onClick={handleDelete} disabled={isSaving}>
-                Excluir
+            {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
+              <Button
+                variant="outline"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                disabled={isSaving}
+                onClick={async () => {
+                  if (!formData.id) return;
+                  setIsSaving(true);
+                  const result = await autoCancelarAgendamento({ agendamentoId: formData.id, motivo: 'faltou' });
+                  toast.success('Falta registrada!', { description: result.actions.join(' • ') });
+                  queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                  setIsFormOpen(false);
+                  setIsSaving(false);
+                }}
+              >
+                Faltou
               </Button>
             )}
             <div className="flex-1" />
