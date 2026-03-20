@@ -235,7 +235,7 @@ export default function Tarefas() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) {
-        console.error('Erro ao buscar tarefas:', error);
+        if (import.meta.env.DEV) console.error('Erro ao buscar tarefas:', error);
         toast.error('Erro ao carregar tarefas: ' + error.message);
         throw error;
       }
@@ -257,7 +257,7 @@ export default function Tarefas() {
       setShowNew(false);
     },
     onError: (err: any) => {
-      console.error('Erro ao criar tarefa:', err);
+      if (import.meta.env.DEV) console.error('Erro ao criar tarefa:', err);
       toast.error('Erro ao criar tarefa: ' + (err?.message || 'Erro desconhecido'));
     },
   });

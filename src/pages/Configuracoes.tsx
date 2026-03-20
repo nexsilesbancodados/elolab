@@ -121,7 +121,7 @@ export default function Configuracoes() {
         if (notifRow) setConfigNotificacoes({ ...DEFAULT_NOTIFICACOES, ...(notifRow.valor as any) });
       }
     } catch (error) {
-      console.error('Error loading configs:', error);
+      if (import.meta.env.DEV) console.error('Error loading configs:', error);
     } finally {
       setLoadingConfig(false);
     }
@@ -149,7 +149,7 @@ export default function Configuracoes() {
       await saveToSupabase('config_clinica', configClinica);
       toast.success('Configurações da clínica salvas na nuvem!');
     } catch (error) {
-      console.error(error);
+      if (import.meta.env.DEV) console.error(error);
       toast.error('Erro ao salvar configurações. Tente novamente.');
     } finally {
       setSavingClinica(false);
@@ -162,7 +162,7 @@ export default function Configuracoes() {
       await saveToSupabase('config_notificacoes', configNotificacoes);
       toast.success('Configurações de notificações salvas na nuvem!');
     } catch (error) {
-      console.error(error);
+      if (import.meta.env.DEV) console.error(error);
       toast.error('Erro ao salvar configurações.');
     } finally {
       setSavingNotif(false);

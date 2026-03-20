@@ -405,6 +405,24 @@ export default function Medicos() {
   const handleSave = async () => {
     if (!formData.crm) { toast.error('CRM é obrigatório.'); return; }
     if (!formData.nome) { toast.error('Nome é obrigatório.'); return; }
+    if (formData.crm && !/^\d{4,10}$/.test(formData.crm.replace(/\D/g, ''))) {
+      toast.error('CRM deve conter entre 4 e 10 dígitos.'); return;
+    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('E-mail inválido.'); return;
+    }
+    if (formData.cpf) {
+      const cpfDigits = formData.cpf.replace(/\D/g, '');
+      if (cpfDigits.length !== 11 || /^(\d)\1+$/.test(cpfDigits)) {
+        toast.error('CPF inválido.'); return;
+      }
+    }
+    if (formData.telefone) {
+      const telDigits = formData.telefone.replace(/\D/g, '');
+      if (telDigits.length < 10 || telDigits.length > 11) {
+        toast.error('Telefone deve ter 10 ou 11 dígitos.'); return;
+      }
+    }
     setIsSubmitting(true);
     try {
       const payload = {

@@ -138,6 +138,10 @@ export default function ContasReceber() {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
+    if (formData.valor <= 0) {
+      toast.error('O valor deve ser maior que zero.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('lancamentos').insert({

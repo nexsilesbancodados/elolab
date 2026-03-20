@@ -39,16 +39,20 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
       `)
       .eq('id', coletaId)
       .maybeSingle()
-      .then(({ data }) => { setColeta(data); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) toast.error('Erro ao carregar dados da coleta.');
+        setColeta(data);
+        setLoading(false);
+      });
   }, [coletaId]);
 
   const handleLiberarLaudo = async (resultadoId: string) => {
-    const { error } = await supabase
-      .from('resultados_laboratorio')
-      .update({ liberado: true, data_liberacao: new Date().toISOString() })
-      .eq('id', resultadoId);
-    if (error) toast.error('Erro ao liberar laudo');
-    else {
+    try {
+      const { error } = await supabase
+        .from('resultados_laboratorio')
+        .update({ liberado: true, data_liberacao: new Date().toISOString() })
+        .eq('id', resultadoId);
+      if (error) throw error;
       toast.success('Laudo liberado!');
       if (coletaId) {
         const { data } = await supabase
@@ -63,6 +67,8 @@ function LaudoDetalheModal({ coletaId, onClose }: { coletaId: string | null; onC
           .eq('id', coletaId).maybeSingle();
         setColeta(data);
       }
+    } catch {
+      toast.error('Erro ao liberar laudo.');
     }
   };
 

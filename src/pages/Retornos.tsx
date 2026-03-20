@@ -173,7 +173,7 @@ export default function RetornosControl() {
       setAgendarDialogOpen(false);
       toast.success(`Retorno agendado para ${format(dataAgendamento, 'dd/MM/yyyy')} às ${horaAgendamento}`);
     } catch (error) {
-      console.error(error);
+      if (import.meta.env.DEV) console.error(error);
       toast.error('Erro ao criar agendamento de retorno.');
     } finally {
       setIsAgendando(false);

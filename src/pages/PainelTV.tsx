@@ -285,7 +285,7 @@ export default function PainelTV() {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar fila:', error);
+      if (import.meta.env.DEV) console.error('Erro ao carregar fila:', error);
     }
   };
 
@@ -300,7 +300,7 @@ export default function PainelTV() {
       const activeItems = (allData as MediaItem[])?.filter(m => m.ativo) || [];
       setMediaItems(activeItems);
     } catch (error) {
-      console.error('Erro ao carregar mídias:', error);
+      if (import.meta.env.DEV) console.error('Erro ao carregar mídias:', error);
     }
   };
 
@@ -332,7 +332,7 @@ export default function PainelTV() {
       toast.success('Mídia adicionada com sucesso!');
       loadMedia();
     } catch (error: any) {
-      console.error('Erro no upload:', error);
+      if (import.meta.env.DEV) console.error('Erro no upload:', error);
       toast.error(error.message || 'Erro ao fazer upload');
     } finally {
       setUploading(false);

@@ -199,6 +199,8 @@ export default function Financeiro() {
 
   const handleSave = async () => {
     if (!form.descricao || !form.valor || !form.data) { toast.error('Preencha todos os campos obrigatórios.'); return; }
+    const valorNum = parseFloat(form.valor.replace(',', '.'));
+    if (isNaN(valorNum) || valorNum <= 0) { toast.error('O valor deve ser maior que zero.'); return; }
     setSaving(true);
     try {
       const payload = {

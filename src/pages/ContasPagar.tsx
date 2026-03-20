@@ -144,6 +144,10 @@ export default function ContasPagar() {
 
   const handleSave = async () => {
     if (!formData.descricao || !formData.valor) { toast.error('Preencha descrição e valor.'); return; }
+    if (formData.valor <= 0) { toast.error('O valor deve ser maior que zero.'); return; }
+    if (formData.data_vencimento && formData.data_vencimento < new Date().toISOString().split('T')[0] && !editingId) {
+      toast.error('A data de vencimento não pode ser no passado.'); return;
+    }
     setIsSubmitting(true);
     try {
       const payload: any = {

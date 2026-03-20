@@ -178,6 +178,12 @@ export default function Prescricoes() {
       toast({ title: 'Erro', description: 'Preencha todos os campos e adicione pelo menos um medicamento.', variant: 'destructive' });
       return;
     }
+    // Validate each medication has a name
+    const medsInvalidos = medicamentos.filter(m => !m.nome?.trim());
+    if (medsInvalidos.length > 0) {
+      toast({ title: 'Erro', description: 'Todos os medicamentos devem ter um nome preenchido.', variant: 'destructive' });
+      return;
+    }
     try {
       for (const med of medicamentos) {
         if (med.nome) {

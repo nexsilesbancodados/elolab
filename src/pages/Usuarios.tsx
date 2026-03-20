@@ -146,7 +146,7 @@ export default function Usuarios() {
       queryClient.invalidateQueries({ queryKey: ['user_roles'] });
       toast.success('Usuário desativado com sucesso.');
     } catch (error) {
-      console.error('Error deleting user:', error);
+      if (import.meta.env.DEV) console.error('Error deleting user:', error);
       toast.error('Erro ao desativar usuário.');
     } finally {
       setIsSaving(false);
@@ -179,7 +179,7 @@ export default function Usuarios() {
       setIsFormOpen(false);
       toast.success('Usuário atualizado com sucesso.');
     } catch (error) {
-      console.error('Error saving user:', error);
+      if (import.meta.env.DEV) console.error('Error saving user:', error);
       toast.error('Erro ao salvar usuário.');
     } finally {
       setIsSaving(false);
@@ -197,7 +197,7 @@ export default function Usuarios() {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success(user.ativo ? 'Usuário desativado.' : 'Usuário ativado.');
     } catch (error) {
-      console.error('Error toggling user status:', error);
+      if (import.meta.env.DEV) console.error('Error toggling user status:', error);
       toast.error('Erro ao alterar status do usuário.');
     }
   };

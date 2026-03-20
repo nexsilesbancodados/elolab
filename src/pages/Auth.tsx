@@ -120,7 +120,7 @@ export default function Auth() {
       );
 
       if (rpcError) {
-        console.error('Erro ao ativar registro:', rpcError);
+        if (import.meta.env.DEV) console.error('Erro ao ativar registro:', rpcError);
         toast.error('Erro ao ativar sua assinatura. Tente fazer login novamente.');
         return;
       }
@@ -139,7 +139,7 @@ export default function Auth() {
         toast.success(`Plano ${res.plano_nome} ativado!`);
       }
     } catch (err) {
-      console.error('Erro ao ativar assinatura:', err);
+      if (import.meta.env.DEV) console.error('Erro ao ativar assinatura:', err);
     }
   };
 
