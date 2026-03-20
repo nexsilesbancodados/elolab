@@ -497,10 +497,16 @@ export default function Prontuarios() {
   // ─── Handlers ────────────────────────────────────────────
   const handleNovoProntuario = () => {
     if (!selectedPacienteId) return;
+    // Use linked medicoId, or fallback to first active medico (for admins)
+    const resolvedMedicoId = medicoId || medicos.find(m => m.ativo !== false)?.id || '';
+    if (!resolvedMedicoId) {
+      toast({ title: 'Erro', description: 'Nenhum médico cadastrado no sistema.', variant: 'destructive' });
+      return;
+    }
     setCurrentProntuario({
       ...emptyProntuario,
       paciente_id: selectedPacienteId,
-      medico_id: medicoId || user?.id || '',
+      medico_id: resolvedMedicoId,
       data: format(new Date(), 'yyyy-MM-dd'),
       alergias_relatadas: selectedPaciente?.alergias?.join(', ') || '',
     });
