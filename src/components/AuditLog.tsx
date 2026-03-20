@@ -53,8 +53,8 @@ export function AuditLog() {
   const [showClearDialog, setShowClearDialog] = useState(false);
   const { toast } = useToast();
 
-  const loadEntries = () => {
-    const filters: any = {};
+  useEffect(() => {
+    const filters: Record<string, string> = {};
     if (filterCollection !== 'all') filters.collection = filterCollection;
     if (filterAction !== 'all') filters.action = filterAction;
 
@@ -67,12 +67,8 @@ export function AuditLog() {
       const end = new Date(`${filterEndDate}T23:59:59.999`);
       filters.endDate = end.toISOString();
     }
-    
-    setEntries(getAuditLog(filters));
-  };
 
-  useEffect(() => {
-    loadEntries();
+    setEntries(getAuditLog(filters));
   }, [filterCollection, filterAction, filterStartDate, filterEndDate]);
 
   const handleClear = () => {

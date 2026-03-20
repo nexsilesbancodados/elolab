@@ -39,63 +39,61 @@ export default function AceitarConvite() {
       return;
     }
 
+    const validateToken = async () => {
+      try {
+        const { data: inviteData, error: inviteError } = await supabase
+          .from('employee_invitations')
+          .select(`
+            id,
+            email,
+            roles,
+            funcionario_id,
+            status,
+            expires_at
+          `)
+          .eq('token', token)
+          .maybeSingle();
+
+        if (inviteError) throw inviteError;
+
+        if (!inviteData) {
+          setError('Convite não encontrado ou já foi utilizado');
+          setLoading(false);
+          return;
+        }
+
+        if (inviteData.status !== 'pending') {
+          setError('Este convite já foi utilizado');
+          setLoading(false);
+          return;
+        }
+
+        if (new Date(inviteData.expires_at) < new Date()) {
+          setError('Este convite expirou');
+          setLoading(false);
+          return;
+        }
+
+        const { data: funcData } = await supabase
+          .from('funcionarios')
+          .select('nome, cargo')
+          .eq('id', inviteData.funcionario_id)
+          .maybeSingle();
+
+        setInvitation({
+          ...inviteData,
+          funcionario: funcData || undefined,
+        });
+        setLoading(false);
+      } catch (err: unknown) {
+        console.error('Error validating token:', err);
+        setError('Erro ao validar convite');
+        setLoading(false);
+      }
+    };
+
     validateToken();
   }, [token]);
-
-  const validateToken = async () => {
-    try {
-      // Fetch invitation with funcionario data
-      const { data: inviteData, error: inviteError } = await supabase
-        .from('employee_invitations')
-        .select(`
-          id,
-          email,
-          roles,
-          funcionario_id,
-          status,
-          expires_at
-        `)
-        .eq('token', token)
-        .maybeSingle();
-
-      if (inviteError) throw inviteError;
-
-      if (!inviteData) {
-        setError('Convite não encontrado ou já foi utilizado');
-        setLoading(false);
-        return;
-      }
-
-      if (inviteData.status !== 'pending') {
-        setError('Este convite já foi utilizado');
-        setLoading(false);
-        return;
-      }
-
-      if (new Date(inviteData.expires_at) < new Date()) {
-        setError('Este convite expirou');
-        setLoading(false);
-        return;
-      }
-
-      // Get funcionario name
-      const { data: funcData } = await supabase
-        .from('funcionarios')
-        .select('nome, cargo')
-        .eq('id', inviteData.funcionario_id)
-        .maybeSingle();
-
-      setInvitation({
-        ...inviteData,
-        funcionario: funcData || undefined,
-      });
-      setLoading(false);
-    } catch (err: any) {
-      console.error('Error validating token:', err);
-      setError('Erro ao validar convite');
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

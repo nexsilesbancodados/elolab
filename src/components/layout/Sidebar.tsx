@@ -58,8 +58,10 @@ export function Sidebar() {
     const activeGroup = filteredMenuGroups.find(group =>
       group.items.some(item => item.href === location.pathname)
     );
-    if (activeGroup && !openGroups.includes(activeGroup.label)) {
-      setOpenGroups(prev => [...prev, activeGroup.label]);
+    if (activeGroup) {
+      setOpenGroups(prev =>
+        prev.includes(activeGroup.label) ? prev : [...prev, activeGroup.label]
+      );
     }
   }, [location.pathname, filteredMenuGroups]);
 

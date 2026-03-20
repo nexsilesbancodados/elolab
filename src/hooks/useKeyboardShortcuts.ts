@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface ShortcutConfig {
@@ -14,8 +14,7 @@ interface ShortcutConfig {
 export function useKeyboardShortcuts() {
   const navigate = useNavigate();
 
-  const shortcuts: ShortcutConfig[] = [
-    // Navigation
+  const shortcuts: ShortcutConfig[] = useMemo(() => [
     { key: 'h', alt: true, action: () => navigate('/dashboard'), description: 'Ir para Dashboard', category: 'Navegação' },
     { key: 'p', alt: true, action: () => navigate('/pacientes'), description: 'Ir para Pacientes', category: 'Navegação' },
     { key: 'a', alt: true, action: () => navigate('/agenda'), description: 'Ir para Agenda', category: 'Navegação' },
@@ -27,7 +26,7 @@ export function useKeyboardShortcuts() {
     { key: 'i', alt: true, action: () => navigate('/estoque'), description: 'Ir para Estoque', category: 'Navegação' },
     { key: '$', alt: true, action: () => navigate('/financeiro'), description: 'Ir para Financeiro', category: 'Navegação' },
     { key: 's', alt: true, action: () => navigate('/configuracoes'), description: 'Ir para Configurações', category: 'Navegação' },
-  ];
+  ], [navigate]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // Don't trigger shortcuts when typing in inputs
@@ -55,7 +54,7 @@ export function useKeyboardShortcuts() {
         return;
       }
     }
-  }, [navigate]);
+  }, [shortcuts]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);

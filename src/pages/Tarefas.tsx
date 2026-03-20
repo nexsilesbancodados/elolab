@@ -330,12 +330,12 @@ export default function Tarefas() {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
     if (!taskId) return;
-    const task = enrichedTarefas.find((t: any) => t.id === taskId);
+    const task = enrichedTarefas.find((t: Record<string, unknown>) => t.id === taskId);
     if (task && task.status !== newStatus) {
       updateTarefa.mutate({ id: taskId, status: newStatus });
     }
     setDraggedTaskId(null);
-  }, [tarefas, updateTarefa]);
+  }, [enrichedTarefas, updateTarefa]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedTaskId(null);

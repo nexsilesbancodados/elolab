@@ -157,6 +157,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isActive = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally depends on user.id only, not the full user object
   }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {

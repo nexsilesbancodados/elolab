@@ -39,17 +39,15 @@ export function Cid10Search({ value, onChange, placeholder = "Buscar CID-10...",
   const [loading, setLoading] = useState(false);
   const [selectedCids, setSelectedCids] = useState<Cid10[]>([]);
 
-  // Parse initial value to extract CIDs
+  // Parse initial value to extract CIDs (only on mount or when value changes externally)
   useEffect(() => {
     if (value) {
-      // Extract CID codes from the value (format: "A00 - Description, B00 - Description")
       const cidMatches = value.match(/[A-Z]\d{2}(\.\d)?/g);
       if (cidMatches) {
-        // Fetch details for these CIDs
         fetchCidDetails(cidMatches);
       }
     }
-  }, []);
+  }, [value]);
 
   const fetchCidDetails = async (codes: string[]) => {
     const { data } = await supabase

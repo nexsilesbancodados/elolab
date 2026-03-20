@@ -43,8 +43,12 @@ export function formatCurrency(value: number): string {
 }
 
 export function parseCurrency(value: string): number {
-  const cleaned = value.replace(/[^\d,.-]/g, '').replace(',', '.');
-  return parseFloat(cleaned) || 0;
+  // Remove non-numeric chars except comma, dot, minus
+  const cleaned = value.replace(/[^\d,.-]/g, '');
+  // Brazilian format: dots are thousands, comma is decimal
+  // Remove dots (thousands sep), then replace comma with dot (decimal)
+  const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+  return parseFloat(normalized) || 0;
 }
 
 export function formatDate(date: Date | string, format: 'short' | 'long' | 'iso' = 'short'): string {

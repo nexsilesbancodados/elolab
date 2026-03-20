@@ -365,9 +365,12 @@ export default function PortalPaciente() {
   };
 
   useEffect(() => {
-    if (searchParams.get('token')) {
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      setToken(urlToken);
       handleLogin();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on mount when URL has token
   }, []);
 
   // ─── Login ────────────────────────────────────────────────

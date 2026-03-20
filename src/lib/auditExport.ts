@@ -4,8 +4,8 @@ function escapeCsvCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
   // Escape quotes by doubling them; wrap if contains comma/quote/newline
-  const escaped = str.replace(/\"/g, '""');
-  if (/[\n\r,\"]/g.test(str)) return `"${escaped}"`;
+  const escaped = str.replace(/"/g, '""');
+  if (/[\n\r,"]/g.test(str)) return `"${escaped}"`;
   return escaped;
 }
 

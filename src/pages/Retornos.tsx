@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format, parseISO, isPast, differenceInDays, addDays, isWithinInterval, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,14 +67,14 @@ export default function RetornosControl() {
 
   const isLoading = loadingRetornos || loadingPacientes || loadingMedicos;
 
-  const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente';
-  const getPacienteTelefone = (id: string) => pacientes.find(p => p.id === id)?.telefone || null;
-  const getMedicoNome = (id: string) => {
+  const getPacienteNome = useCallback((id: string) => pacientes.find(p => p.id === id)?.nome || 'Paciente', [pacientes]);
+  const getPacienteTelefone = useCallback((id: string) => pacientes.find(p => p.id === id)?.telefone || null, [pacientes]);
+  const getMedicoNome = useCallback((id: string) => {
     const m = medicos.find(m => m.id === id);
     return m ? `Dr(a). ${m.nome || m.crm}` : 'Médico';
-  };
+  }, [medicos]);
 
-  const hoje = new Date();
+  const hoje = useMemo(() => new Date(), []);
   const retornosComStatus = useMemo(() => retornos.map(r => {
     const dataRetorno = parseISO(r.data_retorno_prevista);
     const diasAtraso = differenceInDays(hoje, dataRetorno);
@@ -83,7 +83,7 @@ export default function RetornosControl() {
       statusCalculado = 'atrasado';
     }
     return { ...r, statusCalculado, diasAtraso, dataRetorno };
-  }), [retornos]);
+  }), [retornos, hoje]);
 
   const filtrados = useMemo(() => {
     return retornosComStatus.filter(r => {
@@ -102,7 +102,7 @@ export default function RetornosControl() {
       }
       return true;
     });
-  }, [retornosComStatus, filtroStatus, searchTerm, pacientes, medicos]);
+  }, [retornosComStatus, filtroStatus, searchTerm, getPacienteNome, getMedicoNome, hoje]);
 
   const pendentes = retornosComStatus.filter(r => r.statusCalculado === 'pendente').length;
   const atrasados = retornosComStatus.filter(r => r.statusCalculado === 'atrasado').length;
