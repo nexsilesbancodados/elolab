@@ -73,6 +73,8 @@ export default function Encaminhamentos() {
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedEnc, setSelectedEnc] = useState<EncaminhamentoData | null>(null);
+  const [contraRefText, setContraRefText] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const queryClient = useQueryClient();
   const { medicoId } = useCurrentMedico();
