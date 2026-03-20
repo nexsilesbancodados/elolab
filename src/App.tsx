@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,58 +11,52 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
-import { Skeleton } from "@/components/ui/skeleton";
 
-// Core pages that should load fast — keep eagerly loaded
 import Dashboard from "@/pages/Dashboard";
 import Agenda from "@/pages/Agenda";
-
-// All other pages lazy-loaded for smaller initial bundle
-const Pacientes = lazy(() => import("@/pages/Pacientes"));
-const Fila = lazy(() => import("@/pages/Fila"));
-const Prontuarios = lazy(() => import("@/pages/Prontuarios"));
-const Financeiro = lazy(() => import("@/pages/Financeiro"));
-const Medicos = lazy(() => import("@/pages/Medicos"));
-const Estoque = lazy(() => import("@/pages/Estoque"));
-const Relatorios = lazy(() => import("@/pages/Relatorios"));
-const Usuarios = lazy(() => import("@/pages/Usuarios"));
-const Configuracoes = lazy(() => import("@/pages/Configuracoes"));
-const Prescricoes = lazy(() => import("@/pages/Prescricoes"));
-const Atestados = lazy(() => import("@/pages/Atestados"));
-const Convenios = lazy(() => import("@/pages/Convenios"));
-const ContasReceber = lazy(() => import("@/pages/ContasReceber"));
-const ContasPagar = lazy(() => import("@/pages/ContasPagar"));
-const Funcionarios = lazy(() => import("@/pages/Funcionarios"));
-const Exames = lazy(() => import("@/pages/Exames"));
-const Triagem = lazy(() => import("@/pages/Triagem"));
-const Salas = lazy(() => import("@/pages/Salas"));
-const ListaEspera = lazy(() => import("@/pages/ListaEspera"));
-const FluxoCaixa = lazy(() => import("@/pages/FluxoCaixa"));
-const Templates = lazy(() => import("@/pages/Templates"));
-const Encaminhamentos = lazy(() => import("@/pages/Encaminhamentos"));
-const Automacoes = lazy(() => import("@/pages/Automacoes"));
-const AgenteIA = lazy(() => import("@/pages/AgenteIA"));
-const Analytics = lazy(() => import("@/pages/Analytics"));
-const Pagamentos = lazy(() => import("@/pages/Pagamentos"));
-const Planos = lazy(() => import("@/pages/Planos"));
-const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
-const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
-const Tarefas = lazy(() => import("@/pages/Tarefas"));
-const Retornos = lazy(() => import("@/pages/Retornos"));
-const MapaColeta = lazy(() => import("@/pages/MapaColeta"));
-const LaudosLab = lazy(() => import("@/pages/LaudosLab"));
-const Documentacao = lazy(() => import("@/pages/Documentacao"));
-const PainelAdmin = lazy(() => import("@/pages/PainelAdmin"));
-const CaixaDiario = lazy(() => import("@/pages/CaixaDiario"));
-const TiposConsulta = lazy(() => import("@/pages/TiposConsulta"));
-const Recepcao = lazy(() => import("@/pages/Recepcao"));
-
-// Public/rare pages
-const Auth = lazy(() => import("@/pages/Auth"));
-const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
-const PainelTV = lazy(() => import("@/pages/PainelTV"));
-const PortalPaciente = lazy(() => import("@/pages/PortalPaciente"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+import Pacientes from "@/pages/Pacientes";
+import Fila from "@/pages/Fila";
+import Prontuarios from "@/pages/Prontuarios";
+import Financeiro from "@/pages/Financeiro";
+import Medicos from "@/pages/Medicos";
+import Estoque from "@/pages/Estoque";
+import Relatorios from "@/pages/Relatorios";
+import Usuarios from "@/pages/Usuarios";
+import Configuracoes from "@/pages/Configuracoes";
+import Prescricoes from "@/pages/Prescricoes";
+import Atestados from "@/pages/Atestados";
+import Convenios from "@/pages/Convenios";
+import ContasReceber from "@/pages/ContasReceber";
+import ContasPagar from "@/pages/ContasPagar";
+import Funcionarios from "@/pages/Funcionarios";
+import Exames from "@/pages/Exames";
+import Triagem from "@/pages/Triagem";
+import Salas from "@/pages/Salas";
+import ListaEspera from "@/pages/ListaEspera";
+import FluxoCaixa from "@/pages/FluxoCaixa";
+import Templates from "@/pages/Templates";
+import Encaminhamentos from "@/pages/Encaminhamentos";
+import Automacoes from "@/pages/Automacoes";
+import AgenteIA from "@/pages/AgenteIA";
+import Analytics from "@/pages/Analytics";
+import Pagamentos from "@/pages/Pagamentos";
+import Planos from "@/pages/Planos";
+import Laboratorio from "@/pages/Laboratorio";
+import PrecosExames from "@/pages/PrecosExames";
+import Tarefas from "@/pages/Tarefas";
+import Retornos from "@/pages/Retornos";
+import MapaColeta from "@/pages/MapaColeta";
+import LaudosLab from "@/pages/LaudosLab";
+import Documentacao from "@/pages/Documentacao";
+import PainelAdmin from "@/pages/PainelAdmin";
+import CaixaDiario from "@/pages/CaixaDiario";
+import TiposConsulta from "@/pages/TiposConsulta";
+import Recepcao from "@/pages/Recepcao";
+import Auth from "@/pages/Auth";
+import AceitarConvite from "@/pages/AceitarConvite";
+import PainelTV from "@/pages/PainelTV";
+import PortalPaciente from "@/pages/PortalPaciente";
+import NotFound from "@/pages/NotFound";
 
 // Loading fallback component
 function PageLoader() {
