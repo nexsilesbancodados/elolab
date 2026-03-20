@@ -576,7 +576,7 @@ export async function autoConfirmarPagamento(params: {
         data_aprovacao: new Date().toISOString(),
         desconto: params.desconto || 0,
         acrescimo: params.acrescimo || 0,
-      });
+      } as any);
       actions.push(`Registro de pagamento: R$ ${valorFinal.toFixed(2)}`);
     }
 
