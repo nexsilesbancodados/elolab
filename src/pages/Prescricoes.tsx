@@ -26,6 +26,7 @@ import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseD
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface MedicamentoForm {
   nome: string;
@@ -87,6 +88,7 @@ export default function Prescricoes() {
   const [interactionDismissed, setInteractionDismissed] = useState(false);
   const [templates, setTemplates] = useState<Record<string, any>[]>([]);
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
@@ -173,12 +175,11 @@ export default function Prescricoes() {
     toast({ title: 'Modelo carregado', description: `"${template.nome}" aplicado.` });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (dispensar = false) => {
     if (!formData.paciente_id || !formData.medico_id || medicamentos.length === 0) {
       toast({ title: 'Erro', description: 'Preencha todos os campos e adicione pelo menos um medicamento.', variant: 'destructive' });
       return;
     }
-    // Validate each medication has a name
     const medsInvalidos = medicamentos.filter(m => !m.nome?.trim());
     if (medsInvalidos.length > 0) {
       toast({ title: 'Erro', description: 'Todos os medicamentos devem ter um nome preenchido.', variant: 'destructive' });
@@ -200,11 +201,44 @@ export default function Prescricoes() {
             data_emissao: formData.data_emissao,
             tipo: formData.tipo,
           });
+
+          // If dispensing, deduct from stock
+          if (dispensar && med.quantidade) {
+            const qty = parseInt(med.quantidade) || 1;
+            // Find matching item in stock
+            const { data: stockItem } = await supabase
+              .from('estoque')
+              .select('id, quantidade, nome')
+              .ilike('nome', `%${med.nome.split(' ')[0]}%`)
+              .gt('quantidade', 0)
+              .limit(1)
+              .maybeSingle();
+
+            if (stockItem && stockItem.quantidade >= qty) {
+              await supabase.from('estoque').update({
+                quantidade: stockItem.quantidade - qty,
+              }).eq('id', stockItem.id);
+
+              await supabase.from('movimentacoes_estoque').insert({
+                item_id: stockItem.id,
+                tipo: 'saida',
+                quantidade: qty,
+                motivo: `Dispensação prescrição — ${pacientes.find(p => p.id === formData.paciente_id)?.nome || 'Paciente'}`,
+                usuario_id: user?.id || null,
+              });
+            } else if (stockItem && stockItem.quantidade < qty) {
+              toast({ title: '⚠️ Estoque insuficiente', description: `${stockItem.nome}: disponível ${stockItem.quantidade}, solicitado ${qty}`, variant: 'destructive' });
+            }
+          }
         }
       }
       refetch();
       setIsFormOpen(false);
-      toast({ title: 'Prescrição salva', description: 'Assinatura digital ICP-Brasil aplicada.' });
+      if (dispensar) {
+        toast({ title: 'Prescrição salva e dispensada', description: 'Baixa automática no estoque realizada.' });
+      } else {
+        toast({ title: 'Prescrição salva', description: 'Assinatura digital ICP-Brasil aplicada.' });
+      }
     } catch {
       toast({ title: 'Erro', description: 'Erro ao salvar.', variant: 'destructive' });
     }
@@ -630,7 +664,10 @@ export default function Prescricoes() {
 
           <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="gap-2">
+            <Button variant="secondary" onClick={() => handleSave(true)} className="gap-2">
+              <Pill className="h-4 w-4" />Salvar e Dispensar
+            </Button>
+            <Button onClick={() => handleSave(false)} className="gap-2">
               <Lock className="h-4 w-4" />Salvar e Assinar
             </Button>
           </DialogFooter>

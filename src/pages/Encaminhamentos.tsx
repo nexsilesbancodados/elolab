@@ -2,10 +2,11 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, ArrowRightLeft, Filter, FileText, Clock, CheckCircle2,
-  AlertTriangle, Plus, Eye, Loader2, Stethoscope, User,
+  AlertTriangle, Plus, Eye, Loader2, Stethoscope, User, Send, Edit,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,11 +17,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { usePacientes, useMedicos } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
@@ -73,6 +76,8 @@ export default function Encaminhamentos() {
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedEnc, setSelectedEnc] = useState<EncaminhamentoData | null>(null);
+  const [contraRefText, setContraRefText] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const queryClient = useQueryClient();
   const { medicoId } = useCurrentMedico();
@@ -138,7 +143,39 @@ export default function Encaminhamentos() {
 
   const handleView = (enc: EncaminhamentoData) => {
     setSelectedEnc(enc);
+    setContraRefText(enc.contra_referencia || '');
     setIsViewOpen(true);
+  };
+
+  const handleUpdateEncStatus = async (id: string, newStatus: string) => {
+    setIsUpdating(true);
+    try {
+      const updateData: Record<string, any> = { status: newStatus };
+      if (newStatus === 'em_andamento') updateData.data_atendimento = new Date().toISOString().split('T')[0];
+      const { error } = await supabase.from('encaminhamentos').update(updateData).eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] });
+      if (selectedEnc?.id === id) setSelectedEnc({ ...selectedEnc, status: newStatus } as any);
+      toast.success(`Status atualizado para "${STATUS_CONFIG[newStatus]?.label || newStatus}"`);
+    } catch { toast.error('Erro ao atualizar status'); }
+    setIsUpdating(false);
+  };
+
+  const handleSaveContraRef = async () => {
+    if (!selectedEnc || !contraRefText.trim()) return;
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase.from('encaminhamentos').update({
+        contra_referencia: contraRefText,
+        data_contra_referencia: new Date().toISOString().split('T')[0],
+        status: 'concluido',
+      }).eq('id', selectedEnc.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] });
+      setSelectedEnc({ ...selectedEnc, contra_referencia: contraRefText, status: 'concluido' } as any);
+      toast.success('Contra-referência registrada! Encaminhamento concluído.');
+    } catch { toast.error('Erro ao salvar contra-referência'); }
+    setIsUpdating(false);
   };
 
   if (isLoading) {
@@ -358,9 +395,21 @@ export default function Encaminhamentos() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleView(enc)} aria-label="Ver encaminhamento">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleView(enc)} aria-label="Ver">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {enc.status === 'pendente' && (
+                              <Button variant="outline" size="sm" className="text-xs" onClick={() => handleUpdateEncStatus(enc.id, 'em_andamento')} disabled={isUpdating}>
+                                Iniciar
+                              </Button>
+                            )}
+                            {enc.status === 'em_andamento' && (
+                              <Button variant="outline" size="sm" className="text-xs" onClick={() => { handleView(enc); }} disabled={isUpdating}>
+                                <Edit className="h-3 w-3 mr-1" />Contra-ref.
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -425,13 +474,63 @@ export default function Encaminhamentos() {
                   <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.hipotese_diagnostica}</p>
                 </div>
               )}
-              {selectedEnc.contra_referencia && (
+              {selectedEnc.tratamento_atual && (
                 <div>
-                  <p className="text-muted-foreground text-xs mb-1">Contra-referência</p>
-                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                  <p className="text-muted-foreground text-xs mb-1">Tratamento Atual</p>
+                  <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.tratamento_atual}</p>
                 </div>
               )}
+
+              <Separator />
+
+              {/* Contra-referência section */}
+              {selectedEnc.contra_referencia ? (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-green-500" /> Contra-referência
+                    {selectedEnc.data_contra_referencia && (
+                      <span className="ml-auto text-[10px]">{format(new Date(selectedEnc.data_contra_referencia), 'dd/MM/yyyy')}</span>
+                    )}
+                  </p>
+                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                </div>
+              ) : selectedEnc.status !== 'cancelado' && selectedEnc.status !== 'concluido' ? (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs font-medium flex items-center gap-1">
+                    <Send className="h-3 w-3" /> Registrar Contra-referência
+                  </p>
+                  <Textarea
+                    placeholder="Informe o retorno do especialista, condutas sugeridas, diagnóstico final..."
+                    value={contraRefText}
+                    onChange={e => setContraRefText(e.target.value)}
+                    rows={3}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveContraRef}
+                    disabled={!contraRefText.trim() || isUpdating}
+                    className="gap-1.5"
+                  >
+                    {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                    Salvar e Concluir
+                  </Button>
+                </div>
+              ) : null}
             </div>
+          )}
+
+          {/* Status actions in footer */}
+          {selectedEnc && selectedEnc.status !== 'concluido' && selectedEnc.status !== 'cancelado' && (
+            <DialogFooter className="gap-2">
+              {selectedEnc.status === 'pendente' && (
+                <Button variant="outline" size="sm" onClick={() => handleUpdateEncStatus(selectedEnc.id, 'em_andamento')} disabled={isUpdating}>
+                  Marcar Em Andamento
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleUpdateEncStatus(selectedEnc.id, 'cancelado')} disabled={isUpdating}>
+                Cancelar Encaminhamento
+              </Button>
+            </DialogFooter>
           )}
         </DialogContent>
       </Dialog>
