@@ -295,12 +295,12 @@ export default function Tarefas() {
   }, [enrichedTarefas, search, filterStatus]);
 
   const stats = useMemo(() => ({
-    total: tarefas?.length || 0,
-    pendentes: tarefas?.filter((t: any) => t.status === 'pendente').length || 0,
-    emAndamento: tarefas?.filter((t: any) => t.status === 'em_andamento').length || 0,
-    concluidas: tarefas?.filter((t: any) => t.status === 'concluida').length || 0,
-    vencidas: tarefas?.filter((t: any) => t.data_vencimento && isPast(new Date(t.data_vencimento)) && t.status !== 'concluida' && t.status !== 'cancelada').length || 0,
-  }), [tarefas]);
+    total: enrichedTarefas.length,
+    pendentes: enrichedTarefas.filter((t: any) => t.status === 'pendente').length,
+    emAndamento: enrichedTarefas.filter((t: any) => t.status === 'em_andamento').length,
+    concluidas: enrichedTarefas.filter((t: any) => t.status === 'concluida').length,
+    vencidas: enrichedTarefas.filter((t: any) => t.data_vencimento && isPast(new Date(t.data_vencimento)) && t.status !== 'concluida' && t.status !== 'cancelada').length,
+  }), [enrichedTarefas]);
 
   const [form, setForm] = useState({
     titulo: '', descricao: '', prioridade: 'media', responsavel_id: '',
