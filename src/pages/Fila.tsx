@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
+import { autoIniciarAtendimento, autoFinalizarAtendimento } from '@/lib/workflowAutomation';
 import { useFilaAtendimento, useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -285,51 +286,62 @@ export default function Fila() {
   };
 
   const updateStatus = async (id: string, status: string, agendamentoId?: string) => {
+    // Voice call when chamado
+    if (status === 'chamado' && agendamentoId) {
+      await supabase.from('fila_atendimento').update({ status }).eq('id', id);
+      const item = fila.find(f => f.id === id);
+      const nome = getPacienteNome(agendamentoId);
+      const sala = getSalaNome(item?.sala_id ?? null);
+      chamarPacienteVoz(nome, sala);
+      refresh();
+      toast.success('📢 Paciente chamado!');
+      return;
+    }
+
+    // Use centralized workflow for iniciar/finalizar
+    if (status === 'em_atendimento' && agendamentoId) {
+      const ag = agendamentos.find(a => a.id === agendamentoId);
+      const result = await autoIniciarAtendimento(
+        agendamentoId, id, ag?.paciente_id || '', ag?.medico_id || ''
+      );
+      refresh();
+      toast.success('▶ Atendimento iniciado', { description: result.actions.join(' • ') });
+      return;
+    }
+
+    if (status === 'finalizado' && agendamentoId) {
+      const ag = agendamentos.find(a => a.id === agendamentoId);
+      if (ag) {
+        const pac = pacientes.find(p => p.id === ag.paciente_id);
+        const result = await autoFinalizarAtendimento({
+          agendamentoId,
+          filaId: id,
+          pacienteId: ag.paciente_id,
+          pacienteNome: pac?.nome || 'Paciente',
+          medicoId: ag.medico_id,
+          convenioId: pac?.convenio_id,
+          tipoConsulta: ag.tipo,
+        });
+        refresh();
+        toast.success(`✅ Atendimento finalizado — ${pac?.nome || 'Paciente'}`, {
+          description: result.actions.join(' • '),
+          duration: 8000,
+          action: {
+            label: 'Abrir Caixa',
+            onClick: () => navigate('/caixa'),
+          },
+        });
+        return;
+      }
+    }
+
+    // Fallback for other statuses
     await supabase.from('fila_atendimento').update({ status }).eq('id', id);
     if (agendamentoId) {
       const agStatus = status === 'em_atendimento' ? 'em_atendimento' : status === 'finalizado' ? 'finalizado' : 'aguardando';
       await supabase.from('agendamentos').update({ status: agStatus }).eq('id', agendamentoId);
     }
-    // Trigger voice call when status is 'chamado'
-    if (status === 'chamado' && agendamentoId) {
-      const item = fila.find(f => f.id === id);
-      const nome = getPacienteNome(agendamentoId);
-      const sala = getSalaNome(item?.sala_id ?? null);
-      chamarPacienteVoz(nome, sala);
-    }
-    // Auto-billing when finalizing
-    if (status === 'finalizado' && agendamentoId) {
-      const ag = agendamentos.find(a => a.id === agendamentoId);
-      if (ag) {
-        const pac = pacientes.find(p => p.id === ag.paciente_id);
-        await createAutoBilling({
-          agendamentoId,
-          pacienteId: ag.paciente_id,
-          pacienteNome: pac?.nome || 'Paciente',
-          convenioId: pac?.convenio_id,
-          tipoConsulta: ag.tipo,
-          data: format(new Date(), 'yyyy-MM-dd'),
-        });
-      }
-    }
     refresh();
-    if (status === 'finalizado') {
-      const nome = agendamentoId ? getPacienteNome(agendamentoId) : 'Paciente';
-      toast.success(`✅ Atendimento finalizado — ${nome}`, {
-        description: 'Cobrança gerada! Clique para abrir o Caixa.',
-        duration: 8000,
-        action: {
-          label: 'Abrir Caixa',
-          onClick: () => navigate('/caixa'),
-        },
-      });
-    } else {
-      const msgs: Record<string, string> = {
-        chamado: '📢 Paciente chamado!',
-        em_atendimento: '▶ Atendimento iniciado',
-      };
-      if (msgs[status]) toast.success(msgs[status]);
-    }
   };
 
   const handleRemover = async (id: string) => {

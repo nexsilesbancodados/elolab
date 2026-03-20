@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Database } from '@/integrations/supabase/types';
+import { autoCreateColeta, autoBillingExame } from '@/lib/workflowAutomation';
 
 type StatusExame = Database['public']['Enums']['status_exame'];
 
@@ -451,14 +452,32 @@ export default function Exames() {
         data_solicitacao: formData.data_solicitacao,
       }));
 
-      const { error } = await supabase.from('exames').insert(inserts);
+      const { data: inserted, error } = await supabase.from('exames').insert(inserts).select('id, tipo_exame');
       if (error) throw error;
 
+      // Auto-create coleta records for lab exams
+      if (inserted) {
+        const coletaResults = await Promise.all(
+          inserted.map(ex => autoCreateColeta({
+            exameId: ex.id,
+            pacienteId: formData.paciente_id,
+            medicoId: formData.medico_solicitante_id,
+            tipoExame: ex.tipo_exame,
+            urgente: formData.urgencia === 'urgente' || formData.urgencia === 'emergencia',
+          }))
+        );
+        const coletasCriadas = coletaResults.filter(r => r.actions.length > 0).length;
+        if (coletasCriadas > 0) {
+          toast.info(`${coletasCriadas} coleta(s) de laboratório criada(s) automaticamente.`);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['exames'] });
+      queryClient.invalidateQueries({ queryKey: ['coletas_laboratorio'] });
       setIsDialogOpen(false);
 
       if (emitir) {
-        toast.success(`${examesSelecionados.length} exame(s) emitidos e prontos para assinatura digital.`);
+        toast.success(`${examesSelecionados.length} exame(s) emitidos — coletas de lab criadas automaticamente.`);
       } else {
         toast.success(`${examesSelecionados.length} exame(s) solicitados com sucesso!`);
       }
@@ -477,45 +496,30 @@ export default function Exames() {
       const { error } = await supabase.from('exames').update(updateData).eq('id', id);
       if (error) throw error;
 
-      // Auto-billing when laudo is released
+      // Auto-billing + notification when laudo is released
       if (newStatus === 'laudo_disponivel') {
         const exame = exames.find(e => e.id === id);
         if (exame) {
           const pac = pacientes.find(p => p.id === exame.paciente_id);
-          // Check if billing already exists
-          const { data: existing } = await supabase
-            .from('lancamentos')
-            .select('id')
-            .eq('categoria', 'exame')
-            .ilike('descricao', `%${id.slice(0, 8)}%`)
-            .limit(1);
-          if (!existing || existing.length === 0) {
-            // Lookup exam price from convenio
-            let valor = 0;
-            if (pac?.convenio_id) {
-              const { data: preco } = await supabase
-                .from('precos_exames_convenio')
-                .select('valor_total, valor_tabela')
-                .eq('convenio_id', pac.convenio_id)
-                .ilike('tipo_exame', `%${exame.tipo_exame.split(' - ').pop() || exame.tipo_exame}%`)
-                .eq('ativo', true)
-                .limit(1)
-                .maybeSingle();
-              if (preco) valor = preco.valor_total || preco.valor_tabela;
-            }
-            await supabase.from('lancamentos').insert({
-              tipo: 'receita',
-              categoria: 'exame',
-              descricao: `Exame: ${exame.tipo_exame} — ${pac?.nome || 'Paciente'} [${id.slice(0, 8)}]`,
-              valor,
-              data: new Date().toISOString().split('T')[0],
-              data_vencimento: new Date().toISOString().split('T')[0],
-              status: 'pendente',
-              paciente_id: exame.paciente_id,
-            });
-            toast.info('Cobrança de exame gerada no financeiro.');
+          const result = await autoBillingExame({
+            exameId: id,
+            pacienteId: exame.paciente_id,
+            pacienteNome: pac?.nome || 'Paciente',
+            tipoExame: exame.tipo_exame,
+            convenioId: pac?.convenio_id,
+          });
+          if (result.actions.length > 0) {
+            toast.info(result.actions.join(' • '));
           }
         }
+      }
+
+      // Auto-update coleta status when exam progresses
+      if (newStatus === 'agendado' || newStatus === 'realizado') {
+        const coletaStatus = newStatus === 'agendado' ? 'coletado' : 'em_analise';
+        await supabase.from('coletas_laboratorio')
+          .update({ status: coletaStatus })
+          .eq('exame_id', id);
       }
 
       toast.success('Status atualizado!');

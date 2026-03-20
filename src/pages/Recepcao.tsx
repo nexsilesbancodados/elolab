@@ -6,6 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
+import { autoCheckin, autoIniciarAtendimento, autoFinalizarAtendimento, autoConfirmarPagamento } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -189,29 +190,13 @@ export default function Recepcao() {
   async function handleCheckin(agId: string) {
     setIsProcessing(true);
     try {
-      // Update status to aguardando
-      await supabase.from('agendamentos').update({ status: 'aguardando' }).eq('id', agId);
-
-      // Get next position
-      const { data: lastFila } = await supabase
-        .from('fila_atendimento')
-        .select('posicao')
-        .order('posicao', { ascending: false })
-        .limit(1);
-      const nextPos = (lastFila?.[0]?.posicao || 0) + 1;
-
-      await supabase.from('fila_atendimento').insert({
-        agendamento_id: agId,
-        posicao: nextPos,
-        status: 'aguardando',
-        horario_chegada: new Date().toISOString(),
-      });
-
+      const result = await autoCheckin(agId);
+      if (!result.success) throw new Error(result.message);
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Check-in realizado! Paciente na fila.');
-    } catch (err) {
-      toast.error('Erro ao realizar check-in');
+      toast.success('Check-in realizado!', { description: result.actions.join(' • ') });
+    } catch (err: any) {
+      toast.error('Erro ao realizar check-in: ' + err.message);
     }
     setIsProcessing(false);
   }
@@ -229,11 +214,12 @@ export default function Recepcao() {
   async function handleIniciarAtendimento(agId: string, filaId: string) {
     setIsProcessing(true);
     try {
-      await supabase.from('agendamentos').update({ status: 'em_atendimento' }).eq('id', agId);
-      await supabase.from('fila_atendimento').update({ status: 'em_atendimento' }).eq('id', filaId);
+      const item = enriched.find(e => e.ag.id === agId);
+      const result = await autoIniciarAtendimento(agId, filaId, item?.ag.paciente_id || '', item?.ag.medico_id || '');
+      if (!result.success) throw new Error(result.message);
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Atendimento iniciado!');
+      toast.success('Atendimento iniciado!', { description: result.actions.join(' • ') });
     } catch { toast.error('Erro'); }
     setIsProcessing(false);
   }
@@ -244,22 +230,20 @@ export default function Recepcao() {
       const item = enriched.find(e => e.ag.id === agId);
       if (!item) throw new Error('Agendamento não encontrado');
 
-      await supabase.from('agendamentos').update({ status: 'finalizado' }).eq('id', agId);
-      await supabase.from('fila_atendimento').update({ status: 'finalizado' }).eq('id', filaId);
-
-      await createAutoBilling({
+      const result = await autoFinalizarAtendimento({
         agendamentoId: agId,
+        filaId,
         pacienteId: item.ag.paciente_id,
         pacienteNome: item.pac?.nome || 'Paciente',
+        medicoId: item.ag.medico_id,
         convenioId: item.pac?.convenio_id,
         tipoConsulta: item.ag.tipo,
-        data: today,
       });
 
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
-      toast.success('Atendimento finalizado! Cobrança gerada.');
+      toast.success('Atendimento finalizado!', { description: result.actions.join(' • ') });
     } catch (err: any) {
       console.error('Erro ao finalizar:', err);
       toast.error('Erro ao finalizar atendimento');
