@@ -399,20 +399,19 @@ export default function Agenda() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .delete()
-        .eq('id', formData.id);
+      const result = await autoCancelarAgendamento({
+        agendamentoId: formData.id,
+        motivo: 'cancelado',
+      });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.message);
       
-      toast.success('Agendamento excluído!');
+      toast.success('Agendamento cancelado!', { description: result.actions.join(' • ') });
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
     } catch (error: any) {
-      if (import.meta.env.DEV) console.error('Error deleting agendamento:', error);
-      const msg = error?.message || '';
-      toast.error(msg.includes('row-level security') ? 'Apenas administradores e recepção podem excluir agendamentos.' : 'Erro ao excluir agendamento.');
+      if (import.meta.env.DEV) console.error('Error cancelling agendamento:', error);
+      toast.error('Erro ao cancelar agendamento.');
     } finally {
       setIsSaving(false);
     }
