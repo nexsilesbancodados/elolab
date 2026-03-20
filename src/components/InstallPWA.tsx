@@ -16,10 +16,14 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPWA() {
+  const { user, profile } = useSupabaseAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+
+  // Only show for authenticated users with roles (meaning they have a subscription/access)
+  const isAuthorized = !!user && !!profile && profile.roles.length > 0;
 
   useEffect(() => {
     // Check if iOS
