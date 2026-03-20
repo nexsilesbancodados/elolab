@@ -826,19 +826,19 @@ export async function autoVincularResultadoProntuario(params: {
     // Find the latest prontuario for this patient
     const { data: prontuario } = await supabase
       .from('prontuarios')
-      .select('id, evolucao')
+      .select('id, observacoes_internas')
       .eq('paciente_id', params.pacienteId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (prontuario) {
-      const novaEvolucao = (prontuario.evolucao || '') +
+      const novaObs = (prontuario.observacoes_internas || '') +
         `\n\n--- Resultado de Exame (${format(new Date(), 'dd/MM/yyyy HH:mm')}) ---\n` +
         `Exame: ${params.tipoExame}\n${params.resultado}`;
 
       await supabase.from('prontuarios').update({
-        evolucao: novaEvolucao,
+        observacoes_internas: novaObs,
       }).eq('id', prontuario.id);
 
       actions.push(`Resultado vinculado ao prontuário ${prontuario.id.slice(0, 8)}`);
