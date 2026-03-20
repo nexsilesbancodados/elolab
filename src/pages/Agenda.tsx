@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -116,6 +117,7 @@ export default function Agenda() {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
@@ -285,7 +287,21 @@ export default function Agenda() {
           sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
         }
 
-        toast.success('Agendamento atualizado com sucesso!');
+        // When finalized, notify reception to process payment
+        if (formData.status === 'finalizado') {
+          const paciente = pacientes.find(p => p.id === formData.paciente_id);
+          const nomePaciente = paciente?.nome || 'Paciente';
+          toast.success(`Consulta finalizada — ${nomePaciente}`, {
+            description: 'Cobrança gerada automaticamente. Clique para ir ao balcão de pagamento.',
+            duration: 8000,
+            action: {
+              label: 'Ir para Pagamento',
+              onClick: () => navigate('/contas-receber'),
+            },
+          });
+        } else {
+          toast.success('Agendamento atualizado com sucesso!');
+        }
       } else {
         // Create new (possibly recurring)
         const dates = generateRecurringDates(formData.data!, recurrence);

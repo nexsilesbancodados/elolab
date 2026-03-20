@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Play, Check, Loader2, Clock, ArrowUp, ArrowDown,
@@ -162,6 +163,7 @@ export default function Fila() {
   const [now, setNow] = useState(Date.now());
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const { data: fila = [], isLoading: loadingFila } = useFilaAtendimento();
@@ -283,12 +285,23 @@ export default function Fila() {
       chamarPacienteVoz(nome, sala);
     }
     refresh();
-    const msgs: Record<string, string> = {
-      chamado: '📢 Paciente chamado!',
-      em_atendimento: '▶ Atendimento iniciado',
-      finalizado: '✅ Atendimento finalizado',
-    };
-    if (msgs[status]) toast.success(msgs[status]);
+    if (status === 'finalizado') {
+      const nome = agendamentoId ? getPacienteNome(agendamentoId) : 'Paciente';
+      toast.success(`✅ Atendimento finalizado — ${nome}`, {
+        description: 'Cobrança gerada. Clique para ir ao balcão de pagamento.',
+        duration: 8000,
+        action: {
+          label: 'Ir para Pagamento',
+          onClick: () => navigate('/contas-receber'),
+        },
+      });
+    } else {
+      const msgs: Record<string, string> = {
+        chamado: '📢 Paciente chamado!',
+        em_atendimento: '▶ Atendimento iniciado',
+      };
+      if (msgs[status]) toast.success(msgs[status]);
+    }
   };
 
   const handleRemover = async (id: string) => {
