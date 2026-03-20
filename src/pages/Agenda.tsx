@@ -117,6 +117,7 @@ export default function Agenda() {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
