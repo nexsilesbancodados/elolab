@@ -55,6 +55,7 @@ const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const PainelAdmin = lazy(() => import("@/pages/PainelAdmin"));
 const CaixaDiario = lazy(() => import("@/pages/CaixaDiario"));
 const TiposConsulta = lazy(() => import("@/pages/TiposConsulta"));
+const Recepcao = lazy(() => import("@/pages/Recepcao"));
 
 // Public/rare pages
 const Auth = lazy(() => import("@/pages/Auth"));

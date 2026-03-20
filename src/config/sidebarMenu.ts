@@ -1,4 +1,5 @@
 import {
+  MonitorSmartphone,
   LayoutDashboard,
   Users,
   Calendar,
