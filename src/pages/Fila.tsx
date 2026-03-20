@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { createAutoBilling } from '@/lib/autoBilling';
 import { useFilaAtendimento, useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -296,11 +297,26 @@ export default function Fila() {
       const sala = getSalaNome(item?.sala_id ?? null);
       chamarPacienteVoz(nome, sala);
     }
+    // Auto-billing when finalizing
+    if (status === 'finalizado' && agendamentoId) {
+      const ag = agendamentos.find(a => a.id === agendamentoId);
+      if (ag) {
+        const pac = pacientes.find(p => p.id === ag.paciente_id);
+        await createAutoBilling({
+          agendamentoId,
+          pacienteId: ag.paciente_id,
+          pacienteNome: pac?.nome || 'Paciente',
+          convenioId: pac?.convenio_id,
+          tipoConsulta: ag.tipo,
+          data: format(new Date(), 'yyyy-MM-dd'),
+        });
+      }
+    }
     refresh();
     if (status === 'finalizado') {
       const nome = agendamentoId ? getPacienteNome(agendamentoId) : 'Paciente';
       toast.success(`✅ Atendimento finalizado — ${nome}`, {
-        description: 'Pagamento pendente no Caixa Diário. Clique para abrir.',
+        description: 'Cobrança gerada! Clique para abrir o Caixa.',
         duration: 8000,
         action: {
           label: 'Abrir Caixa',

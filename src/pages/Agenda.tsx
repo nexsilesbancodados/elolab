@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { createAutoBilling } from '@/lib/autoBilling';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { useQueryClient } from '@tanstack/react-query';
@@ -319,12 +320,21 @@ export default function Agenda() {
           sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
         }
 
-        // When finalized, notify reception to process payment
+        // When finalized, auto-generate billing and notify
         if (formData.status === 'finalizado') {
           const paciente = pacientes.find(p => p.id === formData.paciente_id);
           const nomePaciente = paciente?.nome || 'Paciente';
+
+          await createAutoBilling({
+            agendamentoId: formData.id!,
+            pacienteId: formData.paciente_id!,
+            pacienteNome: nomePaciente,
+            convenioId: paciente?.convenio_id,
+            tipoConsulta: formData.tipo,
+          });
+
           toast.success(`Consulta finalizada — ${nomePaciente}`, {
-            description: 'Pagamento pendente no Caixa Diário. Clique para abrir.',
+            description: 'Cobrança gerada! Clique para abrir o Caixa.',
             duration: 8000,
             action: {
               label: 'Abrir Caixa',
