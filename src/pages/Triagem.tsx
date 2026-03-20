@@ -263,43 +263,30 @@ export default function TriagemPage() {
       }] as any);
       if (error) throw error;
 
-      // Auto-add to fila_atendimento with priority based on risk classification
+      // Use centralized workflow automation for triage → queue
       if (formData.agendamento_id) {
-        const prioridadeMap: Record<Risco, string> = {
-          vermelho: 'urgente', laranja: 'urgente', amarelo: 'preferencial',
-          verde: 'normal', azul: 'normal',
-        };
-        // Check if already in queue
-        const { data: existingFila } = await supabase
-          .from('fila_atendimento')
-          .select('id')
-          .eq('agendamento_id', formData.agendamento_id)
-          .neq('status', 'finalizado')
-          .limit(1);
+        const triagemResult = await autoTriagemParaFila({
+          agendamentoId: formData.agendamento_id,
+          classificacaoRisco: formData.classificacao_risco,
+        });
 
-        if (!existingFila || existingFila.length === 0) {
-          const { data: lastFila } = await supabase
-            .from('fila_atendimento')
-            .select('posicao')
-            .order('posicao', { ascending: false })
-            .limit(1);
-          const nextPos = (lastFila?.[0]?.posicao || 0) + 1;
-
-          // For urgent cases, position at the front
-          const posicao = formData.classificacao_risco === 'vermelho' || formData.classificacao_risco === 'laranja' ? 0 : nextPos;
-
-          await supabase.from('fila_atendimento').insert({
-            agendamento_id: formData.agendamento_id,
-            posicao,
-            status: 'aguardando',
-            prioridade: prioridadeMap[formData.classificacao_risco],
-            horario_chegada: new Date().toISOString(),
-          });
-          await supabase.from('agendamentos').update({ status: 'aguardando' }).eq('id', formData.agendamento_id);
-          toast.success('Triagem registrada! Paciente adicionado à fila com prioridade.');
-        } else {
-          toast.success('Triagem registrada!');
+        // Auto-notify doctor for urgent cases
+        if (formData.classificacao_risco === 'vermelho' || formData.classificacao_risco === 'laranja') {
+          const ag = agendamentos.find(a => a.id === formData.agendamento_id);
+          if (ag) {
+            const pac = pacientes.find(p => p.id === formData.paciente_id);
+            await autoNotificarMedico({
+              medicoId: ag.medico_id,
+              pacienteNome: pac?.nome || 'Paciente',
+              motivo: `Triagem ${formData.classificacao_risco.toUpperCase()} — PA: ${formData.pressao_arterial}, FC: ${formData.frequencia_cardiaca || '—'}`,
+            });
+            triagemResult.actions.push('Médico notificado (urgência)');
+          }
         }
+
+        toast.success('Triagem registrada!', {
+          description: triagemResult.actions.join(' • '),
+        });
       } else {
         toast.success('Triagem registrada!');
       }
