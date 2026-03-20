@@ -97,7 +97,6 @@ export async function autoIniciarAtendimento(
         agendamento_id: agendamentoId,
         data_consulta: today,
         queixa_principal: '',
-        evolucao: '',
       });
       actions.push('Prontuário criado automaticamente');
     }
