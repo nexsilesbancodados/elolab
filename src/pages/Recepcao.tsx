@@ -268,13 +268,12 @@ export default function Recepcao() {
             descricao = tipoConsulta.nome;
           }
 
-          // Check for convenio-specific price
-          if (item.pac?.convenio_id && tipoConsulta) {
+          if (item.pac?.convenio_id && tipoConsulta?.id) {
             const { data: precoConv } = await supabase
               .from('precos_consulta_convenio')
               .select('valor')
               .eq('convenio_id', item.pac.convenio_id)
-              .eq('tipo_consulta_id', (tipoConsulta as any).id || '')
+              .eq('tipo_consulta_id', tipoConsulta.id)
               .eq('ativo', true)
               .maybeSingle();
             if (precoConv) valor = precoConv.valor;
