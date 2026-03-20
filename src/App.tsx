@@ -54,6 +54,7 @@ const LaudosLab = lazy(() => import("@/pages/LaudosLab"));
 const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const PainelAdmin = lazy(() => import("@/pages/PainelAdmin"));
 const CaixaDiario = lazy(() => import("@/pages/CaixaDiario"));
+const TiposConsulta = lazy(() => import("@/pages/TiposConsulta"));
 
 // Public/rare pages
 const Auth = lazy(() => import("@/pages/Auth"));
