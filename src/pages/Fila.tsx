@@ -163,6 +163,7 @@ export default function Fila() {
   const [now, setNow] = useState(Date.now());
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const { data: fila = [], isLoading: loadingFila } = useFilaAtendimento();
