@@ -147,7 +147,7 @@ export function Cid10Search({ value, onChange, placeholder = "Buscar CID-10...",
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
-          <Command>
+          <Command shouldFilter={false}>
             <CommandList>
               <CommandEmpty>
                 {search.length < 2 
