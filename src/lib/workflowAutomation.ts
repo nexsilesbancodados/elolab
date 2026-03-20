@@ -152,10 +152,11 @@ export async function autoFinalizarAtendimento(params: {
       await supabase.from('retornos').insert({
         paciente_id: params.pacienteId,
         medico_id: params.medicoId,
-        data_prevista: format(dataRetorno, 'yyyy-MM-dd'),
+        data_retorno_prevista: format(dataRetorno, 'yyyy-MM-dd'),
+        data_consulta_origem: format(new Date(), 'yyyy-MM-dd'),
         motivo: `Retorno de ${params.tipoConsulta || 'consulta'}`,
         status: 'pendente',
-        agendamento_origem_id: params.agendamentoId,
+        agendamento_id: params.agendamentoId,
       });
       actions.push(`Retorno agendado para ${format(dataRetorno, 'dd/MM/yyyy')}`);
     }
