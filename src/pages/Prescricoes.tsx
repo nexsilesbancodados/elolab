@@ -664,7 +664,10 @@ export default function Prescricoes() {
 
           <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="gap-2">
+            <Button variant="secondary" onClick={() => handleSave(true)} className="gap-2">
+              <Pill className="h-4 w-4" />Salvar e Dispensar
+            </Button>
+            <Button onClick={() => handleSave(false)} className="gap-2">
               <Lock className="h-4 w-4" />Salvar e Assinar
             </Button>
           </DialogFooter>
