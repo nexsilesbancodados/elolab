@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -218,6 +219,7 @@ export default function Agenda() {
         hora_fim: HORARIOS[HORARIOS.indexOf(hora) + 1] || '18:30',
         tipo: 'consulta',
         status: 'agendado' as StatusAgendamento,
+        medico_id: isMedicoOnly && medicoId ? medicoId : (selectedMedico !== 'todos' ? selectedMedico : undefined),
       });
       setRecurrence({ type: 'none', occurrences: 4 });
     }
@@ -342,9 +344,10 @@ export default function Agenda() {
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
       setRecurrence({ type: 'none', occurrences: 4 });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving agendamento:', error);
-      toast.error('Erro ao salvar agendamento.');
+      const msg = error?.message || error?.details || 'Erro ao salvar agendamento.';
+      toast.error(msg.includes('row-level security') ? 'Sem permissão para esta ação. Verifique seu perfil de acesso.' : msg);
     } finally {
       setIsSaving(false);
     }
@@ -365,9 +368,10 @@ export default function Agenda() {
       toast.success('Agendamento excluído!');
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting agendamento:', error);
-      toast.error('Erro ao excluir agendamento.');
+      const msg = error?.message || '';
+      toast.error(msg.includes('row-level security') ? 'Apenas administradores e recepção podem excluir agendamentos.' : 'Erro ao excluir agendamento.');
     } finally {
       setIsSaving(false);
     }
@@ -847,6 +851,7 @@ export default function Agenda() {
             <DialogTitle>
               {formData.id ? 'Editar Agendamento' : 'Novo Agendamento'}
             </DialogTitle>
+            <DialogDescription>Preencha os dados do agendamento.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
