@@ -140,7 +140,39 @@ export default function Encaminhamentos() {
 
   const handleView = (enc: EncaminhamentoData) => {
     setSelectedEnc(enc);
+    setContraRefText(enc.contra_referencia || '');
     setIsViewOpen(true);
+  };
+
+  const handleUpdateEncStatus = async (id: string, newStatus: string) => {
+    setIsUpdating(true);
+    try {
+      const updateData: Record<string, any> = { status: newStatus };
+      if (newStatus === 'em_andamento') updateData.data_atendimento = new Date().toISOString().split('T')[0];
+      const { error } = await supabase.from('encaminhamentos').update(updateData).eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] });
+      if (selectedEnc?.id === id) setSelectedEnc({ ...selectedEnc, status: newStatus } as any);
+      toast.success(`Status atualizado para "${STATUS_CONFIG[newStatus]?.label || newStatus}"`);
+    } catch { toast.error('Erro ao atualizar status'); }
+    setIsUpdating(false);
+  };
+
+  const handleSaveContraRef = async () => {
+    if (!selectedEnc || !contraRefText.trim()) return;
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase.from('encaminhamentos').update({
+        contra_referencia: contraRefText,
+        data_contra_referencia: new Date().toISOString().split('T')[0],
+        status: 'concluido',
+      }).eq('id', selectedEnc.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] });
+      setSelectedEnc({ ...selectedEnc, contra_referencia: contraRefText, status: 'concluido' } as any);
+      toast.success('Contra-referência registrada! Encaminhamento concluído.');
+    } catch { toast.error('Erro ao salvar contra-referência'); }
+    setIsUpdating(false);
   };
 
   if (isLoading) {
