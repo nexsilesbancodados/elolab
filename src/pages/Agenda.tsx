@@ -1074,6 +1074,11 @@ export default function Agenda() {
                 Faltou
               </Button>
             )}
+            {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
+              <Button variant="destructive" disabled={isSaving} onClick={handleDelete}>
+                Cancelar Consulta
+              </Button>
+            )}
             <div className="flex-1" />
             <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
               Cancelar
