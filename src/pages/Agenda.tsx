@@ -344,9 +344,10 @@ export default function Agenda() {
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
       setRecurrence({ type: 'none', occurrences: 4 });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving agendamento:', error);
-      toast.error('Erro ao salvar agendamento.');
+      const msg = error?.message || error?.details || 'Erro ao salvar agendamento.';
+      toast.error(msg.includes('row-level security') ? 'Sem permissão para esta ação. Verifique seu perfil de acesso.' : msg);
     } finally {
       setIsSaving(false);
     }
