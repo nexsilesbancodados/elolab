@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus, Play, Check, Loader2, Clock, ArrowUp, ArrowDown,
