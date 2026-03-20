@@ -51,6 +51,7 @@ import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
 import PainelAdmin from "@/pages/PainelAdmin";
+import CaixaDiario from "@/pages/CaixaDiario";
 
 // Only lazy load rarely-accessed pages
 const Auth = lazy(() => import("@/pages/Auth"));
