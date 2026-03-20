@@ -368,9 +368,10 @@ export default function Agenda() {
       toast.success('Agendamento excluído!');
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting agendamento:', error);
-      toast.error('Erro ao excluir agendamento.');
+      const msg = error?.message || '';
+      toast.error(msg.includes('row-level security') ? 'Apenas administradores e recepção podem excluir agendamentos.' : 'Erro ao excluir agendamento.');
     } finally {
       setIsSaving(false);
     }
