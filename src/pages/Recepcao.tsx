@@ -190,29 +190,13 @@ export default function Recepcao() {
   async function handleCheckin(agId: string) {
     setIsProcessing(true);
     try {
-      // Update status to aguardando
-      await supabase.from('agendamentos').update({ status: 'aguardando' }).eq('id', agId);
-
-      // Get next position
-      const { data: lastFila } = await supabase
-        .from('fila_atendimento')
-        .select('posicao')
-        .order('posicao', { ascending: false })
-        .limit(1);
-      const nextPos = (lastFila?.[0]?.posicao || 0) + 1;
-
-      await supabase.from('fila_atendimento').insert({
-        agendamento_id: agId,
-        posicao: nextPos,
-        status: 'aguardando',
-        horario_chegada: new Date().toISOString(),
-      });
-
+      const result = await autoCheckin(agId);
+      if (!result.success) throw new Error(result.message);
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Check-in realizado! Paciente na fila.');
-    } catch (err) {
-      toast.error('Erro ao realizar check-in');
+      toast.success('Check-in realizado!', { description: result.actions.join(' • ') });
+    } catch (err: any) {
+      toast.error('Erro ao realizar check-in: ' + err.message);
     }
     setIsProcessing(false);
   }
