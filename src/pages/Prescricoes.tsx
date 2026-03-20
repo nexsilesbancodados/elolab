@@ -26,6 +26,7 @@ import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseD
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface MedicamentoForm {
   nome: string;
