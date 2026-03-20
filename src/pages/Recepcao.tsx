@@ -5,6 +5,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { createAutoBilling } from '@/lib/autoBilling';
 import { useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
