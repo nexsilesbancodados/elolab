@@ -228,10 +228,14 @@ export default function Tarefas() {
   const { data: tarefas, isLoading } = useQuery({
     queryKey: ['tarefas'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('tarefas')
-        .select('*, responsavel:profiles!tarefas_responsavel_id_fkey(nome), criador:profiles!tarefas_criado_por_fkey(nome)')
+        .select('*')
         .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Erro ao buscar tarefas:', error);
+        throw error;
+      }
       return data || [];
     },
   });
@@ -272,22 +276,31 @@ export default function Tarefas() {
     },
   });
 
+  // Enrich tarefas with profile names (since we removed the join)
+  const enrichedTarefas = useMemo(() => {
+    return tarefas?.map((t: any) => ({
+      ...t,
+      responsavel: t.responsavel_id ? { nome: profiles?.find((p: any) => p.id === t.responsavel_id)?.nome || '' } : null,
+      criador: t.criado_por ? { nome: profiles?.find((p: any) => p.id === t.criado_por)?.nome || '' } : null,
+    })) || [];
+  }, [tarefas, profiles]);
+
   const filtered = useMemo(() => {
-    return tarefas?.filter((t: any) => {
+    return enrichedTarefas.filter((t: any) => {
       const matchSearch = !search || t.titulo.toLowerCase().includes(search.toLowerCase()) ||
         (t.descricao && t.descricao.toLowerCase().includes(search.toLowerCase()));
       const matchStatus = filterStatus === 'all' || t.status === filterStatus;
       return matchSearch && matchStatus;
-    }) || [];
-  }, [tarefas, search, filterStatus]);
+    });
+  }, [enrichedTarefas, search, filterStatus]);
 
   const stats = useMemo(() => ({
-    total: tarefas?.length || 0,
-    pendentes: tarefas?.filter((t: any) => t.status === 'pendente').length || 0,
-    emAndamento: tarefas?.filter((t: any) => t.status === 'em_andamento').length || 0,
-    concluidas: tarefas?.filter((t: any) => t.status === 'concluida').length || 0,
-    vencidas: tarefas?.filter((t: any) => t.data_vencimento && isPast(new Date(t.data_vencimento)) && t.status !== 'concluida' && t.status !== 'cancelada').length || 0,
-  }), [tarefas]);
+    total: enrichedTarefas.length,
+    pendentes: enrichedTarefas.filter((t: any) => t.status === 'pendente').length,
+    emAndamento: enrichedTarefas.filter((t: any) => t.status === 'em_andamento').length,
+    concluidas: enrichedTarefas.filter((t: any) => t.status === 'concluida').length,
+    vencidas: enrichedTarefas.filter((t: any) => t.data_vencimento && isPast(new Date(t.data_vencimento)) && t.status !== 'concluida' && t.status !== 'cancelada').length,
+  }), [enrichedTarefas]);
 
   const [form, setForm] = useState({
     titulo: '', descricao: '', prioridade: 'media', responsavel_id: '',
@@ -310,7 +323,7 @@ export default function Tarefas() {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
     if (!taskId) return;
-    const task = tarefas?.find((t: any) => t.id === taskId);
+    const task = enrichedTarefas.find((t: any) => t.id === taskId);
     if (task && task.status !== newStatus) {
       updateTarefa.mutate({ id: taskId, status: newStatus });
     }
@@ -424,7 +437,7 @@ export default function Tarefas() {
         /* ─── Kanban View ─── */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {kanbanColumns.map(col => {
-            const colTasks = (tarefas || []).filter((t: any) => {
+            const colTasks = enrichedTarefas.filter((t: any) => {
               const matchSearch = !search || t.titulo.toLowerCase().includes(search.toLowerCase()) ||
                 (t.descricao && t.descricao.toLowerCase().includes(search.toLowerCase()));
               return t.status === col.key && matchSearch;
