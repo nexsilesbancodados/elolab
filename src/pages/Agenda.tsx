@@ -287,7 +287,21 @@ export default function Agenda() {
           sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
         }
 
-        toast.success('Agendamento atualizado com sucesso!');
+        // When finalized, notify reception to process payment
+        if (formData.status === 'finalizado') {
+          const paciente = pacientes.find(p => p.id === formData.paciente_id);
+          const nomePaciente = paciente?.nome || 'Paciente';
+          toast.success(`Consulta finalizada — ${nomePaciente}`, {
+            description: 'Cobrança gerada automaticamente. Clique para ir ao balcão de pagamento.',
+            duration: 8000,
+            action: {
+              label: 'Ir para Pagamento',
+              onClick: () => navigate('/contas-receber'),
+            },
+          });
+        } else {
+          toast.success('Agendamento atualizado com sucesso!');
+        }
       } else {
         // Create new (possibly recurring)
         const dates = generateRecurringDates(formData.data!, recurrence);
