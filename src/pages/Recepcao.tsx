@@ -230,22 +230,20 @@ export default function Recepcao() {
       const item = enriched.find(e => e.ag.id === agId);
       if (!item) throw new Error('Agendamento não encontrado');
 
-      await supabase.from('agendamentos').update({ status: 'finalizado' }).eq('id', agId);
-      await supabase.from('fila_atendimento').update({ status: 'finalizado' }).eq('id', filaId);
-
-      await createAutoBilling({
+      const result = await autoFinalizarAtendimento({
         agendamentoId: agId,
+        filaId,
         pacienteId: item.ag.paciente_id,
         pacienteNome: item.pac?.nome || 'Paciente',
+        medicoId: item.ag.medico_id,
         convenioId: item.pac?.convenio_id,
         tipoConsulta: item.ag.tipo,
-        data: today,
       });
 
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
-      toast.success('Atendimento finalizado! Cobrança gerada.');
+      toast.success('Atendimento finalizado!', { description: result.actions.join(' • ') });
     } catch (err: any) {
       console.error('Erro ao finalizar:', err);
       toast.error('Erro ao finalizar atendimento');
