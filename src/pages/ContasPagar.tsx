@@ -486,7 +486,10 @@ export default function ContasPagar() {
       {/* Payment Dialog */}
       <Dialog open={isPagamentoOpen} onOpenChange={setIsPagamentoOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Confirmar Pagamento</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Confirmar Pagamento</DialogTitle>
+            <DialogDescription>Registre o pagamento desta conta.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
