@@ -26,6 +26,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Database } from '@/integrations/supabase/types';
+import { autoCreateColeta, autoBillingExame } from '@/lib/workflowAutomation';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { Database } from '@/integrations/supabase/types';
 
 type StatusExame = Database['public']['Enums']['status_exame'];
 
