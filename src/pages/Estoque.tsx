@@ -88,7 +88,7 @@ export default function Estoque() {
       const { data } = await supabase
         .from('movimentacoes_estoque')
         .select('*')
-        .eq('item_id', timelineItemId!)
+        .eq('item_id', timelineItemId || '')
         .order('created_at', { ascending: false })
         .limit(50);
       return data || [];
@@ -251,12 +251,27 @@ export default function Estoque() {
     }
     setIsSaving(true);
     try {
-      const { error: e1 } = await supabase.from('estoque').update({ quantidade: novaQtd }).eq('id', selectedId);
-      if (e1) throw e1;
-      await supabase.from('movimentacoes_estoque').insert({
-        item_id: selectedId!, tipo: movimentacao.tipo,
+      // Insert movement record first (least destructive if partial failure)
+      const { error: e2 } = await supabase.from('movimentacoes_estoque').insert({
+        item_id: selectedId || '', tipo: movimentacao.tipo,
         quantidade: movimentacao.quantidade, motivo: movimentacao.motivo || null,
       });
+      if (e2) throw e2;
+
+      // Re-fetch current quantity to avoid race conditions
+      const { data: current, error: fetchErr } = await supabase.from('estoque').select('quantidade').eq('id', selectedId).single();
+      if (fetchErr) throw fetchErr;
+      const qtdAtual = current.quantidade;
+      const novaQtdFinal = movimentacao.tipo === 'entrada' ? qtdAtual + movimentacao.quantidade : qtdAtual - movimentacao.quantidade;
+      if (novaQtdFinal < 0) {
+        toast.error('Estoque insuficiente (quantidade alterada por outro usuário).');
+        // Rollback movement - best effort
+        await supabase.from('movimentacoes_estoque').delete().eq('item_id', selectedId).eq('quantidade', movimentacao.quantidade).order('created_at', { ascending: false }).limit(1);
+        return;
+      }
+
+      const { error: e1 } = await supabase.from('estoque').update({ quantidade: novaQtdFinal }).eq('id', selectedId);
+      if (e1) throw e1;
       toast.success(`${movimentacao.tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada!`);
       queryClient.invalidateQueries({ queryKey: ['estoque'] });
       setIsMovimentacaoOpen(false);

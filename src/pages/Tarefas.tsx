@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -215,6 +216,7 @@ export default function Tarefas() {
   const [showNew, setShowNew] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('kanban');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: profiles } = useQuery({
@@ -237,7 +239,7 @@ export default function Tarefas() {
         toast.error('Erro ao carregar tarefas: ' + error.message);
         throw error;
       }
-      console.log('Tarefas carregadas:', data?.length || 0);
+      if (import.meta.env.DEV) console.log('Tarefas carregadas:', data?.length || 0);
       return data || [];
     },
     refetchOnWindowFocus: true,
@@ -470,7 +472,7 @@ export default function Tarefas() {
                         tarefa={t}
                         onUpdate={(data) => updateTarefa.mutate(data)}
                         onDelete={(id) => {
-                          if (confirm('Remover esta tarefa?')) deleteTarefa.mutate(id);
+                          setDeleteTaskId(id);
                         }}
                         onDragStart={handleDragStart}
                       />
@@ -513,7 +515,7 @@ export default function Tarefas() {
                 tarefa={t}
                 onUpdate={(data) => updateTarefa.mutate(data)}
                 onDelete={(id) => {
-                  if (confirm('Remover esta tarefa?')) deleteTarefa.mutate(id);
+                  setDeleteTaskId(id);
                 }}
               />
             ))}
@@ -600,6 +602,24 @@ export default function Tarefas() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm delete dialog */}
+      <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover tarefa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta tarefa será removida permanentemente. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (deleteTaskId) { deleteTarefa.mutate(deleteTaskId); setDeleteTaskId(null); } }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

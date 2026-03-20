@@ -71,9 +71,27 @@ export default function CaixaDiario() {
   const [showDetalhes, setShowDetalhes] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [tabFilter, setTabFilter] = useState<'todos' | 'pendente' | 'pago'>('todos');
-  const [caixaAberto, setCaixaAberto] = useState(false);
+  const [caixaAberto, setCaixaAberto] = useState(() => {
+    try {
+      const saved = localStorage.getItem('caixa_estado');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.data === format(new Date(), 'yyyy-MM-dd') && parsed.aberto === true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  });
   const [motivoEstorno, setMotivoEstorno] = useState('');
-  const [valorAbertura, setValorAbertura] = useState(0);
+  const [valorAbertura, setValorAbertura] = useState(() => {
+    try {
+      const saved = localStorage.getItem('caixa_estado');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.data === format(new Date(), 'yyyy-MM-dd')) return parsed.valorAbertura || 0;
+      }
+    } catch { /* ignore */ }
+    return 0;
+  });
   const [showAbertura, setShowAbertura] = useState(false);
   const [baixaForm, setBaixaForm] = useState<BaixaForm>({
     forma_pagamento: 'dinheiro',
@@ -251,6 +269,9 @@ export default function CaixaDiario() {
   const handleAbrirCaixa = () => {
     setCaixaAberto(true);
     setShowAbertura(false);
+    localStorage.setItem('caixa_estado', JSON.stringify({
+      aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema',
+    }));
     toast.success(`Caixa aberto com troco de R$ ${valorAbertura.toFixed(2)}`);
   };
 
@@ -261,7 +282,10 @@ export default function CaixaDiario() {
   const confirmarFechamento = () => {
     setCaixaAberto(false);
     setShowResumo(false);
-    toast.info('🔒 Caixa fechado. Resumo registrado.');
+    localStorage.setItem('caixa_estado', JSON.stringify({
+      aberto: false, valorAbertura: 0, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema',
+    }));
+    toast.info('Caixa fechado. Resumo registrado.');
   };
 
   const handleImprimirResumo = () => {

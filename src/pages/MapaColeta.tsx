@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -66,6 +67,7 @@ export default function MapaColeta() {
   const [statusFiltro, setStatusFiltro] = useState('todos');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(new Date());
+  const [cancelarId, setCancelarId] = useState<string | null>(null);
 
   // Tick every 30s for wait time updates
   useEffect(() => {
@@ -124,12 +126,13 @@ export default function MapaColeta() {
   };
 
   const handleCancelar = async (id: string) => {
-    if (!confirm('Cancelar esta coleta?')) return;
     const { error } = await supabase
       .from('coletas_laboratorio')
       .update({ status: 'cancelado' })
       .eq('id', id);
-    if (error) toast.error('Erro'); else { toast.success('Coleta cancelada'); fetchColetas(); }
+    if (error) toast.error('Erro ao cancelar coleta');
+    else { toast.success('Coleta cancelada'); fetchColetas(); }
+    setCancelarId(null);
   };
 
   const handleBulkPrint = () => {
@@ -294,7 +297,7 @@ export default function MapaColeta() {
                 <RotateCcw className="h-3 w-3" /> Recoleta
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => handleCancelar(item.id)}>
+            <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => setCancelarId(item.id)}>
               <XCircle className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -498,6 +501,23 @@ export default function MapaColeta() {
           )}
         </motion.div>
       )}
+      {/* Confirm cancel dialog */}
+      <AlertDialog open={!!cancelarId} onOpenChange={(open) => !open && setCancelarId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar coleta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta coleta será marcada como cancelada. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => cancelarId && handleCancelar(cancelarId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Cancelar Coleta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

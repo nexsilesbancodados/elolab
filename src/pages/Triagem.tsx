@@ -190,6 +190,54 @@ export default function TriagemPage() {
     if (!formData.paciente_id || !formData.pressao_arterial) {
       toast.error('Preencha paciente e pressão arterial.'); return;
     }
+
+    // Validate PA format (e.g. "120/80")
+    const paMatch = formData.pressao_arterial.match(/^(\d{2,3})\/(\d{2,3})$/);
+    if (!paMatch) {
+      toast.error('Pressão arterial deve estar no formato SIS/DIA (ex: 120/80).'); return;
+    }
+    const [, sistolica, diastolica] = paMatch.map(Number);
+    if (sistolica < 50 || sistolica > 300 || diastolica < 20 || diastolica > 200) {
+      toast.error('Pressão arterial fora da faixa aceitável (SIS: 50-300, DIA: 20-200).'); return;
+    }
+    if (diastolica >= sistolica) {
+      toast.error('A pressão diastólica deve ser menor que a sistólica.'); return;
+    }
+
+    // Validate vital signs ranges if provided
+    const fc = parseInt(formData.frequencia_cardiaca);
+    if (formData.frequencia_cardiaca && (fc < 20 || fc > 300)) {
+      toast.error('Frequência cardíaca fora da faixa (20-300 bpm).'); return;
+    }
+    const fr = parseInt(formData.frequencia_respiratoria);
+    if (formData.frequencia_respiratoria && (fr < 4 || fr > 60)) {
+      toast.error('Frequência respiratória fora da faixa (4-60 irpm).'); return;
+    }
+    const temp = parseFloat(formData.temperatura);
+    if (formData.temperatura && (temp < 30 || temp > 45)) {
+      toast.error('Temperatura fora da faixa (30-45 °C).'); return;
+    }
+    const sat = parseFloat(formData.saturacao);
+    if (formData.saturacao && (sat < 50 || sat > 100)) {
+      toast.error('Saturação fora da faixa (50-100%).'); return;
+    }
+    const peso = parseFloat(formData.peso);
+    if (formData.peso && (peso < 0.5 || peso > 500)) {
+      toast.error('Peso fora da faixa aceitável (0.5-500 kg).'); return;
+    }
+    const altura = parseFloat(formData.altura);
+    if (formData.altura && (altura < 20 || altura > 250)) {
+      toast.error('Altura fora da faixa aceitável (20-250 cm).'); return;
+    }
+    const glic = parseFloat(formData.glicemia);
+    if (formData.glicemia && (glic < 10 || glic > 900)) {
+      toast.error('Glicemia fora da faixa (10-900 mg/dL).'); return;
+    }
+    const dor = parseInt(formData.dor_escala);
+    if (formData.dor_escala && (dor < 0 || dor > 10)) {
+      toast.error('Escala de dor deve estar entre 0 e 10.'); return;
+    }
+
     setIsSaving(true);
     try {
       const imc = calcularIMC(formData.peso, formData.altura);

@@ -2,8 +2,19 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 
-const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const DEFAULT_TIMEOUT_MIN = 30;
 const WARNING_MS = 5 * 60 * 1000; // 5 minutes before timeout
+
+function getTimeoutMs(): number {
+  try {
+    const val = localStorage.getItem('session_timeout_min');
+    if (val) {
+      const mins = parseInt(val, 10);
+      if (mins >= 5 && mins <= 480) return mins * 60 * 1000;
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_TIMEOUT_MIN * 60 * 1000;
+}
 
 export function useSessionTimeout() {
   const { user, signOut } = useSupabaseAuth();
@@ -13,23 +24,27 @@ export function useSessionTimeout() {
   const resetTimer = useCallback(() => {
     if (!user) return;
 
+    const timeoutMs = getTimeoutMs();
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (warningRef.current) clearTimeout(warningRef.current);
 
-    warningRef.current = setTimeout(() => {
-      toast.warning('Sua sessão expira em 5 minutos por inatividade.', {
-        duration: 10000,
-        action: {
-          label: 'Continuar',
-          onClick: () => resetTimer(),
-        },
-      });
-    }, TIMEOUT_MS - WARNING_MS);
+    if (timeoutMs > WARNING_MS) {
+      warningRef.current = setTimeout(() => {
+        toast.warning('Sua sessão expira em 5 minutos por inatividade.', {
+          duration: 10000,
+          action: {
+            label: 'Continuar',
+            onClick: () => resetTimer(),
+          },
+        });
+      }, timeoutMs - WARNING_MS);
+    }
 
     timeoutRef.current = setTimeout(() => {
       toast.error('Sessão encerrada por inatividade.');
       signOut();
-    }, TIMEOUT_MS);
+    }, timeoutMs);
   }, [user, signOut]);
 
   useEffect(() => {

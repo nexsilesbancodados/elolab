@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -160,6 +161,7 @@ export default function Fila() {
   const [selectedAgendamento, setSelectedAgendamento] = useState('');
   const [selectedPrioridade, setSelectedPrioridade] = useState('normal');
   const [isSaving, setIsSaving] = useState(false);
+  const [removeId, setRemoveId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
 
   const queryClient = useQueryClient();
@@ -230,6 +232,16 @@ export default function Fila() {
 
   const handleAddToFila = async () => {
     if (!selectedAgendamento) { toast.error('Selecione um agendamento.'); return; }
+
+    // Check for duplicate entry in active queue
+    const jaExiste = fila.find(
+      (f: any) => f.agendamento_id === selectedAgendamento && f.status !== 'finalizado'
+    );
+    if (jaExiste) {
+      toast.error('Este agendamento já está na fila de atendimento.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const maxPos = Math.max(0, ...fila.map(f => f.posicao));
@@ -305,8 +317,8 @@ export default function Fila() {
   };
 
   const handleRemover = async (id: string) => {
-    if (!confirm('Remover paciente da fila?')) return;
     await supabase.from('fila_atendimento').delete().eq('id', id);
+    setRemoveId(null);
     refresh();
     toast.info('Paciente removido da fila');
   };
@@ -391,7 +403,7 @@ export default function Fila() {
                 onChamar={() => updateStatus(item.id, 'chamado', item.agendamento_id)}
                 onIniciar={() => updateStatus(item.id, 'em_atendimento', item.agendamento_id)}
                 onFinalizar={() => updateStatus(item.id, 'finalizado', item.agendamento_id)}
-                onRemover={() => handleRemover(item.id)}
+                onRemover={() => setRemoveId(item.id)}
               />
             ))}
           </AnimatePresence>
@@ -466,6 +478,24 @@ export default function Fila() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm removal dialog */}
+      <AlertDialog open={!!removeId} onOpenChange={(open) => !open && setRemoveId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover da fila?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O paciente será removido da fila de atendimento. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => removeId && handleRemover(removeId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

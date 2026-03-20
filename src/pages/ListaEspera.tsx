@@ -30,6 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -102,6 +103,7 @@ export default function ListaEspera() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [removeId, setRemoveId] = useState<string | null>(null);
 
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
@@ -189,8 +191,6 @@ export default function ListaEspera() {
   };
 
   const handleRemove = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover este item da lista?')) return;
-
     try {
       const { error } = await supabase
         .from('lista_espera')
@@ -405,7 +405,7 @@ export default function ListaEspera() {
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => handleRemove(item.id)}
+                              onClick={() => setRemoveId(item.id)}
                             >
                               <XCircle className="h-4 w-4 text-destructive" />
                             </Button>
@@ -548,6 +548,24 @@ export default function ListaEspera() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm remove dialog */}
+      <AlertDialog open={!!removeId} onOpenChange={(open) => !open && setRemoveId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover da lista de espera?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O item será removido permanentemente da lista de espera.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (removeId) { handleRemove(removeId); setRemoveId(null); } }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

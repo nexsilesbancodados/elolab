@@ -138,7 +138,7 @@ export default function Agenda() {
       });
     } catch (err) {
       // WhatsApp is optional - don't block the flow
-      console.log('WhatsApp notification skipped:', err);
+      if (import.meta.env.DEV) console.log('WhatsApp notification skipped:', err);
     }
   };
 
@@ -254,6 +254,37 @@ export default function Agenda() {
     if (!formData.paciente_id || !formData.medico_id) {
       toast.error('Selecione o paciente e o médico.');
       return;
+    }
+    if (!formData.data || !formData.hora_inicio) {
+      toast.error('Data e horário de início são obrigatórios.');
+      return;
+    }
+    // Validate time order
+    if (formData.hora_fim && formData.hora_inicio >= formData.hora_fim) {
+      toast.error('O horário de fim deve ser após o horário de início.');
+      return;
+    }
+    // Validate not scheduling in the past (only for new appointments)
+    if (!formData.id) {
+      const hoje = format(new Date(), 'yyyy-MM-dd');
+      const agora = format(new Date(), 'HH:mm');
+      if (formData.data < hoje || (formData.data === hoje && formData.hora_inicio < agora)) {
+        toast.error('Não é possível agendar no passado.');
+        return;
+      }
+    }
+    // Check for scheduling conflicts
+    if (!formData.id) {
+      const conflito = agendamentos.find(ag =>
+        ag.medico_id === formData.medico_id &&
+        ag.data === formData.data &&
+        ag.status !== 'cancelado' &&
+        ag.hora_inicio === formData.hora_inicio
+      );
+      if (conflito) {
+        toast.error('Já existe um agendamento neste horário para este médico.');
+        return;
+      }
     }
 
     setIsSaving(true);

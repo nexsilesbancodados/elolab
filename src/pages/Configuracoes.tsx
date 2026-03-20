@@ -442,7 +442,7 @@ export default function Configuracoes() {
               <CardContent>
                 <div className="divide-y">
                   <SettingRow icon={Key} title="Sessão Automática" description="Desconectar automaticamente após período de inatividade">
-                    <Select defaultValue="30">
+                    <Select defaultValue={localStorage.getItem('session_timeout_min') || '30'} onValueChange={(val) => { localStorage.setItem('session_timeout_min', val); toast.success(`Sessão expira após ${val} minutos de inatividade.`); }}>
                       <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="15">15 minutos</SelectItem>

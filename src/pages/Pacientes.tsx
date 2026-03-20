@@ -474,6 +474,53 @@ export default function Pacientes() {
       return;
     }
 
+    // Validate CPF digits
+    const cpfDigits = formData.cpf.replace(/\D/g, '');
+    if (cpfDigits.length !== 11) {
+      toast({ title: 'CPF inválido', description: 'O CPF deve conter 11 dígitos.', variant: 'destructive' });
+      return;
+    }
+    // CPF checksum validation
+    if (/^(\d)\1+$/.test(cpfDigits)) {
+      toast({ title: 'CPF inválido', description: 'CPF com todos os dígitos iguais não é válido.', variant: 'destructive' });
+      return;
+    }
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(cpfDigits[i]) * (10 - i);
+    let rem = (sum * 10) % 11;
+    if (rem === 10 || rem === 11) rem = 0;
+    if (rem !== parseInt(cpfDigits[9])) {
+      toast({ title: 'CPF inválido', description: 'O CPF informado não é válido. Verifique os dígitos.', variant: 'destructive' });
+      return;
+    }
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(cpfDigits[i]) * (11 - i);
+    rem = (sum * 10) % 11;
+    if (rem === 10 || rem === 11) rem = 0;
+    if (rem !== parseInt(cpfDigits[10])) {
+      toast({ title: 'CPF inválido', description: 'O CPF informado não é válido. Verifique os dígitos.', variant: 'destructive' });
+      return;
+    }
+
+    // Validate email if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
+      return;
+    }
+
+    // Validate birthdate is not in the future
+    if (formData.data_nascimento > format(new Date(), 'yyyy-MM-dd')) {
+      toast({ title: 'Data inválida', description: 'A data de nascimento não pode ser no futuro.', variant: 'destructive' });
+      return;
+    }
+
+    // Validate phone has at least 10 digits
+    const phoneDigits = formData.telefone.replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      toast({ title: 'Telefone inválido', description: 'O telefone deve ter 10 ou 11 dígitos.', variant: 'destructive' });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const dataToSave: any = {
