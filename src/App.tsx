@@ -55,6 +55,7 @@ const Documentacao = lazy(() => import("@/pages/Documentacao"));
 const PainelAdmin = lazy(() => import("@/pages/PainelAdmin"));
 const CaixaDiario = lazy(() => import("@/pages/CaixaDiario"));
 const TiposConsulta = lazy(() => import("@/pages/TiposConsulta"));
+const Recepcao = lazy(() => import("@/pages/Recepcao"));
 
 // Public/rare pages
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -149,6 +150,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                       <Route path="/lista-espera" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><ListaEspera /></SupabaseProtectedRoute>} />
                       <Route path="/tarefas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem', 'financeiro', 'medico']}><Tarefas /></SupabaseProtectedRoute>} />
                       <Route path="/caixa" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro', 'recepcao']}><CaixaDiario /></SupabaseProtectedRoute>} />
+                      <Route path="/recepcao" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Recepcao /></SupabaseProtectedRoute>} />
 
                       {/* Financial — admin + financeiro only */}
                       <Route path="/financeiro" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Financeiro /></SupabaseProtectedRoute>} />
