@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, Smartphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   Dialog,
   DialogContent,
@@ -15,21 +16,27 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPWA() {
+  const { user, profile } = useSupabaseAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
+  // Only show for authenticated users with roles (meaning they have a subscription/access)
+  const isAuthorized = !!user && !!profile && profile.roles.length > 0;
+
   useEffect(() => {
-    // Check if iOS
+    if (!isAuthorized) {
+      setShowBanner(false);
+      return;
+    }
+
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(iOS);
 
-    // Check if already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     if (isStandalone) return;
 
-    // Check if dismissed recently
     const dismissed = localStorage.getItem('pwa_install_dismissed');
     if (dismissed) {
       const dismissedAt = new Date(dismissed);
@@ -38,7 +45,6 @@ export function InstallPWA() {
       if (daysSinceDismissed < 7) return;
     }
 
-    // Listen for install prompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -47,7 +53,6 @@ export function InstallPWA() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Show banner for iOS after a delay
     if (iOS) {
       setTimeout(() => setShowBanner(true), 3000);
     }
@@ -55,7 +60,7 @@ export function InstallPWA() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
-  }, []);
+  }, [isAuthorized]);
 
   const handleInstall = async () => {
     if (isIOS) {
