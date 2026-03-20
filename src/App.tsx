@@ -82,7 +82,6 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
             <BrowserRouter>
               <SupabaseAuthProvider>
                 <NotificationBanner />
-                <Suspense fallback={<PageLoader />}>
                 <Routes>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/auth" element={<Auth />} />
