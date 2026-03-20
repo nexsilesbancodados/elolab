@@ -575,7 +575,7 @@ export default function Financeiro() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editTarget ? 'Editar Lançamento' : 'Novo Lançamento'}</DialogTitle>
-          </DialogHeader>
+            <DialogDescription>Preencha os dados do lançamento financeiro.</DialogDescription>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
