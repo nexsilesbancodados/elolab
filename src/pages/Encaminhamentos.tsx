@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, ArrowRightLeft, Filter, FileText, Clock, CheckCircle2,
-  AlertTriangle, Plus, Eye, Loader2, Stethoscope, User,
+  AlertTriangle, Plus, Eye, Loader2, Stethoscope, User, Send, Edit,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
