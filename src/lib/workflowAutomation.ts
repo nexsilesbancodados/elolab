@@ -95,7 +95,7 @@ export async function autoIniciarAtendimento(
         paciente_id: pacienteId,
         medico_id: medicoId,
         agendamento_id: agendamentoId,
-        data_consulta: today,
+        data: today,
         queixa_principal: '',
       });
       actions.push('Prontuário criado automaticamente');
