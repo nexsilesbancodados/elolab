@@ -234,10 +234,14 @@ export default function Tarefas() {
         .order('created_at', { ascending: false });
       if (error) {
         console.error('Erro ao buscar tarefas:', error);
+        toast.error('Erro ao carregar tarefas: ' + error.message);
         throw error;
       }
+      console.log('Tarefas carregadas:', data?.length || 0);
       return data || [];
     },
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
   });
 
   const createTarefa = useMutation({
@@ -250,7 +254,10 @@ export default function Tarefas() {
       toast.success('Tarefa criada!');
       setShowNew(false);
     },
-    onError: () => toast.error('Erro ao criar tarefa'),
+    onError: (err: any) => {
+      console.error('Erro ao criar tarefa:', err);
+      toast.error('Erro ao criar tarefa: ' + (err?.message || 'Erro desconhecido'));
+    },
   });
 
   const updateTarefa = useMutation({
