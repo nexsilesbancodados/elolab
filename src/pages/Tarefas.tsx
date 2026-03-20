@@ -254,7 +254,10 @@ export default function Tarefas() {
       toast.success('Tarefa criada!');
       setShowNew(false);
     },
-    onError: () => toast.error('Erro ao criar tarefa'),
+    onError: (err: any) => {
+      console.error('Erro ao criar tarefa:', err);
+      toast.error('Erro ao criar tarefa: ' + (err?.message || 'Erro desconhecido'));
+    },
   });
 
   const updateTarefa = useMutation({
