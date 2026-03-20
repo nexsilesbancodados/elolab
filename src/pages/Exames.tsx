@@ -491,35 +491,33 @@ export default function Exames() {
 
   const handleUpdateStatus = async (id: string, newStatus: StatusExame) => {
     try {
-      const updateData: Record<string, any> = { status: newStatus };
-      if (newStatus === 'realizado') updateData.data_realizacao = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('exames').update(updateData).eq('id', id);
-      if (error) throw error;
+      const exame = exames.find(e => e.id === id);
+      if (!exame) throw new Error('Exame não encontrado');
+      const pac = pacientes.find(p => p.id === exame.paciente_id);
 
-      // Auto-billing + notification when laudo is released
-      if (newStatus === 'laudo_disponivel') {
-        const exame = exames.find(e => e.id === id);
-        if (exame) {
-          const pac = pacientes.find(p => p.id === exame.paciente_id);
-          const result = await autoBillingExame({
-            exameId: id,
-            pacienteId: exame.paciente_id,
-            pacienteNome: pac?.nome || 'Paciente',
-            tipoExame: exame.tipo_exame,
-            convenioId: pac?.convenio_id,
-          });
-          if (result.actions.length > 0) {
-            toast.info(result.actions.join(' • '));
-          }
-        }
+      const result = await autoProgressExame({
+        exameId: id,
+        novoStatus: newStatus,
+        pacienteId: exame.paciente_id,
+        pacienteNome: pac?.nome || 'Paciente',
+        medicoId: exame.medico_solicitante_id,
+        tipoExame: exame.tipo_exame,
+        convenioId: pac?.convenio_id,
+        resultado: exame.resultado || undefined,
+      });
+
+      // Auto-link result to prontuario when report is available
+      if (newStatus === 'laudo_disponivel' && exame.resultado) {
+        await autoVincularResultadoProntuario({
+          exameId: id,
+          pacienteId: exame.paciente_id,
+          tipoExame: exame.tipo_exame,
+          resultado: exame.resultado,
+        });
       }
 
-      // Auto-update coleta status when exam progresses
-      if (newStatus === 'agendado' || newStatus === 'realizado') {
-        const coletaStatus = newStatus === 'agendado' ? 'coletado' : 'em_analise';
-        await supabase.from('coletas_laboratorio')
-          .update({ status: coletaStatus })
-          .eq('exame_id', id);
+      if (result.actions.length > 0) {
+        toast.info(`Automações: ${result.actions.join(' • ')}`);
       }
 
       toast.success('Status atualizado!');
