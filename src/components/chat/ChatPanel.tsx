@@ -58,7 +58,7 @@ function ListaConversas({
       return 0;
     });
 
-  const idsComConversa = new Set(conversasComUsuarios.map(c => c.outro_usuario!.id));
+  const idsComConversa = new Set(conversasComUsuarios.map(c => c.outro_usuario?.id).filter(Boolean));
   const semConversa = usuarios.filter(u => !idsComConversa.has(u.id));
 
   const filtrados = search

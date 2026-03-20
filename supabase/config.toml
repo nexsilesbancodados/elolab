@@ -1,42 +1,45 @@
 project_id = "gebygucrpipaufrlyqqj"
 
+# Functions requiring authenticated user (JWT verified)
 [functions.send-employee-invitation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-appointment-reminder]
-verify_jwt = false
+verify_jwt = true
 
 [functions.stock-alert]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-notification-queue]
-verify_jwt = false
+verify_jwt = true
 
 [functions.monthly-report-generator]
-verify_jwt = false
+verify_jwt = true
 
 [functions.birthday-greetings]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-medical-assistant]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-evolution]
-verify_jwt = false
+verify_jwt = true
 
+[functions.whatsapp-notifications]
+verify_jwt = true
+
+[functions.patient-portal]
+verify_jwt = true
+
+# Webhooks — external callbacks, must remain public
 [functions.whatsapp-webhook]
-verify_jwt = false
-
-[functions.mercadopago-checkout]
 verify_jwt = false
 
 [functions.mercadopago-webhook]
 verify_jwt = false
 
-[functions.whatsapp-notifications]
-verify_jwt = false
-
-[functions.patient-portal]
+# Public endpoints — unauthenticated access needed
+[functions.mercadopago-checkout]
 verify_jwt = false
 
 [functions.public-checkout]

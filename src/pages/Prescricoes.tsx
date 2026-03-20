@@ -110,8 +110,12 @@ export default function Prescricoes() {
     const groups = new Map<string, Record<string, any>[]>();
     prescricoes.forEach(p => {
       const key = `${p.paciente_id}-${p.data_emissao || (p.created_at as string).slice(0, 10)}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
+      const existing = groups.get(key);
+      if (existing) {
+        existing.push(p);
+      } else {
+        groups.set(key, [p]);
+      }
     });
     return Array.from(groups.entries()).map(([key, items]) => ({
       key, paciente_id: items[0].paciente_id, medico_id: items[0].medico_id,

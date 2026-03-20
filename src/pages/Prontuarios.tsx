@@ -952,7 +952,7 @@ export default function Prontuarios() {
               </span>
               <div className="flex gap-1.5 flex-wrap">
                 {selectedPaciente && (medicoId || user?.id) && (
-                  <ReturnScheduler pacienteId={selectedPaciente.id} prontuarioId={currentProntuario.id} medicoId={medicoId || user!.id} compact />
+                  <ReturnScheduler pacienteId={selectedPaciente.id} prontuarioId={currentProntuario.id} medicoId={medicoId || user?.id || ''} compact />
                 )}
                 {currentProntuario.id && (() => {
                   const buildPDF = () => {
