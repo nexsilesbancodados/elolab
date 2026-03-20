@@ -240,65 +240,20 @@ export default function Recepcao() {
   async function handleFinalizarAtendimento(agId: string, filaId: string) {
     setIsProcessing(true);
     try {
-      // Find the appointment to get patient / doctor info
       const item = enriched.find(e => e.ag.id === agId);
       if (!item) throw new Error('Agendamento não encontrado');
 
-      // Update statuses
       await supabase.from('agendamentos').update({ status: 'finalizado' }).eq('id', agId);
       await supabase.from('fila_atendimento').update({ status: 'finalizado' }).eq('id', filaId);
 
-      // Auto-create lancamento (billing) if none exists yet
-      const existingLanc = lancamentos.find((l: any) => l.agendamento_id === agId);
-      if (!existingLanc) {
-        // Try to find the consultation price from tipos_consulta
-        let valor = 0;
-        let descricao = 'Consulta';
-        if (item.ag.tipo) {
-          const { data: tipoConsulta } = await supabase
-            .from('tipos_consulta')
-            .select('id, nome, valor_particular')
-            .eq('nome', item.ag.tipo)
-            .eq('ativo', true)
-            .limit(1)
-            .maybeSingle();
-
-          if (tipoConsulta) {
-            valor = tipoConsulta.valor_particular || 0;
-            descricao = tipoConsulta.nome;
-          }
-
-          if (item.pac?.convenio_id && tipoConsulta?.id) {
-            const { data: precoConv } = await supabase
-              .from('precos_consulta_convenio')
-              .select('valor')
-              .eq('convenio_id', item.pac.convenio_id)
-              .eq('tipo_consulta_id', tipoConsulta.id)
-              .eq('ativo', true)
-              .maybeSingle();
-            if (precoConv) valor = precoConv.valor;
-          }
-        }
-
-        // Fallback: use convenio default value
-        if (valor === 0 && item.pac?.convenio_id) {
-          const conv = (await supabase.from('convenios').select('valor_consulta').eq('id', item.pac.convenio_id).maybeSingle()).data;
-          if (conv?.valor_consulta) valor = conv.valor_consulta;
-        }
-
-        await supabase.from('lancamentos').insert({
-          tipo: 'receita',
-          categoria: 'consulta',
-          descricao: `${descricao} — ${item.pac?.nome || 'Paciente'}`,
-          valor: valor,
-          data: today,
-          data_vencimento: today,
-          status: 'pendente',
-          paciente_id: item.ag.paciente_id,
-          agendamento_id: agId,
-          forma_pagamento: null,
-        });
-      }
+      await createAutoBilling({
+        agendamentoId: agId,
+        pacienteId: item.ag.paciente_id,
+        pacienteNome: item.pac?.nome || 'Paciente',
+        convenioId: item.pac?.convenio_id,
+        tipoConsulta: item.ag.tipo,
+        data: today,
+      });
 
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
