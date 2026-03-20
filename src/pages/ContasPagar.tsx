@@ -25,12 +25,12 @@ import { Database } from '@/integrations/supabase/types';
 
 type StatusPagamento = Database['public']['Enums']['status_pagamento'];
 
-const STATUS_COLORS: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  pago: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  atrasado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  cancelado: 'bg-muted text-muted-foreground',
-  estornado: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  pendente: { label: 'Pendente', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+  pago: { label: 'Pago', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+  atrasado: { label: 'Atrasado', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+  cancelado: { label: 'Cancelado', color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border' },
+  estornado: { label: 'Estornado', color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
