@@ -214,11 +214,12 @@ export default function Recepcao() {
   async function handleIniciarAtendimento(agId: string, filaId: string) {
     setIsProcessing(true);
     try {
-      await supabase.from('agendamentos').update({ status: 'em_atendimento' }).eq('id', agId);
-      await supabase.from('fila_atendimento').update({ status: 'em_atendimento' }).eq('id', filaId);
+      const item = enriched.find(e => e.ag.id === agId);
+      const result = await autoIniciarAtendimento(agId, filaId, item?.ag.paciente_id || '', item?.ag.medico_id || '');
+      if (!result.success) throw new Error(result.message);
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Atendimento iniciado!');
+      toast.success('Atendimento iniciado!', { description: result.actions.join(' • ') });
     } catch { toast.error('Erro'); }
     setIsProcessing(false);
   }
