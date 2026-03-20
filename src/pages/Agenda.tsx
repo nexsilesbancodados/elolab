@@ -516,14 +516,30 @@ export default function Agenda() {
                 className="ml-auto h-7 text-xs border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
                 onClick={async () => {
                   const ids = agendamentosHoje.filter(a => a.status === 'agendado').map(a => a.id);
-                  const { error } = await supabase.from('agendamentos').update({ status: 'confirmado' as StatusAgendamento }).in('id', ids);
-                  if (!error) {
-                    toast.success(`${ids.length} agendamento(s) confirmado(s)!`);
+                  let count = 0;
+                  for (const id of ids) {
+                    const r = await autoConfirmarAgendamento(id);
+                    if (r.success) count++;
+                  }
+                  toast.success(`${count} agendamento(s) confirmado(s) com notificações!`);
+                  queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                }}
+              >
+                Confirmar todos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-500/10"
+                onClick={async () => {
+                  const result = await autoMarcarFaltasHoje();
+                  if (result.success) {
+                    toast.success(result.message, { description: result.actions.join(' • ') });
                     queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
                   }
                 }}
               >
-                Confirmar todos
+                Marcar faltas
               </Button>
             </motion.div>
           )}
