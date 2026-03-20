@@ -437,7 +437,7 @@ export default function Tarefas() {
         /* ─── Kanban View ─── */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {kanbanColumns.map(col => {
-            const colTasks = (tarefas || []).filter((t: any) => {
+            const colTasks = enrichedTarefas.filter((t: any) => {
               const matchSearch = !search || t.titulo.toLowerCase().includes(search.toLowerCase()) ||
                 (t.descricao && t.descricao.toLowerCase().includes(search.toLowerCase()));
               return t.status === col.key && matchSearch;
