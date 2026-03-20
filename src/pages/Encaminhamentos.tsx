@@ -474,13 +474,63 @@ export default function Encaminhamentos() {
                   <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.hipotese_diagnostica}</p>
                 </div>
               )}
-              {selectedEnc.contra_referencia && (
+              {selectedEnc.tratamento_atual && (
                 <div>
-                  <p className="text-muted-foreground text-xs mb-1">Contra-referência</p>
-                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                  <p className="text-muted-foreground text-xs mb-1">Tratamento Atual</p>
+                  <p className="bg-muted/50 rounded-lg p-3">{selectedEnc.tratamento_atual}</p>
                 </div>
               )}
+
+              <Separator />
+
+              {/* Contra-referência section */}
+              {selectedEnc.contra_referencia ? (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-green-500" /> Contra-referência
+                    {selectedEnc.data_contra_referencia && (
+                      <span className="ml-auto text-[10px]">{format(new Date(selectedEnc.data_contra_referencia), 'dd/MM/yyyy')}</span>
+                    )}
+                  </p>
+                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                </div>
+              ) : selectedEnc.status !== 'cancelado' && selectedEnc.status !== 'concluido' ? (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs font-medium flex items-center gap-1">
+                    <Send className="h-3 w-3" /> Registrar Contra-referência
+                  </p>
+                  <Textarea
+                    placeholder="Informe o retorno do especialista, condutas sugeridas, diagnóstico final..."
+                    value={contraRefText}
+                    onChange={e => setContraRefText(e.target.value)}
+                    rows={3}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveContraRef}
+                    disabled={!contraRefText.trim() || isUpdating}
+                    className="gap-1.5"
+                  >
+                    {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                    Salvar e Concluir
+                  </Button>
+                </div>
+              ) : null}
             </div>
+          )}
+
+          {/* Status actions in footer */}
+          {selectedEnc && selectedEnc.status !== 'concluido' && selectedEnc.status !== 'cancelado' && (
+            <DialogFooter className="gap-2">
+              {selectedEnc.status === 'pendente' && (
+                <Button variant="outline" size="sm" onClick={() => handleUpdateEncStatus(selectedEnc.id, 'em_andamento')} disabled={isUpdating}>
+                  Marcar Em Andamento
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleUpdateEncStatus(selectedEnc.id, 'cancelado')} disabled={isUpdating}>
+                Cancelar Encaminhamento
+              </Button>
+            </DialogFooter>
           )}
         </DialogContent>
       </Dialog>
