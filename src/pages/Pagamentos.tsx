@@ -22,14 +22,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const statusColors: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  aprovado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  pago: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  rejeitado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  pendente: 'bg-warning/10 text-warning',
+  aprovado: 'bg-success/10 text-success',
+  pago: 'bg-success/10 text-success',
+  rejeitado: 'bg-destructive/10 text-destructive',
   cancelado: 'bg-muted text-muted-foreground',
-  reembolsado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  em_processo: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  parcial: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  reembolsado: 'bg-blue-500/10 text-blue-500',
+  em_processo: 'bg-orange-500/10 text-orange-500',
+  parcial: 'bg-orange-500/10 text-orange-500',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -121,22 +121,26 @@ export default function Pagamentos() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20"><DollarSign className="h-5 w-5 text-green-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(totalRecebido)}</p><p className="text-xs text-muted-foreground">Recebido</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/20"><Clock className="h-5 w-5 text-yellow-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(totalPendente)}</p><p className="text-xs text-muted-foreground">Pendente</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><Banknote className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{totalCobr}</p><p className="text-xs text-muted-foreground">Total Cobranças</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-destructive/10"><AlertCircle className="h-5 w-5 text-destructive" /></div>
-          <div><p className="text-2xl font-bold">{pagamentos?.filter((p: any) => p.status === 'pendente').length || 0}</p><p className="text-xs text-muted-foreground">A Receber</p></div>
-        </CardContent></Card>
+        {[
+          { label: 'Recebido', value: formatCurrency(totalRecebido), icon: DollarSign, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+          { label: 'Pendente', value: formatCurrency(totalPendente), icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+          { label: 'Total Cobranças', value: String(totalCobr), icon: Banknote, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'A Receber', value: String(pagamentos?.filter((p: any) => p.status === 'pendente').length || 0), icon: AlertCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+        ].map((s) => (
+          <Card key={s.label} className={cn('border', s.border)}>
+            <CardContent className="py-4 px-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
+                  <p className={cn('text-xl font-black mt-0.5 tabular-nums', s.color)}>{s.value}</p>
+                </div>
+                <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center', s.bg)}>
+                  <s.icon className={cn('h-5 w-5', s.color)} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters + List */}

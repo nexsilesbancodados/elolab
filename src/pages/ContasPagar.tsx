@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,12 +25,12 @@ import { Database } from '@/integrations/supabase/types';
 
 type StatusPagamento = Database['public']['Enums']['status_pagamento'];
 
-const STATUS_COLORS: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  pago: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  atrasado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  cancelado: 'bg-muted text-muted-foreground',
-  estornado: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  pendente: { label: 'Pendente', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+  pago: { label: 'Pago', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+  atrasado: { label: 'Atrasado', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+  cancelado: { label: 'Cancelado', color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border' },
+  estornado: { label: 'Estornado', color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -212,22 +212,26 @@ export default function ContasPagar() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><DollarSign className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.total)}</p><p className="text-xs text-muted-foreground">Total</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/20"><Calendar className="h-5 w-5 text-yellow-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.pendente)}</p><p className="text-xs text-muted-foreground">Pendente</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-destructive/10"><AlertCircle className="h-5 w-5 text-destructive" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.atrasado)}</p><p className="text-xs text-muted-foreground">Atrasado</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20"><Check className="h-5 w-5 text-green-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.pago)}</p><p className="text-xs text-muted-foreground">Pago</p></div>
-        </CardContent></Card>
+        {[
+          { label: 'Total', value: stats.total, icon: DollarSign, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'Pendente', value: stats.pendente, icon: Calendar, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+          { label: 'Atrasado', value: stats.atrasado, icon: AlertCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+          { label: 'Pago', value: stats.pago, icon: Check, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+        ].map((s) => (
+          <Card key={s.label} className={cn('border', s.border)}>
+            <CardContent className="py-4 px-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
+                  <p className={cn('text-xl font-black mt-0.5 tabular-nums', s.color)}>{formatCurrency(s.value)}</p>
+                </div>
+                <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center', s.bg)}>
+                  <s.icon className={cn('h-5 w-5', s.color)} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Table */}
@@ -302,7 +306,7 @@ export default function ContasPagar() {
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">{formatCurrency(conta.valor)}</TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[conta.status || 'pendente'])}>
+                      <Badge className={cn(STATUS_CONFIG[conta.status || 'pendente']?.bg, STATUS_CONFIG[conta.status || 'pendente']?.color, 'border-0')}>
                           {STATUS_LABELS[conta.status || 'pendente']}
                         </Badge>
                       </TableCell>
@@ -330,6 +334,7 @@ export default function ContasPagar() {
               <DollarSign className="h-5 w-5 text-primary" />
               Nova Conta a Pagar
             </DialogTitle>
+            <DialogDescription>Cadastre uma nova despesa ou conta a pagar.</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto space-y-5 pr-2">
             {/* Dados principais */}
@@ -481,7 +486,10 @@ export default function ContasPagar() {
       {/* Payment Dialog */}
       <Dialog open={isPagamentoOpen} onOpenChange={setIsPagamentoOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Confirmar Pagamento</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Confirmar Pagamento</DialogTitle>
+            <DialogDescription>Registre o pagamento desta conta.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
