@@ -416,6 +416,16 @@ function Convenios() {
 
   const handleSave = async () => {
     if (!formData.nome || !formData.codigo) { toast.error('Nome e código são obrigatórios.'); return; }
+    if (formData.cnpj) {
+      const cnpjDigits = formData.cnpj.replace(/\D/g, '');
+      if (cnpjDigits.length !== 14) { toast.error('CNPJ deve conter 14 dígitos.'); return; }
+    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('E-mail do convênio inválido.'); return;
+    }
+    if (formData.valor_consulta < 0 || formData.valor_retorno < 0) {
+      toast.error('Valores não podem ser negativos.'); return;
+    }
     setIsSubmitting(true);
     try {
       const payload = {

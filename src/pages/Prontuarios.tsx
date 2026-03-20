@@ -637,7 +637,7 @@ export default function Prontuarios() {
       setIsProntuarioOpen(false);
       toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
     } catch (error) {
-      console.error('Error saving prontuario:', error);
+      if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
       toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
     }
   };

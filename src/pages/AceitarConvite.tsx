@@ -86,7 +86,7 @@ export default function AceitarConvite() {
         });
         setLoading(false);
       } catch (err: unknown) {
-        console.error('Error validating token:', err);
+        if (import.meta.env.DEV) console.error('Error validating token:', err);
         setError('Erro ao validar convite');
         setLoading(false);
       }
@@ -138,7 +138,7 @@ export default function AceitarConvite() {
       );
 
       if (acceptError) {
-        console.error('Error accepting invitation:', acceptError);
+        if (import.meta.env.DEV) console.error('Error accepting invitation:', acceptError);
         throw new Error('Erro ao processar convite');
       }
 
@@ -150,7 +150,7 @@ export default function AceitarConvite() {
       toast.success('Conta criada com sucesso! Verifique seu e-mail para confirmar.');
       navigate('/auth');
     } catch (err: any) {
-      console.error('Error creating account:', err);
+      if (import.meta.env.DEV) console.error('Error creating account:', err);
       toast.error(err.message || 'Erro ao criar conta');
     } finally {
       setSubmitting(false);

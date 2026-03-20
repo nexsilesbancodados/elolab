@@ -375,7 +375,7 @@ export default function Agenda() {
       setIsFormOpen(false);
       setRecurrence({ type: 'none', occurrences: 4 });
     } catch (error: any) {
-      console.error('Error saving agendamento:', error);
+      if (import.meta.env.DEV) console.error('Error saving agendamento:', error);
       const msg = error?.message || error?.details || 'Erro ao salvar agendamento.';
       toast.error(msg.includes('row-level security') ? 'Sem permissão para esta ação. Verifique seu perfil de acesso.' : msg);
     } finally {
@@ -399,7 +399,7 @@ export default function Agenda() {
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       setIsFormOpen(false);
     } catch (error: any) {
-      console.error('Error deleting agendamento:', error);
+      if (import.meta.env.DEV) console.error('Error deleting agendamento:', error);
       const msg = error?.message || '';
       toast.error(msg.includes('row-level security') ? 'Apenas administradores e recepção podem excluir agendamentos.' : 'Erro ao excluir agendamento.');
     } finally {

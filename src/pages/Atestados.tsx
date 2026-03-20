@@ -216,7 +216,7 @@ export default function Atestados() {
       setIsFormOpen(false);
       toast.success('Atestado emitido com sucesso.');
     } catch (error) {
-      console.error('Error saving atestado:', error);
+      if (import.meta.env.DEV) console.error('Error saving atestado:', error);
       toast.error('Erro ao emitir atestado.');
     } finally {
       setIsSaving(false);

@@ -91,7 +91,7 @@ export default function MapaColeta() {
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error(error);
+      if (import.meta.env.DEV) console.error(error);
       toast.error('Erro ao carregar mapa de coleta');
     } else {
       setItens(data ?? []);

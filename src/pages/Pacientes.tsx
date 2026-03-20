@@ -308,7 +308,7 @@ export default function Pacientes() {
       setIsEditingProntuario(false);
       setActiveProntuario(null);
     } catch (error) {
-      console.error('Error saving prontuario:', error);
+      if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
       toast({ title: 'Erro ao salvar prontuário', variant: 'destructive' });
     } finally {
       setSavingProntuario(false);
@@ -460,7 +460,7 @@ export default function Pacientes() {
       toast({ title: 'Paciente excluído com sucesso' });
       refetch();
     } catch (error) {
-      console.error('Erro ao excluir:', error);
+      if (import.meta.env.DEV) console.error('Erro ao excluir:', error);
       toast({ title: 'Erro ao excluir paciente', variant: 'destructive' });
     } finally {
       setIsDeleting(false);
@@ -560,7 +560,7 @@ export default function Pacientes() {
       refetch();
       setIsFormOpen(false);
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      if (import.meta.env.DEV) console.error('Erro ao salvar:', error);
       toast({ title: 'Erro ao salvar paciente', variant: 'destructive' });
     } finally {
       setIsSubmitting(false);

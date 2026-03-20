@@ -463,7 +463,7 @@ export default function Exames() {
         toast.success(`${examesSelecionados.length} exame(s) solicitados com sucesso!`);
       }
     } catch (error: any) {
-      console.error('Erro ao solicitar exames:', error);
+      if (import.meta.env.DEV) console.error('Erro ao solicitar exames:', error);
       toast.error(error.message || 'Erro ao solicitar exames.');
     } finally {
       setIsSubmitting(false);

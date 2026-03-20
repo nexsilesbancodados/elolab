@@ -166,7 +166,7 @@ export default function ListaEspera() {
       queryClient.invalidateQueries({ queryKey: ['lista_espera'] });
       setIsDialogOpen(false);
     } catch (error: any) {
-      console.error('Erro ao adicionar:', error);
+      if (import.meta.env.DEV) console.error('Erro ao adicionar:', error);
       toast.error(error.message || 'Erro ao adicionar à lista');
     } finally {
       setIsSubmitting(false);
@@ -185,7 +185,7 @@ export default function ListaEspera() {
       toast.success('Status atualizado!');
       queryClient.invalidateQueries({ queryKey: ['lista_espera'] });
     } catch (error: any) {
-      console.error('Erro ao atualizar:', error);
+      if (import.meta.env.DEV) console.error('Erro ao atualizar:', error);
       toast.error(error.message || 'Erro ao atualizar status');
     }
   };
@@ -202,7 +202,7 @@ export default function ListaEspera() {
       toast.success('Removido da lista de espera!');
       queryClient.invalidateQueries({ queryKey: ['lista_espera'] });
     } catch (error: any) {
-      console.error('Erro ao remover:', error);
+      if (import.meta.env.DEV) console.error('Erro ao remover:', error);
       toast.error(error.message || 'Erro ao remover');
     }
   };

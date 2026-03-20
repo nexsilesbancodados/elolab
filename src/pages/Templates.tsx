@@ -133,7 +133,7 @@ export default function Templates() {
       setIsPrescriptionFormOpen(false);
       setPrescriptionForm({});
     } catch (error) {
-      console.error('Error saving prescription template:', error);
+      if (import.meta.env.DEV) console.error('Error saving prescription template:', error);
       toast.error('Erro ao salvar template');
     } finally {
       setIsSaving(false);
@@ -181,7 +181,7 @@ export default function Templates() {
       setIsCertificateFormOpen(false);
       setCertificateForm({});
     } catch (error) {
-      console.error('Error saving certificate template:', error);
+      if (import.meta.env.DEV) console.error('Error saving certificate template:', error);
       toast.error('Erro ao salvar template');
     } finally {
       setIsSaving(false);
@@ -200,7 +200,7 @@ export default function Templates() {
       queryClient.invalidateQueries({ queryKey: [table] });
       toast.success('Template excluído');
     } catch (error) {
-      console.error('Error deleting template:', error);
+      if (import.meta.env.DEV) console.error('Error deleting template:', error);
       toast.error('Erro ao excluir template');
     } finally {
       setIsSaving(false);
@@ -222,7 +222,7 @@ export default function Templates() {
       queryClient.invalidateQueries({ queryKey: [table] });
       toast.success('Template duplicado');
     } catch (error) {
-      console.error('Error duplicating template:', error);
+      if (import.meta.env.DEV) console.error('Error duplicating template:', error);
       toast.error('Erro ao duplicar template');
     }
   };

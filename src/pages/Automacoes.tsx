@@ -131,7 +131,7 @@ export default function Automacoes() {
       });
       refetchSettings();
     } catch (error) {
-      console.error('Error toggling automation:', error);
+      if (import.meta.env.DEV) console.error('Error toggling automation:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao alterar status da automação.',
@@ -162,7 +162,7 @@ export default function Automacoes() {
       });
       refetchLogs();
     } catch (error) {
-      console.error('Error running automation:', error);
+      if (import.meta.env.DEV) console.error('Error running automation:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao executar automação.',

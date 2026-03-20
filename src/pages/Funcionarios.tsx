@@ -336,6 +336,17 @@ export default function Funcionarios() {
       toast.error('Preencha o nome do funcionário.');
       return;
     }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('E-mail inválido.');
+      return;
+    }
+    if (formData.telefone) {
+      const telDigits = formData.telefone.replace(/\D/g, '');
+      if (telDigits.length < 10 || telDigits.length > 11) {
+        toast.error('Telefone deve ter 10 ou 11 dígitos.');
+        return;
+      }
+    }
 
     if (editingFunc) {
       updateMutation.mutate({ 
