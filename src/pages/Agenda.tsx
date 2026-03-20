@@ -219,6 +219,7 @@ export default function Agenda() {
         hora_fim: HORARIOS[HORARIOS.indexOf(hora) + 1] || '18:30',
         tipo: 'consulta',
         status: 'agendado' as StatusAgendamento,
+        medico_id: isMedicoOnly && medicoId ? medicoId : (selectedMedico !== 'todos' ? selectedMedico : undefined),
       });
       setRecurrence({ type: 'none', occurrences: 4 });
     }
