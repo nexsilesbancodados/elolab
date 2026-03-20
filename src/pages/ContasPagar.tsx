@@ -306,7 +306,7 @@ export default function ContasPagar() {
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">{formatCurrency(conta.valor)}</TableCell>
                       <TableCell>
-                        <Badge className={cn(STATUS_COLORS[conta.status || 'pendente'])}>
+                      <Badge className={cn(STATUS_CONFIG[conta.status || 'pendente']?.bg, STATUS_CONFIG[conta.status || 'pendente']?.color, 'border-0')}>
                           {STATUS_LABELS[conta.status || 'pendente']}
                         </Badge>
                       </TableCell>
