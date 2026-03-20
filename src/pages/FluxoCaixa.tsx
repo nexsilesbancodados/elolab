@@ -202,116 +202,45 @@ export default function FluxoCaixa() {
 
       {/* Cards de Resumo */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Receitas</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(totaisMes.receitas)}</p>
-                {comparacaoMesAnterior.variacaoReceita !== 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {comparacaoMesAnterior.variacaoReceita > 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className={cn(
-                      'text-sm',
-                      comparacaoMesAnterior.variacaoReceita > 0 ? 'text-green-600' : 'text-red-600'
-                    )}>
-                      {comparacaoMesAnterior.variacaoReceita.toFixed(1)}%
-                    </span>
-                  </div>
-                )}
+        {[
+          { label: 'Receitas', value: totaisMes.receitas, icon: ArrowUpCircle, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20',
+            trend: comparacaoMesAnterior.variacaoReceita, trendPositive: comparacaoMesAnterior.variacaoReceita > 0,
+            sub: totaisMes.receitasPendentes > 0 ? `Pendente: ${formatCurrency(totaisMes.receitasPendentes)}` : undefined },
+          { label: 'Despesas', value: totaisMes.despesas, icon: ArrowDownCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20',
+            trend: comparacaoMesAnterior.variacaoDespesa, trendPositive: comparacaoMesAnterior.variacaoDespesa < 0,
+            sub: totaisMes.despesasPendentes > 0 ? `Pendente: ${formatCurrency(totaisMes.despesasPendentes)}` : undefined },
+          { label: 'Saldo do Mês', value: totaisMes.saldo, icon: Wallet,
+            color: totaisMes.saldo >= 0 ? 'text-success' : 'text-destructive',
+            bg: totaisMes.saldo >= 0 ? 'bg-success/10' : 'bg-destructive/10',
+            border: totaisMes.saldo >= 0 ? 'border-success/20' : 'border-destructive/20' },
+          { label: 'Margem', value: -1, icon: DollarSign, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20',
+            pct: totaisMes.receitas > 0 ? ((totaisMes.saldo / totaisMes.receitas) * 100).toFixed(1) : '0' },
+        ].map((s) => (
+          <Card key={s.label} className={cn('border', s.border)}>
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
+                  {s.pct !== undefined ? (
+                    <p className={cn('text-2xl font-bold', s.color)}>{s.pct}%</p>
+                  ) : (
+                    <p className={cn('text-2xl font-bold tabular-nums', s.color)}>{formatCurrency(s.value)}</p>
+                  )}
+                  {s.trend !== undefined && s.trend !== 0 && (
+                    <div className={cn('flex items-center gap-1 mt-1 text-xs font-medium', s.trendPositive ? 'text-success' : 'text-destructive')}>
+                      {s.trendPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {Math.abs(s.trend).toFixed(1)}%
+                    </div>
+                  )}
+                  {s.sub && <p className="text-xs text-muted-foreground mt-1">{s.sub}</p>}
+                </div>
+                <div className={cn('rounded-xl p-3', s.bg)}>
+                  <s.icon className={cn('h-5 w-5', s.color)} />
+                </div>
               </div>
-              <div className="rounded-lg p-3 bg-green-100 dark:bg-green-900/30">
-                <ArrowUpCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-            {totaisMes.receitasPendentes > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Pendente: {formatCurrency(totaisMes.receitasPendentes)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Despesas</p>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(totaisMes.despesas)}</p>
-                {comparacaoMesAnterior.variacaoDespesa !== 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {comparacaoMesAnterior.variacaoDespesa < 0 ? (
-                      <TrendingDown className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingUp className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className={cn(
-                      'text-sm',
-                      comparacaoMesAnterior.variacaoDespesa < 0 ? 'text-green-600' : 'text-red-600'
-                    )}>
-                      {Math.abs(comparacaoMesAnterior.variacaoDespesa).toFixed(1)}%
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="rounded-lg p-3 bg-red-100 dark:bg-red-900/30">
-                <ArrowDownCircle className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-            {totaisMes.despesasPendentes > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Pendente: {formatCurrency(totaisMes.despesasPendentes)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Saldo do Mês</p>
-                <p className={cn(
-                  'text-2xl font-bold',
-                  totaisMes.saldo >= 0 ? 'text-green-600' : 'text-red-600'
-                )}>
-                  {formatCurrency(totaisMes.saldo)}
-                </p>
-              </div>
-              <div className={cn(
-                'rounded-lg p-3',
-                totaisMes.saldo >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
-              )}>
-                <Wallet className={cn(
-                  'h-6 w-6',
-                  totaisMes.saldo >= 0 ? 'text-green-600' : 'text-red-600'
-                )} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Margem</p>
-                <p className="text-2xl font-bold">
-                  {totaisMes.receitas > 0 
-                    ? ((totaisMes.saldo / totaisMes.receitas) * 100).toFixed(1) 
-                    : '0'}%
-                </p>
-              </div>
-              <div className="rounded-lg p-3 bg-primary/10">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Gráficos */}
