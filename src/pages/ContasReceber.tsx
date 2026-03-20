@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Check, Send, DollarSign, AlertCircle } from 'lucide-react';
+import { Plus, Search, Check, Send, DollarSign, AlertCircle, Receipt, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -58,6 +60,16 @@ const STATUS_LABELS: Record<string, string> = {
   estornado: 'Estornado',
 };
 
+const FORMAS_PAGAMENTO = [
+  { value: 'pix', label: 'PIX' },
+  { value: 'dinheiro', label: 'Dinheiro' },
+  { value: 'cartao_credito', label: 'Cartão de Crédito' },
+  { value: 'cartao_debito', label: 'Cartão de Débito' },
+  { value: 'convenio', label: 'Convênio' },
+  { value: 'transferencia', label: 'Transferência Bancária' },
+  { value: 'boleto', label: 'Boleto' },
+];
+
 interface FormData {
   paciente_id: string;
   categoria: string;
@@ -65,6 +77,14 @@ interface FormData {
   valor: number;
   data_vencimento: string;
   forma_pagamento: string;
+}
+
+interface BaixaData {
+  forma_pagamento: string;
+  data_recebimento: string;
+  desconto: number;
+  acrescimo: number;
+  observacoes: string;
 }
 
 const initialFormData: FormData = {
@@ -76,14 +96,22 @@ const initialFormData: FormData = {
   forma_pagamento: 'pix',
 };
 
+const initialBaixaData: BaixaData = {
+  forma_pagamento: 'pix',
+  data_recebimento: format(new Date(), 'yyyy-MM-dd'),
+  desconto: 0,
+  acrescimo: 0,
+  observacoes: '',
+};
+
 export default function ContasReceber() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPagamentoOpen, setIsPagamentoOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedConta, setSelectedConta] = useState<any>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [pagamentoData, setPagamentoData] = useState({ forma_pagamento: 'pix' });
+  const [baixaData, setBaixaData] = useState<BaixaData>(initialBaixaData);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user } = useSupabaseAuth();
@@ -101,7 +129,6 @@ export default function ContasReceber() {
 
       if (error) throw error;
       
-      // Check for overdue
       const today = new Date().toISOString().split('T')[0];
       return data.map(conta => {
         if (conta.status === 'pendente' && conta.data_vencimento && conta.data_vencimento < today) {
@@ -142,7 +169,6 @@ export default function ContasReceber() {
   };
 
   const handleNew = () => {
-    setSelectedId(null);
     setFormData(initialFormData);
     setIsFormOpen(true);
   };
@@ -181,14 +207,22 @@ export default function ContasReceber() {
     }
   };
 
-  const handlePagamento = (id: string) => {
-    setSelectedId(id);
-    setPagamentoData({ forma_pagamento: 'pix' });
+  const handleDarBaixa = (conta: any) => {
+    setSelectedConta(conta);
+    setBaixaData({
+      ...initialBaixaData,
+      forma_pagamento: conta.forma_pagamento || 'pix',
+    });
     setIsPagamentoOpen(true);
   };
 
-  const handleConfirmarPagamento = async () => {
-    if (!selectedId) return;
+  const valorFinal = useMemo(() => {
+    if (!selectedConta) return 0;
+    return selectedConta.valor - baixaData.desconto + baixaData.acrescimo;
+  }, [selectedConta, baixaData.desconto, baixaData.acrescimo]);
+
+  const handleConfirmarBaixa = async () => {
+    if (!selectedConta) return;
 
     setIsSubmitting(true);
     try {
@@ -196,13 +230,24 @@ export default function ContasReceber() {
         .from('lancamentos')
         .update({ 
           status: 'pago' as StatusPagamento,
-          forma_pagamento: pagamentoData.forma_pagamento,
+          forma_pagamento: baixaData.forma_pagamento,
+          observacoes: baixaData.observacoes || null,
         })
-        .eq('id', selectedId);
+        .eq('id', selectedConta.id);
 
       if (error) throw error;
       
-      toast.success('Pagamento registrado!');
+      toast.success(
+        <div className="flex items-center gap-2">
+          <Check className="h-4 w-4 text-green-500" />
+          <div>
+            <p className="font-semibold">Pagamento confirmado!</p>
+            <p className="text-sm text-muted-foreground">
+              {getPacienteNome(selectedConta)} — {formatCurrency(valorFinal)}
+            </p>
+          </div>
+        </div>
+      );
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
       setIsPagamentoOpen(false);
     } catch (error: any) {
@@ -336,7 +381,16 @@ export default function ContasReceber() {
                   filteredContas.map((conta) => (
                     <TableRow key={conta.id}>
                       <TableCell className="font-medium">{getPacienteNome(conta)}</TableCell>
-                      <TableCell>{conta.descricao}</TableCell>
+                      <TableCell>
+                        <div>
+                          <span>{conta.descricao}</span>
+                          {conta.forma_pagamento && conta.status === 'pago' && (
+                            <p className="text-xs text-muted-foreground">
+                              {FORMAS_PAGAMENTO.find(f => f.value === conta.forma_pagamento)?.label || conta.forma_pagamento}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         {conta.data_vencimento && format(new Date(conta.data_vencimento), 'dd/MM/yyyy')}
                       </TableCell>
@@ -349,13 +403,19 @@ export default function ContasReceber() {
                       <TableCell className="text-right">
                         {(conta.status === 'pendente' || conta.status === 'atrasado') && (
                           <Button 
-                            variant="ghost" 
+                            variant="default" 
                             size="sm"
-                            onClick={() => handlePagamento(conta.id)}
+                            className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleDarBaixa(conta)}
                           >
-                            <Check className="h-4 w-4 mr-1" />
-                            Receber
+                            <Receipt className="h-3.5 w-3.5" />
+                            Dar Baixa
                           </Button>
+                        )}
+                        {conta.status === 'pago' && (
+                          <span className="text-xs text-green-600 font-medium flex items-center justify-end gap-1">
+                            <Check className="h-3.5 w-3.5" /> Pago
+                          </span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -367,7 +427,7 @@ export default function ContasReceber() {
         </CardContent>
       </Card>
 
-      {/* Form Dialog */}
+      {/* Nova Conta Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -451,38 +511,119 @@ export default function ContasReceber() {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialog */}
+      {/* DAR BAIXA Dialog */}
       <Dialog open={isPagamentoOpen} onOpenChange={setIsPagamentoOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Recebimento</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-green-600" />
+              Dar Baixa — Confirmar Recebimento
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Forma de Pagamento</Label>
-              <Select
-                value={pagamentoData.forma_pagamento}
-                onValueChange={(v) => setPagamentoData({ ...pagamentoData, forma_pagamento: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="convenio">Convênio</SelectItem>
-                  <SelectItem value="transferencia">Transferência</SelectItem>
-                </SelectContent>
-              </Select>
+          
+          {selectedConta && (
+            <div className="space-y-4 py-2">
+              {/* Resumo da conta */}
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-1">
+                <p className="font-semibold text-foreground">{getPacienteNome(selectedConta)}</p>
+                <p className="text-sm text-muted-foreground">{selectedConta.descricao}</p>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-sm text-muted-foreground">
+                    Venc.: {selectedConta.data_vencimento ? format(new Date(selectedConta.data_vencimento), 'dd/MM/yyyy') : '—'}
+                  </span>
+                  <span className="text-lg font-bold text-foreground">{formatCurrency(selectedConta.valor)}</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Forma de pagamento */}
+              <div className="space-y-2">
+                <Label>Forma de Pagamento *</Label>
+                <Select
+                  value={baixaData.forma_pagamento}
+                  onValueChange={(v) => setBaixaData({ ...baixaData, forma_pagamento: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGAMENTO.map(f => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Data recebimento */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Data do Recebimento
+                </Label>
+                <Input
+                  type="date"
+                  value={baixaData.data_recebimento}
+                  onChange={(e) => setBaixaData({ ...baixaData, data_recebimento: e.target.value })}
+                />
+              </div>
+
+              {/* Desconto / Acréscimo */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-green-600">Desconto (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={baixaData.desconto || ''}
+                    onChange={(e) => setBaixaData({ ...baixaData, desconto: parseFloat(e.target.value) || 0 })}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-destructive">Acréscimo (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={baixaData.acrescimo || ''}
+                    onChange={(e) => setBaixaData({ ...baixaData, acrescimo: parseFloat(e.target.value) || 0 })}
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+
+              {/* Valor final */}
+              <div className="rounded-lg border-2 border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-900/10 p-3 flex items-center justify-between">
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">Valor Final a Receber</span>
+                <span className="text-xl font-bold text-green-700 dark:text-green-400">{formatCurrency(valorFinal)}</span>
+              </div>
+
+              {/* Observações */}
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={baixaData.observacoes}
+                  onChange={(e) => setBaixaData({ ...baixaData, observacoes: e.target.value })}
+                  placeholder="Ex: Pagou com PIX na hora da consulta..."
+                  rows={2}
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
+          )}
+          
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsPagamentoOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <LoadingButton onClick={handleConfirmarPagamento} isLoading={isSubmitting} loadingText="Confirmando...">
+            <LoadingButton 
+              onClick={handleConfirmarBaixa} 
+              isLoading={isSubmitting} 
+              loadingText="Confirmando..."
+              className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
+            >
+              <Check className="h-4 w-4" />
               Confirmar Recebimento
             </LoadingButton>
           </DialogFooter>
