@@ -31,7 +31,11 @@ export function Sidebar() {
   const [openGroups, setOpenGroups] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(GROUPS_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_OPEN_GROUPS;
+      if (!saved) return DEFAULT_OPEN_GROUPS;
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.every(item => typeof item === 'string')
+        ? parsed
+        : DEFAULT_OPEN_GROUPS;
     } catch {
       return DEFAULT_OPEN_GROUPS;
     }
@@ -57,7 +61,7 @@ export function Sidebar() {
     if (activeGroup && !openGroups.includes(activeGroup.label)) {
       setOpenGroups(prev => [...prev, activeGroup.label]);
     }
-  }, [location.pathname]);
+  }, [location.pathname, filteredMenuGroups]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) =>

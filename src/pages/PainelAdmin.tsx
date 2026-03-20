@@ -32,7 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-const SUPER_ADMIN_EMAIL = 'contato@elolab.com.br';
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'contato@elolab.com.br';
 
 const ROLE_LABELS: Record<AppRole, string> = {
   admin: 'Administrador',

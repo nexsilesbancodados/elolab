@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 1000,
-    sourcemap: false,
+    sourcemap: mode === 'development',
     minify: 'esbuild',
   },
   plugins: [

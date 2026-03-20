@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth } from 'date-fns';
@@ -143,12 +143,11 @@ export default function Agenda() {
   };
 
   // Auto-set filter to own doctor when logged in as medico-only
-  // Using useEffect instead of useMemo for side effects
-  useState(() => {
+  useEffect(() => {
     if (isMedicoOnly && medicoId) {
       setSelectedMedico(medicoId);
     }
-  });
+  }, [isMedicoOnly, medicoId]);
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeek, { weekStartsOn: 1 });

@@ -227,18 +227,32 @@ export default function Dashboard() {
   const saudacao = horaAtual < 12 ? 'Bom dia' : horaAtual < 18 ? 'Boa tarde' : 'Boa noite';
   const SaudacaoIcon = horaAtual < 12 ? Sun : horaAtual < 18 ? Sunset : Moon;
 
-  const stats = useMemo(() => {
-    const baseAgendamentos = isMedicoOnly && medicoId 
-      ? agendamentos.filter(a => a.medico_id === medicoId) 
-      : agendamentos;
+  const mesAtual = new Date().getMonth();
+  const anoAtual = new Date().getFullYear();
+
+  const baseAgendamentos = useMemo(() =>
+    isMedicoOnly && medicoId ? agendamentos.filter(a => a.medico_id === medicoId) : agendamentos,
+    [agendamentos, isMedicoOnly, medicoId]
+  );
+
+  // Consultas de hoje
+  const consultasStats = useMemo(() => {
     const consultasHoje = baseAgendamentos.filter(a => a.data === hoje);
     const consultasConfirmadas = consultasHoje.filter(a => a.status === 'confirmado').length;
     const consultasAgendadas = consultasHoje.filter(a => a.status === 'agendado').length;
     const consultasFinalizadas = consultasHoje.filter(a => a.status === 'finalizado').length;
     const totalHoje = consultasHoje.length;
-    const mesAtual = new Date().getMonth();
-    const anoAtual = new Date().getFullYear();
+    const taxaOcupacao = totalHoje > 0 ? Math.round((consultasFinalizadas + consultasConfirmadas) / totalHoje * 100) : 0;
+    const statusDistribution = [
+      { name: 'Confirmado', value: consultasConfirmadas, color: 'hsl(var(--success))' },
+      { name: 'Agendado', value: consultasAgendadas, color: 'hsl(var(--info))' },
+      { name: 'Finalizado', value: consultasFinalizadas, color: 'hsl(var(--primary))' },
+    ].filter(s => s.value > 0);
+    return { consultasConfirmadas, consultasAgendadas, consultasFinalizadas, totalHoje, taxaOcupacao, statusDistribution };
+  }, [baseAgendamentos, hoje]);
 
+  // Financeiro
+  const financeiroStats = useMemo(() => {
     const filterByMonth = (tipo: string, status: string, month = mesAtual, year = anoAtual) =>
       lancamentos
         .filter(l => { const d = new Date(l.data); return l.tipo === tipo && l.status === status && d.getMonth() === month && d.getFullYear() === year; })
@@ -255,31 +269,37 @@ export default function Dashboard() {
     const receitasMesAnterior = filterByMonth('receita', 'pago', prevMonth, prevYear);
     const trendReceita = receitasMesAnterior > 0 ? Math.round(((receitasMes - receitasMesAnterior) / receitasMesAnterior) * 100) : 0;
 
-    const estoqueBaixo = estoque.filter(e => e.quantidade <= (e.quantidade_minima || 0)).length;
-    const filaAguardando = fila.filter(f => f.status === 'aguardando').length;
+    const receitaDia = lancamentos
+      .filter(l => l.data === hoje && l.tipo === 'receita' && l.status === 'pago')
+      .reduce((acc, l) => acc + Number(l.valor), 0);
 
-    const novosPacientesMes = pacientes.filter(p => {
-      if (!p.created_at) return false;
-      const d = new Date(p.created_at);
-      return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-    }).length;
+    const monthlyChartData = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date(anoAtual, mesAtual - 5 + i, 1);
+      const receitas = filterByMonth('receita', 'pago', date.getMonth(), date.getFullYear());
+      const desp = filterByMonth('despesa', 'pago', date.getMonth(), date.getFullYear());
+      return { name: format(date, 'MMM', { locale: ptBR }), receitas, despesas: desp, lucro: receitas - desp };
+    });
+
+    const sparkReceitas = monthlyChartData.map(d => d.receitas);
 
     const atendimentosFinalizadosMes = baseAgendamentos.filter(a => {
       const d = new Date(a.data);
       return a.status === 'finalizado' && d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
     }).length;
-
     const ticketMedio = atendimentosFinalizadosMes > 0 ? receitasMes / atendimentosFinalizadosMes : 0;
-    const taxaOcupacao = totalHoje > 0 ? Math.round((consultasFinalizadas + consultasConfirmadas) / totalHoje * 100) : 0;
 
-    const monthlyChartData = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date(anoAtual, mesAtual - 5 + i, 1);
-      const month = date.getMonth();
-      const year = date.getFullYear();
-      const receitas = filterByMonth('receita', 'pago', month, year);
-      const desp = filterByMonth('despesa', 'pago', month, year);
-      return { name: format(date, 'MMM', { locale: ptBR }), receitas, despesas: desp, lucro: receitas - desp };
-    });
+    return { receitasMes, aReceber, inadimplente, despesas, saldoLiquido, trendReceita, receitaDia, monthlyChartData, sparkReceitas, atendimentosFinalizadosMes, ticketMedio };
+  }, [lancamentos, baseAgendamentos, hoje, mesAtual, anoAtual]);
+
+  // Operacional e sparklines
+  const operacionalStats = useMemo(() => {
+    const estoqueBaixo = estoque.filter(e => e.quantidade <= (e.quantidade_minima || 0)).length;
+    const filaAguardando = fila.filter(f => f.status === 'aguardando').length;
+    const novosPacientesMes = pacientes.filter(p => {
+      if (!p.created_at) return false;
+      const d = new Date(p.created_at);
+      return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+    }).length;
 
     const sparkPacientes = Array.from({ length: 6 }, (_, i) => {
       const date = new Date(anoAtual, mesAtual - 5 + i, 1);
@@ -298,24 +318,13 @@ export default function Dashboard() {
       }).length;
     });
 
-    const sparkReceitas = monthlyChartData.map(d => d.receitas);
-
-    const statusDistribution = [
-      { name: 'Confirmado', value: consultasConfirmadas, color: 'hsl(var(--success))' },
-      { name: 'Agendado', value: consultasAgendadas, color: 'hsl(var(--info))' },
-      { name: 'Finalizado', value: consultasFinalizadas, color: 'hsl(var(--primary))' },
-    ].filter(s => s.value > 0);
+    const medicosAtivos = medicos.filter(m => m.ativo).length;
 
     const proximosAgendamentos = baseAgendamentos
       .filter(a => a.data >= hoje && (a.status === 'agendado' || a.status === 'confirmado'))
       .sort((a, b) => `${a.data}${a.hora_inicio}`.localeCompare(`${b.data}${b.hora_inicio}`))
       .slice(0, 6);
 
-    const receitaDia = lancamentos
-      .filter(l => l.data === hoje && l.tipo === 'receita' && l.status === 'pago')
-      .reduce((acc, l) => acc + Number(l.valor), 0);
-
-    // Recent activities from various sources
     const recentActivities = [
       ...pacientes.slice(-3).map(p => ({
         icon: UserPlus,
@@ -335,16 +344,15 @@ export default function Dashboard() {
       })),
     ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
-    return {
-      consultasConfirmadas, consultasAgendadas, consultasFinalizadas, totalHoje,
-      receitasMes, aReceber, inadimplente, despesas, saldoLiquido, trendReceita,
-      estoqueBaixo, filaAguardando, novosPacientesMes, atendimentosFinalizadosMes,
-      ticketMedio, taxaOcupacao, monthlyChartData, sparkPacientes, sparkConsultas,
-      sparkReceitas, statusDistribution, proximosAgendamentos, receitaDia,
-      medicosAtivos: medicos.filter(m => m.ativo).length,
-      recentActivities,
-    };
-  }, [agendamentos, lancamentos, pacientes, medicos, estoque, fila, hoje, isMedicoOnly, medicoId]);
+    return { estoqueBaixo, filaAguardando, novosPacientesMes, sparkPacientes, sparkConsultas, medicosAtivos, proximosAgendamentos, recentActivities };
+  }, [pacientes, agendamentos, baseAgendamentos, estoque, fila, medicos, hoje, mesAtual, anoAtual]);
+
+  // Combine all stats into single object for backward compatibility
+  const stats = useMemo(() => ({
+    ...consultasStats,
+    ...financeiroStats,
+    ...operacionalStats,
+  }), [consultasStats, financeiroStats, operacionalStats]);
 
   const setupSteps = useMemo(() => [
     { label: 'Cadastrar médicos', done: medicos.length > 0, icon: Stethoscope, href: '/medicos', color: 'text-info' },

@@ -28,8 +28,9 @@ function reportError(error: Error, errorInfo?: React.ErrorInfo) {
   // Keep only last 20
   if (errorLog.length > 20) errorLog.shift();
   
-  // Log to console with structured format for easier debugging
-  console.error('[ErrorBoundary]', entry);
+  if (import.meta.env.DEV) {
+    console.error('[ErrorBoundary]', entry);
+  }
 }
 
 export function getErrorLog() {
