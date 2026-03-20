@@ -228,10 +228,14 @@ export default function Tarefas() {
   const { data: tarefas, isLoading } = useQuery({
     queryKey: ['tarefas'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('tarefas')
         .select('*, responsavel:profiles!tarefas_responsavel_id_fkey(nome), criador:profiles!tarefas_criado_por_fkey(nome)')
         .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Erro ao buscar tarefas:', error);
+        throw error;
+      }
       return data || [];
     },
   });
