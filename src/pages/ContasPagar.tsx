@@ -212,22 +212,26 @@ export default function ContasPagar() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><DollarSign className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.total)}</p><p className="text-xs text-muted-foreground">Total</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/20"><Calendar className="h-5 w-5 text-yellow-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.pendente)}</p><p className="text-xs text-muted-foreground">Pendente</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-destructive/10"><AlertCircle className="h-5 w-5 text-destructive" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.atrasado)}</p><p className="text-xs text-muted-foreground">Atrasado</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="pt-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20"><Check className="h-5 w-5 text-green-600" /></div>
-          <div><p className="text-2xl font-bold tabular-nums">{formatCurrency(stats.pago)}</p><p className="text-xs text-muted-foreground">Pago</p></div>
-        </CardContent></Card>
+        {[
+          { label: 'Total', value: stats.total, icon: DollarSign, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'Pendente', value: stats.pendente, icon: Calendar, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+          { label: 'Atrasado', value: stats.atrasado, icon: AlertCircle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+          { label: 'Pago', value: stats.pago, icon: Check, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+        ].map((s) => (
+          <Card key={s.label} className={cn('border', s.border)}>
+            <CardContent className="py-4 px-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
+                  <p className={cn('text-xl font-black mt-0.5 tabular-nums', s.color)}>{formatCurrency(s.value)}</p>
+                </div>
+                <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center', s.bg)}>
+                  <s.icon className={cn('h-5 w-5', s.color)} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Table */}
