@@ -88,6 +88,7 @@ export default function Prescricoes() {
   const [interactionDismissed, setInteractionDismissed] = useState(false);
   const [templates, setTemplates] = useState<Record<string, any>[]>([]);
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
