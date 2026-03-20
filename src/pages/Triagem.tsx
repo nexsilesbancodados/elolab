@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { autoTriagemParaFila, autoNotificarMedico } from '@/lib/workflowAutomation';
 import { usePacientes, useAgendamentos } from '@/hooks/useSupabaseData';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
