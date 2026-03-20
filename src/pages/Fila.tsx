@@ -288,11 +288,11 @@ export default function Fila() {
     if (status === 'finalizado') {
       const nome = agendamentoId ? getPacienteNome(agendamentoId) : 'Paciente';
       toast.success(`✅ Atendimento finalizado — ${nome}`, {
-        description: 'Cobrança gerada. Clique para ir ao balcão de pagamento.',
+        description: 'Pagamento pendente no Caixa Diário. Clique para abrir.',
         duration: 8000,
         action: {
-          label: 'Ir para Pagamento',
-          onClick: () => navigate('/contas-receber'),
+          label: 'Abrir Caixa',
+          onClick: () => navigate('/caixa'),
         },
       });
     } else {

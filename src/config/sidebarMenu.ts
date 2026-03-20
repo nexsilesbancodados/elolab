@@ -60,6 +60,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Agenda', icon: Calendar, href: '/agenda' },
       { label: 'Pacientes', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
       { label: 'Fila', icon: ClipboardList, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
+      { label: 'Caixa Diário', icon: HandCoins, href: '/caixa', roles: ['admin', 'financeiro', 'recepcao'] },
       { label: 'Tarefas', icon: ListTodo, href: '/tarefas', roles: ['admin', 'recepcao', 'enfermagem', 'financeiro'] },
     ],
   },

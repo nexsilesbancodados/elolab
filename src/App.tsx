@@ -51,6 +51,7 @@ import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
 import PainelAdmin from "@/pages/PainelAdmin";
+import CaixaDiario from "@/pages/CaixaDiario";
 
 // Only lazy load rarely-accessed pages
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -141,6 +142,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                       <Route path="/templates" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Templates /></SupabaseProtectedRoute>} />
                       <Route path="/lista-espera" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><ListaEspera /></SupabaseProtectedRoute>} />
                       <Route path="/tarefas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem', 'financeiro', 'medico']}><Tarefas /></SupabaseProtectedRoute>} />
+                      <Route path="/caixa" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro', 'recepcao']}><CaixaDiario /></SupabaseProtectedRoute>} />
 
                       {/* Financial — admin + financeiro only */}
                       <Route path="/financeiro" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Financeiro /></SupabaseProtectedRoute>} />
