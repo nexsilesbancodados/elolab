@@ -257,7 +257,7 @@ export default function Recepcao() {
         if (item.ag.tipo) {
           const { data: tipoConsulta } = await supabase
             .from('tipos_consulta')
-            .select('nome, valor_particular')
+            .select('id, nome, valor_particular')
             .eq('nome', item.ag.tipo)
             .eq('ativo', true)
             .limit(1)
