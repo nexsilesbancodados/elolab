@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
+import { autoConfirmarAgendamento, autoCancelarAgendamento, autoMarcarFaltasHoje } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { useQueryClient } from '@tanstack/react-query';
