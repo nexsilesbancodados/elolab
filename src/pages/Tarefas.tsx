@@ -276,14 +276,23 @@ export default function Tarefas() {
     },
   });
 
+  // Enrich tarefas with profile names (since we removed the join)
+  const enrichedTarefas = useMemo(() => {
+    return tarefas?.map((t: any) => ({
+      ...t,
+      responsavel: t.responsavel_id ? { nome: profiles?.find((p: any) => p.id === t.responsavel_id)?.nome || '' } : null,
+      criador: t.criado_por ? { nome: profiles?.find((p: any) => p.id === t.criado_por)?.nome || '' } : null,
+    })) || [];
+  }, [tarefas, profiles]);
+
   const filtered = useMemo(() => {
-    return tarefas?.filter((t: any) => {
+    return enrichedTarefas.filter((t: any) => {
       const matchSearch = !search || t.titulo.toLowerCase().includes(search.toLowerCase()) ||
         (t.descricao && t.descricao.toLowerCase().includes(search.toLowerCase()));
       const matchStatus = filterStatus === 'all' || t.status === filterStatus;
       return matchSearch && matchStatus;
-    }) || [];
-  }, [tarefas, search, filterStatus]);
+    });
+  }, [enrichedTarefas, search, filterStatus]);
 
   const stats = useMemo(() => ({
     total: tarefas?.length || 0,
