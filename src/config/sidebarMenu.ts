@@ -58,6 +58,7 @@ export const menuGroups: MenuGroup[] = [
     color: '#6366f1',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+      { label: 'Recepção', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao'] },
       { label: 'Agenda', icon: Calendar, href: '/agenda' },
       { label: 'Pacientes', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
       { label: 'Fila', icon: ClipboardList, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },

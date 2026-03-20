@@ -399,7 +399,7 @@ export default function Recepcao() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <h3 className="font-semibold truncate">
-                                    {pac?.nome_social || pac?.nome || 'Paciente'}
+                                    {(pac as any)?.nome_social || pac?.nome || 'Paciente'}
                                   </h3>
                                   {pac?.alergias && pac.alergias.length > 0 && (
                                     <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
