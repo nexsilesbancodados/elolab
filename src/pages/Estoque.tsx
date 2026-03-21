@@ -355,7 +355,40 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* Expiry Alert Banner */}
+      {expiryAlerts.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <Bell className="h-5 w-5 text-destructive flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-destructive">
+                    {expiryAlerts.length} {expiryAlerts.length === 1 ? 'produto' : 'produtos'} com validade próxima ou vencido
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {expiryAlerts.slice(0, 5).map(p => {
+                      const dias = differenceInDays(new Date(p.validade), new Date());
+                      return (
+                        <Badge key={p.id} variant={dias < 0 ? 'destructive' : 'secondary'} className="text-[10px]">
+                          {p.nome} — {dias < 0 ? `Vencido há ${Math.abs(dias)}d` : `${dias}d restantes`}
+                        </Badge>
+                      );
+                    })}
+                    {expiryAlerts.length > 5 && (
+                      <Badge variant="outline" className="text-[10px]">+{expiryAlerts.length - 5} mais</Badge>
+                    )}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setFilterAlerta('validade')}>
+                  Ver todos
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-4">
