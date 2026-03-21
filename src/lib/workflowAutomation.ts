@@ -124,11 +124,13 @@ export async function autoFinalizarAtendimento(params: {
 
   try {
     // Update statuses
-    await supabase.from('agendamentos').update({ status: 'finalizado' }).eq('id', params.agendamentoId);
+    const { error: agError } = await supabase.from('agendamentos').update({ status: 'finalizado' }).eq('id', params.agendamentoId);
+    if (agError) throw new Error('Erro ao atualizar agendamento: ' + agError.message);
     actions.push('Agendamento → Finalizado');
 
     if (params.filaId) {
-      await supabase.from('fila_atendimento').update({ status: 'finalizado' }).eq('id', params.filaId);
+      const { error: filaError } = await supabase.from('fila_atendimento').update({ status: 'finalizado' }).eq('id', params.filaId);
+      if (filaError) throw new Error('Erro ao atualizar fila: ' + filaError.message);
       actions.push('Fila → Finalizado');
     }
 
