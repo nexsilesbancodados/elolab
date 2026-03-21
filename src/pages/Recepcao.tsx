@@ -312,6 +312,7 @@ export default function Recepcao() {
   }
 
    function openPagamento(lanc: any, pac: any) {
+     if (!checkCaixaAberto()) return;
      setSelectedLancamento(lanc);
      setSelectedPacienteBalcao(pac);
      setFormaPagamento('');
