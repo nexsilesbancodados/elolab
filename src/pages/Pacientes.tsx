@@ -921,19 +921,44 @@ export default function Pacientes() {
 
             {/* Convênio */}
             {formSection === 'convenio' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Convênio</Label>
-                   <Select value={formData.convenio_id || '__particular__'} onValueChange={v => setFormData({ ...formData, convenio_id: v === '__particular__' ? '' : v })}>
-                     <SelectTrigger><SelectValue placeholder="Particular (sem convênio)" /></SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="__particular__">Particular</SelectItem>
-                       {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                     </SelectContent>
-                   </Select>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm font-medium">Possui convênio?</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={!formData.convenio_id ? 'default' : 'outline'}
+                      onClick={() => setFormData({ ...formData, convenio_id: '', numero_carteira: '', validade_carteira: '' })}
+                    >
+                      Não
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={formData.convenio_id ? 'default' : 'outline'}
+                      onClick={() => {
+                        if (!formData.convenio_id && convenios.length > 0) {
+                          setFormData({ ...formData, convenio_id: (convenios[0] as any).id });
+                        }
+                      }}
+                    >
+                      Sim
+                    </Button>
+                  </div>
                 </div>
+
                 {formData.convenio_id && (
-                  <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Convênio</Label>
+                      <Select value={formData.convenio_id} onValueChange={v => setFormData({ ...formData, convenio_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o convênio" /></SelectTrigger>
+                        <SelectContent>
+                          {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-2">
                       <Label>Número da Carteira</Label>
                       <Input value={formData.numero_carteira} onChange={e => setFormData({ ...formData, numero_carteira: e.target.value })} placeholder="Número da carteirinha" />
@@ -942,7 +967,7 @@ export default function Pacientes() {
                       <Label>Validade da Carteira</Label>
                       <Input type="date" value={formData.validade_carteira} onChange={e => setFormData({ ...formData, validade_carteira: e.target.value })} />
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
