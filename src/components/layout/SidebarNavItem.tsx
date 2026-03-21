@@ -22,11 +22,16 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
       to={item.href}
       target={item.external ? '_blank' : undefined}
       rel={item.external ? 'noopener noreferrer' : undefined}
+      style={({ isActive }: { isActive: boolean }) =>
+        isActive && !item.external && groupColor
+          ? { backgroundColor: `${groupColor}14`, '--active-color': groupColor } as React.CSSProperties
+          : undefined
+      }
       className={({ isActive }) =>
         cn(
-          'group relative flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150',
+          'group relative flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200',
           'text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
-          isActive && !item.external && 'text-sidebar-accent-foreground bg-sidebar-accent shadow-[0_1px_2px_hsl(220_20%_20%/0.04)] font-semibold',
+          isActive && !item.external && 'font-semibold shadow-[0_1px_3px_hsl(220_20%_20%/0.06)]',
           collapsed && 'justify-center px-2',
           !collapsed && 'ml-1'
         )
@@ -56,7 +61,12 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
 
           {/* Label */}
           {!collapsed && (
-            <span className="truncate flex-1">{item.label}</span>
+            <span
+              className="truncate flex-1 transition-colors duration-150"
+              style={isActive && !item.external && groupColor ? { color: groupColor } : undefined}
+            >
+              {item.label}
+            </span>
           )}
 
           {/* Badge */}
