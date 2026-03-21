@@ -253,9 +253,20 @@ export default function Prescricoes() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{prescricoes.length}</div><p className="text-xs text-muted-foreground">Total</p></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{prescricoes.filter(p => p.data_emissao === format(new Date(), 'yyyy-MM-dd')).length}</div><p className="text-xs text-muted-foreground">Hoje</p></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{new Set(prescricoes.map(p => p.paciente_id)).size}</div><p className="text-xs text-muted-foreground">Pacientes</p></CardContent></Card>
+        {[
+          { label: 'Total', value: prescricoes.length, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'Hoje', value: prescricoes.filter(p => p.data_emissao === format(new Date(), 'yyyy-MM-dd')).length, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+          { label: 'Pacientes', value: new Set(prescricoes.map(p => p.paciente_id)).size, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+        ].map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <Card className={cn('border', s.border)}>
+              <CardContent className="py-4 px-5">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
+                <p className={cn('text-2xl font-black mt-0.5 tabular-nums', s.color)}>{s.value}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Table */}
