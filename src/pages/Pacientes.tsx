@@ -546,6 +546,7 @@ export default function Pacientes() {
         nome_responsavel: formData.nome_responsavel || null,
         cpf_responsavel: formData.cpf_responsavel || null,
         parentesco_responsavel: formData.parentesco_responsavel || null,
+        clinica_id: authProfile?.clinica_id || null,
       };
 
       if (selectedPacienteId) {
@@ -559,9 +560,10 @@ export default function Pacientes() {
       }
       refetch();
       setIsFormOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       if (import.meta.env.DEV) console.error('Erro ao salvar:', error);
-      toast({ title: 'Erro ao salvar paciente', variant: 'destructive' });
+      const msg = error?.message || error?.details || 'Verifique os dados e tente novamente.';
+      toast({ title: 'Erro ao salvar paciente', description: msg, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
