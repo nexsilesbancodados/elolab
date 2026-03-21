@@ -8,6 +8,7 @@ import {
   AlertTriangle, Activity, ChevronRight, History, PenLine, Lock,
   ShieldCheck, BookOpen, FileCheck, Brain, Bone, Eye as EyeIcon,
   Thermometer, Scale, Ruler, Paperclip, Shield, Clipboard,
+  Clock, TestTube, DollarSign, CalendarPlus, RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -147,6 +148,18 @@ export default function Pacientes() {
   const [prontuarioPrescricoes, setProntuarioPrescricoes] = useState<any[]>([]);
   const [prontuarioTab, setProntuarioTab] = useState('lista');
   const [savingProntuario, setSavingProntuario] = useState(false);
+  // Agendamentos inline state
+  const [agendamentosList, setAgendamentosList] = useState<any[]>([]);
+  const [loadingAgendamentos, setLoadingAgendamentos] = useState(false);
+  const [showAgendamentoForm, setShowAgendamentoForm] = useState(false);
+  const [agendamentoForm, setAgendamentoForm] = useState<Record<string, string>>({});
+  const [savingAgendamento, setSavingAgendamento] = useState(false);
+  // Exames inline state
+  const [examesList, setExamesList] = useState<any[]>([]);
+  const [loadingExames, setLoadingExames] = useState(false);
+  const [showExameForm, setShowExameForm] = useState(false);
+  const [exameForm, setExameForm] = useState<Record<string, string>>({});
+  const [savingExame, setSavingExame] = useState(false);
 
   const { toast } = useToast();
   const { profile: authProfile } = useSupabaseAuth();
@@ -168,16 +181,44 @@ export default function Pacientes() {
     setLoadingProntuarios(false);
   }, []);
 
-  // Reset prontuário state when view opens
+  const loadAgendamentos = useCallback(async (pacienteId: string) => {
+    setLoadingAgendamentos(true);
+    const { data } = await supabase
+      .from('agendamentos')
+      .select('id, data, hora_inicio, hora_fim, status, tipo, observacoes, medico_id, medicos(nome, crm, especialidade), salas(nome)')
+      .eq('paciente_id', pacienteId)
+      .order('data', { ascending: false })
+      .limit(50);
+    setAgendamentosList(data || []);
+    setLoadingAgendamentos(false);
+  }, []);
+
+  const loadExames = useCallback(async (pacienteId: string) => {
+    setLoadingExames(true);
+    const { data } = await supabase
+      .from('exames')
+      .select('id, tipo_exame, status, data_solicitacao, data_realizacao, resultado, observacoes, medico_solicitante_id, medicos:medico_solicitante_id(nome, crm)')
+      .eq('paciente_id', pacienteId)
+      .order('data_solicitacao', { ascending: false })
+      .limit(50);
+    setExamesList(data || []);
+    setLoadingExames(false);
+  }, []);
+
+  // Reset state when view opens
   const handleViewWithProntuario = useCallback((paciente: any) => {
     setSelectedPacienteId(paciente.id);
     setViewTab('dados');
     setProntuarioTab('lista');
     setActiveProntuario(null);
     setIsEditingProntuario(false);
+    setShowAgendamentoForm(false);
+    setShowExameForm(false);
     setIsViewOpen(true);
     loadProntuarios(paciente.id);
-  }, [loadProntuarios]);
+    loadAgendamentos(paciente.id);
+    loadExames(paciente.id);
+  }, [loadProntuarios, loadAgendamentos, loadExames]);
 
   const handleNewProntuario = () => {
     const paciente = pacientes.find(p => p.id === selectedPacienteId);
@@ -1053,13 +1094,17 @@ export default function Pacientes() {
               </div>
 
               <Tabs value={viewTab} onValueChange={setViewTab} className="flex-1 overflow-hidden flex flex-col">
-                <TabsList className="flex-shrink-0 grid w-full grid-cols-5 h-auto p-0.5 bg-muted/40 rounded-xl">
-                  <TabsTrigger value="dados" className="text-[11px] gap-1 py-1.5 rounded-lg"><User2 className="h-3 w-3" />Dados</TabsTrigger>
-                  <TabsTrigger value="prontuario" className="text-[11px] gap-1 py-1.5 rounded-lg"><Stethoscope className="h-3 w-3" />Prontuário</TabsTrigger>
-                  <TabsTrigger value="endereco" className="text-[11px] gap-1 py-1.5 rounded-lg"><MapPin className="h-3 w-3" />Endereço</TabsTrigger>
-                  <TabsTrigger value="historico" className="text-[11px] gap-1 py-1.5 rounded-lg"><History className="h-3 w-3" />Timeline</TabsTrigger>
-                  <TabsTrigger value="sinais" className="text-[11px] gap-1 py-1.5 rounded-lg"><Activity className="h-3 w-3" />Sinais</TabsTrigger>
-                </TabsList>
+                <div className="flex-shrink-0 overflow-x-auto">
+                  <TabsList className="inline-flex w-auto min-w-full h-auto p-0.5 bg-muted/40 rounded-xl">
+                    <TabsTrigger value="dados" className="text-[11px] gap-1 py-1.5 rounded-lg"><User2 className="h-3 w-3" />Dados</TabsTrigger>
+                    <TabsTrigger value="consultas" className="text-[11px] gap-1 py-1.5 rounded-lg"><Calendar className="h-3 w-3" />Consultas</TabsTrigger>
+                    <TabsTrigger value="exames" className="text-[11px] gap-1 py-1.5 rounded-lg"><TestTube className="h-3 w-3" />Exames</TabsTrigger>
+                    <TabsTrigger value="prontuario" className="text-[11px] gap-1 py-1.5 rounded-lg"><Stethoscope className="h-3 w-3" />Prontuário</TabsTrigger>
+                    <TabsTrigger value="historico" className="text-[11px] gap-1 py-1.5 rounded-lg"><History className="h-3 w-3" />Timeline</TabsTrigger>
+                    <TabsTrigger value="sinais" className="text-[11px] gap-1 py-1.5 rounded-lg"><Activity className="h-3 w-3" />Sinais</TabsTrigger>
+                    <TabsTrigger value="endereco" className="text-[11px] gap-1 py-1.5 rounded-lg"><MapPin className="h-3 w-3" />Endereço</TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <ScrollArea className="flex-1 mt-3">
                   {/* Tab: Dados */}
@@ -1093,6 +1138,239 @@ export default function Pacientes() {
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedPaciente.observacoes}</p>
                         </div>
                       </>
+                    )}
+                  </TabsContent>
+
+                  {/* Tab: Consultas / Agendamentos */}
+                  <TabsContent value="consultas" className="mt-0 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Consultas ({agendamentosList.length})
+                      </span>
+                      <Button size="sm" onClick={() => { setAgendamentoForm({ data: format(new Date(), 'yyyy-MM-dd'), hora_inicio: '08:00', medico_id: medicoId || '', tipo: 'consulta', observacoes: '' }); setShowAgendamentoForm(true); }} className="gap-1.5 rounded-xl text-xs">
+                        <CalendarPlus className="h-3.5 w-3.5" />Agendar Consulta
+                      </Button>
+                    </div>
+
+                    {showAgendamentoForm && (
+                      <div className="border rounded-xl p-4 bg-muted/20 space-y-3">
+                        <h4 className="text-sm font-semibold">Nova Consulta</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Data *</Label>
+                            <Input type="date" value={agendamentoForm.data || ''} onChange={e => setAgendamentoForm(p => ({ ...p, data: e.target.value }))} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Horário *</Label>
+                            <Input type="time" value={agendamentoForm.hora_inicio || ''} onChange={e => setAgendamentoForm(p => ({ ...p, hora_inicio: e.target.value }))} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Médico *</Label>
+                            <Select value={agendamentoForm.medico_id || ''} onValueChange={v => setAgendamentoForm(p => ({ ...p, medico_id: v }))}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                              <SelectContent>
+                                {medicos.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.nome || m.crm} - {m.especialidade || 'Geral'}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Tipo</Label>
+                            <Select value={agendamentoForm.tipo || 'consulta'} onValueChange={v => setAgendamentoForm(p => ({ ...p, tipo: v }))}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="consulta">Consulta</SelectItem>
+                                <SelectItem value="retorno">Retorno</SelectItem>
+                                <SelectItem value="exame">Exame</SelectItem>
+                                <SelectItem value="procedimento">Procedimento</SelectItem>
+                                <SelectItem value="cirurgia">Cirurgia</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-xs">Observações</Label>
+                            <Textarea value={agendamentoForm.observacoes || ''} onChange={e => setAgendamentoForm(p => ({ ...p, observacoes: e.target.value }))} rows={2} className="text-xs" placeholder="Observações sobre a consulta..." />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setShowAgendamentoForm(false)} className="text-xs h-7">Cancelar</Button>
+                          <LoadingButton size="sm" className="text-xs h-7" isLoading={savingAgendamento} loadingText="Salvando..." onClick={async () => {
+                            if (!agendamentoForm.data || !agendamentoForm.hora_inicio || !agendamentoForm.medico_id) {
+                              toast({ title: 'Preencha data, horário e médico', variant: 'destructive' });
+                              return;
+                            }
+                            setSavingAgendamento(true);
+                            try {
+                              const { error } = await supabase.from('agendamentos').insert({
+                                paciente_id: selectedPacienteId!,
+                                medico_id: agendamentoForm.medico_id,
+                                data: agendamentoForm.data,
+                                hora_inicio: agendamentoForm.hora_inicio,
+                                tipo: agendamentoForm.tipo || 'consulta',
+                                observacoes: agendamentoForm.observacoes || null,
+                                status: 'agendado',
+                                clinica_id: authProfile?.clinica_id || null,
+                              });
+                              if (error) throw error;
+                              toast({ title: 'Consulta agendada!' });
+                              setShowAgendamentoForm(false);
+                              loadAgendamentos(selectedPacienteId!);
+                            } catch (err: any) {
+                              toast({ title: 'Erro ao agendar', description: err?.message, variant: 'destructive' });
+                            } finally { setSavingAgendamento(false); }
+                          }}>Agendar</LoadingButton>
+                        </div>
+                      </div>
+                    )}
+
+                    {loadingAgendamentos ? (
+                      <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-14" />)}</div>
+                    ) : agendamentosList.length === 0 ? (
+                      <div className="flex flex-col items-center py-14 text-muted-foreground">
+                        <Calendar className="h-8 w-8 opacity-20 mb-2" />
+                        <p className="text-xs">Nenhuma consulta agendada</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {agendamentosList.map((a, idx) => {
+                          const statusColors: Record<string, string> = {
+                            agendado: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                            confirmado: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                            cancelado: 'bg-destructive/10 text-destructive',
+                            realizado: 'bg-muted text-muted-foreground',
+                            em_atendimento: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                          };
+                          return (
+                            <motion.div key={a.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
+                              className="border border-border/40 rounded-xl p-3 hover:border-primary/30 transition-all">
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <Badge className={cn("text-[10px] px-1.5 py-0", statusColors[a.status] || 'bg-muted text-muted-foreground')}>
+                                      {a.status?.replace('_', ' ')}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{a.tipo || 'consulta'}</Badge>
+                                  </div>
+                                  <p className="text-xs font-semibold">
+                                    {format(new Date(a.data + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR })} às {a.hora_inicio?.slice(0, 5)}
+                                  </p>
+                                  {a.medicos && <p className="text-[11px] text-muted-foreground">Dr(a). {a.medicos.nome || a.medicos.crm}</p>}
+                                  {a.observacoes && <p className="text-[11px] text-muted-foreground line-clamp-1">{a.observacoes}</p>}
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Tab: Exames */}
+                  <TabsContent value="exames" className="mt-0 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                        <TestTube className="h-3.5 w-3.5" />
+                        Exames ({examesList.length})
+                      </span>
+                      <Button size="sm" onClick={() => { setExameForm({ tipo_exame: '', medico_solicitante_id: medicoId || '', observacoes: '' }); setShowExameForm(true); }} className="gap-1.5 rounded-xl text-xs">
+                        <Plus className="h-3.5 w-3.5" />Solicitar Exame
+                      </Button>
+                    </div>
+
+                    {showExameForm && (
+                      <div className="border rounded-xl p-4 bg-muted/20 space-y-3">
+                        <h4 className="text-sm font-semibold">Novo Pedido de Exame</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1 col-span-2">
+                            <Label className="text-xs">Tipo de Exame *</Label>
+                            <Input value={exameForm.tipo_exame || ''} onChange={e => setExameForm(p => ({ ...p, tipo_exame: e.target.value }))} placeholder="Ex: Hemograma, Glicemia..." className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Médico Solicitante *</Label>
+                            <Select value={exameForm.medico_solicitante_id || ''} onValueChange={v => setExameForm(p => ({ ...p, medico_solicitante_id: v }))}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                              <SelectContent>
+                                {medicos.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.nome || m.crm}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Data Agendamento</Label>
+                            <Input type="date" value={exameForm.data_agendamento || ''} onChange={e => setExameForm(p => ({ ...p, data_agendamento: e.target.value }))} className="h-8 text-xs" />
+                          </div>
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-xs">Observações / Justificativa</Label>
+                            <Textarea value={exameForm.observacoes || ''} onChange={e => setExameForm(p => ({ ...p, observacoes: e.target.value }))} rows={2} className="text-xs" placeholder="Indicação clínica, urgência..." />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setShowExameForm(false)} className="text-xs h-7">Cancelar</Button>
+                          <LoadingButton size="sm" className="text-xs h-7" isLoading={savingExame} loadingText="Salvando..." onClick={async () => {
+                            if (!exameForm.tipo_exame || !exameForm.medico_solicitante_id) {
+                              toast({ title: 'Preencha tipo de exame e médico', variant: 'destructive' });
+                              return;
+                            }
+                            setSavingExame(true);
+                            try {
+                              const { error } = await supabase.from('exames').insert({
+                                paciente_id: selectedPacienteId!,
+                                medico_solicitante_id: exameForm.medico_solicitante_id,
+                                tipo_exame: exameForm.tipo_exame,
+                                data_agendamento: exameForm.data_agendamento || null,
+                                observacoes: exameForm.observacoes || null,
+                                status: 'solicitado',
+                                clinica_id: authProfile?.clinica_id || null,
+                              });
+                              if (error) throw error;
+                              toast({ title: 'Exame solicitado!' });
+                              setShowExameForm(false);
+                              loadExames(selectedPacienteId!);
+                            } catch (err: any) {
+                              toast({ title: 'Erro ao solicitar exame', description: err?.message, variant: 'destructive' });
+                            } finally { setSavingExame(false); }
+                          }}>Solicitar</LoadingButton>
+                        </div>
+                      </div>
+                    )}
+
+                    {loadingExames ? (
+                      <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-14" />)}</div>
+                    ) : examesList.length === 0 ? (
+                      <div className="flex flex-col items-center py-14 text-muted-foreground">
+                        <TestTube className="h-8 w-8 opacity-20 mb-2" />
+                        <p className="text-xs">Nenhum exame registrado</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {examesList.map((ex, idx) => {
+                          const exStatusColors: Record<string, string> = {
+                            solicitado: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                            agendado: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                            em_andamento: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                            concluido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                            cancelado: 'bg-destructive/10 text-destructive',
+                          };
+                          return (
+                            <motion.div key={ex.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
+                              className="border border-border/40 rounded-xl p-3 hover:border-primary/30 transition-all">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge className={cn("text-[10px] px-1.5 py-0", exStatusColors[ex.status] || 'bg-muted text-muted-foreground')}>
+                                    {ex.status?.replace('_', ' ')}
+                                  </Badge>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {ex.data_solicitacao ? format(new Date(ex.data_solicitacao + 'T12:00'), 'dd/MM/yyyy') : ''}
+                                  </span>
+                                </div>
+                                <p className="text-xs font-semibold">{ex.tipo_exame}</p>
+                                {ex.medicos && <p className="text-[11px] text-muted-foreground">Solicitante: Dr(a). {ex.medicos.nome || ex.medicos.crm}</p>}
+                                {ex.resultado && <p className="text-[11px] text-emerald-600 dark:text-emerald-400">Resultado: {ex.resultado.substring(0, 80)}...</p>}
+                                {ex.observacoes && <p className="text-[11px] text-muted-foreground line-clamp-1">{ex.observacoes}</p>}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     )}
                   </TabsContent>
 
