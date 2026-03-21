@@ -253,14 +253,54 @@ export default function Recepcao() {
     setIsProcessing(false);
   }
 
-  function openPagamento(lanc: any) {
-    setSelectedLancamento(lanc);
-    setFormaPagamento('');
-    setDesconto(0);
-    setAcrescimo(0);
-    setObsPagamento('');
-    setShowPagamento(true);
-  }
+   function openPagamento(lanc: any, pac: any) {
+     setSelectedLancamento(lanc);
+     setSelectedPacienteBalcao(pac);
+     setFormaPagamento('');
+     setDesconto(0);
+     setAcrescimo(0);
+     setObsPagamento('');
+     setShowPagamento(true);
+   }
+
+   async function handleChamarBalcao(lanc: any, pac: any) {
+     setIsProcessing(true);
+     try {
+       // Play a chime sound
+       try {
+         const ctx = new AudioContext();
+         const osc = ctx.createOscillator();
+         const gain = ctx.createGain();
+         osc.connect(gain);
+         gain.connect(ctx.destination);
+         osc.frequency.value = 880;
+         gain.gain.value = 0.3;
+         osc.start();
+         osc.stop(ctx.currentTime + 0.3);
+       } catch {}
+
+       // Announce via TTS
+       if ('speechSynthesis' in window) {
+         const utter = new SpeechSynthesisUtterance(
+           `${pac?.nome || 'Paciente'}, por favor dirija-se ao balcão para pagamento.`
+         );
+         utter.lang = 'pt-BR';
+         utter.rate = 0.9;
+         window.speechSynthesis.speak(utter);
+       }
+
+       toast.success(`${pac?.nome} chamado ao balcão!`, {
+         description: 'Aguardando paciente no balcão para pagamento',
+         action: {
+           label: 'Receber agora',
+           onClick: () => openPagamento(lanc, pac),
+         },
+       });
+     } catch {
+       toast.error('Erro ao chamar paciente');
+     }
+     setIsProcessing(false);
+   }
 
   async function handleConfirmarPagamento() {
     if (!formaPagamento || !selectedLancamento) {
