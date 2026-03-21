@@ -426,22 +426,23 @@ export default function Recepcao() {
                     layout
                   >
                     <Card className={cn(
-                      'border transition-all duration-200 overflow-hidden',
-                      step === 2 && 'border-primary/30 shadow-md shadow-primary/5',
-                      step === 3 && 'border-amber-400/30 shadow-md shadow-amber-400/5',
-                      step === 4 && 'opacity-60',
-                    )}>
-                      <CardContent className="p-0">
-                        <div className="flex items-stretch">
-                          {/* Step indicator */}
-                          <div className={cn(
-                            'w-1.5 shrink-0',
-                            step === 0 && 'bg-amber-400',
-                            step === 1 && 'bg-sky-400',
-                            step === 2 && 'bg-primary',
-                            step === 3 && 'bg-orange-400',
-                            step === 4 && 'bg-emerald-500',
-                          )} />
+                     'border transition-all duration-200 overflow-hidden',
+                       step === 1 && 'border-orange-400/30 shadow-md shadow-orange-400/5',
+                       step === 2 && 'border-primary/30 shadow-md shadow-primary/5',
+                       step === 3 && 'border-sky-400/30 shadow-md shadow-sky-400/5',
+                       step === 4 && 'opacity-60',
+                     )}>
+                       <CardContent className="p-0">
+                         <div className="flex items-stretch">
+                           {/* Step indicator */}
+                           <div className={cn(
+                             'w-1.5 shrink-0',
+                             step === 0 && 'bg-amber-400',
+                             step === 1 && 'bg-orange-400',
+                             step === 2 && 'bg-primary',
+                             step === 3 && 'bg-sky-400',
+                             step === 4 && 'bg-emerald-500',
+                           )} />
 
                           <div className="flex-1 p-4">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
