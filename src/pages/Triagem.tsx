@@ -413,11 +413,24 @@ export default function TriagemPage() {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              <div className="space-y-3 p-4">
+                {[1,2,3].map(i => (
+                  <div key={i} className="flex items-center gap-3 py-3">
+                    <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                      <div className="h-3 w-48 bg-muted/60 animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 text-center">
-                <Activity className="h-12 w-12 text-muted-foreground/20 mb-4" />
-                <p className="font-semibold text-muted-foreground">Nenhuma triagem encontrada</p>
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Activity className="h-8 w-8 text-primary" />
+                </div>
+                <p className="font-semibold text-foreground">Nenhuma triagem encontrada</p>
+                <p className="text-sm text-muted-foreground mt-1">Registre a primeira triagem do dia</p>
                 <Button className="mt-4 gap-2" onClick={() => handleOpenDialog()}>
                   <Plus className="h-4 w-4" /> Registrar Triagem
                 </Button>
