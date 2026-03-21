@@ -81,6 +81,28 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       const roles = (rolesData?.map(r => r.role) || []) as AppRole[];
       const primaryRole = roles.length > 0 ? roles[0] : null;
 
+      let clinicaId = (profileData as any).clinica_id as string | undefined;
+
+      // Auto-create clinica for admins who don't have one
+      if (!clinicaId && roles.includes('admin')) {
+        try {
+          const { data: newClinica } = await supabase
+            .from('clinicas')
+            .insert({ nome: 'Minha Clínica', owner_id: userId })
+            .select('id')
+            .single();
+          if (newClinica) {
+            clinicaId = newClinica.id;
+            await supabase
+              .from('profiles')
+              .update({ clinica_id: clinicaId } as any)
+              .eq('id', userId);
+          }
+        } catch (e) {
+          console.error('Error auto-creating clinica:', e);
+        }
+      }
+
       return {
         id: profileData.id,
         nome: profileData.nome,
@@ -88,6 +110,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         avatar: profileData.avatar,
         telefone: profileData.telefone,
         ativo: profileData.ativo,
+        clinica_id: clinicaId,
         role: primaryRole,
         roles,
       } as UserWithRole;
