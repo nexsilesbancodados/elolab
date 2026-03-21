@@ -118,7 +118,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   const [isRemarkMode, setIsRemarkMode] = useState(false);
-  
+  const [draggedAg, setDraggedAg] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
