@@ -664,14 +664,25 @@ export default function Recepcao() {
                               {/* Action buttons */}
                               <div className="flex items-center gap-2 shrink-0">
                                 {step === 0 && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCheckin(ag.id)}
-                                    disabled={isProcessing}
-                                    className="gap-1.5"
-                                  >
-                                    <UserCheck className="h-3.5 w-3.5" /> Check-in
-                                  </Button>
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleCheckin(ag.id)}
+                                      disabled={isProcessing}
+                                      className="gap-1.5"
+                                    >
+                                      <UserCheck className="h-3.5 w-3.5" /> Check-in
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEncaminharTriagem(ag.id, ag.paciente_id)}
+                                      disabled={isProcessing}
+                                      className="gap-1"
+                                    >
+                                      <Activity className="h-3.5 w-3.5" /> Triagem
+                                    </Button>
+                                  </div>
                                 )}
 
                                 {/* Step 1: Balcão — patient pays before consultation */}

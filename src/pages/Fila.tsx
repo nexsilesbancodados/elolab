@@ -289,6 +289,8 @@ export default function Fila() {
     // Voice call when chamado
     if (status === 'chamado' && agendamentoId) {
       await supabase.from('fila_atendimento').update({ status }).eq('id', id);
+      // Also update agendamento status so PainelTV can pick it up
+      await supabase.from('agendamentos').update({ status: 'em_atendimento' }).eq('id', agendamentoId);
       const item = fila.find(f => f.id === id);
       const nome = getPacienteNome(agendamentoId);
       const sala = getSalaNome(item?.sala_id ?? null);

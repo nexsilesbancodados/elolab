@@ -354,8 +354,13 @@ export default function TriagemPage() {
             <Activity className="h-7 w-7 text-primary" />
             Triagem
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
             {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })} • Protocolo Manchester
+            {pendingTriagemCount > 0 && (
+              <Badge variant="secondary" className="text-xs bg-warning/10 text-warning border-warning/20">
+                {pendingTriagemCount} pendente{pendingTriagemCount > 1 ? 's' : ''}
+              </Badge>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
