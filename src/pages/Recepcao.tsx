@@ -14,7 +14,8 @@ import {
   UserCheck, Clock, Play, Check, Banknote, QrCode, CreditCard,
   Landmark, Search, Bell, ChevronRight, Users, Stethoscope,
   DollarSign, ArrowRight, Loader2, CheckCircle2, AlertTriangle,
-  Timer, Phone, XCircle, Receipt, Eye,
+  Timer, Phone, XCircle, Receipt, Eye, CalendarPlus, FileText,
+  FlaskConical, RotateCcw, ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
