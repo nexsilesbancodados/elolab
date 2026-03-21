@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Search, Edit, Package, AlertTriangle, ArrowDown, ArrowUp, Loader2,
   Barcode, Calendar, Clock, Pill, Building2, ShieldAlert, TrendingDown,
-  History, BarChart3, X,
+  History, BarChart3, X, Trash2, FileDown, Bell,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,11 +22,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useEstoque } from '@/hooks/useSupabaseData';
-import { supabase as sb } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton, TableSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyEstoque } from '@/components/EmptyState';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -76,6 +76,8 @@ export default function Estoque() {
     tipo: 'entrada', quantidade: 0, motivo: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const { data: estoque = [], isLoading } = useEstoque();
@@ -285,6 +287,36 @@ export default function Estoque() {
     setIsTimelineOpen(true);
   };
 
+  const handleDeleteProduto = async () => {
+    if (!deleteId) return;
+    setIsSaving(true);
+    try {
+      // Delete movements first
+      await supabase.from('movimentacoes_estoque').delete().eq('item_id', deleteId);
+      const { error } = await supabase.from('estoque').delete().eq('id', deleteId);
+      if (error) throw error;
+      toast.success('Produto excluído!');
+      queryClient.invalidateQueries({ queryKey: ['estoque'] });
+      setIsDeleteOpen(false);
+      setDeleteId(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir.');
+    } finally { setIsSaving(false); }
+  };
+
+  // Expiry alert items
+  const expiryAlerts = useMemo(() => {
+    return (estoque as any[]).filter(p => {
+      if (!p.validade) return false;
+      const dias = differenceInDays(new Date(p.validade), new Date());
+      return dias <= 60;
+    }).sort((a, b) => {
+      const dA = differenceInDays(new Date(a.validade), new Date());
+      const dB = differenceInDays(new Date(b.validade), new Date());
+      return dA - dB;
+    });
+  }, [estoque]);
+
   const isMedicamento = formData.categoria === 'medicamentos';
   const timelineItem = (estoque as any[]).find(p => p.id === timelineItemId);
 
@@ -323,7 +355,40 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* Expiry Alert Banner */}
+      {expiryAlerts.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <Bell className="h-5 w-5 text-destructive flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-destructive">
+                    {expiryAlerts.length} {expiryAlerts.length === 1 ? 'produto' : 'produtos'} com validade próxima ou vencido
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {expiryAlerts.slice(0, 5).map(p => {
+                      const dias = differenceInDays(new Date(p.validade), new Date());
+                      return (
+                        <Badge key={p.id} variant={dias < 0 ? 'destructive' : 'secondary'} className="text-[10px]">
+                          {p.nome} — {dias < 0 ? `Vencido há ${Math.abs(dias)}d` : `${dias}d restantes`}
+                        </Badge>
+                      );
+                    })}
+                    {expiryAlerts.length > 5 && (
+                      <Badge variant="outline" className="text-[10px]">+{expiryAlerts.length - 5} mais</Badge>
+                    )}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setFilterAlerta('validade')}>
+                  Ver todos
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-4">
@@ -582,6 +647,9 @@ export default function Estoque() {
                                   <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => { setDeleteId(produto.id); setIsDeleteOpen(true); }}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -771,6 +839,15 @@ export default function Estoque() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirm */}
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        title="Excluir Produto"
+        description="Tem certeza que deseja excluir este produto e todo seu histórico de movimentações? Esta ação não pode ser desfeita."
+        onConfirm={handleDeleteProduto}
+        isLoading={isSaving}
+      />
     </div>
   );
 }
