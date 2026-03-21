@@ -1,20 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function NotificationBanner() {
   const { permission, supported, requestPermission } = useNotifications();
-  const [dismissed, setDismissed] = useState(false);
+  const { user, profile } = useSupabaseAuth();
+  const queryClient = useQueryClient();
+  const [localDismissed, setLocalDismissed] = useState(false);
 
-  useEffect(() => {
-    const wasDismissed = localStorage.getItem('notification_banner_dismissed');
-    if (wasDismissed) setDismissed(true);
-  }, []);
+  const { data: dismissed = false } = useQuery({
+    queryKey: ['notification-banner-dismissed', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'notification_banner_dismissed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data?.valor === true;
+    },
+    enabled: !!user?.id,
+  });
 
-  const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem('notification_banner_dismissed', 'true');
+  const handleDismiss = async () => {
+    setLocalDismissed(true);
+    if (user?.id) {
+      await supabase.from('configuracoes_clinica').upsert({
+        chave: 'notification_banner_dismissed',
+        user_id: user.id,
+        valor: true as any,
+      }, { onConflict: 'user_id,chave' });
+      queryClient.invalidateQueries({ queryKey: ['notification-banner-dismissed', user.id] });
+    }
   };
 
   const handleEnable = async () => {
@@ -24,7 +46,8 @@ export function NotificationBanner() {
     }
   };
 
-  if (!supported || permission === 'granted' || permission === 'denied' || dismissed) {
+  // Only show for logged-in users, and only once
+  if (!user || !supported || permission === 'granted' || permission === 'denied' || dismissed || localDismissed) {
     return null;
   }
 
