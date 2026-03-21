@@ -308,11 +308,17 @@ export default function ContasReceber() {
       const { error } = await supabase.from('lancamentos').update({
         status: 'pago' as StatusPagamento,
         forma_pagamento: baixaData.forma_pagamento,
-        observacoes: [selectedConta.observacoes, baixaData.observacoes].filter(Boolean).join(' | ') || null,
+        observacoes: [
+          selectedConta.observacoes, baixaData.observacoes,
+          baixaData.desconto > 0 ? `Desconto: R$ ${baixaData.desconto.toFixed(2)}` : null,
+          baixaData.acrescimo > 0 ? `Acréscimo: R$ ${baixaData.acrescimo.toFixed(2)}` : null,
+          `Recebido em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`,
+        ].filter(Boolean).join(' | ') || null,
       }).eq('id', selectedConta.id);
       if (error) throw error;
       toast.success(`Pagamento confirmado — ${getPacienteNome(selectedConta)}`);
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       setIsPagamentoOpen(false);
     } catch (e: any) {
       toast.error(e.message || 'Erro ao confirmar');

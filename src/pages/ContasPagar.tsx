@@ -95,10 +95,10 @@ export default function ContasPagar() {
   const [isPagamentoOpen, setIsPagamentoOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [pagamentoData, setPagamentoData] = useState({ forma_pagamento: 'pix' });
+  const [pagamentoData, setPagamentoData] = useState({ forma_pagamento: 'pix', observacoes: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
   const { data: contas = [], isLoading } = useQuery({
@@ -167,6 +167,7 @@ export default function ContasPagar() {
         frequencia_recorrencia: formData.recorrente ? formData.frequencia_recorrencia : null,
         centro_custo: formData.centro_custo || null,
         observacoes: formData.observacoes || null,
+        clinica_id: profile?.clinica_id || null,
       };
 
       const { error } = await supabase.from('lancamentos').insert(payload);
@@ -181,7 +182,7 @@ export default function ContasPagar() {
 
   const handlePagamento = (id: string) => {
     setSelectedId(id);
-    setPagamentoData({ forma_pagamento: 'pix' });
+    setPagamentoData({ forma_pagamento: 'pix', observacoes: '' });
     setIsPagamentoOpen(true);
   };
 
@@ -189,9 +190,18 @@ export default function ContasPagar() {
     if (!selectedId) return;
     setIsSubmitting(true);
     try {
+      const now = new Date();
       const { error } = await supabase
         .from('lancamentos')
-        .update({ status: 'pago' as StatusPagamento, forma_pagamento: pagamentoData.forma_pagamento })
+        .update({
+          status: 'pago' as StatusPagamento,
+          forma_pagamento: pagamentoData.forma_pagamento,
+          observacoes: [
+            contas.find(c => c.id === selectedId)?.observacoes,
+            pagamentoData.observacoes,
+            `Pago em ${format(now, "dd/MM/yyyy 'às' HH:mm")} por ${profile?.nome || 'Sistema'}`,
+          ].filter(Boolean).join(' | ') || null,
+        })
         .eq('id', selectedId);
       if (error) throw error;
       toast.success('Pagamento registrado!');
@@ -213,6 +223,20 @@ export default function ContasPagar() {
         </div>
         <Button onClick={handleNew} className="gap-2"><Plus className="h-4 w-4" />Nova Conta</Button>
       </div>
+
+      {/* Overdue alert */}
+      {contas.filter(c => c.status === 'atrasado').length > 0 && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
+          <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+          <span className="text-sm text-destructive font-medium">
+            {contas.filter(c => c.status === 'atrasado').length} conta(s) vencida(s) — Total: {formatCurrency(stats.atrasado)}
+          </span>
+          <Button variant="outline" size="sm" className="ml-auto h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => setFilterStatus('atrasado')}>
+            Ver vencidas
+          </Button>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -504,6 +528,12 @@ export default function ContasPagar() {
                   {FORMAS_PAGAMENTO.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea value={pagamentoData.observacoes}
+                onChange={e => setPagamentoData({ ...pagamentoData, observacoes: e.target.value })}
+                placeholder="Anotações sobre o pagamento..." rows={2} />
             </div>
           </div>
           <DialogFooter>
