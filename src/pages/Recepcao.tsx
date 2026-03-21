@@ -442,6 +442,30 @@ export default function Recepcao() {
     setIsProcessing(false);
   }
 
+  async function handleEncaminharTriagem(agId: string, pacienteId: string) {
+    setIsProcessing(true);
+    try {
+      // Check if triagem already exists for this agendamento
+      const { data: existing } = await supabase
+        .from('triagens')
+        .select('id')
+        .eq('agendamento_id', agId)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        toast.info('Triagem já registrada para este agendamento');
+        navigate('/triagem');
+        setIsProcessing(false);
+        return;
+      }
+      toast.success('Paciente encaminhado para triagem!', {
+        description: 'Acesse a página de Triagem para registrar os sinais vitais',
+        action: { label: 'Ir para Triagem', onClick: () => navigate('/triagem') },
+      });
+      navigate(`/triagem`);
+    } catch { toast.error('Erro ao encaminhar'); }
+    setIsProcessing(false);
+  }
+
   // ─── Render ───────────────────────────────────────────
   return (
     <div className="space-y-6">
