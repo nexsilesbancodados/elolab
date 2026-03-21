@@ -221,7 +221,8 @@ function SalasManager() {
 
   const openEdit = (s: any) => {
     setEditId(s.id);
-    setForm({ nome: s.nome, tipo: s.tipo || 'consultorio', ativo: s.ativo ?? true, equipamentos: s.equipamentos || '' });
+    const eq = Array.isArray(s.equipamentos) ? s.equipamentos.join(', ') : (s.equipamentos || '');
+    setForm({ nome: s.nome, tipo: s.tipo || 'consultorio', ativo: s.ativo ?? true, equipamentos: eq });
     setShowForm(true);
   };
 
