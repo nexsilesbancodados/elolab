@@ -1228,57 +1228,25 @@ export default function CaixaDiario() {
               {/* Action buttons */}
               <div className="grid grid-cols-3 gap-2">
                 <Button variant="outline" className="gap-1.5" onClick={() => {
-                  const w = window.open('', '_blank', 'width=420,height=600');
-                  if (!w) return;
-                  w.document.write(`<!DOCTYPE html><html><head><title>Cupom</title>
-                    <style>
-                      body { font-family: 'Segoe UI', sans-serif; max-width: 350px; margin: 20px auto; font-size: 13px; color: #333; }
-                      .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
-                      .header h2 { margin: 0; font-size: 18px; }
-                      .row { display: flex; justify-content: space-between; padding: 4px 0; }
-                      .row.total { border-top: 2px solid #333; margin-top: 8px; padding-top: 8px; font-weight: bold; font-size: 16px; }
-                      .discount { color: #16a34a; }
-                      .surcharge { color: #dc2626; }
-                      .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; border-top: 1px dashed #ccc; padding-top: 10px; }
-                      @media print { body { margin: 0; } }
-                    </style></head><body>
-                    <div class="header"><h2>CUPOM DE RECEBIMENTO</h2><p>${cupomData.dataHora}</p></div>
-                    <div class="row"><span>Paciente:</span><strong>${cupomData.paciente}</strong></div>
-                    ${cupomData.cpf ? `<div class="row"><span>CPF:</span><span>${cupomData.cpf}</span></div>` : ''}
-                    <div class="row"><span>Descrição:</span><span>${cupomData.descricao}</span></div>
-                    ${cupomData.categoria ? `<div class="row"><span>Categoria:</span><span>${cupomData.categoria}</span></div>` : ''}
-                    <div class="row"><span>Forma Pgto:</span><span>${cupomData.formaPagamento}</span></div>
-                    <hr style="border:none;border-top:1px dashed #ccc;margin:8px 0;">
-                    <div class="row"><span>Valor original:</span><span>R$ ${cupomData.valorOriginal.toFixed(2)}</span></div>
-                    ${cupomData.desconto > 0 ? `<div class="row discount"><span>Desconto:</span><span>- R$ ${cupomData.desconto.toFixed(2)}</span></div>` : ''}
-                    ${cupomData.acrescimo > 0 ? `<div class="row surcharge"><span>Acréscimo:</span><span>+ R$ ${cupomData.acrescimo.toFixed(2)}</span></div>` : ''}
-                    <div class="row total"><span>TOTAL PAGO:</span><span>R$ ${cupomData.valorFinal.toFixed(2)}</span></div>
-                    <div class="footer"><p>Recebido por: ${cupomData.operador}</p><p>Documento sem valor fiscal</p></div>
-                    <script>window.onload = function() { window.print(); }</script>
-                  </body></html>`);
-                  w.document.close();
+                  printReceiptPdf({
+                    titulo: 'CUPOM DE RECEBIMENTO',
+                    dataHora: cupomData.dataHora,
+                    paciente: cupomData.paciente,
+                    cpf: cupomData.cpf,
+                    descricao: cupomData.descricao,
+                    categoria: cupomData.categoria,
+                    formaPagamento: cupomData.formaPagamento,
+                    valorOriginal: cupomData.valorOriginal,
+                    desconto: cupomData.desconto,
+                    acrescimo: cupomData.acrescimo,
+                    valorFinal: cupomData.valorFinal,
+                    operador: cupomData.operador,
+                  });
                 }}>
                   <Printer className="h-4 w-4" /> Imprimir
                 </Button>
                 <Button variant="outline" className="gap-1.5" onClick={() => {
-                  const text = [
-                    '📋 *CUPOM DE RECEBIMENTO*',
-                    `📅 ${cupomData.dataHora}`,
-                    '',
-                    `👤 Paciente: ${cupomData.paciente}`,
-                    cupomData.cpf ? `🪪 CPF: ${cupomData.cpf}` : '',
-                    `📝 ${cupomData.descricao}`,
-                    cupomData.categoria ? `📂 ${cupomData.categoria}` : '',
-                    `💳 ${cupomData.formaPagamento}`,
-                    '',
-                    `💰 Valor: R$ ${cupomData.valorOriginal.toFixed(2)}`,
-                    cupomData.desconto > 0 ? `🟢 Desconto: - R$ ${cupomData.desconto.toFixed(2)}` : '',
-                    cupomData.acrescimo > 0 ? `🔴 Acréscimo: + R$ ${cupomData.acrescimo.toFixed(2)}` : '',
-                    `✅ *TOTAL PAGO: R$ ${cupomData.valorFinal.toFixed(2)}*`,
-                    '',
-                    `Recebido por: ${cupomData.operador}`,
-                    '_Documento sem valor fiscal_',
-                  ].filter(Boolean).join('\n');
+                  const text = getReceiptWhatsAppText(cupomData);
                   const phone = (cupomData.telefone || '').replace(/\D/g, '');
                   const url = phone
                     ? `https://wa.me/55${phone}?text=${encodeURIComponent(text)}`
@@ -1288,34 +1256,23 @@ export default function CaixaDiario() {
                   <MessageCircle className="h-4 w-4" /> WhatsApp
                 </Button>
                 <Button variant="outline" className="gap-1.5" onClick={() => {
-                  const text = [
-                    'CUPOM DE RECEBIMENTO',
-                    cupomData.dataHora,
-                    '',
-                    `Paciente: ${cupomData.paciente}`,
-                    cupomData.cpf ? `CPF: ${cupomData.cpf}` : '',
-                    `Descrição: ${cupomData.descricao}`,
-                    cupomData.categoria ? `Categoria: ${cupomData.categoria}` : '',
-                    `Forma Pgto: ${cupomData.formaPagamento}`,
-                    '',
-                    `Valor: R$ ${cupomData.valorOriginal.toFixed(2)}`,
-                    cupomData.desconto > 0 ? `Desconto: - R$ ${cupomData.desconto.toFixed(2)}` : '',
-                    cupomData.acrescimo > 0 ? `Acréscimo: + R$ ${cupomData.acrescimo.toFixed(2)}` : '',
-                    `TOTAL PAGO: R$ ${cupomData.valorFinal.toFixed(2)}`,
-                    '',
-                    `Recebido por: ${cupomData.operador}`,
-                    'Documento sem valor fiscal',
-                  ].filter(Boolean).join('\n');
-                  const blob = new Blob([text], { type: 'text/plain' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `cupom_${cupomData.paciente.replace(/\s+/g, '_')}_${cupomData.data.replace(/\//g, '-')}.txt`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  toast.success('Cupom baixado!');
+                  downloadReceiptPdf({
+                    titulo: 'CUPOM DE RECEBIMENTO',
+                    dataHora: cupomData.dataHora,
+                    paciente: cupomData.paciente,
+                    cpf: cupomData.cpf,
+                    descricao: cupomData.descricao,
+                    categoria: cupomData.categoria,
+                    formaPagamento: cupomData.formaPagamento,
+                    valorOriginal: cupomData.valorOriginal,
+                    desconto: cupomData.desconto,
+                    acrescimo: cupomData.acrescimo,
+                    valorFinal: cupomData.valorFinal,
+                    operador: cupomData.operador,
+                  });
+                  toast.success('PDF baixado!');
                 }}>
-                  <Download className="h-4 w-4" /> Baixar
+                  <Download className="h-4 w-4" /> Baixar PDF
                 </Button>
               </div>
             </div>
