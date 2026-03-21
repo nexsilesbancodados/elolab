@@ -147,7 +147,7 @@ export default function CaixaDiario() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lancamentos')
-        .select('*')
+        .select('*, pacientes:paciente_id(id, nome, telefone, cpf)')
         .eq('tipo', 'receita')
         .gte('data', periodoRange.de)
         .lte('data', periodoRange.ate)
@@ -156,15 +156,6 @@ export default function CaixaDiario() {
       return data || [];
     },
     enabled: viewMode === 'historico',
-  });
-
-  const { data: pacientes = [] } = useQuery({
-    queryKey: ['pacientes-caixa'],
-    queryFn: async () => {
-      const { data } = await supabase.from('pacientes').select('id, nome, telefone, cpf');
-      return data || [];
-    },
-    staleTime: 60000,
   });
 
   useEffect(() => {
