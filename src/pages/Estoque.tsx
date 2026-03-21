@@ -287,6 +287,36 @@ export default function Estoque() {
     setIsTimelineOpen(true);
   };
 
+  const handleDeleteProduto = async () => {
+    if (!deleteId) return;
+    setIsSaving(true);
+    try {
+      // Delete movements first
+      await supabase.from('movimentacoes_estoque').delete().eq('item_id', deleteId);
+      const { error } = await supabase.from('estoque').delete().eq('id', deleteId);
+      if (error) throw error;
+      toast.success('Produto excluído!');
+      queryClient.invalidateQueries({ queryKey: ['estoque'] });
+      setIsDeleteOpen(false);
+      setDeleteId(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir.');
+    } finally { setIsSaving(false); }
+  };
+
+  // Expiry alert items
+  const expiryAlerts = useMemo(() => {
+    return (estoque as any[]).filter(p => {
+      if (!p.validade) return false;
+      const dias = differenceInDays(new Date(p.validade), new Date());
+      return dias <= 60;
+    }).sort((a, b) => {
+      const dA = differenceInDays(new Date(a.validade), new Date());
+      const dB = differenceInDays(new Date(b.validade), new Date());
+      return dA - dB;
+    });
+  }, [estoque]);
+
   const isMedicamento = formData.categoria === 'medicamentos';
   const timelineItem = (estoque as any[]).find(p => p.id === timelineItemId);
 
