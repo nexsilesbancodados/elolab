@@ -61,7 +61,12 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
 
           {/* Label */}
           {!collapsed && (
-            <span className="truncate flex-1">{item.label}</span>
+            <span
+              className="truncate flex-1 transition-colors duration-150"
+              style={isActive && !item.external && groupColor ? { color: groupColor } : undefined}
+            >
+              {item.label}
+            </span>
           )}
 
           {/* Badge */}
