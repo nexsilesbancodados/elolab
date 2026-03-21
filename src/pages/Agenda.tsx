@@ -370,10 +370,33 @@ export default function Agenda() {
 
         if (error) throw error;
         
-        // Send WhatsApp confirmation for each new appointment
+        // Send WhatsApp confirmation + schedule reminder for each new appointment
         if (inserted) {
           for (const ag of inserted) {
             sendWhatsAppNotification(ag.id, 'send_appointment_confirmation');
+          }
+          // Schedule reminder notification (24h before) — best effort
+          try {
+            const paciente = pacientes.find(p => p.id === formData.paciente_id);
+            for (let i = 0; i < inserted.length; i++) {
+              const agDate = newAgendamentos[i];
+              const reminderDate = new Date(`${agDate.data}T${agDate.hora_inicio}`);
+              reminderDate.setHours(reminderDate.getHours() - 24);
+              
+              await supabase.from('notification_queue').insert({
+                tipo: 'whatsapp',
+                conteudo: `Lembrete: você tem consulta amanhã às ${agDate.hora_inicio?.slice(0, 5)} na clínica. Paciente: ${paciente?.nome || 'Paciente'}`,
+                destinatario_nome: paciente?.nome || '',
+                destinatario_telefone: paciente?.telefone || '',
+                destinatario_id: formData.paciente_id,
+                agendado_para: reminderDate.toISOString(),
+                status: 'pendente',
+                dados_extras: { agendamento_id: inserted[i].id, tipo: 'lembrete_consulta' },
+              });
+            }
+          } catch (e) {
+            // Reminder is non-blocking
+            if (import.meta.env.DEV) console.log('Reminder scheduling skipped:', e);
           }
         }
 
