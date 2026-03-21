@@ -393,6 +393,24 @@ export default function Recepcao() {
         </p>
       </motion.div>
 
+      {/* Caixa fechado alert */}
+      {!caixaAberto && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Lock className="h-4 w-4 text-destructive" />
+                <span className="font-medium text-destructive">Caixa fechado</span>
+                <span className="text-muted-foreground">— Abra o caixa para realizar check-ins e pagamentos.</span>
+              </div>
+              <Button size="sm" variant="destructive" className="gap-1.5 shrink-0" onClick={() => navigate('/caixa')}>
+                <LockOpen className="h-3.5 w-3.5" /> Abrir Caixa
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Stats */}
       <motion.div
         variants={stagger}
