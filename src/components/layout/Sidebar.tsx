@@ -96,27 +96,27 @@ export function Sidebar() {
       {/* ─── Header ─── */}
       <div className={cn(
         'flex items-center shrink-0',
-        collapsed ? 'justify-center px-2 h-16' : 'justify-between px-4 h-16'
+        collapsed ? 'justify-center px-2 h-[72px]' : 'justify-between px-4 h-[72px]'
       )}>
         {!collapsed ? (
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl shrink-0 overflow-hidden ring-1 ring-sidebar-border/60">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl shrink-0 overflow-hidden bg-gradient-to-br from-emerald-400/20 to-teal-500/10 ring-1 ring-emerald-500/20 shadow-sm">
               <img src={logoIcon} alt="EloLab" className="h-8 w-8 object-contain" />
-              <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar" />
+              <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar animate-pulse" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[15px] font-bold text-sidebar-foreground tracking-tight">
+              <span className="text-[16px] font-extrabold text-sidebar-foreground tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
                 EloLab
               </span>
-              <span className="text-[10px] text-sidebar-foreground/35 font-medium mt-0.5">
+              <span className="text-[10.5px] text-sidebar-foreground/40 font-medium mt-0.5 tracking-wide uppercase">
                 Gestão Clínica
               </span>
             </div>
           </div>
         ) : (
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden ring-1 ring-sidebar-border/60">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-emerald-400/20 to-teal-500/10 ring-1 ring-emerald-500/20 shadow-sm">
             <img src={logoIcon} alt="EloLab" className="h-8 w-8 object-contain" />
-            <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar" />
+            <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar animate-pulse" />
           </div>
         )}
 
