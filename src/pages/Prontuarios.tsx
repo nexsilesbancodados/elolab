@@ -561,10 +561,11 @@ export default function Prontuarios() {
 
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
 
-  const handleSave = async () => {
+  // ─── Core save logic (used by manual save and auto-save) ───
+  const performSave = async (silent = false): Promise<string | null> => {
     if (!currentProntuario.queixa_principal) {
-      toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
-      return;
+      if (!silent) toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      return null;
     }
     try {
       const payload = {
@@ -604,9 +605,13 @@ export default function Prontuarios() {
         }).select().single();
         if (error) throw error;
         prontuarioId = data.id;
+        setCurrentProntuario(prev => ({ ...prev, id: prontuarioId }));
       }
 
-      if (!currentProntuario.id) {
+      // ─── Save prescriptions (create + update) ───
+      if (prontuarioId) {
+        // Delete existing prescriptions for this prontuário, then re-insert
+        await supabase.from('prescricoes').delete().eq('prontuario_id', prontuarioId);
         for (const presc of prescricoes) {
           if (presc.medicamento) {
             await supabase.from('prescricoes').insert({
@@ -617,32 +622,104 @@ export default function Prontuarios() {
               observacoes: presc.observacoes || null,
               data_emissao: format(new Date(), 'yyyy-MM-dd'), tipo: 'simples',
             });
+
+            // ─── Stock deduction ───
+            const { data: estoqueItem } = await supabase.from('estoque')
+              .select('id, quantidade, nome')
+              .ilike('nome', `%${presc.medicamento}%`)
+              .gt('quantidade', 0)
+              .limit(1)
+              .maybeSingle();
+            if (estoqueItem) {
+              const qtd = parseInt(presc.quantidade) || 1;
+              const newQtd = Math.max(0, estoqueItem.quantidade - qtd);
+              await supabase.from('estoque').update({ quantidade: newQtd }).eq('id', estoqueItem.id);
+              await supabase.from('movimentacoes_estoque').insert({
+                item_id: estoqueItem.id, tipo: 'saida', quantidade: qtd,
+                motivo: `Prescrição — ${selectedPaciente?.nome || 'paciente'}`,
+              });
+            }
           }
         }
       }
 
+      // ─── Audit log ───
       try {
-        const changes = currentProntuario.id ? {
-          campos_alterados: Object.keys(payload).filter(k =>
-            JSON.stringify((currentProntuario as any)[k]) !== JSON.stringify((payload as any)[k])
-          ),
-          editado_em: new Date().toISOString(),
-        } : undefined;
         await supabase.from('audit_log').insert({
-          action: currentProntuario.id ? 'update' : 'create',
+          action: currentProntuario.id && !silent ? 'update' : 'create',
           collection: 'prontuarios', record_id: prontuarioId,
           record_name: selectedPaciente?.nome || '',
           user_id: user?.id || null, user_name: user?.nome || null,
-          changes: changes || null,
         });
       } catch { /* silent */ }
 
-      refetchProntuarios();
-      setIsProntuarioOpen(false);
-      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
+      if (silent) {
+        setAutoSaveTime(format(new Date(), 'HH:mm'));
+      } else {
+        refetchProntuarios();
+        // Reload history
+        const { data: hist } = await supabase.from('prontuarios')
+          .select('id, data, queixa_principal, historia_doenca_atual, exames_fisicos, hipotese_diagnostica, conduta, sinais_vitais, diagnostico_principal, plano_terapeutico, medicos(nome, crm, especialidade)')
+          .eq('paciente_id', currentProntuario.paciente_id)
+          .order('data', { ascending: false }).limit(50);
+        setHistoricoEvolucoes(hist ?? []);
+      }
+
+      return prontuarioId;
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
-      toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
+      if (!silent) toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const handleSave = async () => {
+    const id = await performSave(false);
+    if (id) {
+      setIsProntuarioOpen(false);
+      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
+    }
+  };
+
+  // ─── Auto-save every 60s ───
+  useEffect(() => {
+    if (isProntuarioOpen && isEditing && currentProntuario.queixa_principal) {
+      autoSaveRef.current = setInterval(() => {
+        performSave(true);
+      }, 60000);
+      return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current); };
+    }
+    return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current); };
+  }, [isProntuarioOpen, isEditing, currentProntuario, sinaisVitais, prescricoes]);
+
+  // Reset auto-save time when dialog closes
+  useEffect(() => {
+    if (!isProntuarioOpen) setAutoSaveTime(null);
+  }, [isProntuarioOpen]);
+
+  // ─── Exam solicitation ───
+  const handleSolicitarExame = async () => {
+    if (!examForm.tipo_exame) {
+      toast({ title: 'Erro', description: 'Informe o tipo do exame.', variant: 'destructive' });
+      return;
+    }
+    const resolvedMedicoId = medicoId || medicos.find(m => m.ativo !== false)?.id;
+    if (!resolvedMedicoId || !selectedPacienteId) return;
+    const { error } = await supabase.from('exames').insert({
+      paciente_id: selectedPacienteId,
+      medico_solicitante_id: resolvedMedicoId,
+      tipo_exame: examForm.tipo_exame,
+      descricao: examForm.descricao || null,
+      observacoes: examForm.observacoes || null,
+      status: 'solicitado',
+      data_solicitacao: format(new Date(), 'yyyy-MM-dd'),
+    });
+    if (!error) {
+      toast({ title: 'Exame solicitado', description: `${examForm.tipo_exame} registrado.` });
+      setExamForm({ tipo_exame: '', descricao: '', observacoes: '' });
+      setShowExamSolicitation(false);
+    } else {
+      toast({ title: 'Erro', description: 'Erro ao solicitar exame.', variant: 'destructive' });
     }
   };
 
