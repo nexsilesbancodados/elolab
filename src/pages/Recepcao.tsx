@@ -677,9 +677,16 @@ export default function Recepcao() {
                                 {/* Step 3: Finalizado — post-consultation actions */}
                                 {step === 3 && (
                                   <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                    <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-0 w-fit">
-                                      <Check className="h-3 w-3 mr-1" /> Consulta finalizada
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-0 w-fit">
+                                        <Check className="h-3 w-3 mr-1" /> Consulta finalizada
+                                      </Badge>
+                                      {lanc?.status === 'pago' && (
+                                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" /> Pago
+                                        </Badge>
+                                      )}
+                                    </div>
                                     <div className="flex flex-wrap gap-1.5">
                                       <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
                                         onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}>
@@ -697,6 +704,13 @@ export default function Recepcao() {
                                         onClick={() => navigate(`/prontuarios?paciente=${ag.paciente_id}`)}>
                                         <ClipboardList className="h-3 w-3" /> Prontuário
                                       </Button>
+                                      {fila && (
+                                        <Button size="sm" className="gap-1 text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto"
+                                          onClick={() => handleConcluir(ag.id, fila.id)}
+                                          disabled={isProcessing}>
+                                          <CheckCircle2 className="h-3 w-3" /> Concluir
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
                                 )}
