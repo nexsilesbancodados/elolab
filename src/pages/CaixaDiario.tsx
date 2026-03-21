@@ -272,9 +272,12 @@ export default function CaixaDiario() {
   const handleAbrirCaixa = () => {
     setCaixaAberto(true);
     setShowAbertura(false);
-    localStorage.setItem('caixa_estado', JSON.stringify({
-      aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema',
-    }));
+    const estado = { aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
+    if (profile) {
+      supabase.from('configuracoes_clinica').upsert({
+        chave: 'caixa_estado', user_id: profile.id, valor: estado as any,
+      }, { onConflict: 'user_id,chave' });
+    }
     toast.success(`Caixa aberto com troco de R$ ${valorAbertura.toFixed(2)}`);
   };
 
