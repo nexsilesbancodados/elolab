@@ -345,6 +345,33 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
+        {/* ─── Tipos de Consulta ─── */}
+        <TabsContent value="consultas">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <TiposConsulta />
+            </Suspense>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Preços de Exames ─── */}
+        <TabsContent value="exames">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <PrecosExames />
+            </Suspense>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Convênios ─── */}
+        <TabsContent value="convenios">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <Convenios />
+            </Suspense>
+          </motion.div>
+        </TabsContent>
+
         {/* ─── Notificações ─── */}
         <TabsContent value="notificacoes">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
