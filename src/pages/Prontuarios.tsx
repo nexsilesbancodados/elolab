@@ -444,6 +444,10 @@ export default function Prontuarios() {
   const [showDischargeReport, setShowDischargeReport] = useState(false);
   const [sinaisVitais, setSinaisVitais] = useState<SinaisVitais>(emptySinaisVitais);
   const [isEditing, setIsEditing] = useState(false);
+  const [autoSaveTime, setAutoSaveTime] = useState<string | null>(null);
+  const [showExamSolicitation, setShowExamSolicitation] = useState(false);
+  const [examForm, setExamForm] = useState({ tipo_exame: '', descricao: '', observacoes: '' });
+  const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
