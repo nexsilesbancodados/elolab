@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
 import { autoCheckin, autoIniciarAtendimento, autoFinalizarAtendimento, autoConfirmarPagamento } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
