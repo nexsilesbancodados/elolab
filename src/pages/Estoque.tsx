@@ -76,6 +76,8 @@ export default function Estoque() {
     tipo: 'entrada', quantidade: 0, motivo: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const { data: estoque = [], isLoading } = useEstoque();
