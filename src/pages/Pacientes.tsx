@@ -8,6 +8,7 @@ import {
   AlertTriangle, Activity, ChevronRight, History, PenLine, Lock,
   ShieldCheck, BookOpen, FileCheck, Brain, Bone, Eye as EyeIcon,
   Thermometer, Scale, Ruler, Paperclip, Shield, Clipboard,
+  Clock, TestTube, DollarSign, CalendarPlus, RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
