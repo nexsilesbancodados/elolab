@@ -306,6 +306,10 @@ export default function Fila() {
       );
       refresh();
       toast.success('▶ Atendimento iniciado', { description: result.actions.join(' • ') });
+      // Navigate to prontuário for the consultation
+      if (ag?.paciente_id) {
+        navigate(`/prontuarios?paciente=${ag.paciente_id}&agendamento=${agendamentoId}`);
+      }
       return;
     }
 
