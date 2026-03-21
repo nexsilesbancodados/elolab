@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { printReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -412,48 +413,19 @@ export default function Recepcao() {
   function gerarComprovante(lanc: any, pac: any, forma: string, valorFinal: number) {
     const formaLabel = FORMAS_PAGAMENTO.find(f => f.value === forma)?.label || forma;
     const agora = format(new Date(), "dd/MM/yyyy 'às' HH:mm");
-    const w = window.open('', '_blank', 'width=400,height=600');
-    if (!w) { toast.info('Comprovante gerado. Desbloqueie popups para imprimir.'); return; }
-    w.document.write(`<!DOCTYPE html><html><head><title>Comprovante</title>
-      <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Courier New',monospace;width:300px;margin:0 auto;padding:16px;font-size:12px}
-        .center{text-align:center}
-        .line{border-top:1px dashed #333;margin:8px 0}
-        .row{display:flex;justify-content:space-between;padding:2px 0}
-        .bold{font-weight:bold}
-        .total{font-size:16px;font-weight:bold}
-        h2{font-size:16px;margin-bottom:4px}
-        .footer{margin-top:12px;font-size:10px;text-align:center;color:#666}
-        @media print{.no-print{display:none !important}}
-      </style></head><body>
-      <div class="center">
-        <h2>COMPROVANTE DE PAGAMENTO</h2>
-        <p style="font-size:10px">EloLab — Sistema Clínico</p>
-      </div>
-      <div class="line"></div>
-      <div class="row"><span>Data:</span><span>${agora}</span></div>
-      <div class="row"><span>Nº Doc:</span><span>${lanc.id?.slice(0, 8).toUpperCase()}</span></div>
-      <div class="line"></div>
-      <div class="row bold"><span>Paciente:</span><span>${pac?.nome || '—'}</span></div>
-      ${pac?.cpf ? `<div class="row"><span>CPF:</span><span>${pac.cpf}</span></div>` : ''}
-      <div class="line"></div>
-      <div class="row"><span>Descrição:</span><span>${lanc.descricao || 'Consulta'}</span></div>
-      <div class="row"><span>Forma Pgto:</span><span>${formaLabel}</span></div>
-      ${desconto > 0 ? `<div class="row"><span>Desconto:</span><span>- R$ ${desconto.toFixed(2)}</span></div>` : ''}
-      ${acrescimo > 0 ? `<div class="row"><span>Acréscimo:</span><span>+ R$ ${acrescimo.toFixed(2)}</span></div>` : ''}
-      <div class="line"></div>
-      <div class="row total"><span>TOTAL PAGO:</span><span>R$ ${valorFinal.toFixed(2)}</span></div>
-      <div class="line"></div>
-      <div class="footer">
-        <p>Documento sem valor fiscal</p>
-        <p>Obrigado pela preferência!</p>
-      </div>
-      <div class="center no-print" style="margin-top:16px">
-        <button onclick="window.print()" style="padding:8px 24px;font-size:14px;cursor:pointer;border:1px solid #333;background:#fff;border-radius:4px">🖨️ Imprimir</button>
-      </div>
-      </body></html>`);
-    w.document.close();
+    printReceiptPdf({
+      titulo: 'COMPROVANTE DE PAGAMENTO',
+      dataHora: agora,
+      docId: lanc.id?.slice(0, 8).toUpperCase(),
+      paciente: pac?.nome || '—',
+      cpf: pac?.cpf || '',
+      descricao: lanc.descricao || 'Consulta',
+      formaPagamento: formaLabel,
+      valorOriginal: lanc.valor || 0,
+      desconto: desconto > 0 ? desconto : undefined,
+      acrescimo: acrescimo > 0 ? acrescimo : undefined,
+      valorFinal,
+    });
   }
 
   async function handleConfirmarPagamento() {
