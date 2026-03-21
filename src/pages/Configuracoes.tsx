@@ -195,13 +195,14 @@ function SalasManager() {
     if (!form.nome.trim()) { toast.error('Nome é obrigatório'); return; }
     setSaving(true);
     try {
-      const payload = { nome: form.nome.trim(), tipo: form.tipo, ativo: form.ativo, equipamentos: form.equipamentos || null };
+      const equipArray = form.equipamentos ? form.equipamentos.split(',').map(s => s.trim()).filter(Boolean) : null;
+      const payload: any = { nome: form.nome.trim(), tipo: form.tipo, ativo: form.ativo, equipamentos: equipArray };
       if (editId) {
         const { error } = await supabase.from('salas').update(payload).eq('id', editId);
         if (error) throw error;
         toast.success('Sala atualizada!');
       } else {
-        const { error } = await supabase.from('salas').insert(payload);
+        const { error } = await supabase.from('salas').insert([payload]);
         if (error) throw error;
         toast.success('Sala criada!');
       }
