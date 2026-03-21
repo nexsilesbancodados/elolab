@@ -134,6 +134,40 @@ export default function Recepcao() {
     },
   });
 
+  // Check if caixa is open
+  const { data: caixaAberto = false } = useQuery({
+    queryKey: ['caixa-estado-recepcao', profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return false;
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'caixa_estado')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      if (!data?.valor) return false;
+      const estado = data.valor as any;
+      return estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto === true;
+    },
+    enabled: !!profile?.id,
+  });
+
+  function checkCaixaAberto(): boolean {
+    if (!caixaAberto) {
+      toast.error('Caixa fechado!', {
+        description: 'Abra o Caixa Diário antes de realizar pagamentos.',
+        action: {
+          label: 'Abrir Caixa',
+          onClick: () => navigate('/caixa'),
+        },
+        duration: 6000,
+      });
+      return false;
+    }
+    return true;
+  }
+
+
   // Realtime subscriptions
   useEffect(() => {
     const ch = supabase
