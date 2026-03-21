@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS auto_billing_on_appointment_complete ON public.agendamentos;
