@@ -148,6 +148,18 @@ export default function Pacientes() {
   const [prontuarioPrescricoes, setProntuarioPrescricoes] = useState<any[]>([]);
   const [prontuarioTab, setProntuarioTab] = useState('lista');
   const [savingProntuario, setSavingProntuario] = useState(false);
+  // Agendamentos inline state
+  const [agendamentosList, setAgendamentosList] = useState<any[]>([]);
+  const [loadingAgendamentos, setLoadingAgendamentos] = useState(false);
+  const [showAgendamentoForm, setShowAgendamentoForm] = useState(false);
+  const [agendamentoForm, setAgendamentoForm] = useState<Record<string, string>>({});
+  const [savingAgendamento, setSavingAgendamento] = useState(false);
+  // Exames inline state
+  const [examesList, setExamesList] = useState<any[]>([]);
+  const [loadingExames, setLoadingExames] = useState(false);
+  const [showExameForm, setShowExameForm] = useState(false);
+  const [exameForm, setExameForm] = useState<Record<string, string>>({});
+  const [savingExame, setSavingExame] = useState(false);
 
   const { toast } = useToast();
   const { profile: authProfile } = useSupabaseAuth();
