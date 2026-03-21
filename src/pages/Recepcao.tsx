@@ -343,8 +343,8 @@ export default function Recepcao() {
       >
         {[
           { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Na Fila', value: stats.naFila, icon: Users, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-          { label: 'Aguardando Pgto', value: stats.pagamento, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+          { label: 'Na Fila / Atendimento', value: stats.naFila, icon: Users, color: 'text-sky-500', bg: 'bg-sky-500/10' },
+          { label: 'Balcão', value: stats.pagamento, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
           { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
         ].map((s, i) => (
           <motion.div key={i} variants={fadeUp}>
