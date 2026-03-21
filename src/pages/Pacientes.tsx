@@ -79,8 +79,9 @@ const initialFormData: PacienteFormData = {
 };
 
 const SEXO_OPTIONS = [
-  { value: 'masculino', label: 'Masculino' },
-  { value: 'feminino', label: 'Feminino' },
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Feminino' },
+  { value: 'O', label: 'Outro' },
   { value: 'outro', label: 'Outro' },
 ];
 
