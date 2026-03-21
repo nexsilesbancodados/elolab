@@ -95,10 +95,10 @@ export default function ContasPagar() {
   const [isPagamentoOpen, setIsPagamentoOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [pagamentoData, setPagamentoData] = useState({ forma_pagamento: 'pix' });
+  const [pagamentoData, setPagamentoData] = useState({ forma_pagamento: 'pix', observacoes: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
   const { data: contas = [], isLoading } = useQuery({
