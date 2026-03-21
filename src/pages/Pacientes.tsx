@@ -538,7 +538,7 @@ export default function Pacientes() {
         bairro: formData.bairro || null,
         cidade: formData.cidade || null,
         estado: formData.estado || null,
-        convenio_id: formData.convenio_id || null,
+        convenio_id: formData.convenio_id && formData.convenio_id !== '' && formData.convenio_id !== 'none' ? formData.convenio_id : null,
         numero_carteira: formData.numero_carteira || null,
         validade_carteira: formData.validade_carteira || null,
         alergias: formData.alergias,
@@ -561,7 +561,7 @@ export default function Pacientes() {
       refetch();
       setIsFormOpen(false);
     } catch (error: any) {
-      if (import.meta.env.DEV) console.error('Erro ao salvar:', error);
+      console.error('Erro ao salvar paciente:', error);
       const msg = error?.message || error?.details || 'Verifique os dados e tente novamente.';
       toast({ title: 'Erro ao salvar paciente', description: msg, variant: 'destructive' });
     } finally {
@@ -954,9 +954,10 @@ export default function Pacientes() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
                     <div className="space-y-2 md:col-span-2">
                       <Label>Convênio</Label>
-                      <Select value={formData.convenio_id} onValueChange={v => setFormData({ ...formData, convenio_id: v })}>
+                      <Select value={formData.convenio_id || 'none'} onValueChange={v => setFormData({ ...formData, convenio_id: v === 'none' ? '' : v })}>
                         <SelectTrigger><SelectValue placeholder="Selecione o convênio" /></SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="none">Nenhum (Particular)</SelectItem>
                           {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                         </SelectContent>
                       </Select>
