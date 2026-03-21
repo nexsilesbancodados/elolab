@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,15 +12,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, isToday, isYesterday, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   FlaskConical, Search, Plus, TestTube, ClipboardCheck, AlertTriangle,
   Clock, CheckCircle2, XCircle, Eye, Printer, Tag, Barcode,
-  User, Droplets, MapPin, Package, FileText, Link2,
+  User, Droplets, MapPin, Package, FileText, Link2, Filter,
+  TrendingUp, Activity, Calendar, ArrowRight, Trash2, RotateCcw,
+  Download, Zap, Timer, Shield,
 } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
@@ -30,6 +34,7 @@ const statusColors: Record<string, string> = {
   validado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   liberado: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   cancelado: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  recoleta: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
 };
 
 const statusLabels: Record<string, string> = {
@@ -39,19 +44,17 @@ const statusLabels: Record<string, string> = {
   validado: 'Validado',
   liberado: 'Liberado',
   cancelado: 'Cancelado',
+  recoleta: 'Recoleta',
 };
+
+const PIPELINE_STEPS = ['pendente', 'coletado', 'em_analise', 'validado', 'liberado'];
 
 const CONDICOES_AMOSTRA = ['Hemólise', 'Lipemia', 'Icterícia', 'Coagulada', 'Volume insuficiente'];
 
 const SITIOS_COLETA = [
-  'Braço direito (veia cubital)',
-  'Braço esquerdo (veia cubital)',
-  'Mão direita',
-  'Mão esquerda',
-  'Acesso venoso central',
-  'Veia jugular',
-  'Cateter',
-  'Outro',
+  'Braço direito (veia cubital)', 'Braço esquerdo (veia cubital)',
+  'Mão direita', 'Mão esquerda', 'Acesso venoso central',
+  'Veia jugular', 'Cateter', 'Outro',
 ];
 
 const TUBOS = [
@@ -66,10 +69,17 @@ const TUBOS = [
   { value: 'Swab (Laranja)', color: 'bg-orange-400' },
 ];
 
+const SLA_WARNING_MINUTES = 120; // 2h
+const SLA_CRITICAL_MINUTES = 240; // 4h
+
 export default function Laboratorio() {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('todos');
+  const [dateFilter, setDateFilter] = useState('hoje');
+  const [urgentOnly, setUrgentOnly] = useState(false);
   const [showNewColeta, setShowNewColeta] = useState(false);
   const [showResultados, setShowResultados] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('worklist');
   const queryClient = useQueryClient();
   const { user } = useSupabaseAuth();
 
@@ -97,7 +107,6 @@ export default function Laboratorio() {
     },
   });
 
-  // Exames for linking
   const { data: examesPendentes } = useQuery({
     queryKey: ['exames-pendentes-lab'],
     queryFn: async () => {
@@ -112,7 +121,7 @@ export default function Laboratorio() {
     queryFn: async () => {
       const { data } = await supabase
         .from('coletas_laboratorio')
-        .select('*, pacientes(nome), medicos(nome, crm, especialidade)')
+        .select('*, pacientes(nome, cpf, data_nascimento, sexo), medicos(nome, crm, especialidade)')
         .order('created_at', { ascending: false });
       return data || [];
     },
@@ -139,6 +148,7 @@ export default function Laboratorio() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['coletas-laboratorio'] });
+      queryClient.invalidateQueries({ queryKey: ['exames-pendentes-lab'] });
       toast.success('Coleta registrada com sucesso!');
       setShowNewColeta(false);
     },
@@ -170,29 +180,84 @@ export default function Laboratorio() {
     onError: () => toast.error('Erro ao adicionar resultado'),
   });
 
-  const filtered = coletas?.filter((c: any) =>
-    c.pacientes?.nome?.toLowerCase().includes(search.toLowerCase()) ||
-    c.codigo_amostra?.toLowerCase().includes(search.toLowerCase())
-  );
+  // ─── Filtering with date ─────────────────────────────────
+  const filtered = useMemo(() => {
+    if (!coletas) return [];
+    return coletas.filter((c: any) => {
+      // Search
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        if (!c.pacientes?.nome?.toLowerCase().includes(q) &&
+            !c.codigo_amostra?.toLowerCase().includes(q) &&
+            !c.pacientes?.cpf?.toLowerCase().includes(q)) return false;
+      }
+      // Status
+      if (statusFilter !== 'todos' && c.status !== statusFilter) return false;
+      // Urgent
+      if (urgentOnly && !c.urgente) return false;
+      // Date
+      if (dateFilter === 'hoje' && c.created_at && !isToday(new Date(c.created_at))) return false;
+      if (dateFilter === 'ontem' && c.created_at && !isYesterday(new Date(c.created_at))) return false;
+      if (dateFilter === '7dias' && c.created_at && new Date(c.created_at) < subDays(new Date(), 7)) return false;
+      return true;
+    });
+  }, [coletas, search, statusFilter, urgentOnly, dateFilter]);
 
-  const stats = {
-    pendentes: coletas?.filter((c: any) => c.status === 'pendente').length || 0,
-    coletados: coletas?.filter((c: any) => c.status === 'coletado').length || 0,
-    emAnalise: coletas?.filter((c: any) => c.status === 'em_analise').length || 0,
-    liberados: coletas?.filter((c: any) => c.status === 'liberado').length || 0,
+  // ─── Stats ───────────────────────────────────────────────
+  const stats = useMemo(() => {
+    if (!coletas) return { pendentes: 0, coletados: 0, emAnalise: 0, validados: 0, liberados: 0, cancelados: 0, urgentes: 0, total: 0 };
+    const todayItems = coletas.filter((c: any) => c.created_at && isToday(new Date(c.created_at)));
+    return {
+      pendentes: todayItems.filter((c: any) => c.status === 'pendente').length,
+      coletados: todayItems.filter((c: any) => c.status === 'coletado').length,
+      emAnalise: todayItems.filter((c: any) => c.status === 'em_analise').length,
+      validados: todayItems.filter((c: any) => c.status === 'validado').length,
+      liberados: todayItems.filter((c: any) => c.status === 'liberado').length,
+      cancelados: todayItems.filter((c: any) => c.status === 'cancelado').length,
+      urgentes: todayItems.filter((c: any) => c.urgente).length,
+      total: todayItems.length,
+    };
+  }, [coletas]);
+
+  // SLA tracking
+  const slaBreaches = useMemo(() => {
+    if (!coletas) return [];
+    return coletas.filter((c: any) => {
+      if (c.status === 'liberado' || c.status === 'cancelado') return false;
+      if (!c.created_at) return false;
+      const mins = differenceInMinutes(new Date(), new Date(c.created_at));
+      return mins > SLA_CRITICAL_MINUTES;
+    });
+  }, [coletas]);
+
+  const completionRate = stats.total > 0
+    ? Math.round(((stats.liberados + stats.validados) / stats.total) * 100) : 0;
+
+  const getNextStatus = (current: string) => {
+    const idx = PIPELINE_STEPS.indexOf(current);
+    return idx >= 0 && idx < PIPELINE_STEPS.length - 1 ? PIPELINE_STEPS[idx + 1] : null;
   };
 
+  const getSLAColor = (created: string) => {
+    const mins = differenceInMinutes(new Date(), new Date(created));
+    if (mins > SLA_CRITICAL_MINUTES) return 'text-destructive';
+    if (mins > SLA_WARNING_MINUTES) return 'text-warning';
+    return 'text-muted-foreground';
+  };
+
+  const getSLALabel = (created: string) => {
+    const mins = differenceInMinutes(new Date(), new Date(created));
+    if (mins < 60) return `${mins}min`;
+    const h = Math.floor(mins / 60);
+    return `${h}h${mins % 60 > 0 ? `${mins % 60}m` : ''}`;
+  };
+
+  // ─── Form state ──────────────────────────────────────────
   const [newColetaForm, setNewColetaForm] = useState({
     paciente_id: '', medico_solicitante_id: '', tipo_amostra: 'sangue',
     tubo: '', observacoes: '', jejum_necessario: false, jejum_horas: 0, urgente: false,
-    // New fields
-    coletado_por: '',
-    data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-    exame_id: '',
-    volume_ml: '',
-    condicao_amostra: [] as string[],
-    sitio_coleta: '',
-    lote_insumo: '',
+    coletado_por: '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    exame_id: '', volume_ml: '', condicao_amostra: [] as string[], sitio_coleta: '', lote_insumo: '',
   });
 
   const resetColetaForm = () => setNewColetaForm({
@@ -211,7 +276,6 @@ export default function Laboratorio() {
     }));
   };
 
-  // Filter exames by selected patient
   const examesFiltrados = examesPendentes?.filter((e: any) =>
     !newColetaForm.paciente_id || e.paciente_id === newColetaForm.paciente_id
   ) || [];
@@ -228,111 +292,246 @@ export default function Laboratorio() {
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <FlaskConical className="h-6 w-6 text-primary" /> Laboratório
           </h1>
-          <p className="text-muted-foreground">Gestão de coletas, amostras e resultados laboratoriais</p>
+          <p className="text-muted-foreground">Central de gestão laboratorial — worklist, coletas e resultados</p>
         </div>
         <Button onClick={() => { resetColetaForm(); setShowNewColeta(true); }}>
           <Plus className="h-4 w-4 mr-2" /> Nova Coleta
         </Button>
       </div>
 
-      {/* ─── Visual Pipeline ─── */}
-      <div className="relative">
-        <div className="absolute top-1/2 left-0 right-0 h-1 bg-muted -translate-y-1/2 hidden md:block" />
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[
-            { label: 'Pendente', value: stats.pendentes, icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', step: 1 },
-            { label: 'Coletado', value: stats.coletados, icon: TestTube, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30', step: 2 },
-            { label: 'Em Análise', value: stats.emAnalise, icon: ClipboardCheck, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/30', step: 3 },
-            { label: 'Validado', value: coletas?.filter((c: any) => c.status === 'validado').length || 0, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30', step: 4 },
-            { label: 'Liberado', value: stats.liberados, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', step: 5 },
-          ].map((s) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: s.step * 0.05 }}>
-              <Card className={cn('relative border-2', s.border, 'hover:shadow-md transition-shadow')}>
-                <CardContent className="pt-4 pb-3 flex items-center gap-3">
-                  <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>
-                    <s.icon className={cn('h-5 w-5', s.color)} />
-                  </div>
-                  <div>
-                    <p className={cn('text-2xl font-bold tabular-nums', s.color)}>{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">{s.label}</p>
-                  </div>
-                </CardContent>
-                {/* Arrow connector */}
-                {s.step < 5 && (
-                  <div className="absolute -right-2 top-1/2 -translate-y-1/2 hidden md:block z-10 text-muted-foreground/40">
-                    →
-                  </div>
-                )}
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      {/* SLA Breach Alert */}
+      {slaBreaches.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-destructive">
+              {slaBreaches.length} amostra(s) excedem o SLA de {SLA_CRITICAL_MINUTES / 60}h
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Pacientes: {slaBreaches.slice(0, 3).map((c: any) => c.pacientes?.nome).join(', ')}
+              {slaBreaches.length > 3 && ` +${slaBreaches.length - 3}`}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por paciente ou código..." value={search}
-          onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-      </div>
-
-      {/* Coletas list */}
-      <div className="space-y-3">
-        {isLoading ? (
-          <p className="text-muted-foreground">Carregando...</p>
-        ) : filtered?.length === 0 ? (
-          <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhuma coleta encontrada</CardContent></Card>
-        ) : (
-          filtered?.map((coleta: any) => (
-            <Card key={coleta.id} className={coleta.urgente ? 'border-red-500/50' : ''}>
-              <CardContent className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">{coleta.pacientes?.nome}</span>
-                    <Badge variant="outline" className="font-mono text-xs gap-1">
-                      <Barcode className="h-3 w-3" />{coleta.codigo_amostra}
-                    </Badge>
-                    <Badge className={statusColors[coleta.status]}>{statusLabels[coleta.status]}</Badge>
-                    {coleta.urgente && <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />Urgente</Badge>}
-                    {coleta.jejum_necessario && <Badge variant="outline">Jejum {coleta.jejum_horas}h</Badge>}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {coleta.tipo_amostra} {coleta.tubo && `• ${coleta.tubo}`}
-                    {coleta.volume_ml && ` • ${coleta.volume_ml}mL`}
-                    {coleta.sitio_coleta && ` • ${coleta.sitio_coleta}`}
-                    {' '}• Dr(a). {coleta.medicos?.nome || coleta.medicos?.crm}
-                    {coleta.data_coleta && ` • ${format(new Date(coleta.data_coleta), "dd/MM/yyyy HH:mm", { locale: ptBR })}`}
-                  </p>
-                  {coleta.condicao_amostra && coleta.condicao_amostra.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
-                      {coleta.condicao_amostra.map((c: string) => (
-                        <Badge key={c} variant="destructive" className="text-[10px]">{c}</Badge>
-                      ))}
-                    </div>
-                  )}
+      {/* ─── Pipeline Visual + KPIs ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {[
+          { label: 'Pendente', value: stats.pendentes, icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', filter: 'pendente' },
+          { label: 'Coletado', value: stats.coletados, icon: TestTube, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30', filter: 'coletado' },
+          { label: 'Em Análise', value: stats.emAnalise, icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/30', filter: 'em_analise' },
+          { label: 'Validado', value: stats.validados, icon: Shield, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30', filter: 'validado' },
+          { label: 'Liberado', value: stats.liberados, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', filter: 'liberado' },
+          { label: 'Urgentes', value: stats.urgentes, icon: Zap, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30', filter: 'urgente' },
+        ].map((s, idx) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
+            <Card className={cn('relative border cursor-pointer hover:shadow-md transition-all',
+              s.border,
+              (statusFilter === s.filter || (s.filter === 'urgente' && urgentOnly)) && 'ring-2 ring-primary'
+            )}
+              onClick={() => {
+                if (s.filter === 'urgente') { setUrgentOnly(!urgentOnly); }
+                else { setStatusFilter(statusFilter === s.filter ? 'todos' : s.filter); setDateFilter('hoje'); }
+              }}>
+              <CardContent className="pt-3 pb-2 flex items-center gap-2">
+                <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center shrink-0', s.bg)}>
+                  <s.icon className={cn('h-4 w-4', s.color)} />
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  {coleta.status === 'pendente' && (
-                    <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: coleta.id, status: 'coletado' })}>
-                      <TestTube className="h-3 w-3 mr-1" /> Coletar
-                    </Button>
-                  )}
-                  {coleta.status === 'coletado' && (
-                    <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: coleta.id, status: 'em_analise' })}>
-                      Iniciar Análise
-                    </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={() => setShowResultados(coleta.id)}>
-                    <Eye className="h-3 w-3 mr-1" /> Resultados
-                  </Button>
+                <div>
+                  <p className={cn('text-xl font-bold tabular-nums', s.color)}>{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">{s.label}</p>
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
+          </motion.div>
+        ))}
       </div>
 
-      {/* ─── Dialog Nova Coleta (Enhanced) ─── */}
+      {/* Completion bar */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium">Taxa de conclusão hoje</p>
+            <span className="text-sm font-bold text-primary">{completionRate}%</span>
+          </div>
+          <Progress value={completionRate} className="h-2" />
+          <p className="text-xs text-muted-foreground mt-1">
+            {stats.liberados + stats.validados} de {stats.total} amostras concluídas
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="worklist" className="gap-1"><ClipboardCheck className="h-3.5 w-3.5" />Worklist</TabsTrigger>
+          <TabsTrigger value="pipeline" className="gap-1"><Activity className="h-3.5 w-3.5" />Pipeline</TabsTrigger>
+        </TabsList>
+
+        {/* ─── Worklist Tab ─── */}
+        <TabsContent value="worklist" className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar paciente, código ou CPF..." value={search}
+                onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Status</SelectItem>
+                {Object.entries(statusLabels).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="7dias">7 dias</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge variant="outline" className="text-xs">
+              {filtered.length} resultado(s)
+            </Badge>
+          </div>
+
+          {/* Coletas list */}
+          <div className="space-y-2">
+            {isLoading ? (
+              <p className="text-muted-foreground text-center py-8">Carregando...</p>
+            ) : filtered.length === 0 ? (
+              <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhuma coleta encontrada</CardContent></Card>
+            ) : (
+              filtered.map((coleta: any) => {
+                const nextStatus = getNextStatus(coleta.status);
+                return (
+                  <Card key={coleta.id} className={cn(
+                    'transition-all hover:shadow-sm',
+                    coleta.urgente && 'border-destructive/50 bg-destructive/5',
+                  )}>
+                    <CardContent className="py-3 px-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold">{coleta.pacientes?.nome}</span>
+                            <Badge variant="outline" className="font-mono text-[10px] gap-1">
+                              <Barcode className="h-3 w-3" />{coleta.codigo_amostra}
+                            </Badge>
+                            <Badge className={statusColors[coleta.status]}>{statusLabels[coleta.status]}</Badge>
+                            {coleta.urgente && <Badge variant="destructive" className="gap-1"><Zap className="h-3 w-3" />Urgente</Badge>}
+                            {coleta.jejum_necessario && <Badge variant="outline" className="text-[10px]">Jejum {coleta.jejum_horas}h</Badge>}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                            <span>{coleta.tipo_amostra}</span>
+                            {coleta.tubo && <span>• {coleta.tubo}</span>}
+                            {coleta.volume_ml && <span>• {coleta.volume_ml}mL</span>}
+                            {coleta.sitio_coleta && <span>• {coleta.sitio_coleta}</span>}
+                            <span>• Dr(a). {coleta.medicos?.nome || coleta.medicos?.crm}</span>
+                            {coleta.created_at && (
+                              <span className={cn('flex items-center gap-1', getSLAColor(coleta.created_at))}>
+                                <Timer className="h-3 w-3" />{getSLALabel(coleta.created_at)}
+                              </span>
+                            )}
+                          </div>
+                          {coleta.condicao_amostra?.length > 0 && (
+                            <div className="flex gap-1 flex-wrap">
+                              {coleta.condicao_amostra.map((c: string) => (
+                                <Badge key={c} variant="destructive" className="text-[10px]">{c}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {nextStatus && coleta.status !== 'cancelado' && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
+                              onClick={() => updateStatus.mutate({ id: coleta.id, status: nextStatus })}>
+                              <ArrowRight className="h-3 w-3" /> {statusLabels[nextStatus]}
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1"
+                            onClick={() => setShowResultados(coleta.id)}>
+                            <Eye className="h-3 w-3" /> Resultados
+                          </Button>
+                          {coleta.status !== 'cancelado' && coleta.status !== 'liberado' && (
+                            <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive"
+                              onClick={() => updateStatus.mutate({ id: coleta.id, status: 'cancelado' })}>
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ─── Pipeline Tab ─── */}
+        <TabsContent value="pipeline" className="space-y-4">
+          <p className="text-sm text-muted-foreground">Visão Kanban do fluxo laboratorial de hoje</p>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            {PIPELINE_STEPS.map(step => {
+              const items = (coletas || []).filter((c: any) =>
+                c.status === step && c.created_at && isToday(new Date(c.created_at))
+              );
+              const nextStep = getNextStatus(step);
+              return (
+                <Card key={step} className="min-h-[200px]">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span className={cn('h-2.5 w-2.5 rounded-full',
+                          step === 'pendente' && 'bg-yellow-500',
+                          step === 'coletado' && 'bg-blue-500',
+                          step === 'em_analise' && 'bg-purple-500',
+                          step === 'validado' && 'bg-green-500',
+                          step === 'liberado' && 'bg-emerald-500',
+                        )} />
+                        {statusLabels[step]}
+                      </span>
+                      <Badge variant="secondary" className="text-[10px]">{items.length}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {items.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">Vazio</p>
+                    ) : items.map((c: any) => (
+                      <div key={c.id} className={cn(
+                        'rounded-lg border p-2 space-y-1 text-xs',
+                        c.urgente && 'border-destructive/50 bg-destructive/5'
+                      )}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium truncate">{c.pacientes?.nome}</span>
+                          {c.urgente && <Zap className="h-3 w-3 text-destructive shrink-0" />}
+                        </div>
+                        <p className="text-muted-foreground font-mono text-[10px]">{c.codigo_amostra}</p>
+                        <p className="text-muted-foreground">{c.tipo_amostra} {c.tubo && `· ${c.tubo}`}</p>
+                        {nextStep && (
+                          <Button size="sm" variant="outline" className="h-6 text-[10px] w-full gap-1"
+                            onClick={() => updateStatus.mutate({ id: c.id, status: nextStep })}>
+                            <ArrowRight className="h-2.5 w-2.5" /> {statusLabels[nextStep]}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* ─── Dialog Nova Coleta ─── */}
       <Dialog open={showNewColeta} onOpenChange={setShowNewColeta}>
         <DialogContent className="max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader>
@@ -345,10 +544,7 @@ export default function Laboratorio() {
 
           <form onSubmit={(e) => {
             e.preventDefault();
-            if (!newColetaForm.paciente_id) {
-              toast.error('Selecione o paciente.');
-              return;
-            }
+            if (!newColetaForm.paciente_id) { toast.error('Selecione o paciente.'); return; }
             createColeta.mutate({
               paciente_id: newColetaForm.paciente_id,
               medico_solicitante_id: newColetaForm.medico_solicitante_id || null,
@@ -373,14 +569,12 @@ export default function Laboratorio() {
               <h4 className="text-sm font-semibold flex items-center gap-2">
                 <Barcode className="h-4 w-4 text-primary" />Rastreabilidade
               </h4>
-              <p className="text-xs text-muted-foreground">O código da amostra é gerado automaticamente pelo sistema ao salvar. Use-o para impressão de etiquetas.</p>
+              <p className="text-xs text-muted-foreground">Código gerado automaticamente ao salvar.</p>
               <div className="space-y-1.5">
                 <Label className="text-xs">Lote do Insumo (tubo/agulha)</Label>
-                <Input
-                  value={newColetaForm.lote_insumo}
+                <Input value={newColetaForm.lote_insumo}
                   onChange={e => setNewColetaForm(p => ({ ...p, lote_insumo: e.target.value }))}
-                  placeholder="Ex: LOT-2026-03-ABC123 (para auditoria ONA/DICQ)"
-                />
+                  placeholder="Ex: LOT-2026-03-ABC123" />
               </div>
             </div>
 
@@ -402,11 +596,11 @@ export default function Laboratorio() {
               </div>
             </div>
 
-            {/* Vincular a Pedido de Exame */}
+            {/* Vincular a Exame */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium flex items-center gap-1"><Link2 className="h-3 w-3" />Vincular a Pedido de Exame</Label>
               <Select value={newColetaForm.exame_id || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, exame_id: v === '__none__' ? '' : v }))}>
-                <SelectTrigger><SelectValue placeholder="Opcional — vincule a uma solicitação" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Nenhum (coleta avulsa)</SelectItem>
                   {examesFiltrados.map((e: any) => (
@@ -416,7 +610,6 @@ export default function Laboratorio() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">Vincule à solicitação de exames para evitar coletas redundantes.</p>
             </div>
 
             <Separator />
@@ -424,18 +617,14 @@ export default function Laboratorio() {
             {/* Data/Hora + Profissional */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium flex items-center gap-1"><Clock className="h-3 w-3" />Data e Hora da Coleta *</Label>
-                <Input
-                  type="datetime-local"
-                  value={newColetaForm.data_coleta}
-                  onChange={e => setNewColetaForm(p => ({ ...p, data_coleta: e.target.value }))}
-                />
-                <p className="text-[11px] text-muted-foreground">Tempo entre coleta e análise afeta estabilidade dos resultados.</p>
+                <Label className="text-xs font-medium flex items-center gap-1"><Clock className="h-3 w-3" />Data e Hora da Coleta</Label>
+                <Input type="datetime-local" value={newColetaForm.data_coleta}
+                  onChange={e => setNewColetaForm(p => ({ ...p, data_coleta: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium flex items-center gap-1"><User className="h-3 w-3" />Profissional Responsável</Label>
+                <Label className="text-xs font-medium flex items-center gap-1"><User className="h-3 w-3" />Profissional</Label>
                 <Select value={newColetaForm.coletado_por || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, coletado_por: v === '__none__' ? '' : v }))}>
-                  <SelectTrigger><SelectValue placeholder="Quem realizou a coleta" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Quem realizou" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">Não informado</SelectItem>
                     {funcionarios?.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
@@ -446,10 +635,10 @@ export default function Laboratorio() {
 
             <Separator />
 
-            {/* Tipo de Amostra + Tubo + Volume */}
+            {/* Amostra */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Tipo de Amostra</Label>
+                <Label className="text-xs">Tipo de Amostra</Label>
                 <Select value={newColetaForm.tipo_amostra} onValueChange={v => setNewColetaForm(p => ({ ...p, tipo_amostra: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -460,7 +649,7 @@ export default function Laboratorio() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Tubo</Label>
+                <Label className="text-xs">Tubo</Label>
                 <Select value={newColetaForm.tubo || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, tubo: v === '__none__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
@@ -468,8 +657,7 @@ export default function Laboratorio() {
                     {TUBOS.map(t => (
                       <SelectItem key={t.value} value={t.value}>
                         <span className="flex items-center gap-2">
-                          <span className={`h-3 w-2 rounded-sm ${t.color}`} />
-                          {t.value}
+                          <span className={`h-3 w-2 rounded-sm ${t.color}`} />{t.value}
                         </span>
                       </SelectItem>
                     ))}
@@ -477,18 +665,12 @@ export default function Laboratorio() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium flex items-center gap-1"><Droplets className="h-3 w-3" />Volume (mL)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={newColetaForm.volume_ml}
-                  onChange={e => setNewColetaForm(p => ({ ...p, volume_ml: e.target.value }))}
-                  placeholder="Ex: 5"
-                />
+                <Label className="text-xs flex items-center gap-1"><Droplets className="h-3 w-3" />Volume (mL)</Label>
+                <Input type="number" step="0.1" min="0" value={newColetaForm.volume_ml}
+                  onChange={e => setNewColetaForm(p => ({ ...p, volume_ml: e.target.value }))} placeholder="Ex: 5" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="h-3 w-3" />Sítio de Coleta</Label>
+                <Label className="text-xs flex items-center gap-1"><MapPin className="h-3 w-3" />Sítio de Coleta</Label>
                 <Select value={newColetaForm.sitio_coleta || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, sitio_coleta: v === '__none__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Local" /></SelectTrigger>
                   <SelectContent>
@@ -499,27 +681,18 @@ export default function Laboratorio() {
               </div>
             </div>
 
-            {/* Condições da Amostra */}
+            {/* Condições */}
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Condições da Amostra (intercorrências)</Label>
+              <Label className="text-xs font-medium">Condições da Amostra</Label>
               <div className="flex flex-wrap gap-3">
                 {CONDICOES_AMOSTRA.map(cond => (
                   <div key={cond} className="flex items-center gap-1.5">
-                    <Checkbox
-                      id={`cond-${cond}`}
-                      checked={newColetaForm.condicao_amostra.includes(cond)}
-                      onCheckedChange={() => toggleCondicao(cond)}
-                    />
+                    <Checkbox id={`cond-${cond}`} checked={newColetaForm.condicao_amostra.includes(cond)}
+                      onCheckedChange={() => toggleCondicao(cond)} />
                     <Label htmlFor={`cond-${cond}`} className="text-xs cursor-pointer">{cond}</Label>
                   </div>
                 ))}
               </div>
-              {newColetaForm.condicao_amostra.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>Intercorrência registrada — analista será notificado.</span>
-                </div>
-              )}
             </div>
 
             <Separator />
@@ -545,40 +718,40 @@ export default function Laboratorio() {
 
             {/* Observações */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Observações</Label>
+              <Label className="text-xs">Observações</Label>
               <Textarea value={newColetaForm.observacoes} onChange={e => setNewColetaForm(p => ({ ...p, observacoes: e.target.value }))}
-                placeholder="Instruções especiais, dificuldade de acesso venoso, etc..." rows={2} />
+                placeholder="Instruções especiais..." rows={2} />
             </div>
 
-            <DialogFooter className="flex-shrink-0 pt-4 border-t">
+            <DialogFooter className="pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setShowNewColeta(false)}>Cancelar</Button>
               <Button type="submit" disabled={!newColetaForm.paciente_id || createColeta.isPending} className="gap-1">
                 {createColeta.isPending && <Clock className="h-4 w-4 animate-spin" />}
-                <Barcode className="h-4 w-4" />Registrar e Gerar Etiqueta
+                <Barcode className="h-4 w-4" />Registrar Coleta
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Resultados */}
+      {/* ─── Dialog Resultados ─── */}
       <Dialog open={!!showResultados} onOpenChange={() => setShowResultados(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Resultados Laboratoriais</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            {resultados?.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhum resultado cadastrado ainda</p>}
+            {resultados?.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhum resultado cadastrado</p>}
             {resultados?.map((r: any) => {
               const numResult = parseFloat(r.resultado);
               const isAltered = !isNaN(numResult) && ((r.valor_referencia_min != null && numResult < r.valor_referencia_min) || (r.valor_referencia_max != null && numResult > r.valor_referencia_max));
               return (
-                <div key={r.id} className={`p-3 rounded-lg border ${isAltered ? 'border-red-300 bg-red-50 dark:bg-red-950/20' : 'border-border'}`}>
+                <div key={r.id} className={cn('p-3 rounded-lg border', isAltered ? 'border-destructive/30 bg-destructive/5' : '')}>
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium">{r.parametro}</p>
-                      <p className="text-sm text-muted-foreground">{r.metodo && `Método: ${r.metodo}`}</p>
+                      {r.metodo && <p className="text-xs text-muted-foreground">Método: {r.metodo}</p>}
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-bold ${isAltered ? 'text-red-600' : ''}`}>
+                      <p className={cn('text-lg font-bold', isAltered && 'text-destructive')}>
                         {r.resultado} {r.unidade}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -590,7 +763,7 @@ export default function Laboratorio() {
               );
             })}
 
-            {/* Form add resultado */}
+            {/* Add resultado form */}
             <Card>
               <CardHeader><CardTitle className="text-sm">Adicionar Resultado</CardTitle></CardHeader>
               <CardContent>
@@ -611,12 +784,12 @@ export default function Laboratorio() {
                   });
                   setNewResultForm({ parametro: '', resultado: '', unidade: '', valor_referencia_min: '', valor_referencia_max: '', valor_referencia_texto: '', metodo: '' });
                 }} className="grid grid-cols-2 gap-3">
-                  <div><Label>Parâmetro *</Label><Input value={newResultForm.parametro} onChange={(e) => setNewResultForm(p => ({ ...p, parametro: e.target.value }))} placeholder="Ex: Hemoglobina" /></div>
-                  <div><Label>Resultado *</Label><Input value={newResultForm.resultado} onChange={(e) => setNewResultForm(p => ({ ...p, resultado: e.target.value }))} placeholder="Ex: 14.2" /></div>
-                  <div><Label>Unidade</Label><Input value={newResultForm.unidade} onChange={(e) => setNewResultForm(p => ({ ...p, unidade: e.target.value }))} placeholder="g/dL" /></div>
-                  <div><Label>Método</Label><Input value={newResultForm.metodo} onChange={(e) => setNewResultForm(p => ({ ...p, metodo: e.target.value }))} placeholder="Automatizado" /></div>
-                  <div><Label>Ref. Mínimo</Label><Input type="number" step="any" value={newResultForm.valor_referencia_min} onChange={(e) => setNewResultForm(p => ({ ...p, valor_referencia_min: e.target.value }))} /></div>
-                  <div><Label>Ref. Máximo</Label><Input type="number" step="any" value={newResultForm.valor_referencia_max} onChange={(e) => setNewResultForm(p => ({ ...p, valor_referencia_max: e.target.value }))} /></div>
+                  <div><Label className="text-xs">Parâmetro *</Label><Input value={newResultForm.parametro} onChange={(e) => setNewResultForm(p => ({ ...p, parametro: e.target.value }))} placeholder="Ex: Hemoglobina" /></div>
+                  <div><Label className="text-xs">Resultado *</Label><Input value={newResultForm.resultado} onChange={(e) => setNewResultForm(p => ({ ...p, resultado: e.target.value }))} placeholder="Ex: 14.2" /></div>
+                  <div><Label className="text-xs">Unidade</Label><Input value={newResultForm.unidade} onChange={(e) => setNewResultForm(p => ({ ...p, unidade: e.target.value }))} placeholder="g/dL" /></div>
+                  <div><Label className="text-xs">Método</Label><Input value={newResultForm.metodo} onChange={(e) => setNewResultForm(p => ({ ...p, metodo: e.target.value }))} placeholder="Automatizado" /></div>
+                  <div><Label className="text-xs">Ref. Mínimo</Label><Input type="number" step="any" value={newResultForm.valor_referencia_min} onChange={(e) => setNewResultForm(p => ({ ...p, valor_referencia_min: e.target.value }))} /></div>
+                  <div><Label className="text-xs">Ref. Máximo</Label><Input type="number" step="any" value={newResultForm.valor_referencia_max} onChange={(e) => setNewResultForm(p => ({ ...p, valor_referencia_max: e.target.value }))} /></div>
                   <div className="col-span-2">
                     <Button type="submit" size="sm" disabled={!newResultForm.parametro || !newResultForm.resultado}>Adicionar</Button>
                   </div>
