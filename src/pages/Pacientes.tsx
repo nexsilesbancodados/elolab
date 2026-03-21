@@ -954,9 +954,10 @@ export default function Pacientes() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
                     <div className="space-y-2 md:col-span-2">
                       <Label>Convênio</Label>
-                      <Select value={formData.convenio_id} onValueChange={v => setFormData({ ...formData, convenio_id: v })}>
+                      <Select value={formData.convenio_id || 'none'} onValueChange={v => setFormData({ ...formData, convenio_id: v === 'none' ? '' : v })}>
                         <SelectTrigger><SelectValue placeholder="Selecione o convênio" /></SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="none">Nenhum (Particular)</SelectItem>
                           {convenios.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                         </SelectContent>
                       </Select>
