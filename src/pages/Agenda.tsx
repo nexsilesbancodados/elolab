@@ -910,9 +910,12 @@ export default function Agenda() {
                                 blocked 
                                   ? 'bg-muted/60 cursor-not-allowed' 
                                   : 'cursor-pointer hover:bg-muted/30',
-                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5'
+                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5',
+                                draggedAg && !blocked && 'hover:bg-primary/10 hover:ring-1 hover:ring-primary/30',
                               )}
                               onClick={() => handleSlotClick(day, hora)}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, day, hora)}
                             >
                               {blocked && !agendamento && (
                                 <div className="rounded p-1.5 text-xs bg-muted text-muted-foreground/60 border border-dashed border-muted-foreground/20 h-full flex items-center justify-center">
@@ -921,9 +924,14 @@ export default function Agenda() {
                               )}
                               {agendamento && (
                                 <div
+                                  draggable={agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado'}
+                                  onDragStart={(e) => handleDragStart(e, agendamento.id)}
+                                  onDragEnd={() => setDraggedAg(null)}
                                   className={cn(
                                     'rounded p-1.5 text-xs border relative',
-                                    STATUS_COLORS[agendamento.status || 'agendado']
+                                    STATUS_COLORS[agendamento.status || 'agendado'],
+                                    agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado' && 'cursor-grab active:cursor-grabbing',
+                                    draggedAg === agendamento.id && 'opacity-40',
                                   )}
                                 >
                                   <p className="font-medium truncate">
