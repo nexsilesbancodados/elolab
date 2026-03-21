@@ -31,6 +31,7 @@ interface SupabaseAuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserWithRole | null;
+  clinicaId: string | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, nome: string) => Promise<{ data: any; error: Error | null }>;
