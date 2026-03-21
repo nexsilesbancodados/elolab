@@ -71,27 +71,30 @@ export default function CaixaDiario() {
   const [showDetalhes, setShowDetalhes] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [tabFilter, setTabFilter] = useState<'todos' | 'pendente' | 'pago'>('todos');
-  const [caixaAberto, setCaixaAberto] = useState(() => {
-    try {
-      const saved = localStorage.getItem('caixa_estado');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.data === format(new Date(), 'yyyy-MM-dd') && parsed.aberto === true;
-      }
-    } catch { /* ignore */ }
-    return false;
-  });
+  const [caixaAberto, setCaixaAberto] = useState(false);
   const [motivoEstorno, setMotivoEstorno] = useState('');
-  const [valorAbertura, setValorAbertura] = useState(() => {
-    try {
-      const saved = localStorage.getItem('caixa_estado');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.data === format(new Date(), 'yyyy-MM-dd')) return parsed.valorAbertura || 0;
+  const [valorAbertura, setValorAbertura] = useState(0);
+
+  // Load caixa state from Supabase
+  useEffect(() => {
+    if (!profile) return;
+    const loadCaixaState = async () => {
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'caixa_estado')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      if (data?.valor) {
+        const estado = data.valor as any;
+        if (estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto) {
+          setCaixaAberto(true);
+          setValorAbertura(estado.valorAbertura || 0);
+        }
       }
-    } catch { /* ignore */ }
-    return 0;
-  });
+    };
+    loadCaixaState();
+  }, [profile]);
   const [showAbertura, setShowAbertura] = useState(false);
   const [baixaForm, setBaixaForm] = useState<BaixaForm>({
     forma_pagamento: 'dinheiro',
