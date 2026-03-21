@@ -647,6 +647,9 @@ export default function Estoque() {
                                   <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => { setDeleteId(produto.id); setIsDeleteOpen(true); }}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
