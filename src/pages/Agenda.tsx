@@ -786,8 +786,11 @@ export default function Agenda() {
                         className={cn(
                           'flex items-stretch min-h-[72px] transition-colors',
                           blocked ? 'bg-muted/40' : 'hover:bg-muted/20 cursor-pointer',
+                          draggedAg && !blocked && 'hover:bg-primary/10',
                         )}
                         onClick={() => !blocked && handleSlotClick(currentWeek, hora)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, currentWeek, hora)}
                       >
                         <div className="w-20 flex-shrink-0 flex items-center justify-center border-r bg-muted/20 text-sm font-medium text-muted-foreground">
                           {hora}
@@ -802,7 +805,15 @@ export default function Agenda() {
                             <motion.div
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
-                              className={cn('rounded-lg p-3 border', STATUS_COLORS[agendamento.status || 'agendado'])}
+                              draggable={agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado'}
+                              onDragStart={(e) => handleDragStart(e as any, agendamento.id)}
+                              onDragEnd={() => setDraggedAg(null)}
+                              className={cn(
+                                'rounded-lg p-3 border',
+                                STATUS_COLORS[agendamento.status || 'agendado'],
+                                agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado' && 'cursor-grab active:cursor-grabbing',
+                                draggedAg === agendamento.id && 'opacity-40',
+                              )}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
