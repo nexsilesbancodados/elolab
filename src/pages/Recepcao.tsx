@@ -217,7 +217,10 @@ export default function Recepcao() {
        const q = search.toLowerCase();
        list = list.filter(e =>
          e.pac?.nome?.toLowerCase().includes(q) ||
-         e.med?.nome?.toLowerCase().includes(q)
+         e.pac?.cpf?.includes(search) ||
+         e.pac?.telefone?.includes(search) ||
+         e.med?.nome?.toLowerCase().includes(q) ||
+         e.ag?.hora_inicio?.includes(search)
        );
      }
      return list;
