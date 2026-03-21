@@ -225,6 +225,7 @@ export default function Agenda() {
         medico_id: isMedicoOnly && medicoId ? medicoId : (selectedMedico !== 'todos' ? selectedMedico : undefined),
       });
       setRecurrence({ type: 'none', occurrences: 4 });
+      setIsRemarkMode(false);
     }
     setIsFormOpen(true);
   };
