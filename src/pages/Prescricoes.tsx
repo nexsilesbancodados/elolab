@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
@@ -15,7 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { supabase } from '@/integrations/supabase/client';
@@ -135,7 +137,7 @@ function buildReceitaPdf(data: {
 
 /* ─── Component ─── */
 export default function Prescricoes() {
-  const { toast } = useToast();
+  
   const { data: pacientes = [], isLoading: loadingPac } = usePacientes();
   const { data: medicos = [], isLoading: loadingMed } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
@@ -176,7 +178,7 @@ export default function Prescricoes() {
 
   const handleSaveAndGenerate = async () => {
     if (!form.paciente_id || !form.medico_id || !form.medicamentos_texto.trim()) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      toast.error('Preencha todos os campos');
       return;
     }
 
@@ -212,7 +214,7 @@ export default function Prescricoes() {
     setPdfFileName(`receita_${safeName}_${form.data_emissao}.pdf`);
     setIsFormOpen(false);
     setIsResultOpen(true);
-    toast({ title: 'Receita gerada com sucesso!' });
+    toast.success('Receita gerada com sucesso!');
   };
 
   const handleDownload = () => {
@@ -237,7 +239,7 @@ export default function Prescricoes() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -252,9 +254,20 @@ export default function Prescricoes() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{prescricoes.length}</div><p className="text-xs text-muted-foreground">Total</p></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{prescricoes.filter(p => p.data_emissao === format(new Date(), 'yyyy-MM-dd')).length}</div><p className="text-xs text-muted-foreground">Hoje</p></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-2xl font-bold tabular-nums">{new Set(prescricoes.map(p => p.paciente_id)).size}</div><p className="text-xs text-muted-foreground">Pacientes</p></CardContent></Card>
+        {[
+          { label: 'Total', value: prescricoes.length, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'Hoje', value: prescricoes.filter(p => p.data_emissao === format(new Date(), 'yyyy-MM-dd')).length, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+          { label: 'Pacientes', value: new Set(prescricoes.map(p => p.paciente_id)).size, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+        ].map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <Card className={cn('border', s.border)}>
+              <CardContent className="py-4 px-5">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
+                <p className={cn('text-2xl font-black mt-0.5 tabular-nums', s.color)}>{s.value}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Table */}
@@ -281,7 +294,15 @@ export default function Prescricoes() {
               </TableHeader>
               <TableBody>
                 {filteredPrescricoes.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground"><Pill className="h-10 w-10 mx-auto mb-2 opacity-40" /><p>Nenhuma prescrição</p></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-12">
+                    <div className="flex flex-col items-center">
+                      <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+                        <Pill className="h-7 w-7 text-primary" />
+                      </div>
+                      <p className="font-semibold text-foreground">Nenhuma prescrição</p>
+                      <p className="text-sm text-muted-foreground mt-1">Crie sua primeira prescrição médica</p>
+                    </div>
+                  </TableCell></TableRow>
                 ) : filteredPrescricoes.map(p => (
                   <TableRow key={p.id}>
                     <TableCell>{p.data_emissao ? format(new Date(p.data_emissao + 'T12:00:00'), 'dd/MM/yyyy') : '—'}</TableCell>
@@ -386,6 +407,6 @@ export default function Prescricoes() {
           </p>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
