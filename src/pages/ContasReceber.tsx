@@ -318,6 +318,7 @@ export default function ContasReceber() {
       if (error) throw error;
       toast.success(`Pagamento confirmado — ${getPacienteNome(selectedConta)}`);
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       setIsPagamentoOpen(false);
     } catch (e: any) {
       toast.error(e.message || 'Erro ao confirmar');
