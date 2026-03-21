@@ -18,11 +18,13 @@ interface UserProfile {
   avatar?: string;
   telefone?: string;
   ativo: boolean;
+  clinica_id?: string;
 }
 
 interface UserWithRole extends UserProfile {
   role: AppRole | null;
   roles: AppRole[];
+  clinica_id?: string;
 }
 
 interface SupabaseAuthContextType {
