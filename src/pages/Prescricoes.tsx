@@ -136,7 +136,7 @@ function buildReceitaPdf(data: {
 
 /* ─── Component ─── */
 export default function Prescricoes() {
-  const { toast } = useToast();
+  
   const { data: pacientes = [], isLoading: loadingPac } = usePacientes();
   const { data: medicos = [], isLoading: loadingMed } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
