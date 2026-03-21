@@ -88,6 +88,7 @@ const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } }
 export default function Recepcao() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { profile } = useSupabaseAuth();
   const today = format(new Date(), 'yyyy-MM-dd');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('todos');
