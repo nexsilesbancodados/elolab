@@ -195,7 +195,39 @@ export default function Agenda() {
     );
   };
 
-  const handleSlotClick = (data: Date, hora: string) => {
+  // ─── Drag & Drop to reschedule ─────────────────────────
+  const handleDragStart = (e: React.DragEvent, agId: string) => {
+    e.dataTransfer.setData('text/plain', agId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedAg(agId);
+  };
+
+  const handleDrop = async (e: React.DragEvent, data: Date, hora: string) => {
+    e.preventDefault();
+    setDraggedAg(null);
+    const agId = e.dataTransfer.getData('text/plain');
+    if (!agId) return;
+    if (isSlotBlocked(data, hora)) { toast.error('Horário bloqueado'); return; }
+    const existing = getAgendamentoForSlot(data, hora);
+    if (existing && existing.id !== agId) { toast.error('Horário já ocupado'); return; }
+    const ag = filteredAgendamentos.find(a => a.id === agId);
+    if (!ag) return;
+    if (ag.status === 'finalizado' || ag.status === 'cancelado') {
+      toast.error('Não é possível mover agendamentos finalizados/cancelados');
+      return;
+    }
+    const newDate = format(data, 'yyyy-MM-dd');
+    if (ag.data === newDate && ag.hora_inicio?.slice(0, 5) === hora) return; // same slot
+    const { error } = await supabase.from('agendamentos')
+      .update({ data: newDate, hora_inicio: hora } as any)
+      .eq('id', agId);
+    if (error) { toast.error('Erro ao reagendar: ' + error.message); return; }
+    queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+    toast.success(`Reagendado para ${format(data, 'dd/MM', { locale: ptBR })} às ${hora}`);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+
     if (isSlotBlocked(data, hora)) {
       toast.error('Este horário está bloqueado');
       return;
