@@ -3800,10 +3800,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accept_employee_invitation: {
-        Args: { _token: string; _user_id: string }
-        Returns: Json
-      }
+      accept_employee_invitation:
+        | { Args: { _token: string; _user_id: string }; Returns: Json }
+        | { Args: { _token: string; _user_id: string }; Returns: Json }
       activate_public_registration: {
         Args: { _codigo_convite: string; _user_id: string }
         Returns: Json
