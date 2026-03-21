@@ -75,6 +75,10 @@ export const menuGroups: MenuGroup[] = [
     color: '#10b981',
     roles: ['admin', 'medico', 'enfermagem'],
     items: [
+      { label: 'Prontuários', icon: ScrollText, href: '/prontuarios', roles: ['admin', 'medico'] },
+      { label: 'Prescrições', icon: BookMarked, href: '/prescricoes', roles: ['admin', 'medico'] },
+      { label: 'Atestados', icon: FileBarChart, href: '/atestados', roles: ['admin', 'medico'] },
+      { label: 'Encaminhamentos', icon: Stethoscope, href: '/encaminhamentos', roles: ['admin', 'medico'] },
       { label: 'Exames', icon: Microscope, href: '/exames', roles: ['admin', 'medico', 'enfermagem'] },
       { label: 'Triagem', icon: HeartPulse, href: '/triagem', roles: ['admin', 'enfermagem'] },
       { label: 'Retornos', icon: ClockAlert, href: '/retornos', roles: ['admin', 'medico', 'recepcao'] },

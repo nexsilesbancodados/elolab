@@ -56,9 +56,11 @@ export function useRealtimeSubscription() {
       );
     });
 
+    let channelErrorLogged = false;
     channel.subscribe((status) => {
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.warn('[Realtime] Channel issue, relying on fallback polling:', status);
+      if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && !channelErrorLogged) {
+        console.warn('[Realtime] Canal com problema, usando polling como fallback.');
+        channelErrorLogged = true;
       }
     });
 
