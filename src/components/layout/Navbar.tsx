@@ -1,4 +1,4 @@
-import { Bell, Menu, LogOut, User, Settings, Plus } from 'lucide-react';
+import { Bell, Menu, LogOut, User, Settings, Plus, Command } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { GlobalSearch } from '@/components/GlobalSearch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -45,130 +46,168 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/40 bg-background/70 backdrop-blur-2xl px-4 md:px-6">
-      <Button variant="ghost" size="icon" className="md:hidden h-9 w-9" onClick={onMenuClick}>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/30 bg-background/80 backdrop-blur-xl px-3 md:px-5">
+      {/* Left: Hamburger */}
+      <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-lg" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Global Search */}
-      <div className="flex-1 max-w-md">
+      {/* Center-left: Search */}
+      <div className="flex-1 max-w-sm">
         <GlobalSearch />
       </div>
 
-      {/* Right section */}
-      <div className="flex items-center gap-1">
-        {/* Quick Actions */}
+      {/* Right actions */}
+      <div className="flex items-center gap-0.5">
+        {/* Quick Add */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="hidden sm:flex h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10">
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden sm:inline-flex h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Plus className="h-4.5 w-4.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Ação rápida</TooltipContent>
+            </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ações Rápidas</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+            <DropdownMenuLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2">
+              Ações Rápidas
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/agenda" className="flex items-center gap-2.5 rounded-lg">
-                <div className="h-2 w-2 rounded-full bg-primary" />
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/agenda">
+                <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                 Nova Consulta
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/pacientes" className="flex items-center gap-2.5 rounded-lg">
-                <div className="h-2 w-2 rounded-full bg-success" />
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/pacientes">
+                <span className="h-2 w-2 rounded-full bg-success shrink-0" />
                 Novo Paciente
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prescricoes" className="flex items-center gap-2.5 rounded-lg">
-                <div className="h-2 w-2 rounded-full bg-info" />
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/prescricoes">
+                <span className="h-2 w-2 rounded-full bg-info shrink-0" />
                 Nova Prescrição
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/exames" className="flex items-center gap-2.5 rounded-lg">
-                <div className="h-2 w-2 rounded-full bg-warning" />
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/exames">
+                <span className="h-2 w-2 rounded-full bg-warning shrink-0" />
                 Solicitar Exame
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Theme */}
         <ThemeToggle variant="dropdown" />
 
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/60">
-              <Bell className="h-[18px] w-[18px]" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <Bell className="h-[18px] w-[18px]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {unreadCount > 0 ? `${unreadCount} notificações` : 'Notificações'}
+              </TooltipContent>
+            </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 rounded-xl">
-            <DropdownMenuLabel className="flex items-center justify-between">
+          <DropdownMenuContent align="end" className="w-80 rounded-xl p-1.5">
+            <DropdownMenuLabel className="flex items-center justify-between px-2">
               <span className="font-semibold">Notificações</span>
-              {unreadCount > 0 && <Badge variant="secondary" className="text-xs rounded-lg">{unreadCount} novas</Badge>}
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="text-[10px] rounded-full px-2 h-5">
+                  {unreadCount}
+                </Badge>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <ScrollArea className="h-[300px]">
+            <ScrollArea className="h-[280px]">
               {notifications.length > 0 ? notifications.map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
-                  className={cn('flex items-start gap-3 py-3 cursor-pointer rounded-lg', !notification.read && 'bg-accent/30')}
+                  className={cn(
+                    'flex items-start gap-3 py-2.5 px-2 cursor-pointer rounded-lg mb-0.5',
+                    !notification.read && 'bg-accent/40'
+                  )}
                 >
-                  <div className={cn('w-2 h-2 rounded-full mt-2 shrink-0', getNotificationColor(notification.type))} />
+                  <div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', getNotificationColor(notification.type))} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">{notification.time}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{notification.message}</p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-1">{notification.time}</p>
                   </div>
                 </DropdownMenuItem>
               )) : (
-                <div className="py-10 text-center text-sm text-muted-foreground/60">
-                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                  Nenhuma notificação
+                <div className="py-10 text-center text-sm text-muted-foreground/50">
+                  <Bell className="h-7 w-7 mx-auto mb-2 opacity-15" />
+                  Sem notificações
                 </div>
               )}
             </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Divider */}
-        <div className="hidden md:block w-px h-6 bg-border/50 mx-1" />
+        {/* Separator */}
+        <div className="hidden md:block w-px h-7 bg-border/40 mx-1.5" />
 
-        {/* User Menu */}
+        {/* User */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2.5 px-2 hover:bg-accent/60 h-auto py-1.5 rounded-xl">
-              <Avatar className="h-8 w-8 ring-2 ring-primary/15 transition-all hover:ring-primary/30">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-brand-glow text-primary-foreground text-xs font-bold">
+            <button className="flex items-center gap-2.5 px-1.5 py-1 rounded-full hover:bg-accent/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-xs font-bold">
                   {profile?.nome ? getInitials(profile.nome) : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-semibold leading-none">{profile?.nome?.split(' ')[0]}</span>
-                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">Online</span>
+              <div className="hidden md:flex flex-col items-start pr-1">
+                <span className="text-sm font-semibold leading-tight">{profile?.nome?.split(' ')[0]}</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground leading-tight">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Online
+                </span>
               </div>
-            </Button>
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-xl">
-            <DropdownMenuLabel className="pb-3">
+          <DropdownMenuContent align="end" className="w-56 rounded-xl p-1.5">
+            <DropdownMenuLabel className="px-2 pb-2">
               <p className="font-semibold truncate">{profile?.nome}</p>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-lg">
-              <Link to="/configuracoes" className="flex items-center gap-2.5"><User className="h-4 w-4" />Meu Perfil</Link>
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/configuracoes"><User className="h-4 w-4" />Meu Perfil</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg">
-              <Link to="/configuracoes" className="flex items-center gap-2.5"><Settings className="h-4 w-4" />Configurações</Link>
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+              <Link to="/configuracoes"><Settings className="h-4 w-4" />Configurações</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2.5 text-destructive focus:text-destructive rounded-lg">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="rounded-lg gap-2.5 py-2 text-destructive focus:text-destructive"
+            >
               <LogOut className="h-4 w-4" />Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
