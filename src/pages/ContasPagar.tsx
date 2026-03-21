@@ -167,6 +167,7 @@ export default function ContasPagar() {
         frequencia_recorrencia: formData.recorrente ? formData.frequencia_recorrencia : null,
         centro_custo: formData.centro_custo || null,
         observacoes: formData.observacoes || null,
+        clinica_id: profile?.clinica_id || null,
       };
 
       const { error } = await supabase.from('lancamentos').insert(payload);
