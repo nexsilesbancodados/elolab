@@ -839,6 +839,15 @@ export default function Estoque() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirm */}
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        title="Excluir Produto"
+        description="Tem certeza que deseja excluir este produto e todo seu histórico de movimentações? Esta ação não pode ser desfeita."
+        onConfirm={handleDeleteProduto}
+        loading={isSaving}
+      />
     </div>
   );
 }
