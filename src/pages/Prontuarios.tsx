@@ -1418,7 +1418,7 @@ export default function Prontuarios() {
           {/* Footer */}
           <DialogFooter className="flex-shrink-0 pt-3 border-t border-border/40">
             <div className="flex items-center gap-2 w-full justify-between">
-              <div className="flex-1">
+              <div className="flex items-center gap-3 flex-1">
                 {currentProntuario.id && (
                   <DigitalSignature
                     documentId={currentProntuario.id}
@@ -1428,8 +1428,16 @@ export default function Prontuarios() {
                     compact
                   />
                 )}
+                {autoSaveTime && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-2.5 w-2.5" />Salvo às {autoSaveTime}
+                  </span>
+                )}
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowExamSolicitation(true)} className="rounded-xl text-xs gap-1">
+                  <TestTube className="h-3.5 w-3.5" />Solicitar Exame
+                </Button>
                 <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} size="sm" className="rounded-xl text-xs">Cancelar</Button>
                 {!isReadOnly && (
                   <Button onClick={handleSave} size="sm" className="gap-1.5 rounded-xl text-xs"><Save className="h-3.5 w-3.5" />Salvar Prontuário</Button>
