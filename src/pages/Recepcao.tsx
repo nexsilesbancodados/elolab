@@ -40,7 +40,7 @@ const FORMAS_PAGAMENTO = [
   { value: 'transferencia', label: 'Transferência', icon: Landmark, color: 'text-muted-foreground' },
 ];
 
-const STEP_LABELS = ['Check-in', 'Fila', 'Atendimento', 'Balcão', 'Concluído'] as const;
+const STEP_LABELS = ['Check-in', 'Balcão', 'Atendimento', 'Finalizado', 'Concluído'] as const;
 
 function calcEspera(ts: string | null): string {
   if (!ts) return '—';
@@ -58,15 +58,21 @@ function corEspera(ts: string | null): string {
   return 'text-destructive';
 }
 
-// Which step is the patient on?
-// 0=Check-in, 1=Fila, 2=Em atendimento, 3=Balcão (aguardando pagamento), 4=Concluído
+// New flow: Check-in(0) → Balcão/Pagamento(1) → Atendimento(2) → Finalizado(3) → Concluído(4)
+// Patient pays BEFORE entering the consultation room
 function patientStep(ag: any, filaItem: any, lancamento: any): number {
-  if (lancamento?.status === 'pago') return 4;
-  if (lancamento?.status === 'pendente' && ag.status === 'finalizado') return 3; // Balcão
+  // Concluído: finalizado + pago
+  if (ag.status === 'finalizado' && lancamento?.status === 'pago') return 4;
+  // Finalizado: consultation done, already paid before
   if (ag.status === 'finalizado') return 3;
+  // Em atendimento: paid and in consultation
   if (ag.status === 'em_atendimento') return 2;
-  if (filaItem) return 1;
-  if (ag.status === 'confirmado' || ag.status === 'aguardando') return 0;
+  // Balcão: checked in (in queue), waiting to pay before consultation
+  if (filaItem && lancamento?.status !== 'pago') return 1;
+  // Already paid, waiting to be called for consultation
+  if (filaItem && lancamento?.status === 'pago') return 2;
+  // Check-in: just arrived
+  if (ag.status === 'confirmado' || ag.status === 'aguardando' || ag.status === 'agendado') return 0;
   return -1;
 }
 
@@ -164,45 +170,59 @@ export default function Recepcao() {
     [todayAgendamentos, pacientes, medicos, salas, filaItems, lancamentos]
   );
 
-  // Filter
-  const filtered = useMemo(() => {
-    let list = enriched;
-    if (activeTab === 'checkin') list = list.filter(e => e.step === 0);
-    if (activeTab === 'fila') list = list.filter(e => e.step === 1 || e.step === 2);
-    if (activeTab === 'pagamento') list = list.filter(e => e.step === 3);
-    if (activeTab === 'concluido') list = list.filter(e => e.step === 4);
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(e =>
-        e.pac?.nome?.toLowerCase().includes(q) ||
-        e.med?.nome?.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [enriched, activeTab, search]);
+   // Filter
+   const filtered = useMemo(() => {
+     let list = enriched;
+     if (activeTab === 'checkin') list = list.filter(e => e.step === 0);
+     if (activeTab === 'balcao') list = list.filter(e => e.step === 1);
+     if (activeTab === 'atendimento') list = list.filter(e => e.step === 2 || e.step === 3);
+     if (activeTab === 'concluido') list = list.filter(e => e.step === 4);
+     if (search) {
+       const q = search.toLowerCase();
+       list = list.filter(e =>
+         e.pac?.nome?.toLowerCase().includes(q) ||
+         e.med?.nome?.toLowerCase().includes(q)
+       );
+     }
+     return list;
+   }, [enriched, activeTab, search]);
 
-  // Stats
-  const stats = useMemo(() => ({
-    aguardando: enriched.filter(e => e.step === 0).length,
-    naFila: enriched.filter(e => e.step === 1 || e.step === 2).length,
-    pagamento: enriched.filter(e => e.step === 3).length,
-    concluido: enriched.filter(e => e.step === 4).length,
-  }), [enriched]);
+   // Stats
+   const stats = useMemo(() => ({
+     aguardando: enriched.filter(e => e.step === 0).length,
+     balcao: enriched.filter(e => e.step === 1).length,
+     atendimento: enriched.filter(e => e.step === 2 || e.step === 3).length,
+     concluido: enriched.filter(e => e.step === 4).length,
+   }), [enriched]);
 
   // ─── Actions ──────────────────────────────────────────
-  async function handleCheckin(agId: string) {
-    setIsProcessing(true);
-    try {
-      const result = await autoCheckin(agId);
-      if (!result.success) throw new Error(result.message);
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Check-in realizado!', { description: result.actions.join(' • ') });
-    } catch (err: any) {
-      toast.error('Erro ao realizar check-in: ' + err.message);
-    }
-    setIsProcessing(false);
-  }
+   async function handleCheckin(agId: string) {
+     setIsProcessing(true);
+     try {
+       const result = await autoCheckin(agId);
+       if (!result.success) throw new Error(result.message);
+
+       // Generate billing entry at check-in so price is ready at the counter
+       const item = enriched.find(e => e.ag.id === agId);
+       if (item) {
+         await createAutoBilling({
+           agendamentoId: agId,
+           pacienteId: item.ag.paciente_id,
+           pacienteNome: item.pac?.nome || 'Paciente',
+           convenioId: item.pac?.convenio_id,
+           tipoConsulta: item.ag.tipo,
+         });
+       }
+
+       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+       toast.success('Check-in realizado!', { description: 'Paciente encaminhado ao balcão para pagamento' });
+     } catch (err: any) {
+       toast.error('Erro ao realizar check-in: ' + err.message);
+     }
+     setIsProcessing(false);
+   }
 
   async function handleChamar(filaId: string) {
     setIsProcessing(true);
@@ -342,11 +362,11 @@ export default function Recepcao() {
         animate="visible"
         className="grid grid-cols-2 md:grid-cols-4 gap-3"
       >
-        {[
-          { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Na Fila / Atendimento', value: stats.naFila, icon: Users, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-          { label: 'Balcão', value: stats.pagamento, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-          { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+         {[
+           { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+           { label: 'Balcão (Pgto)', value: stats.balcao, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+           { label: 'Em Atendimento', value: stats.atendimento, icon: Stethoscope, color: 'text-sky-500', bg: 'bg-sky-500/10' },
+           { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
         ].map((s, i) => (
           <motion.div key={i} variants={fadeUp}>
             <Card className="border bg-card">
@@ -382,16 +402,16 @@ export default function Recepcao() {
           <TabsTrigger value="todos" className="data-[state=active]:bg-background">
             Todos ({enriched.length})
           </TabsTrigger>
-          <TabsTrigger value="checkin" className="data-[state=active]:bg-background">
-            <Clock className="h-3.5 w-3.5 mr-1" /> Check-in ({stats.aguardando})
-          </TabsTrigger>
-          <TabsTrigger value="fila" className="data-[state=active]:bg-background">
-            <Users className="h-3.5 w-3.5 mr-1" /> Fila ({stats.naFila})
-          </TabsTrigger>
-          <TabsTrigger value="pagamento" className="data-[state=active]:bg-background">
-            <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.pagamento})
-          </TabsTrigger>
-          <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
+           <TabsTrigger value="checkin" className="data-[state=active]:bg-background">
+             <Clock className="h-3.5 w-3.5 mr-1" /> Check-in ({stats.aguardando})
+           </TabsTrigger>
+           <TabsTrigger value="balcao" className="data-[state=active]:bg-background">
+             <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.balcao})
+           </TabsTrigger>
+           <TabsTrigger value="atendimento" className="data-[state=active]:bg-background">
+             <Stethoscope className="h-3.5 w-3.5 mr-1" /> Atendimento ({stats.atendimento})
+           </TabsTrigger>
+           <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Concluído ({stats.concluido})
           </TabsTrigger>
         </TabsList>
@@ -420,22 +440,23 @@ export default function Recepcao() {
                     layout
                   >
                     <Card className={cn(
-                      'border transition-all duration-200 overflow-hidden',
-                      step === 2 && 'border-primary/30 shadow-md shadow-primary/5',
-                      step === 3 && 'border-amber-400/30 shadow-md shadow-amber-400/5',
-                      step === 4 && 'opacity-60',
-                    )}>
-                      <CardContent className="p-0">
-                        <div className="flex items-stretch">
-                          {/* Step indicator */}
-                          <div className={cn(
-                            'w-1.5 shrink-0',
-                            step === 0 && 'bg-amber-400',
-                            step === 1 && 'bg-sky-400',
-                            step === 2 && 'bg-primary',
-                            step === 3 && 'bg-orange-400',
-                            step === 4 && 'bg-emerald-500',
-                          )} />
+                     'border transition-all duration-200 overflow-hidden',
+                       step === 1 && 'border-orange-400/30 shadow-md shadow-orange-400/5',
+                       step === 2 && 'border-primary/30 shadow-md shadow-primary/5',
+                       step === 3 && 'border-sky-400/30 shadow-md shadow-sky-400/5',
+                       step === 4 && 'opacity-60',
+                     )}>
+                       <CardContent className="p-0">
+                         <div className="flex items-stretch">
+                           {/* Step indicator */}
+                           <div className={cn(
+                             'w-1.5 shrink-0',
+                             step === 0 && 'bg-amber-400',
+                             step === 1 && 'bg-orange-400',
+                             step === 2 && 'bg-primary',
+                             step === 3 && 'bg-sky-400',
+                             step === 4 && 'bg-emerald-500',
+                           )} />
 
                           <div className="flex-1 p-4">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -513,126 +534,116 @@ export default function Recepcao() {
                                   </Button>
                                 )}
 
-                                {step === 1 && fila && (
-                                  <div className="flex gap-1.5">
+                                {/* Step 1: Balcão — patient pays before consultation */}
+                                {step === 1 && (
+                                  <div className="flex flex-wrap gap-1.5">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleChamar(fila.id)}
+                                      onClick={() => handleChamarBalcao(lanc, pac)}
                                       disabled={isProcessing}
                                       className="gap-1"
                                     >
-                                      <Bell className="h-3.5 w-3.5" /> Chamar
+                                      <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
                                     </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleIniciarAtendimento(ag.id, fila.id)}
-                                      disabled={isProcessing}
-                                      className="gap-1"
-                                    >
-                                      <Play className="h-3.5 w-3.5" /> Atender
-                                    </Button>
+                                    {lanc && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => openPagamento(lanc, pac)}
+                                        disabled={isProcessing}
+                                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                      >
+                                        <DollarSign className="h-3.5 w-3.5" />
+                                        Receber R$ {lanc.valor?.toFixed(2)}
+                                      </Button>
+                                    )}
                                   </div>
                                 )}
 
-                                {step === 2 && fila && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handleFinalizarAtendimento(ag.id, fila.id)}
-                                    disabled={isProcessing}
-                                    className="gap-1"
-                                  >
-                                    <Check className="h-3.5 w-3.5" /> Finalizar
-                                  </Button>
-                                )}
-
-                                {step === 3 && (
-                                  <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                    {/* Primary actions row */}
-                                    <div className="flex flex-wrap gap-1.5">
+                                {/* Step 2: Paid, waiting/in consultation */}
+                                {step === 2 && (
+                                  <div className="flex gap-1.5">
+                                    {lanc?.status === 'pago' && (
+                                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 mr-1">
+                                        <CheckCircle2 className="h-3 w-3 mr-1" /> Pago
+                                      </Badge>
+                                    )}
+                                    {fila && ag.status !== 'em_atendimento' && (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleChamar(fila.id)}
+                                          disabled={isProcessing}
+                                          className="gap-1"
+                                        >
+                                          <Bell className="h-3.5 w-3.5" /> Chamar
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleIniciarAtendimento(ag.id, fila.id)}
+                                          disabled={isProcessing}
+                                          className="gap-1"
+                                        >
+                                          <Play className="h-3.5 w-3.5" /> Atender
+                                        </Button>
+                                      </>
+                                    )}
+                                    {ag.status === 'em_atendimento' && fila && (
                                       <Button
                                         size="sm"
-                                        variant="outline"
-                                        onClick={() => handleChamarBalcao(lanc, pac)}
+                                        variant="default"
+                                        onClick={() => handleFinalizarAtendimento(ag.id, fila.id)}
                                         disabled={isProcessing}
                                         className="gap-1"
                                       >
-                                        <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
+                                        <Check className="h-3.5 w-3.5" /> Finalizar
                                       </Button>
-                                      {lanc && (
-                                        <Button
-                                          size="sm"
-                                          onClick={() => openPagamento(lanc, pac)}
-                                          disabled={isProcessing}
-                                          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                        >
-                                          <DollarSign className="h-3.5 w-3.5" />
-                                          Receber R$ {lanc.valor?.toFixed(2)}
-                                        </Button>
-                                      )}
-                                    </div>
-                                    {/* Secondary post-consultation actions */}
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Step 3: Finalizado — post-consultation actions */}
+                                {step === 3 && (
+                                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                    <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-0 w-fit">
+                                      <Check className="h-3 w-3 mr-1" /> Consulta finalizada
+                                    </Badge>
                                     <div className="flex flex-wrap gap-1.5">
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}>
                                         <CalendarPlus className="h-3 w-3" /> Reagendar
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/retornos?paciente=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/retornos?paciente=${ag.paciente_id}`)}>
                                         <RotateCcw className="h-3 w-3" /> Retorno
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}>
                                         <FlaskConical className="h-3 w-3" /> Exames
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/prontuarios?paciente=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/prontuarios?paciente=${ag.paciente_id}`)}>
                                         <ClipboardList className="h-3 w-3" /> Prontuário
                                       </Button>
                                     </div>
                                   </div>
                                 )}
 
+                                {/* Step 4: Concluído */}
                                 {step === 4 && (
                                   <div className="flex flex-col gap-2 items-end">
-                                    {lanc && (
-                                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
-                                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                                        Pago — {lanc.forma_pagamento}
-                                      </Badge>
-                                    )}
+                                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                                      Concluído {lanc?.forma_pagamento ? `— ${lanc.forma_pagamento}` : ''}
+                                    </Badge>
                                     <div className="flex flex-wrap gap-1.5">
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}>
                                         <CalendarPlus className="h-3 w-3" /> Reagendar
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="gap-1 text-xs h-7"
-                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}
-                                      >
+                                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}>
                                         <FlaskConical className="h-3 w-3" /> Exames
                                       </Button>
                                     </div>
