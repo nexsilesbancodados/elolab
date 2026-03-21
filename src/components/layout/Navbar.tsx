@@ -46,16 +46,19 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/30 bg-background/80 backdrop-blur-xl px-3 md:px-5">
+    <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border/30 bg-background/80 backdrop-blur-xl px-3 md:px-5">
       {/* Left: Hamburger */}
       <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-lg" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Center-left: Search */}
-      <div className="flex-1 max-w-sm">
+      {/* Left: Search */}
+      <div className="max-w-sm">
         <GlobalSearch />
       </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
 
       {/* Right actions */}
       <div className="flex items-center gap-0.5">
