@@ -515,6 +515,12 @@ export default function ContasPagar() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea value={pagamentoData.observacoes}
+                onChange={e => setPagamentoData({ ...pagamentoData, observacoes: e.target.value })}
+                placeholder="Anotações sobre o pagamento..." rows={2} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPagamentoOpen(false)} disabled={isSubmitting}>Cancelar</Button>
