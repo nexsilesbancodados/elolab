@@ -5,14 +5,29 @@ import { toast } from 'sonner';
 const DEFAULT_TIMEOUT_MIN = 30;
 const WARNING_MS = 5 * 60 * 1000; // 5 minutes before timeout
 
-function getTimeoutMs(): number {
+let cachedTimeoutMin: number | null = null;
+
+// Load from Supabase on init (called once)
+async function loadTimeoutFromSupabase(userId: string) {
   try {
-    const val = localStorage.getItem('session_timeout_min');
-    if (val) {
-      const mins = parseInt(val, 10);
-      if (mins >= 5 && mins <= 480) return mins * 60 * 1000;
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data } = await supabase
+      .from('configuracoes_clinica')
+      .select('valor')
+      .eq('chave', 'session_timeout_min')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (data?.valor) {
+      const mins = typeof data.valor === 'number' ? data.valor : parseInt(String(data.valor), 10);
+      if (mins >= 5 && mins <= 480) cachedTimeoutMin = mins;
     }
   } catch { /* ignore */ }
+}
+
+function getTimeoutMs(): number {
+  if (cachedTimeoutMin && cachedTimeoutMin >= 5 && cachedTimeoutMin <= 480) {
+    return cachedTimeoutMin * 60 * 1000;
+  }
   return DEFAULT_TIMEOUT_MIN * 60 * 1000;
 }
 
@@ -49,6 +64,7 @@ export function useSessionTimeout() {
 
   useEffect(() => {
     if (!user) return;
+    loadTimeoutFromSupabase(user.id).then(() => resetTimer());
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     const handler = () => resetTimer();

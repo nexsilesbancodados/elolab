@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Calendar, Users, FileText, BarChart3, Stethoscope,
   ArrowRight, CheckCircle2, Sparkles, Rocket
 } from 'lucide-react';
-
-const ONBOARDING_KEY = 'elolab_onboarding_completed';
 
 const steps = [
   {
@@ -55,14 +54,29 @@ export function OnboardingWizard() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (profile && !localStorage.getItem(ONBOARDING_KEY)) {
-      const timer = setTimeout(() => setOpen(true), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (!profile) return;
+    const checkOnboarding = async () => {
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'onboarding_completed')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      if (!data) {
+        setTimeout(() => setOpen(true), 1000);
+      }
+    };
+    checkOnboarding();
   }, [profile]);
 
-  const handleComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, new Date().toISOString());
+  const handleComplete = async () => {
+    if (profile) {
+      await supabase.from('configuracoes_clinica').upsert({
+        chave: 'onboarding_completed',
+        user_id: profile.id,
+        valor: new Date().toISOString() as any,
+      }, { onConflict: 'user_id,chave' });
+    }
     setOpen(false);
   };
 

@@ -1,5 +1,5 @@
-// Audit Trail System for tracking changes
-import { getItem, setItem, generateId } from './storageCore';
+// Audit Trail System - reads/writes from Supabase audit_log table
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AuditEntry {
   id: string;
@@ -17,59 +17,62 @@ export interface AuditEntry {
   userName?: string;
 }
 
-const MAX_ENTRIES = 500; // Keep last 500 entries
-
-export function logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>) {
-  const entries = getItem<AuditEntry[]>('audit_log') || [];
-  
-  const newEntry: AuditEntry = {
-    ...entry,
-    id: generateId(),
-    timestamp: new Date().toISOString(),
-  };
-  
-  entries.unshift(newEntry);
-  
-  // Keep only the last MAX_ENTRIES
-  if (entries.length > MAX_ENTRIES) {
-    entries.splice(MAX_ENTRIES);
+export async function logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>) {
+  try {
+    await supabase.from('audit_log').insert({
+      action: entry.action,
+      collection: entry.collection,
+      record_id: entry.recordId,
+      record_name: entry.recordName || null,
+      changes: entry.changes ? JSON.parse(JSON.stringify(entry.changes)) : null,
+      user_id: entry.userId || null,
+      user_name: entry.userName || null,
+    });
+  } catch (err) {
+    console.error('Audit log error:', err);
   }
-  
-  setItem('audit_log', entries);
 }
 
-export function getAuditLog(filters?: {
+export async function getAuditLog(filters?: {
   collection?: string;
-  action?: AuditEntry['action'];
+  action?: string;
   startDate?: string;
   endDate?: string;
   limit?: number;
-}): AuditEntry[] {
-  let entries = getItem<AuditEntry[]>('audit_log') || [];
-  
-  if (filters) {
-    if (filters.collection) {
-      entries = entries.filter(e => e.collection === filters.collection);
-    }
-    if (filters.action) {
-      entries = entries.filter(e => e.action === filters.action);
-    }
-    if (filters.startDate) {
-      entries = entries.filter(e => e.timestamp >= filters.startDate!);
-    }
-    if (filters.endDate) {
-      entries = entries.filter(e => e.timestamp <= filters.endDate!);
-    }
-    if (filters.limit) {
-      entries = entries.slice(0, filters.limit);
-    }
+}): Promise<AuditEntry[]> {
+  let query = supabase
+    .from('audit_log')
+    .select('*')
+    .order('timestamp', { ascending: false })
+    .limit(filters?.limit || 500);
+
+  if (filters?.collection) query = query.eq('collection', filters.collection);
+  if (filters?.action) query = query.eq('action', filters.action);
+  if (filters?.startDate) query = query.gte('timestamp', filters.startDate);
+  if (filters?.endDate) query = query.lte('timestamp', filters.endDate);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error('Error loading audit log:', error);
+    return [];
   }
-  
-  return entries;
+
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    timestamp: row.timestamp,
+    action: row.action as AuditEntry['action'],
+    collection: row.collection,
+    recordId: row.record_id,
+    recordName: row.record_name,
+    changes: row.changes as AuditEntry['changes'],
+    userId: row.user_id,
+    userName: row.user_name,
+  }));
 }
 
-export function clearAuditLog() {
-  setItem('audit_log', []);
+export async function clearAuditLog() {
+  // We don't actually delete - just a no-op for safety
+  console.warn('clearAuditLog: operation disabled for data safety');
 }
 
 // Helper to detect changes between objects
@@ -78,7 +81,7 @@ export function detectChanges(oldObj: any, newObj: any): { field: string; oldVal
   const allKeys = new Set([...Object.keys(oldObj || {}), ...Object.keys(newObj || {})]);
   
   allKeys.forEach(key => {
-    if (key === 'id' || key === 'criadoEm' || key === 'atualizadoEm') return;
+    if (key === 'id' || key === 'created_at' || key === 'updated_at') return;
     
     const oldVal = oldObj?.[key];
     const newVal = newObj?.[key];

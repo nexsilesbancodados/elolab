@@ -95,7 +95,7 @@ function SettingRow({ icon: Icon, title, description, children }: {
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [configClinica, setConfigClinica] = useState<ConfiguracaoClinica>(DEFAULT_CLINICA);
   const [configNotificacoes, setConfigNotificacoes] = useState<ConfiguracaoNotificacoes>(DEFAULT_NOTIFICACOES);
@@ -442,7 +442,14 @@ export default function Configuracoes() {
               <CardContent>
                 <div className="divide-y">
                   <SettingRow icon={Key} title="Sessão Automática" description="Desconectar automaticamente após período de inatividade">
-                    <Select defaultValue={localStorage.getItem('session_timeout_min') || '30'} onValueChange={(val) => { localStorage.setItem('session_timeout_min', val); toast.success(`Sessão expira após ${val} minutos de inatividade.`); }}>
+                    <Select defaultValue="30" onValueChange={async (val) => {
+                      if (profile) {
+                        await supabase.from('configuracoes_clinica').upsert({
+                          chave: 'session_timeout_min', user_id: profile.id, valor: parseInt(val) as any,
+                        }, { onConflict: 'user_id,chave' });
+                      }
+                      toast.success(`Sessão expira após ${val} minutos de inatividade.`);
+                    }}>
                       <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="15">15 minutos</SelectItem>
