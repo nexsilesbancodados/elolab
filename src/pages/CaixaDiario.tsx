@@ -288,9 +288,12 @@ export default function CaixaDiario() {
   const confirmarFechamento = () => {
     setCaixaAberto(false);
     setShowResumo(false);
-    localStorage.setItem('caixa_estado', JSON.stringify({
-      aberto: false, valorAbertura: 0, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema',
-    }));
+    const estado = { aberto: false, valorAbertura: 0, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
+    if (profile) {
+      supabase.from('configuracoes_clinica').upsert({
+        chave: 'caixa_estado', user_id: profile.id, valor: estado as any,
+      }, { onConflict: 'user_id,chave' });
+    }
     toast.info('Caixa fechado. Resumo registrado.');
   };
 

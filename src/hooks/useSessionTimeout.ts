@@ -64,6 +64,7 @@ export function useSessionTimeout() {
 
   useEffect(() => {
     if (!user) return;
+    loadTimeoutFromSupabase(user.id).then(() => resetTimer());
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     const handler = () => resetTimer();

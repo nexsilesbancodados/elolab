@@ -54,14 +54,29 @@ export function OnboardingWizard() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (profile && !localStorage.getItem(ONBOARDING_KEY)) {
-      const timer = setTimeout(() => setOpen(true), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (!profile) return;
+    const checkOnboarding = async () => {
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'onboarding_completed')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      if (!data) {
+        setTimeout(() => setOpen(true), 1000);
+      }
+    };
+    checkOnboarding();
   }, [profile]);
 
-  const handleComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, new Date().toISOString());
+  const handleComplete = async () => {
+    if (profile) {
+      await supabase.from('configuracoes_clinica').upsert({
+        chave: 'onboarding_completed',
+        user_id: profile.id,
+        valor: new Date().toISOString() as any,
+      }, { onConflict: 'user_id,chave' });
+    }
     setOpen(false);
   };
 
