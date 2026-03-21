@@ -95,7 +95,7 @@ function SettingRow({ icon: Icon, title, description, children }: {
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [configClinica, setConfigClinica] = useState<ConfiguracaoClinica>(DEFAULT_CLINICA);
   const [configNotificacoes, setConfigNotificacoes] = useState<ConfiguracaoNotificacoes>(DEFAULT_NOTIFICACOES);

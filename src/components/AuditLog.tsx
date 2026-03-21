@@ -97,10 +97,10 @@ export function AuditLog() {
             <Button variant="outline" size="sm" onClick={loadEntries} disabled={loading}>
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => exportAuditEntriesAsCsv(filteredEntries)}>
+            <Button variant="outline" size="sm" onClick={() => exportAuditEntriesAsCsv(filteredEntries, 'audit_log.csv')}>
               <Download className="h-4 w-4 mr-1" /> CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={() => exportAuditEntriesAsJson(filteredEntries)}>
+            <Button variant="outline" size="sm" onClick={() => exportAuditEntriesAsJson(filteredEntries, 'audit_log.json')}>
               <Download className="h-4 w-4 mr-1" /> JSON
             </Button>
           </div>
