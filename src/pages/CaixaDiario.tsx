@@ -169,10 +169,10 @@ export default function CaixaDiario() {
     return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
-  const getPaciente = useCallback((id: string | null) => {
-    if (!id) return { nome: 'Particular', telefone: '', cpf: '' };
-    return pacientes.find((p: any) => p.id === id) || { nome: 'Paciente', telefone: '', cpf: '' };
-  }, [pacientes]);
+  const getPaciente = useCallback((lancamento: any) => {
+    if (lancamento?.pacientes) return lancamento.pacientes;
+    return { nome: 'Particular', telefone: '', cpf: '' };
+  }, []);
 
   // ===== Stats (today) =====
   const stats = useMemo(() => {
