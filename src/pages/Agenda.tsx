@@ -214,6 +214,7 @@ export default function Agenda() {
         observacoes: existing.observacoes || '',
       });
       setRecurrence({ type: 'none', occurrences: 4 });
+      setIsRemarkMode(false);
     } else {
       setFormData({
         data: format(data, 'yyyy-MM-dd'),
