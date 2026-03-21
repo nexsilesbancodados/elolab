@@ -1,145 +1,117 @@
 
 
-# Analise Completa dos Modulos - EloLab
+# Plano: Auditoria Completa + Correções + Melhorias de UX
 
 ## Visao Geral
 
-Apos analise de todos os 40+ modulos do sistema, identifiquei melhorias organizadas por prioridade e impacto.
+Revisao sistematica de todos os modulos do EloLab, corrigindo bugs de uso, inconsistencias e melhorando drasticamente a experiencia do usuario.
 
 ---
 
-## Modulos com Maior Potencial de Melhoria
+## Fase 1 — Bugs Criticos e Problemas de Funcionamento
 
-### 1. Retornos (283 linhas) - BASICO DEMAIS
-**Problema**: Modulo mais simples do sistema. Apenas uma tabela com filtros basicos, sem KPIs, sem acoes em lote, sem integracao com agenda.
-**Melhorias**:
-- Dashboard com KPIs (retornos atrasados, taxa de comparecimento, proximos 7 dias)
-- Botao "Agendar Retorno" que cria agendamento automaticamente
-- Envio de lembrete via WhatsApp/SMS
-- Cards visuais ao inves de tabela pura
-- Alertas visuais para retornos vencidos ha mais de X dias
+### 1.1 Faturamento Duplicado (Auto-Billing)
+- O trigger `auto_billing_on_appointment_complete` no banco E o `createAutoBilling()` no codigo podem gerar lancamentos duplicados em race conditions
+- **Correcao**: Remover o trigger do banco (migration) e manter apenas o `createAutoBilling()` no codigo, que ja tem check de duplicata (`existing.length > 0`)
 
-### 2. Analytics (416 linhas) - SUBUTILIZADO
-**Problema**: KPIs basicos sem filtros de periodo customizaveis, sem comparativos, sem exportacao.
-**Melhorias**:
-- Seletor de periodo customizado (date range picker)
-- Comparativo mes a mes lado a lado
-- Metricas de produtividade por medico
-- Taxa de ocupacao de salas
-- Funil de conversao (agendamento -> atendimento -> retorno)
-- Export PDF/Excel dos dashboards
+### 1.2 Realtime Channel Error
+- Console mostra `CHANNEL_ERROR` repetidamente — o hook `useRealtimeSubscription` ja faz fallback para polling, mas gera spam de warnings
+- **Correcao**: Silenciar o warning apos o primeiro ocorrencia e adicionar exponential backoff
 
-### 3. Configuracoes (560 linhas) - USA localStorage
-**Problema**: Salva configuracoes em localStorage ao inves de Supabase. Dados se perdem ao trocar de navegador.
-**Melhorias**:
-- Migrar todas as configuracoes para tabela `configuracoes_clinica` no Supabase
-- Adicionar configuracao de logo/marca da clinica
-- Personalizar modelos de PDF (receita, atestado)
-- Configurar horarios por dia da semana
-- Gerenciamento de feriados
+### 1.3 Prontuarios nao acessivel para medicos na sidebar
+- O menu lateral mostra Prontuarios apenas para admin/medico, mas a rota existe — o item nao esta no sidebarMenu
+- **Correcao**: Verificar se `Prontuarios`, `Prescricoes`, `Atestados`, `Encaminhamentos` estao no menu (eles foram consolidados dentro de Pacientes, mas as rotas independentes ainda existem)
 
-### 4. Usuarios (431 linhas) - FALTA GESTAO
-**Problema**: CRUD basico sem logs de ultimo acesso, sem gestao de sessoes, sem 2FA.
-**Melhorias**:
-- Mostrar ultimo login e status online/offline
-- Historico de acessos do usuario
-- Bloqueio temporario de conta
-- Reset de senha pelo admin
-- Visao de permissoes em formato matrix (usuario x modulo)
-
-### 5. Tarefas (435 linhas) - FALTA COLABORACAO
-**Problema**: Tarefas individuais sem atribuicao a equipe, sem Kanban, sem subtarefas.
-**Melhorias**:
-- Visao Kanban (drag and drop entre colunas)
-- Atribuicao de tarefas a funcionarios
-- Subtarefas/checklist
-- Comentarios nas tarefas
-- Notificacao quando tarefa e atribuida
-
-### 6. Agenda (874 linhas) - FALTA DRAG & DROP
-**Problema**: Grade visual basica sem arrastar para reagendar, sem visao mensal, sem integracao Google Calendar.
-**Melhorias**:
-- Drag and drop para mover agendamentos
-- Visao mensal com mini-preview
-- Confirmacao automatica via WhatsApp (24h antes)
-- Cores por tipo de consulta/medico
-- Impressao da agenda do dia
-
-### 7. Estoque (568 linhas) - FALTA RASTREABILIDADE
-**Problema**: Controle basico sem historico de movimentacoes visivel, sem leitura de codigo de barras, sem relatorios de consumo.
-**Melhorias**:
-- Historico/timeline de movimentacoes por item
-- Grafico de consumo mensal
-- Alertas de validade proxima (30/60/90 dias)
-- Relatorio de curva ABC
-- Sugestao automatica de pedido de compra
-
-### 8. Painel TV (657 linhas) - FALTA PERSONALIDADE
-**Problema**: Funcional mas visual sem destaque, sem temas personalizaveis.
-**Melhorias**:
-- Temas visuais (moderno, classico, infantil)
-- Exibir mensagens de aniversariantes do dia
-- Previsao do tempo
-- Tempo medio de espera estimado
-- Animacoes de transicao mais fluidas
+### 1.4 GlobalSearch referencia paginas que nao existem mais
+- O GlobalSearch.tsx lista `/prontuarios`, `/prescricoes`, `/atestados` como paginas separadas — precisa alinhar com o menu atual
 
 ---
 
-## Modulos com Melhorias Pontuais
+## Fase 2 — Melhorias de UX Criticas
 
-### 9. Financeiro / Contas a Pagar / Contas a Receber
-- Conciliacao bancaria (upload de extrato OFX)
-- DRE (Demonstrativo de Resultado)
-- Dashboard unificado entre os 3 modulos financeiros
-- Parcelamento de pagamentos
+### 2.1 Feedback Visual em Acoes
+- Adicionar `toast` de sucesso/erro consistente em TODOS os formularios (Agenda, Pacientes, Estoque, Triagem, Fila)
+- Usar `LoadingButton` em vez de `Button` + estado loading manual em todos os forms
 
-### 10. Laboratorio / Laudos / Mapa de Coleta
-- Integracao entre os 3 modulos (coleta -> analise -> laudo em pipeline visual)
-- Dashboard unificado do lab com metricas de TAT (turnaround time)
-- Impressao em lote de etiquetas
+### 2.2 Confirmacao em Acoes Destrutivas
+- Garantir que deletar paciente, cancelar agendamento, excluir item do estoque usam `ConfirmDialog` ou `AlertDialog`
+- Verificar cada modulo: Pacientes, Agenda, Estoque, Contas, Fila
 
-### 11. Prescricoes / Atestados
-- Favoritos/templates rapidos por medico
-- Duplicar prescricao anterior com 1 clique
-- Preview do PDF antes de gerar
-- Envio direto por WhatsApp ao paciente
+### 2.3 Empty States Melhores
+- Verificar que todos os modulos com listas vazias exibem um `EmptyState` amigavel com acao primaria (ex: "Nenhum paciente cadastrado — Cadastrar Primeiro Paciente")
+- Modulos a verificar: Triagem, Laboratorio, Prescricoes, Atestados, Encaminhamentos, Contas a Pagar
 
-### 12. Pacientes (1457 linhas) - MUITO GRANDE
-- Refatorar em componentes menores (PatientList, PatientForm, PatientDetail)
-- Performance: virtualizar lista para clinicas com 1000+ pacientes
-- Fusao de cadastros duplicados
+### 2.4 Validacao de Formularios
+- CPF: adicionar validacao de digito verificador (nao apenas length)
+- Telefone: mascara automatica
+- Email: feedback visual inline
+- Campos obrigatorios com asterisco vermelho
+- Focar no primeiro campo com erro apos submit
 
----
-
-## Melhorias Transversais (afetam todos os modulos)
-
-| Melhoria | Impacto |
-|----------|---------|
-| Paginacao server-side | Performance com volume alto de dados |
-| Filtros salvos/favoritos | Produtividade do usuario |
-| Exportacao unificada (Excel/PDF) em todos os modulos | Consistencia |
-| Notificacoes in-app (sino no navbar) com contagem | UX |
-| Atalhos de teclado globais documentados | Power users |
-| Tour guiado por modulo (onboarding contextual) | Onboarding |
+### 2.5 Navegacao e Breadcrumbs
+- Garantir que o botao "Voltar" funcione em todos os contextos de ficha/detalhe
+- Breadcrumbs devem refletir a hierarquia real (ex: Pacientes > Joao > Prontuario)
 
 ---
 
-## Plano de Implementacao Sugerido
+## Fase 3 — Polimento de Interface
 
-**Fase 1 - Quick Wins (alto impacto, baixo esforco)**:
-1. Retornos: adicionar KPIs e botao de agendamento
-2. Configuracoes: migrar para Supabase
-3. Usuarios: mostrar ultimo acesso
+### 3.1 Transicoes e Animacoes
+- Adicionar `animate-fade-in` nos modulos que ainda nao tem (verificar Triagem, Laboratorio, Contas)
+- Skeleton loaders em todos os modulos com dados async
 
-**Fase 2 - Experiencia Premium**:
-4. Tarefas: visao Kanban
-5. Agenda: visao mensal + cores por medico
-6. Analytics: filtros de periodo + comparativos
+### 3.2 Responsividade Mobile
+- Verificar que tabelas largas usam `ScrollArea` horizontal em telas pequenas
+- Cards de KPI empilham corretamente em mobile
+- Dialogs de formulario nao cortam em telas menores
 
-**Fase 3 - Operacional Avancado**:
-7. Estoque: timeline de movimentacoes + curva ABC
-8. Lab pipeline unificado
-9. Pacientes: refatoracao em componentes
+### 3.3 Acessibilidade
+- Labels em todos os inputs de formulario
+- `aria-label` em botoes de icone
+- Focus trap em dialogs (ja coberto pelo Radix, mas verificar)
 
-Qual grupo de melhorias voce gostaria de implementar primeiro?
+### 3.4 Consistencia Visual
+- Padronizar uso de `rounded-xl` vs `rounded-lg` em cards
+- Padronizar espacamento de header de pagina (titulo + descricao + acao)
+- Padronizar cores de status entre modulos (verde=sucesso, amarelo=pendente, vermelho=erro)
+
+---
+
+## Fase 4 — Funcionalidades Faltantes
+
+### 4.1 Configuracoes na Nuvem
+- O `Configuracoes.tsx` ja usa Supabase (tabela `configuracoes_clinica`) — verificar se o save funciona e se carrega corretamente ao reabrir
+
+### 4.2 Pagina de Recepcao — Fluxo Completo
+- Verificar que o fluxo Check-in > Triagem > Atendimento > Pagamento funciona de ponta a ponta
+- Testar transicao de status do agendamento em cada etapa
+
+### 4.3 Medicos sem acesso a Prontuario direto
+- Adicionar rota de prontuario no menu clinico para medicos (atualmente so acessivel via ficha de paciente)
+
+---
+
+## Detalhes Tecnicos
+
+```text
+Arquivos principais afetados:
+├── src/hooks/useRealtimeSubscription.ts  (silenciar spam)
+├── src/lib/autoBilling.ts                (manter, remover trigger DB)
+├── src/config/sidebarMenu.ts             (ajustar itens clinicos)
+├── src/components/GlobalSearch.tsx        (alinhar com menu)
+├── src/pages/Pacientes.tsx               (validacao CPF, UX)
+├── src/pages/Agenda.tsx                   (confirm dialogs)
+├── src/pages/Estoque.tsx                  (empty states)
+├── src/pages/Triagem.tsx                  (animacoes, skeleton)
+├── src/pages/Recepcao.tsx                 (fluxo completo)
+├── src/pages/Prescricoes.tsx              (consistencia)
+├── src/pages/Atestados.tsx                (consistencia)
+├── src/pages/Laboratorio.tsx              (empty states)
+├── src/pages/ContasPagar.tsx              (UX)
+├── src/pages/ContasReceber.tsx            (UX)
+├── migration: remover trigger duplicado
+└── ~15 arquivos menores de ajuste
+```
+
+**Estimativa**: ~8-10 mensagens de implementacao sequencial, priorizando bugs criticos primeiro.
 
