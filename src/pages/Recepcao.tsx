@@ -388,7 +388,7 @@ export default function Recepcao() {
             <Users className="h-3.5 w-3.5 mr-1" /> Fila ({stats.naFila})
           </TabsTrigger>
           <TabsTrigger value="pagamento" className="data-[state=active]:bg-background">
-            <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagamento ({stats.pagamento})
+            <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.pagamento})
           </TabsTrigger>
           <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Concluído ({stats.concluido})
