@@ -547,15 +547,26 @@ export default function Recepcao() {
                                 )}
 
                                 {step === 3 && lanc && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => openPagamento(lanc)}
-                                    disabled={isProcessing}
-                                    className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  >
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    Receber R$ {lanc.valor?.toFixed(2)}
-                                  </Button>
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleChamarBalcao(lanc, pac)}
+                                      disabled={isProcessing}
+                                      className="gap-1"
+                                    >
+                                      <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => openPagamento(lanc, pac)}
+                                      disabled={isProcessing}
+                                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    >
+                                      <DollarSign className="h-3.5 w-3.5" />
+                                      Receber R$ {lanc.valor?.toFixed(2)}
+                                    </Button>
+                                  </div>
                                 )}
 
                                 {step === 4 && lanc && (
