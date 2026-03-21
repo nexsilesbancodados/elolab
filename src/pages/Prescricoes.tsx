@@ -213,7 +213,7 @@ export default function Prescricoes() {
     setPdfFileName(`receita_${safeName}_${form.data_emissao}.pdf`);
     setIsFormOpen(false);
     setIsResultOpen(true);
-    toast({ title: 'Receita gerada com sucesso!' });
+    toast.success('Receita gerada com sucesso!');
   };
 
   const handleDownload = () => {
