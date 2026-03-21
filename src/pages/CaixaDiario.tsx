@@ -1193,6 +1193,144 @@ export default function CaixaDiario() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* ===== Dialog: Cupom/Recibo pós-pagamento ===== */}
+      <Dialog open={showCupom} onOpenChange={(open) => { if (!open) { setShowCupom(false); setCupomData(null); setSelectedLancamento(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" /> Pagamento Recebido
+            </DialogTitle>
+            <DialogDescription>Cupom de recebimento gerado com sucesso.</DialogDescription>
+          </DialogHeader>
+          {cupomData && (
+            <div className="space-y-4">
+              {/* Cupom visual */}
+              <div id="cupom-recibo" className="border-2 border-dashed border-border rounded-xl p-5 space-y-3 bg-card">
+                <div className="text-center border-b border-dashed border-border pb-3">
+                  <h3 className="font-bold text-lg tracking-tight">CUPOM DE RECEBIMENTO</h3>
+                  <p className="text-xs text-muted-foreground">{cupomData.dataHora}</p>
+                </div>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Paciente:</span><span className="font-medium text-right max-w-[60%] truncate">{cupomData.paciente}</span></div>
+                  {cupomData.cpf && <div className="flex justify-between"><span className="text-muted-foreground">CPF:</span><span>{cupomData.cpf}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">Descrição:</span><span className="text-right max-w-[60%] truncate">{cupomData.descricao}</span></div>
+                  {cupomData.categoria && <div className="flex justify-between"><span className="text-muted-foreground">Categoria:</span><span>{cupomData.categoria}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">Forma Pgto:</span><span className="font-medium">{cupomData.formaPagamento}</span></div>
+                </div>
+                <Separator className="border-dashed" />
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Valor original:</span><span>R$ {cupomData.valorOriginal.toFixed(2)}</span></div>
+                  {cupomData.desconto > 0 && <div className="flex justify-between text-success"><span>Desconto:</span><span>- R$ {cupomData.desconto.toFixed(2)}</span></div>}
+                  {cupomData.acrescimo > 0 && <div className="flex justify-between text-destructive"><span>Acréscimo:</span><span>+ R$ {cupomData.acrescimo.toFixed(2)}</span></div>}
+                </div>
+                <div className="flex justify-between items-center border-t-2 border-foreground pt-2 text-lg font-bold">
+                  <span>TOTAL PAGO:</span>
+                  <span className="text-success">R$ {cupomData.valorFinal.toFixed(2)}</span>
+                </div>
+                <div className="text-center text-xs text-muted-foreground border-t border-dashed border-border pt-2 space-y-0.5">
+                  <p>Recebido por: {cupomData.operador}</p>
+                  <p>Documento sem valor fiscal</p>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="grid grid-cols-3 gap-2">
+                <Button variant="outline" className="gap-1.5" onClick={() => {
+                  const w = window.open('', '_blank', 'width=420,height=600');
+                  if (!w) return;
+                  w.document.write(`<!DOCTYPE html><html><head><title>Cupom</title>
+                    <style>
+                      body { font-family: 'Segoe UI', sans-serif; max-width: 350px; margin: 20px auto; font-size: 13px; color: #333; }
+                      .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
+                      .header h2 { margin: 0; font-size: 18px; }
+                      .row { display: flex; justify-content: space-between; padding: 4px 0; }
+                      .row.total { border-top: 2px solid #333; margin-top: 8px; padding-top: 8px; font-weight: bold; font-size: 16px; }
+                      .discount { color: #16a34a; }
+                      .surcharge { color: #dc2626; }
+                      .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; border-top: 1px dashed #ccc; padding-top: 10px; }
+                      @media print { body { margin: 0; } }
+                    </style></head><body>
+                    <div class="header"><h2>CUPOM DE RECEBIMENTO</h2><p>${cupomData.dataHora}</p></div>
+                    <div class="row"><span>Paciente:</span><strong>${cupomData.paciente}</strong></div>
+                    ${cupomData.cpf ? `<div class="row"><span>CPF:</span><span>${cupomData.cpf}</span></div>` : ''}
+                    <div class="row"><span>Descrição:</span><span>${cupomData.descricao}</span></div>
+                    ${cupomData.categoria ? `<div class="row"><span>Categoria:</span><span>${cupomData.categoria}</span></div>` : ''}
+                    <div class="row"><span>Forma Pgto:</span><span>${cupomData.formaPagamento}</span></div>
+                    <hr style="border:none;border-top:1px dashed #ccc;margin:8px 0;">
+                    <div class="row"><span>Valor original:</span><span>R$ ${cupomData.valorOriginal.toFixed(2)}</span></div>
+                    ${cupomData.desconto > 0 ? `<div class="row discount"><span>Desconto:</span><span>- R$ ${cupomData.desconto.toFixed(2)}</span></div>` : ''}
+                    ${cupomData.acrescimo > 0 ? `<div class="row surcharge"><span>Acréscimo:</span><span>+ R$ ${cupomData.acrescimo.toFixed(2)}</span></div>` : ''}
+                    <div class="row total"><span>TOTAL PAGO:</span><span>R$ ${cupomData.valorFinal.toFixed(2)}</span></div>
+                    <div class="footer"><p>Recebido por: ${cupomData.operador}</p><p>Documento sem valor fiscal</p></div>
+                    <script>window.onload = function() { window.print(); }</script>
+                  </body></html>`);
+                  w.document.close();
+                }}>
+                  <Printer className="h-4 w-4" /> Imprimir
+                </Button>
+                <Button variant="outline" className="gap-1.5" onClick={() => {
+                  const text = [
+                    '📋 *CUPOM DE RECEBIMENTO*',
+                    `📅 ${cupomData.dataHora}`,
+                    '',
+                    `👤 Paciente: ${cupomData.paciente}`,
+                    cupomData.cpf ? `🪪 CPF: ${cupomData.cpf}` : '',
+                    `📝 ${cupomData.descricao}`,
+                    cupomData.categoria ? `📂 ${cupomData.categoria}` : '',
+                    `💳 ${cupomData.formaPagamento}`,
+                    '',
+                    `💰 Valor: R$ ${cupomData.valorOriginal.toFixed(2)}`,
+                    cupomData.desconto > 0 ? `🟢 Desconto: - R$ ${cupomData.desconto.toFixed(2)}` : '',
+                    cupomData.acrescimo > 0 ? `🔴 Acréscimo: + R$ ${cupomData.acrescimo.toFixed(2)}` : '',
+                    `✅ *TOTAL PAGO: R$ ${cupomData.valorFinal.toFixed(2)}*`,
+                    '',
+                    `Recebido por: ${cupomData.operador}`,
+                    '_Documento sem valor fiscal_',
+                  ].filter(Boolean).join('\n');
+                  const phone = (cupomData.telefone || '').replace(/\D/g, '');
+                  const url = phone
+                    ? `https://wa.me/55${phone}?text=${encodeURIComponent(text)}`
+                    : `https://wa.me/?text=${encodeURIComponent(text)}`;
+                  window.open(url, '_blank');
+                }}>
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </Button>
+                <Button variant="outline" className="gap-1.5" onClick={() => {
+                  const text = [
+                    'CUPOM DE RECEBIMENTO',
+                    cupomData.dataHora,
+                    '',
+                    `Paciente: ${cupomData.paciente}`,
+                    cupomData.cpf ? `CPF: ${cupomData.cpf}` : '',
+                    `Descrição: ${cupomData.descricao}`,
+                    cupomData.categoria ? `Categoria: ${cupomData.categoria}` : '',
+                    `Forma Pgto: ${cupomData.formaPagamento}`,
+                    '',
+                    `Valor: R$ ${cupomData.valorOriginal.toFixed(2)}`,
+                    cupomData.desconto > 0 ? `Desconto: - R$ ${cupomData.desconto.toFixed(2)}` : '',
+                    cupomData.acrescimo > 0 ? `Acréscimo: + R$ ${cupomData.acrescimo.toFixed(2)}` : '',
+                    `TOTAL PAGO: R$ ${cupomData.valorFinal.toFixed(2)}`,
+                    '',
+                    `Recebido por: ${cupomData.operador}`,
+                    'Documento sem valor fiscal',
+                  ].filter(Boolean).join('\n');
+                  const blob = new Blob([text], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `cupom_${cupomData.paciente.replace(/\s+/g, '_')}_${cupomData.data.replace(/\//g, '-')}.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success('Cupom baixado!');
+                }}>
+                  <Download className="h-4 w-4" /> Baixar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
