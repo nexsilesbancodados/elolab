@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Calendar, Users, FileText, BarChart3, Stethoscope,
   ArrowRight, CheckCircle2, Sparkles, Rocket
 } from 'lucide-react';
-
-const ONBOARDING_KEY = 'elolab_onboarding_completed';
 
 const steps = [
   {
