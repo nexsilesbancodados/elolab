@@ -62,16 +62,16 @@ function corEspera(ts: string | null): string {
 // New flow: Check-in(0) → Balcão/Pagamento(1) → Atendimento(2) → Finalizado(3) → Concluído(4)
 // Patient pays BEFORE entering the consultation room
 function patientStep(ag: any, filaItem: any, lancamento: any): number {
-  // Concluído: finalizado + pago
-  if (ag.status === 'finalizado' && lancamento?.status === 'pago') return 4;
-  // Finalizado: consultation done, already paid before
+  // Concluído: explicitly marked as concluded in the queue
+  if (ag.status === 'finalizado' && filaItem?.status === 'concluido') return 4;
+  // Finalizado: consultation done — show post-consultation actions (regardless of payment)
   if (ag.status === 'finalizado') return 3;
-  // Em atendimento: paid and in consultation
+  // Em atendimento: in consultation
   if (ag.status === 'em_atendimento') return 2;
-  // Balcão: checked in (in queue), waiting to pay before consultation
-  if (filaItem && lancamento?.status !== 'pago') return 1;
   // Already paid, waiting to be called for consultation
   if (filaItem && lancamento?.status === 'pago') return 2;
+  // Balcão: checked in (in queue), waiting to pay before consultation
+  if (filaItem && lancamento?.status !== 'pago') return 1;
   // Check-in: just arrived
   if (ag.status === 'confirmado' || ag.status === 'aguardando' || ag.status === 'agendado') return 0;
   return -1;
@@ -371,10 +371,11 @@ export default function Recepcao() {
     }
     setIsProcessing(true);
     try {
-      const valorFinal = selectedLancamento.valor - desconto + acrescimo;
+      const valorFinal = (selectedLancamento.valor || 0) - desconto + acrescimo;
       await supabase.from('lancamentos').update({
         status: 'pago',
         forma_pagamento: formaPagamento,
+        valor: valorFinal,
         observacoes: obsPagamento || null,
       }).eq('id', selectedLancamento.id);
 
@@ -382,6 +383,17 @@ export default function Recepcao() {
       setShowPagamento(false);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
     } catch { toast.error('Erro ao confirmar pagamento'); }
+    setIsProcessing(false);
+  }
+
+  async function handleConcluir(agId: string, filaId: string) {
+    setIsProcessing(true);
+    try {
+      await supabase.from('fila_atendimento').update({ status: 'concluido' }).eq('id', filaId);
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      toast.success('Atendimento concluído!');
+    } catch { toast.error('Erro ao concluir'); }
     setIsProcessing(false);
   }
 
@@ -665,9 +677,16 @@ export default function Recepcao() {
                                 {/* Step 3: Finalizado — post-consultation actions */}
                                 {step === 3 && (
                                   <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                    <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-0 w-fit">
-                                      <Check className="h-3 w-3 mr-1" /> Consulta finalizada
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-0 w-fit">
+                                        <Check className="h-3 w-3 mr-1" /> Consulta finalizada
+                                      </Badge>
+                                      {lanc?.status === 'pago' && (
+                                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" /> Pago
+                                        </Badge>
+                                      )}
+                                    </div>
                                     <div className="flex flex-wrap gap-1.5">
                                       <Button size="sm" variant="ghost" className="gap-1 text-xs h-7"
                                         onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}>
@@ -685,6 +704,13 @@ export default function Recepcao() {
                                         onClick={() => navigate(`/prontuarios?paciente=${ag.paciente_id}`)}>
                                         <ClipboardList className="h-3 w-3" /> Prontuário
                                       </Button>
+                                      {fila && (
+                                        <Button size="sm" className="gap-1 text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto"
+                                          onClick={() => handleConcluir(ag.id, fila.id)}
+                                          disabled={isProcessing}>
+                                          <CheckCircle2 className="h-3 w-3" /> Concluir
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
                                 )}
