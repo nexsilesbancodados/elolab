@@ -1,0 +1,2 @@
+ALTER TABLE public.lancamentos DROP CONSTRAINT lancamentos_forma_pagamento_check;
+ALTER TABLE public.lancamentos ADD CONSTRAINT lancamentos_forma_pagamento_check CHECK (forma_pagamento IS NULL OR forma_pagamento = ANY (ARRAY['dinheiro'::text, 'pix'::text, 'cartao_credito'::text, 'cartao_debito'::text, 'convenio'::text, 'boleto'::text]));
