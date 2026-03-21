@@ -170,30 +170,30 @@ export default function Recepcao() {
     [todayAgendamentos, pacientes, medicos, salas, filaItems, lancamentos]
   );
 
-  // Filter
-  const filtered = useMemo(() => {
-    let list = enriched;
-    if (activeTab === 'checkin') list = list.filter(e => e.step === 0);
-    if (activeTab === 'fila') list = list.filter(e => e.step === 1 || e.step === 2);
-    if (activeTab === 'pagamento') list = list.filter(e => e.step === 3);
-    if (activeTab === 'concluido') list = list.filter(e => e.step === 4);
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(e =>
-        e.pac?.nome?.toLowerCase().includes(q) ||
-        e.med?.nome?.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [enriched, activeTab, search]);
+   // Filter
+   const filtered = useMemo(() => {
+     let list = enriched;
+     if (activeTab === 'checkin') list = list.filter(e => e.step === 0);
+     if (activeTab === 'balcao') list = list.filter(e => e.step === 1);
+     if (activeTab === 'atendimento') list = list.filter(e => e.step === 2 || e.step === 3);
+     if (activeTab === 'concluido') list = list.filter(e => e.step === 4);
+     if (search) {
+       const q = search.toLowerCase();
+       list = list.filter(e =>
+         e.pac?.nome?.toLowerCase().includes(q) ||
+         e.med?.nome?.toLowerCase().includes(q)
+       );
+     }
+     return list;
+   }, [enriched, activeTab, search]);
 
-  // Stats
-  const stats = useMemo(() => ({
-    aguardando: enriched.filter(e => e.step === 0).length,
-    naFila: enriched.filter(e => e.step === 1 || e.step === 2).length,
-    pagamento: enriched.filter(e => e.step === 3).length,
-    concluido: enriched.filter(e => e.step === 4).length,
-  }), [enriched]);
+   // Stats
+   const stats = useMemo(() => ({
+     aguardando: enriched.filter(e => e.step === 0).length,
+     balcao: enriched.filter(e => e.step === 1).length,
+     atendimento: enriched.filter(e => e.step === 2 || e.step === 3).length,
+     concluido: enriched.filter(e => e.step === 4).length,
+   }), [enriched]);
 
   // ─── Actions ──────────────────────────────────────────
   async function handleCheckin(agId: string) {
