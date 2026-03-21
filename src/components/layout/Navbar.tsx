@@ -194,14 +194,26 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-xl p-1.5">
-            <DropdownMenuLabel className="px-2 pb-2">
-              <p className="font-semibold truncate">{profile?.nome}</p>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email}</p>
-            </DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+            {/* User header card */}
+            <div className="flex items-center gap-3 px-2 py-3 mb-1 rounded-lg bg-accent/40">
+              <Avatar className="h-10 w-10 ring-2 ring-emerald-500/30 shadow-sm">
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold">
+                  {profile?.nome ? getInitials(profile.nome) : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate">{profile?.nome}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{profile?.email}</p>
+                <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Online
+                </span>
+              </div>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
-              <Link to="/configuracoes"><User className="h-4 w-4 text-muted-foreground" />Meu Perfil</Link>
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5 mt-1">
+              <Link to="/configuracoes"><User className="h-4 w-4 text-primary" />Meu Perfil</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
               <Link to="/configuracoes"><Settings className="h-4 w-4 text-muted-foreground" />Configurações</Link>
@@ -209,7 +221,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}
-              className="rounded-lg gap-2.5 py-2.5 text-destructive focus:text-destructive"
+              className="rounded-lg gap-2.5 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10"
             >
               <LogOut className="h-4 w-4" />Sair
             </DropdownMenuItem>
