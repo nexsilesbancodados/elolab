@@ -16,7 +16,7 @@ import {
   Landmark, Search, Bell, ChevronRight, Users, Stethoscope,
   DollarSign, ArrowRight, Loader2, CheckCircle2, AlertTriangle,
   Timer, Phone, XCircle, Receipt, Eye, CalendarPlus, FileText,
-  FlaskConical, RotateCcw, ClipboardList, Lock as LockIcon, LockOpen,
+  FlaskConical, RotateCcw, ClipboardList, Lock as LockIcon, LockOpen, Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -442,6 +442,30 @@ export default function Recepcao() {
     setIsProcessing(false);
   }
 
+  async function handleEncaminharTriagem(agId: string, pacienteId: string) {
+    setIsProcessing(true);
+    try {
+      // Check if triagem already exists for this agendamento
+      const { data: existing } = await supabase
+        .from('triagens')
+        .select('id')
+        .eq('agendamento_id', agId)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        toast.info('Triagem já registrada para este agendamento');
+        navigate('/triagem');
+        setIsProcessing(false);
+        return;
+      }
+      toast.success('Paciente encaminhado para triagem!', {
+        description: 'Acesse a página de Triagem para registrar os sinais vitais',
+        action: { label: 'Ir para Triagem', onClick: () => navigate('/triagem') },
+      });
+      navigate(`/triagem`);
+    } catch { toast.error('Erro ao encaminhar'); }
+    setIsProcessing(false);
+  }
+
   // ─── Render ───────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -640,14 +664,25 @@ export default function Recepcao() {
                               {/* Action buttons */}
                               <div className="flex items-center gap-2 shrink-0">
                                 {step === 0 && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCheckin(ag.id)}
-                                    disabled={isProcessing}
-                                    className="gap-1.5"
-                                  >
-                                    <UserCheck className="h-3.5 w-3.5" /> Check-in
-                                  </Button>
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleCheckin(ag.id)}
+                                      disabled={isProcessing}
+                                      className="gap-1.5"
+                                    >
+                                      <UserCheck className="h-3.5 w-3.5" /> Check-in
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEncaminharTriagem(ag.id, ag.paciente_id)}
+                                      disabled={isProcessing}
+                                      className="gap-1"
+                                    >
+                                      <Activity className="h-3.5 w-3.5" /> Triagem
+                                    </Button>
+                                  </div>
                                 )}
 
                                 {/* Step 1: Balcão — patient pays before consultation */}

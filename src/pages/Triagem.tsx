@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Activity, Heart, Scale, Loader2, Search, Thermometer,
@@ -179,6 +179,26 @@ export default function TriagemPage() {
   const { data: pacientes = [] } = usePacientes();
   const { data: agendamentos = [] } = useAgendamentos(today);
 
+  // Realtime subscription for triagens
+  React.useEffect(() => {
+    const ch = supabase
+      .channel('triagem-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'triagens' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['triagens'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [queryClient]);
+
+  // Count of agendamentos without triagem today (pending triages)
+  const pendingTriagemCount = useMemo(() => {
+    const todayAgs = agendamentos.filter((a: any) =>
+      ['agendado', 'confirmado', 'aguardando'].includes(a.status || '')
+    );
+    const triagemAgIds = new Set(triagens.filter((t: any) => t.data_hora?.startsWith(today)).map((t: any) => t.agendamento_id));
+    return todayAgs.filter((a: any) => !triagemAgIds.has(a.id)).length;
+  }, [agendamentos, triagens, today]);
+
   const setField = (field: keyof TriagemForm) => (value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -334,8 +354,13 @@ export default function TriagemPage() {
             <Activity className="h-7 w-7 text-primary" />
             Triagem
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
             {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })} • Protocolo Manchester
+            {pendingTriagemCount > 0 && (
+              <Badge variant="secondary" className="text-xs bg-warning/10 text-warning border-warning/20">
+                {pendingTriagemCount} pendente{pendingTriagemCount > 1 ? 's' : ''}
+              </Badge>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
