@@ -4,6 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type AppRole = 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro';
 
+export interface Clinica {
+  id: string;
+  nome: string;
+  cnpj?: string;
+  owner_id?: string;
+}
+
 interface UserProfile {
   id: string;
   nome: string;
@@ -11,17 +18,20 @@ interface UserProfile {
   avatar?: string;
   telefone?: string;
   ativo: boolean;
+  clinica_id?: string;
 }
 
 interface UserWithRole extends UserProfile {
   role: AppRole | null;
   roles: AppRole[];
+  clinica_id?: string;
 }
 
 interface SupabaseAuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserWithRole | null;
+  clinicaId: string | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, nome: string) => Promise<{ data: any; error: Error | null }>;
@@ -71,6 +81,28 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       const roles = (rolesData?.map(r => r.role) || []) as AppRole[];
       const primaryRole = roles.length > 0 ? roles[0] : null;
 
+      let clinicaId = (profileData as any).clinica_id as string | undefined;
+
+      // Auto-create clinica for admins who don't have one
+      if (!clinicaId && roles.includes('admin')) {
+        try {
+          const { data: newClinica } = await supabase
+            .from('clinicas')
+            .insert({ nome: 'Minha Clínica', owner_id: userId })
+            .select('id')
+            .single();
+          if (newClinica) {
+            clinicaId = newClinica.id;
+            await supabase
+              .from('profiles')
+              .update({ clinica_id: clinicaId } as any)
+              .eq('id', userId);
+          }
+        } catch (e) {
+          console.error('Error auto-creating clinica:', e);
+        }
+      }
+
       return {
         id: profileData.id,
         nome: profileData.nome,
@@ -78,6 +110,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         avatar: profileData.avatar,
         telefone: profileData.telefone,
         ativo: profileData.ativo,
+        clinica_id: clinicaId,
         role: primaryRole,
         roles,
       } as UserWithRole;
@@ -214,10 +247,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <SupabaseAuthContext.Provider
-      value={{
+       value={{
         user,
         session,
         profile,
+        clinicaId: profile?.clinica_id || null,
         isLoading,
         signIn,
         signUp,
