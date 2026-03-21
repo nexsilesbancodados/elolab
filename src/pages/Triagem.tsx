@@ -179,6 +179,26 @@ export default function TriagemPage() {
   const { data: pacientes = [] } = usePacientes();
   const { data: agendamentos = [] } = useAgendamentos(today);
 
+  // Realtime subscription for triagens
+  React.useEffect(() => {
+    const ch = supabase
+      .channel('triagem-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'triagens' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['triagens'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [queryClient]);
+
+  // Count of agendamentos without triagem today (pending triages)
+  const pendingTriagemCount = useMemo(() => {
+    const todayAgs = agendamentos.filter((a: any) =>
+      ['agendado', 'confirmado', 'aguardando'].includes(a.status || '')
+    );
+    const triagemAgIds = new Set(triagens.filter((t: any) => t.data_hora?.startsWith(today)).map((t: any) => t.agendamento_id));
+    return todayAgs.filter((a: any) => !triagemAgIds.has(a.id)).length;
+  }, [agendamentos, triagens, today]);
+
   const setField = (field: keyof TriagemForm) => (value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
