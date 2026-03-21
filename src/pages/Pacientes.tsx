@@ -561,7 +561,7 @@ export default function Pacientes() {
       refetch();
       setIsFormOpen(false);
     } catch (error: any) {
-      if (import.meta.env.DEV) console.error('Erro ao salvar:', error);
+      console.error('Erro ao salvar paciente:', error);
       const msg = error?.message || error?.details || 'Verifique os dados e tente novamente.';
       toast({ title: 'Erro ao salvar paciente', description: msg, variant: 'destructive' });
     } finally {
