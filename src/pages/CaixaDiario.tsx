@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { downloadReceiptPdf, printReceiptPdf, getReceiptWhatsAppText, type ReceiptData } from '@/lib/pdfReceipt';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

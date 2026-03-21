@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { printReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
