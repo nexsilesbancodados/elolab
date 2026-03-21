@@ -315,28 +315,46 @@ export default function Recepcao() {
       const item = enriched.find(e => e.ag.id === agId);
       if (!item) throw new Error('Agendamento não encontrado');
 
-      const result = await autoFinalizarAtendimento({
-        agendamentoId: agId,
-        filaId,
-        pacienteId: item.ag.paciente_id,
-        pacienteNome: item.pac?.nome || 'Paciente',
-        medicoId: item.ag.medico_id,
-        convenioId: item.pac?.convenio_id,
-        tipoConsulta: item.ag.tipo,
-      });
+      // Direct updates as primary method (more reliable)
+      const { error: agErr } = await supabase
+        .from('agendamentos')
+        .update({ status: 'finalizado' as any })
+        .eq('id', agId);
+      if (agErr) {
+        console.error('Erro ao atualizar agendamento:', agErr);
+        throw new Error('Erro ao finalizar agendamento: ' + agErr.message);
+      }
 
-      if (!result.success) {
-        throw new Error(result.message || 'Falha ao finalizar');
+      if (filaId) {
+        const { error: filaErr } = await supabase
+          .from('fila_atendimento')
+          .update({ status: 'finalizado' })
+          .eq('id', filaId);
+        if (filaErr) console.error('Erro ao atualizar fila:', filaErr);
+      }
+
+      // Auto-billing (non-blocking)
+      try {
+        await createAutoBilling({
+          agendamentoId: agId,
+          pacienteId: item.ag.paciente_id,
+          pacienteNome: item.pac?.nome || 'Paciente',
+          convenioId: item.pac?.convenio_id,
+          tipoConsulta: item.ag.tipo,
+          data: format(new Date(), 'yyyy-MM-dd'),
+        });
+      } catch (billingErr) {
+        console.warn('Auto-billing falhou:', billingErr);
       }
 
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
-      toast.success('Atendimento finalizado!', { description: result.actions.join(' • ') });
+      toast.success('Atendimento finalizado!');
     } catch (err: any) {
       console.error('Erro ao finalizar:', err);
-      toast.error('Erro ao finalizar atendimento');
+      toast.error('Erro ao finalizar: ' + (err?.message || 'Erro desconhecido'));
     }
     setIsProcessing(false);
   }
