@@ -927,7 +927,7 @@ export default function Agenda() {
       )}
 
       {/* Form Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={(open) => { setIsFormOpen(open); if (!open) setIsRemarkMode(false); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -935,21 +935,110 @@ export default function Agenda() {
             </DialogTitle>
             <DialogDescription>Preencha os dados do agendamento.</DialogDescription>
           </DialogHeader>
+
+          {/* ─── Quick Actions Bar (existing appointments only) ─── */}
+          {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
+            <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg border border-border/50">
+              <span className="text-xs text-muted-foreground font-medium w-full mb-1">Ações rápidas:</span>
+              
+              {(formData.status === 'agendado') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-success border-success/30 hover:bg-success/10 gap-1.5"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    if (!formData.id) return;
+                    setIsSaving(true);
+                    const result = await autoConfirmarAgendamento(formData.id);
+                    if (result.success) {
+                      toast.success('Consulta confirmada!', { description: result.actions.join(' • ') });
+                      sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
+                      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                      setFormData(prev => ({ ...prev, status: 'confirmado' as StatusAgendamento }));
+                    }
+                    setIsSaving(false);
+                  }}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Confirmar
+                </Button>
+              )}
+
+              {(formData.status === 'agendado' || formData.status === 'confirmado') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-primary border-primary/30 hover:bg-primary/10 gap-1.5"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    if (!formData.id) return;
+                    setIsSaving(true);
+                    const result = await autoCheckin(formData.id);
+                    if (result.success) {
+                      toast.success('Check-in realizado!', { description: result.actions.join(' • ') });
+                      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                      setIsFormOpen(false);
+                      navigate('/recepcao');
+                    } else {
+                      toast.info(result.message);
+                    }
+                    setIsSaving(false);
+                  }}
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  Check-in
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-accent-foreground border-accent hover:bg-accent/50 gap-1.5"
+                disabled={isSaving}
+                onClick={() => {
+                  setIsRemarkMode(true);
+                  toast.info('Altere a data e horário e clique em Salvar.');
+                }}
+              >
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                Remarcar
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Data</Label>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded">
-                  <Clock className="h-4 w-4" />
-                  {formData.data && format(parseISO(formData.data), "dd/MM/yyyy")}
-                </div>
+                {isRemarkMode || !formData.id ? (
+                  <Input
+                    type="date"
+                    value={formData.data || ''}
+                    onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded">
+                    <Clock className="h-4 w-4" />
+                    {formData.data && format(parseISO(formData.data), "dd/MM/yyyy")}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Horário</Label>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded">
-                  <Clock className="h-4 w-4" />
-                  {formData.hora_inicio}
-                </div>
+                {isRemarkMode || !formData.id ? (
+                  <Select value={formData.hora_inicio} onValueChange={(v) => setFormData({ ...formData, hora_inicio: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {HORARIOS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded">
+                    <Clock className="h-4 w-4" />
+                    {formData.hora_inicio}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1085,7 +1174,7 @@ export default function Agenda() {
             {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
               <Button
                 variant="outline"
-                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                className="text-warning border-warning/30 hover:bg-warning/10"
                 disabled={isSaving}
                 onClick={async () => {
                   if (!formData.id) return;
@@ -1107,7 +1196,7 @@ export default function Agenda() {
             )}
             <div className="flex-1" />
             <Button variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSaving}>
-              Cancelar
+              Fechar
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
