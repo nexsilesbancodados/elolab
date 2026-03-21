@@ -181,16 +181,44 @@ export default function Pacientes() {
     setLoadingProntuarios(false);
   }, []);
 
-  // Reset prontuário state when view opens
+  const loadAgendamentos = useCallback(async (pacienteId: string) => {
+    setLoadingAgendamentos(true);
+    const { data } = await supabase
+      .from('agendamentos')
+      .select('id, data, hora_inicio, hora_fim, status, tipo, observacoes, medico_id, medicos(nome, crm, especialidade), salas(nome)')
+      .eq('paciente_id', pacienteId)
+      .order('data', { ascending: false })
+      .limit(50);
+    setAgendamentosList(data || []);
+    setLoadingAgendamentos(false);
+  }, []);
+
+  const loadExames = useCallback(async (pacienteId: string) => {
+    setLoadingExames(true);
+    const { data } = await supabase
+      .from('exames')
+      .select('id, tipo_exame, status, data_solicitacao, data_realizacao, resultado, observacoes, medico_solicitante_id, medicos:medico_solicitante_id(nome, crm)')
+      .eq('paciente_id', pacienteId)
+      .order('data_solicitacao', { ascending: false })
+      .limit(50);
+    setExamesList(data || []);
+    setLoadingExames(false);
+  }, []);
+
+  // Reset state when view opens
   const handleViewWithProntuario = useCallback((paciente: any) => {
     setSelectedPacienteId(paciente.id);
     setViewTab('dados');
     setProntuarioTab('lista');
     setActiveProntuario(null);
     setIsEditingProntuario(false);
+    setShowAgendamentoForm(false);
+    setShowExameForm(false);
     setIsViewOpen(true);
     loadProntuarios(paciente.id);
-  }, [loadProntuarios]);
+    loadAgendamentos(paciente.id);
+    loadExames(paciente.id);
+  }, [loadProntuarios, loadAgendamentos, loadExames]);
 
   const handleNewProntuario = () => {
     const paciente = pacientes.find(p => p.id === selectedPacienteId);
