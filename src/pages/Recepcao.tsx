@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createAutoBilling } from '@/lib/autoBilling';
 import { autoCheckin, autoIniciarAtendimento, autoFinalizarAtendimento, autoConfirmarPagamento } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -15,7 +16,7 @@ import {
   Landmark, Search, Bell, ChevronRight, Users, Stethoscope,
   DollarSign, ArrowRight, Loader2, CheckCircle2, AlertTriangle,
   Timer, Phone, XCircle, Receipt, Eye, CalendarPlus, FileText,
-  FlaskConical, RotateCcw, ClipboardList,
+  FlaskConical, RotateCcw, ClipboardList, Lock as LockIcon, LockOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +88,7 @@ const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } }
 export default function Recepcao() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { profile } = useSupabaseAuth();
   const today = format(new Date(), 'yyyy-MM-dd');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('todos');
@@ -131,6 +133,40 @@ export default function Recepcao() {
       return data || [];
     },
   });
+
+  // Check if caixa is open
+  const { data: caixaAberto = false } = useQuery({
+    queryKey: ['caixa-estado-recepcao', profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return false;
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'caixa_estado')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      if (!data?.valor) return false;
+      const estado = data.valor as any;
+      return estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto === true;
+    },
+    enabled: !!profile?.id,
+  });
+
+  function checkCaixaAberto(): boolean {
+    if (!caixaAberto) {
+      toast.error('Caixa fechado!', {
+        description: 'Abra o Caixa Diário antes de realizar pagamentos.',
+        action: {
+          label: 'Abrir Caixa',
+          onClick: () => navigate('/caixa'),
+        },
+        duration: 6000,
+      });
+      return false;
+    }
+    return true;
+  }
+
 
   // Realtime subscriptions
   useEffect(() => {
@@ -197,6 +233,7 @@ export default function Recepcao() {
 
   // ─── Actions ──────────────────────────────────────────
    async function handleCheckin(agId: string) {
+     if (!checkCaixaAberto()) return;
      setIsProcessing(true);
      try {
        const result = await autoCheckin(agId);
@@ -275,6 +312,7 @@ export default function Recepcao() {
   }
 
    function openPagamento(lanc: any, pac: any) {
+     if (!checkCaixaAberto()) return;
      setSelectedLancamento(lanc);
      setSelectedPacienteBalcao(pac);
      setFormaPagamento('');
@@ -354,6 +392,24 @@ export default function Recepcao() {
           {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })} — Fluxo completo do paciente
         </p>
       </motion.div>
+
+      {/* Caixa fechado alert */}
+      {!caixaAberto && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <LockIcon className="h-4 w-4 text-destructive" />
+                <span className="font-medium text-destructive">Caixa fechado</span>
+                <span className="text-muted-foreground">— Abra o caixa para realizar check-ins e pagamentos.</span>
+              </div>
+              <Button size="sm" variant="destructive" className="gap-1.5 shrink-0" onClick={() => navigate('/caixa')}>
+                <LockOpen className="h-3.5 w-3.5" /> Abrir Caixa
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <motion.div
