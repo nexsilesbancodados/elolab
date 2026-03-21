@@ -62,16 +62,16 @@ function corEspera(ts: string | null): string {
 // New flow: Check-in(0) → Balcão/Pagamento(1) → Atendimento(2) → Finalizado(3) → Concluído(4)
 // Patient pays BEFORE entering the consultation room
 function patientStep(ag: any, filaItem: any, lancamento: any): number {
-  // Concluído: finalizado + pago
-  if (ag.status === 'finalizado' && lancamento?.status === 'pago') return 4;
-  // Finalizado: consultation done, already paid before
+  // Concluído: explicitly marked as concluded in the queue
+  if (ag.status === 'finalizado' && filaItem?.status === 'concluido') return 4;
+  // Finalizado: consultation done — show post-consultation actions (regardless of payment)
   if (ag.status === 'finalizado') return 3;
-  // Em atendimento: paid and in consultation
+  // Em atendimento: in consultation
   if (ag.status === 'em_atendimento') return 2;
-  // Balcão: checked in (in queue), waiting to pay before consultation
-  if (filaItem && lancamento?.status !== 'pago') return 1;
   // Already paid, waiting to be called for consultation
   if (filaItem && lancamento?.status === 'pago') return 2;
+  // Balcão: checked in (in queue), waiting to pay before consultation
+  if (filaItem && lancamento?.status !== 'pago') return 1;
   // Check-in: just arrived
   if (ag.status === 'confirmado' || ag.status === 'aguardando' || ag.status === 'agendado') return 0;
   return -1;
