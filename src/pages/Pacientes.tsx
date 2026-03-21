@@ -79,8 +79,9 @@ const initialFormData: PacienteFormData = {
 };
 
 const SEXO_OPTIONS = [
-  { value: 'masculino', label: 'Masculino' },
-  { value: 'feminino', label: 'Feminino' },
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Feminino' },
+  { value: 'O', label: 'Outro' },
   { value: 'outro', label: 'Outro' },
 ];
 
@@ -1041,7 +1042,7 @@ export default function Pacientes() {
                   <h3 className="text-base font-bold truncate">{(selectedPaciente as any).nome_social || selectedPaciente.nome}</h3>
                   <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
                     <span>{calcularIdade(selectedPaciente.data_nascimento)}a</span>
-                    {selectedPaciente.sexo && <span>• {selectedPaciente.sexo === 'masculino' ? '♂' : '♀'}</span>}
+                    {selectedPaciente.sexo && <span>• {selectedPaciente.sexo === 'M' ? '♂' : selectedPaciente.sexo === 'F' ? '♀' : '⚧'}</span>}
                     {selectedPaciente.cpf && <span>• {selectedPaciente.cpf}</span>}
                     <span>• {getConvenioNome(selectedPaciente.convenio_id)}</span>
                   </div>
