@@ -69,6 +69,8 @@ export default function CaixaDiario() {
   const [showEstorno, setShowEstorno] = useState(false);
   const [showResumo, setShowResumo] = useState(false);
   const [showDetalhes, setShowDetalhes] = useState(false);
+  const [showCupom, setShowCupom] = useState(false);
+  const [cupomData, setCupomData] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [tabFilter, setTabFilter] = useState<'todos' | 'pendente' | 'pago'>('todos');
   const [caixaAberto, setCaixaAberto] = useState(false);
