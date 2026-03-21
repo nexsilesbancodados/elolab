@@ -322,20 +322,48 @@ export default function Analytics() {
           value={receitaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           change={showComparison ? calcChange(receitaTotal, prevReceita) : undefined}
           icon={<DollarSign className="h-6 w-6 text-primary" />}
+          description={`Margem: ${margemLucro}%`}
+        />
+        <KPICard
+          title="Ticket Médio"
+          value={ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          change={showComparison ? calcChange(ticketMedio, prevReceita / (prevFinalizados || 1)) : undefined}
+          icon={<TrendingUp className="h-6 w-6 text-primary" />}
+          description={`Lucro: ${lucroLiquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
         />
         <KPICard
           title="Total Agendamentos"
           value={totalAg}
           change={showComparison ? calcChange(totalAg, prevTotalAg) : undefined}
           icon={<CalendarIcon className="h-6 w-6 text-primary" />}
-          description={`${rangeDays} dias de período`}
+          description={`${cancelados} cancelados (${taxaCancelamento}%)`}
         />
-        <KPICard
-          title="Triagens Realizadas"
-          value={triagens.length}
-          icon={<Stethoscope className="h-6 w-6 text-primary" />}
-          description="No período selecionado"
-        />
+      </div>
+
+      {/* Secondary KPIs */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card><CardContent className="pt-5">
+          <p className="text-xs text-muted-foreground">Despesas</p>
+          <p className="text-xl font-bold tabular-nums text-destructive">{despesaTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+          {showComparison && <p className={cn('text-[10px]', calcChange(despesaTotal, prevDespesa) <= 0 ? 'text-success' : 'text-destructive')}>
+            {calcChange(despesaTotal, prevDespesa) <= 0 ? '↓' : '↑'} {Math.abs(calcChange(despesaTotal, prevDespesa))}% vs anterior
+          </p>}
+        </CardContent></Card>
+        <Card><CardContent className="pt-5">
+          <p className="text-xs text-muted-foreground">Triagens</p>
+          <p className="text-xl font-bold tabular-nums">{triagens.length}</p>
+          <p className="text-[10px] text-muted-foreground">No período selecionado</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-5">
+          <p className="text-xs text-muted-foreground">Margem de Lucro</p>
+          <p className={cn('text-xl font-bold tabular-nums', margemLucro >= 0 ? 'text-success' : 'text-destructive')}>{margemLucro}%</p>
+          <p className="text-[10px] text-muted-foreground">Receita - Despesa / Receita</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-5">
+          <p className="text-xs text-muted-foreground">Média Diária Atendimentos</p>
+          <p className="text-xl font-bold tabular-nums">{(totalAg / (rangeDays || 1)).toFixed(1)}</p>
+          <p className="text-[10px] text-muted-foreground">consultas/dia</p>
+        </CardContent></Card>
       </div>
 
       <Tabs defaultValue="atendimento" className="space-y-4">
