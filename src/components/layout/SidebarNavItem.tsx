@@ -44,12 +44,14 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
 
           {/* Icon */}
           <Icon
-            className={cn(
-              'h-4 w-4 shrink-0 transition-colors duration-150',
-              isActive && !item.external
-                ? 'text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
-            )}
+            className="h-4 w-4 shrink-0 transition-colors duration-150"
+            style={{
+              color: isActive && !item.external
+                ? groupColor || 'hsl(var(--sidebar-primary))'
+                : groupColor
+                  ? `${groupColor}99`
+                  : undefined,
+            }}
           />
 
           {/* Label */}
