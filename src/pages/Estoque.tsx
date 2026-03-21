@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Search, Edit, Package, AlertTriangle, ArrowDown, ArrowUp, Loader2,
   Barcode, Calendar, Clock, Pill, Building2, ShieldAlert, TrendingDown,
-  History, BarChart3, X,
+  History, BarChart3, X, Trash2, FileDown, Bell,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,11 +22,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useEstoque } from '@/hooks/useSupabaseData';
-import { supabase as sb } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton, TableSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyEstoque } from '@/components/EmptyState';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
