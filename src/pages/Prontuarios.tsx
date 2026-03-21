@@ -1457,6 +1457,35 @@ export default function Prontuarios() {
       </Dialog>
 
       <DischargeReport isOpen={showDischargeReport} onClose={() => setShowDischargeReport(false)} data={getDischargeReportData()} />
+
+      {/* Exam Solicitation Dialog */}
+      <Dialog open={showExamSolicitation} onOpenChange={setShowExamSolicitation}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <TestTube className="h-4 w-4 text-primary" />Solicitar Exame
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Tipo do Exame *</Label>
+              <Input placeholder="Ex: Hemograma, Glicemia, TSH..." value={examForm.tipo_exame} onChange={e => setExamForm(f => ({ ...f, tipo_exame: e.target.value }))} className="text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Descrição</Label>
+              <Input placeholder="Detalhes adicionais" value={examForm.descricao} onChange={e => setExamForm(f => ({ ...f, descricao: e.target.value }))} className="text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Observações</Label>
+              <Textarea placeholder="Jejum, preparo..." value={examForm.observacoes} onChange={e => setExamForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} className="text-xs" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowExamSolicitation(false)} className="text-xs">Cancelar</Button>
+            <Button size="sm" onClick={handleSolicitarExame} className="gap-1.5 text-xs"><TestTube className="h-3.5 w-3.5" />Solicitar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
