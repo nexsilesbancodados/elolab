@@ -58,9 +58,10 @@ function corEspera(ts: string | null): string {
 }
 
 // Which step is the patient on?
+// 0=Check-in, 1=Fila, 2=Em atendimento, 3=Balcão (aguardando pagamento), 4=Concluído
 function patientStep(ag: any, filaItem: any, lancamento: any): number {
   if (lancamento?.status === 'pago') return 4;
-  if (lancamento?.status === 'pendente' && ag.status === 'finalizado') return 3;
+  if (lancamento?.status === 'pendente' && ag.status === 'finalizado') return 3; // Balcão
   if (ag.status === 'finalizado') return 3;
   if (ag.status === 'em_atendimento') return 2;
   if (filaItem) return 1;
