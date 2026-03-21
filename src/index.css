@@ -657,3 +657,211 @@
     }
   }
 }
+
+/* ── SaaS Design Skills - Premium Utilities ────────────────── */
+@layer components {
+  /* SaaS Section container */
+  .saas-section {
+    @apply py-20 lg:py-28 relative;
+  }
+
+  /* SaaS feature card */
+  .saas-feature-card {
+    @apply relative p-6 rounded-2xl bg-card border border-border transition-all duration-300;
+    @apply hover:border-primary/20 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .saas-feature-card::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 pointer-events-none;
+  }
+
+  .saas-feature-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* SaaS pricing card popular */
+  .saas-pricing-popular {
+    @apply relative bg-card border-2 border-primary/30 shadow-xl shadow-primary/10 scale-[1.03];
+  }
+
+  /* SaaS gradient text */
+  .saas-gradient-text {
+    @apply font-bold font-display;
+    background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--primary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .saas-gradient-text-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* SaaS dashboard card */
+  .saas-dashboard-card {
+    @apply rounded-2xl border border-border bg-card p-6;
+    @apply hover:shadow-md transition-shadow;
+  }
+
+  /* SaaS metric display */
+  .saas-metric {
+    @apply text-3xl lg:text-4xl font-bold font-display tabular-nums tracking-tight;
+  }
+
+  .saas-metric-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  /* SaaS navigation tab */
+  .saas-tab {
+    @apply px-4 py-2 text-sm font-medium rounded-lg transition-all;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+  }
+
+  .saas-tab-active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  /* SaaS settings row */
+  .saas-settings-row {
+    @apply flex items-center justify-between py-4 border-b border-border/50 last:border-0;
+  }
+
+  /* SaaS status indicator */
+  .saas-status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .saas-status-dot-online {
+    @apply bg-success shadow-[0_0_6px_hsl(var(--success)/0.5)];
+  }
+
+  .saas-status-dot-offline {
+    @apply bg-muted-foreground/40;
+  }
+
+  .saas-status-dot-warning {
+    @apply bg-warning shadow-[0_0_6px_hsl(var(--warning)/0.5)];
+  }
+
+  /* SaaS notification badge */
+  .saas-notification-badge {
+    @apply absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground;
+    @apply flex items-center justify-center text-[10px] font-bold;
+    @apply animate-scale-in;
+  }
+
+  /* SaaS avatar group */
+  .saas-avatar-group {
+    @apply flex -space-x-2;
+  }
+
+  .saas-avatar-group > * {
+    @apply border-2 border-background;
+  }
+
+  /* SaaS command palette trigger */
+  .saas-cmd-trigger {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/50;
+    @apply text-xs text-muted-foreground cursor-pointer hover:bg-muted transition-colors;
+  }
+
+  /* SaaS breadcrumb */
+  .saas-breadcrumb {
+    @apply flex items-center gap-1.5 text-sm text-muted-foreground;
+  }
+
+  .saas-breadcrumb-active {
+    @apply text-foreground font-medium;
+  }
+
+  /* SaaS divider with text */
+  .saas-divider {
+    @apply flex items-center gap-4;
+  }
+
+  .saas-divider::before,
+  .saas-divider::after {
+    content: '';
+    @apply flex-1 h-px bg-border;
+  }
+
+  /* SaaS onboarding progress step */
+  .saas-step {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all;
+  }
+
+  .saas-step-active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  .saas-step-completed {
+    @apply bg-success/10 text-success;
+  }
+
+  .saas-step-pending {
+    @apply text-muted-foreground;
+  }
+
+  /* SaaS tooltip arrow */
+  .saas-tooltip {
+    @apply px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-medium shadow-lg;
+  }
+
+  /* SaaS data table header */
+  .saas-table-header {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground/70;
+  }
+
+  /* SaaS chart legend */
+  .saas-chart-legend {
+    @apply flex items-center gap-2 text-xs text-muted-foreground;
+  }
+
+  .saas-chart-legend-dot {
+    @apply w-2.5 h-2.5 rounded-full;
+  }
+}
+
+@layer utilities {
+  /* SaaS content width helpers */
+  .saas-narrow { max-width: 640px; }
+  .saas-medium { max-width: 768px; }
+  .saas-wide { max-width: 1024px; }
+  .saas-full { max-width: 1280px; }
+
+  /* SaaS text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* SaaS gradient border */
+  .gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: calc(var(--radius) + 1px);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--info) / 0.3));
+    z-index: -1;
+  }
+
+  /* SaaS glow effects */
+  .glow-primary-sm { box-shadow: 0 0 20px -8px hsl(var(--primary) / 0.3); }
+  .glow-primary-md { box-shadow: 0 0 30px -8px hsl(var(--primary) / 0.35); }
+  .glow-primary-lg { box-shadow: 0 0 50px -10px hsl(var(--primary) / 0.4); }
+
+  /* SaaS backdrop blur variants */
+  .backdrop-blur-xs { backdrop-filter: blur(2px); }
+  .backdrop-blur-2xl { backdrop-filter: blur(40px); }
+  .backdrop-blur-3xl { backdrop-filter: blur(64px); }
+}
