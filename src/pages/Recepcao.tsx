@@ -388,16 +388,16 @@ export default function Recepcao() {
           <TabsTrigger value="todos" className="data-[state=active]:bg-background">
             Todos ({enriched.length})
           </TabsTrigger>
-          <TabsTrigger value="checkin" className="data-[state=active]:bg-background">
-            <Clock className="h-3.5 w-3.5 mr-1" /> Check-in ({stats.aguardando})
-          </TabsTrigger>
-          <TabsTrigger value="fila" className="data-[state=active]:bg-background">
-            <Users className="h-3.5 w-3.5 mr-1" /> Fila ({stats.naFila})
-          </TabsTrigger>
-          <TabsTrigger value="pagamento" className="data-[state=active]:bg-background">
-            <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.pagamento})
-          </TabsTrigger>
-          <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
+           <TabsTrigger value="checkin" className="data-[state=active]:bg-background">
+             <Clock className="h-3.5 w-3.5 mr-1" /> Check-in ({stats.aguardando})
+           </TabsTrigger>
+           <TabsTrigger value="balcao" className="data-[state=active]:bg-background">
+             <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.balcao})
+           </TabsTrigger>
+           <TabsTrigger value="atendimento" className="data-[state=active]:bg-background">
+             <Stethoscope className="h-3.5 w-3.5 mr-1" /> Atendimento ({stats.atendimento})
+           </TabsTrigger>
+           <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Concluído ({stats.concluido})
           </TabsTrigger>
         </TabsList>
