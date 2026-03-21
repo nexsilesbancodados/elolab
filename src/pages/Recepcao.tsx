@@ -39,7 +39,7 @@ const FORMAS_PAGAMENTO = [
   { value: 'transferencia', label: 'Transferência', icon: Landmark, color: 'text-muted-foreground' },
 ];
 
-const STEP_LABELS = ['Check-in', 'Fila', 'Atendimento', 'Pagamento', 'Concluído'] as const;
+const STEP_LABELS = ['Check-in', 'Fila', 'Atendimento', 'Balcão', 'Concluído'] as const;
 
 function calcEspera(ts: string | null): string {
   if (!ts) return '—';
@@ -58,9 +58,10 @@ function corEspera(ts: string | null): string {
 }
 
 // Which step is the patient on?
+// 0=Check-in, 1=Fila, 2=Em atendimento, 3=Balcão (aguardando pagamento), 4=Concluído
 function patientStep(ag: any, filaItem: any, lancamento: any): number {
   if (lancamento?.status === 'pago') return 4;
-  if (lancamento?.status === 'pendente' && ag.status === 'finalizado') return 3;
+  if (lancamento?.status === 'pendente' && ag.status === 'finalizado') return 3; // Balcão
   if (ag.status === 'finalizado') return 3;
   if (ag.status === 'em_atendimento') return 2;
   if (filaItem) return 1;
@@ -83,12 +84,13 @@ export default function Recepcao() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('todos');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPagamento, setShowPagamento] = useState(false);
-  const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
-  const [formaPagamento, setFormaPagamento] = useState('');
-  const [desconto, setDesconto] = useState(0);
-  const [acrescimo, setAcrescimo] = useState(0);
-  const [obsPagamento, setObsPagamento] = useState('');
+   const [showPagamento, setShowPagamento] = useState(false);
+   const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
+   const [selectedPacienteBalcao, setSelectedPacienteBalcao] = useState<any>(null);
+   const [formaPagamento, setFormaPagamento] = useState('');
+   const [desconto, setDesconto] = useState(0);
+   const [acrescimo, setAcrescimo] = useState(0);
+   const [obsPagamento, setObsPagamento] = useState('');
   const [now, setNow] = useState(Date.now());
 
   // Refresh timer every 30s
@@ -251,14 +253,54 @@ export default function Recepcao() {
     setIsProcessing(false);
   }
 
-  function openPagamento(lanc: any) {
-    setSelectedLancamento(lanc);
-    setFormaPagamento('');
-    setDesconto(0);
-    setAcrescimo(0);
-    setObsPagamento('');
-    setShowPagamento(true);
-  }
+   function openPagamento(lanc: any, pac: any) {
+     setSelectedLancamento(lanc);
+     setSelectedPacienteBalcao(pac);
+     setFormaPagamento('');
+     setDesconto(0);
+     setAcrescimo(0);
+     setObsPagamento('');
+     setShowPagamento(true);
+   }
+
+   async function handleChamarBalcao(lanc: any, pac: any) {
+     setIsProcessing(true);
+     try {
+       // Play a chime sound
+       try {
+         const ctx = new AudioContext();
+         const osc = ctx.createOscillator();
+         const gain = ctx.createGain();
+         osc.connect(gain);
+         gain.connect(ctx.destination);
+         osc.frequency.value = 880;
+         gain.gain.value = 0.3;
+         osc.start();
+         osc.stop(ctx.currentTime + 0.3);
+       } catch {}
+
+       // Announce via TTS
+       if ('speechSynthesis' in window) {
+         const utter = new SpeechSynthesisUtterance(
+           `${pac?.nome || 'Paciente'}, por favor dirija-se ao balcão para pagamento.`
+         );
+         utter.lang = 'pt-BR';
+         utter.rate = 0.9;
+         window.speechSynthesis.speak(utter);
+       }
+
+       toast.success(`${pac?.nome} chamado ao balcão!`, {
+         description: 'Aguardando paciente no balcão para pagamento',
+         action: {
+           label: 'Receber agora',
+           onClick: () => openPagamento(lanc, pac),
+         },
+       });
+     } catch {
+       toast.error('Erro ao chamar paciente');
+     }
+     setIsProcessing(false);
+   }
 
   async function handleConfirmarPagamento() {
     if (!formaPagamento || !selectedLancamento) {
@@ -301,8 +343,8 @@ export default function Recepcao() {
       >
         {[
           { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Na Fila', value: stats.naFila, icon: Users, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-          { label: 'Aguardando Pgto', value: stats.pagamento, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+          { label: 'Na Fila / Atendimento', value: stats.naFila, icon: Users, color: 'text-sky-500', bg: 'bg-sky-500/10' },
+          { label: 'Balcão', value: stats.pagamento, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
           { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
         ].map((s, i) => (
           <motion.div key={i} variants={fadeUp}>
@@ -346,7 +388,7 @@ export default function Recepcao() {
             <Users className="h-3.5 w-3.5 mr-1" /> Fila ({stats.naFila})
           </TabsTrigger>
           <TabsTrigger value="pagamento" className="data-[state=active]:bg-background">
-            <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagamento ({stats.pagamento})
+            <DollarSign className="h-3.5 w-3.5 mr-1" /> Balcão ({stats.pagamento})
           </TabsTrigger>
           <TabsTrigger value="concluido" className="data-[state=active]:bg-background">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Concluído ({stats.concluido})
@@ -505,15 +547,26 @@ export default function Recepcao() {
                                 )}
 
                                 {step === 3 && lanc && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => openPagamento(lanc)}
-                                    disabled={isProcessing}
-                                    className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  >
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    Receber R$ {lanc.valor?.toFixed(2)}
-                                  </Button>
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleChamarBalcao(lanc, pac)}
+                                      disabled={isProcessing}
+                                      className="gap-1"
+                                    >
+                                      <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => openPagamento(lanc, pac)}
+                                      disabled={isProcessing}
+                                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    >
+                                      <DollarSign className="h-3.5 w-3.5" />
+                                      Receber R$ {lanc.valor?.toFixed(2)}
+                                    </Button>
+                                  </div>
                                 )}
 
                                 {step === 4 && lanc && (
