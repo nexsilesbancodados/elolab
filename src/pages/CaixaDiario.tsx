@@ -249,7 +249,7 @@ export default function CaixaDiario() {
   const filtered = useMemo(() => {
     return lancamentos.filter((l: any) => {
       const matchSearch = !search ||
-        getPaciente(l.paciente_id).nome.toLowerCase().includes(search.toLowerCase()) ||
+        getPaciente(l).nome.toLowerCase().includes(search.toLowerCase()) ||
         (l.descricao || '').toLowerCase().includes(search.toLowerCase());
       const matchTab = tabFilter === 'todos' || l.status === tabFilter;
       return matchSearch && matchTab;
@@ -425,7 +425,7 @@ export default function CaixaDiario() {
   };
 
   const handleImprimirRecibo = (l: any) => {
-    const pac = getPaciente(l.paciente_id);
+    const pac = getPaciente(l);
     const fp = FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento);
     const w = window.open('', '_blank', 'width=400,height=600');
     if (!w) return;
@@ -628,7 +628,7 @@ export default function CaixaDiario() {
                   <div className="space-y-2">
                     <AnimatePresence mode="popLayout">
                       {pendentesFiltered.map((l: any, i: number) => {
-                        const pac = getPaciente(l.paciente_id);
+                        const pac = getPaciente(l);
                         return (
                           <motion.div key={l.id} layout initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.03 }}>
                             <Card className="border-warning/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group cursor-pointer" onClick={() => openDetalhes(l)}>
@@ -670,7 +670,7 @@ export default function CaixaDiario() {
                   </h2>
                   <div className="space-y-1.5">
                     {pagosFiltered.map((l: any) => {
-                      const pac = getPaciente(l.paciente_id);
+                      const pac = getPaciente(l);
                       const fp = FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento);
                       const FpIcon = fp?.icon || DollarSign;
                       return (
@@ -857,7 +857,7 @@ export default function CaixaDiario() {
                   </CardHeader>
                   <CardContent className="max-h-[400px] overflow-y-auto space-y-1">
                     {historicoLancamentos.map((l: any) => {
-                      const pac = getPaciente(l.paciente_id);
+                      const pac = getPaciente(l);
                       const fp = FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento);
                       return (
                         <div key={l.id} className="flex items-center gap-3 py-2 px-1 border-b border-border/30 last:border-0 hover:bg-muted/30 rounded-lg transition-colors cursor-pointer" onClick={() => openDetalhes(l)}>
