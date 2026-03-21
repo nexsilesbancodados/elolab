@@ -598,7 +598,12 @@ export default function Relatorios() {
                           .map(([cat, val]) => (
                             <div key={cat} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/30">
                               <span className="text-sm capitalize">{cat.replace(/_/g, ' ')}</span>
-                              <span className="text-sm font-semibold tabular-nums text-success">{formatCurrency(val)}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[10px] text-muted-foreground tabular-nums">
+                                  {totalReceitas > 0 ? Math.round((val / totalReceitas) * 100) : 0}%
+                                </span>
+                                <span className="text-sm font-semibold tabular-nums text-success">{formatCurrency(val)}</span>
+                              </div>
                             </div>
                           ))}
                         {Object.keys(receitasPorCategoria).length === 0 && (
@@ -622,7 +627,12 @@ export default function Relatorios() {
                           .map(([cat, val]) => (
                             <div key={cat} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/30">
                               <span className="text-sm capitalize">{cat.replace(/_/g, ' ')}</span>
-                              <span className="text-sm font-semibold tabular-nums text-destructive">-{formatCurrency(val)}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[10px] text-muted-foreground tabular-nums">
+                                  {totalDespesas > 0 ? Math.round((val / totalDespesas) * 100) : 0}%
+                                </span>
+                                <span className="text-sm font-semibold tabular-nums text-destructive">-{formatCurrency(val)}</span>
+                              </div>
                             </div>
                           ))}
                         {Object.keys(despesasPorCategoria).length === 0 && (
@@ -645,6 +655,9 @@ export default function Relatorios() {
                       <span className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5" />
                         RESULTADO DO PERÍODO
+                        <span className="text-xs font-normal opacity-70">
+                          (margem: {totalReceitas > 0 ? Math.round((resultado / totalReceitas) * 100) : 0}%)
+                        </span>
                       </span>
                       <span className="tabular-nums">{formatCurrency(resultado)}</span>
                     </div>
