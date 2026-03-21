@@ -406,6 +406,6 @@ export default function Prescricoes() {
           </p>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
