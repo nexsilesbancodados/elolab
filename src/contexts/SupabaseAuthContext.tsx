@@ -247,10 +247,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <SupabaseAuthContext.Provider
-      value={{
+       value={{
         user,
         session,
         profile,
+        clinicaId: profile?.clinica_id || null,
         isLoading,
         signIn,
         signUp,
