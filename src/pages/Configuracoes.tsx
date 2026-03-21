@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
   Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
-  Key, RefreshCw, CloudOff, Cloud,
+  Key, RefreshCw, CloudOff, Cloud, Stethoscope, FlaskConical, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
