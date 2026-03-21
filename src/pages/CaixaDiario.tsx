@@ -266,15 +266,45 @@ export default function CaixaDiario() {
   const pagosFiltered = filtered.filter((l: any) => l.status === 'pago');
 
   // ===== Actions =====
-  const handleAbrirCaixa = () => {
+  const saveCaixaState = async (estado: any) => {
+    if (!profile) return;
+    // Try upsert first
+    const { error } = await supabase.from('configuracoes_clinica').upsert({
+      chave: 'caixa_estado',
+      user_id: profile.id,
+      valor: estado as any,
+    }, { onConflict: 'user_id,chave' });
+    
+    if (error) {
+      console.error('Erro ao salvar estado do caixa (upsert):', error);
+      // Fallback: try to find existing and update, or insert new
+      const { data: existing } = await supabase
+        .from('configuracoes_clinica')
+        .select('id')
+        .eq('chave', 'caixa_estado')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+      
+      if (existing) {
+        const { error: updateErr } = await supabase
+          .from('configuracoes_clinica')
+          .update({ valor: estado as any })
+          .eq('id', existing.id);
+        if (updateErr) console.error('Erro ao atualizar estado do caixa:', updateErr);
+      } else {
+        const { error: insertErr } = await supabase
+          .from('configuracoes_clinica')
+          .insert({ chave: 'caixa_estado', user_id: profile.id, valor: estado as any });
+        if (insertErr) console.error('Erro ao inserir estado do caixa:', insertErr);
+      }
+    }
+  };
+
+  const handleAbrirCaixa = async () => {
+    const estado = { aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
+    await saveCaixaState(estado);
     setCaixaAberto(true);
     setShowAbertura(false);
-    const estado = { aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
-    if (profile) {
-      supabase.from('configuracoes_clinica').upsert({
-        chave: 'caixa_estado', user_id: profile.id, valor: estado as any,
-      }, { onConflict: 'user_id,chave' });
-    }
     toast.success(`Caixa aberto com troco de R$ ${valorAbertura.toFixed(2)}`);
   };
 
@@ -282,15 +312,11 @@ export default function CaixaDiario() {
     setShowResumo(true);
   };
 
-  const confirmarFechamento = () => {
+  const confirmarFechamento = async () => {
+    const estado = { aberto: false, valorAbertura: 0, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
+    await saveCaixaState(estado);
     setCaixaAberto(false);
     setShowResumo(false);
-    const estado = { aberto: false, valorAbertura: 0, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
-    if (profile) {
-      supabase.from('configuracoes_clinica').upsert({
-        chave: 'caixa_estado', user_id: profile.id, valor: estado as any,
-      }, { onConflict: 'user_id,chave' });
-    }
     toast.info('Caixa fechado. Resumo registrado.');
   };
 
