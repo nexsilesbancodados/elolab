@@ -538,7 +538,7 @@ export default function Pacientes() {
         bairro: formData.bairro || null,
         cidade: formData.cidade || null,
         estado: formData.estado || null,
-        convenio_id: formData.convenio_id || null,
+        convenio_id: formData.convenio_id && formData.convenio_id !== '' && formData.convenio_id !== 'none' ? formData.convenio_id : null,
         numero_carteira: formData.numero_carteira || null,
         validade_carteira: formData.validade_carteira || null,
         alergias: formData.alergias,
