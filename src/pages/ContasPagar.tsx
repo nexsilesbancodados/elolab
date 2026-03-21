@@ -300,9 +300,17 @@ export default function ContasPagar() {
               <TableBody>
                 {filteredContas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhuma conta encontrada</p>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex flex-col items-center">
+                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+                          <DollarSign className="h-7 w-7 text-primary" />
+                        </div>
+                        <p className="font-semibold text-foreground">Nenhuma conta encontrada</p>
+                        <p className="text-sm text-muted-foreground mt-1">Cadastre uma nova conta a pagar</p>
+                        <Button className="mt-3 gap-2" size="sm" onClick={handleNew}>
+                          <Plus className="h-4 w-4" /> Nova Conta
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (

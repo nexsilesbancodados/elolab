@@ -405,9 +405,29 @@ export default function Laboratorio() {
           {/* Coletas list */}
           <div className="space-y-2">
             {isLoading ? (
-              <p className="text-muted-foreground text-center py-8">Carregando...</p>
+              <div className="space-y-3">
+                {[1,2,3].map(i => (
+                  <Card key={i}><CardContent className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-32 bg-muted animate-pulse rounded" />
+                      <div className="h-5 w-20 bg-muted/60 animate-pulse rounded" />
+                      <div className="flex-1" />
+                      <div className="h-7 w-24 bg-muted animate-pulse rounded" />
+                    </div>
+                  </CardContent></Card>
+                ))}
+              </div>
             ) : filtered.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhuma coleta encontrada</CardContent></Card>
+              <Card><CardContent className="py-12 text-center">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <FlaskConical className="h-8 w-8 text-primary" />
+                </div>
+                <p className="font-semibold text-foreground">Nenhuma coleta encontrada</p>
+                <p className="text-sm text-muted-foreground mt-1">Registre uma nova coleta para começar</p>
+                <Button className="mt-4 gap-2" onClick={() => { resetColetaForm(); setShowNewColeta(true); }}>
+                  <Plus className="h-4 w-4" /> Nova Coleta
+                </Button>
+              </CardContent></Card>
             ) : (
               filtered.map((coleta: any) => {
                 const nextStatus = getNextStatus(coleta.status);
