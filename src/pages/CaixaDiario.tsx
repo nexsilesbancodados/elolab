@@ -26,7 +26,7 @@ import {
   ChevronLeft, ChevronRight, AlertCircle,
   Lock, LockOpen, Undo2, Printer, Eye,
   CalendarDays, History, FileText,
-  BarChart3, Calendar,
+  BarChart3, Calendar, Download, MessageCircle,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
