@@ -139,7 +139,6 @@ function TabelaExamesConvenio({ convenioId }: { convenioId: string }) {
         valor_filme: exameForm.valor_filme || 0,
         valor_custo: exameForm.valor_custo || 0,
         valor_repasse: exameForm.valor_repasse || 0,
-        valor_total: exameForm.valor_tabela + (exameForm.valor_filme || 0),
       };
       if (editingExameId) {
         const { error } = await supabase.from('precos_exames_convenio').update(payload).eq('id', editingExameId);
