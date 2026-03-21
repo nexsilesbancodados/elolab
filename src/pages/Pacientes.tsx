@@ -546,6 +546,7 @@ export default function Pacientes() {
         nome_responsavel: formData.nome_responsavel || null,
         cpf_responsavel: formData.cpf_responsavel || null,
         parentesco_responsavel: formData.parentesco_responsavel || null,
+        clinica_id: authProfile?.clinica_id || null,
       };
 
       if (selectedPacienteId) {
