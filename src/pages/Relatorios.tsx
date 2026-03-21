@@ -655,6 +655,9 @@ export default function Relatorios() {
                       <span className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5" />
                         RESULTADO DO PERÍODO
+                        <span className="text-xs font-normal opacity-70">
+                          (margem: {totalReceitas > 0 ? Math.round((resultado / totalReceitas) * 100) : 0}%)
+                        </span>
                       </span>
                       <span className="tabular-nums">{formatCurrency(resultado)}</span>
                     </div>
