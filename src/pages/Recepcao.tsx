@@ -456,11 +456,25 @@ export default function Recepcao() {
   async function handleConcluir(agId: string, filaId: string) {
     setIsProcessing(true);
     try {
-      await supabase.from('fila_atendimento').update({ status: 'concluido' }).eq('id', filaId);
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      const { error: filaErr } = await supabase
+        .from('fila_atendimento')
+        .update({ status: 'concluido' })
+        .eq('id', filaId);
+      if (filaErr) throw filaErr;
+
+      const { error: agErr } = await supabase
+        .from('agendamentos')
+        .update({ status: 'finalizado' })
+        .eq('id', agId);
+      if (agErr) throw agErr;
+
+      await queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       toast.success('Atendimento concluído!');
-    } catch { toast.error('Erro ao concluir'); }
+    } catch (err: any) {
+      console.error('Erro ao concluir:', err);
+      toast.error('Erro ao concluir: ' + (err?.message || 'Erro desconhecido'));
+    }
     setIsProcessing(false);
   }
 
