@@ -4,6 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type AppRole = 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro';
 
+export interface Clinica {
+  id: string;
+  nome: string;
+  cnpj?: string;
+  owner_id?: string;
+}
+
 interface UserProfile {
   id: string;
   nome: string;
