@@ -846,7 +846,7 @@ export default function Estoque() {
         title="Excluir Produto"
         description="Tem certeza que deseja excluir este produto e todo seu histórico de movimentações? Esta ação não pode ser desfeita."
         onConfirm={handleDeleteProduto}
-        loading={isSaving}
+        isLoading={isSaving}
       />
     </div>
   );
