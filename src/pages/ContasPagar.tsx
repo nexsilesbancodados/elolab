@@ -224,6 +224,20 @@ export default function ContasPagar() {
         <Button onClick={handleNew} className="gap-2"><Plus className="h-4 w-4" />Nova Conta</Button>
       </div>
 
+      {/* Overdue alert */}
+      {contas.filter(c => c.status === 'atrasado').length > 0 && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
+          <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+          <span className="text-sm text-destructive font-medium">
+            {contas.filter(c => c.status === 'atrasado').length} conta(s) vencida(s) — Total: {formatCurrency(stats.atrasado)}
+          </span>
+          <Button variant="outline" size="sm" className="ml-auto h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => setFilterStatus('atrasado')}>
+            Ver vencidas
+          </Button>
+        </div>
+      )}
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
