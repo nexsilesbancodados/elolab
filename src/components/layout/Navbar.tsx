@@ -1,4 +1,4 @@
-import { Bell, Menu, LogOut, User, Settings, Plus, Command } from 'lucide-react';
+import { Bell, Menu, LogOut, User, Settings, Plus, Command, CalendarPlus, UserPlus, FileText, FlaskConical } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -61,7 +61,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       <div className="flex-1" />
 
       {/* Right actions */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1.5">
         {/* Quick Add */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -70,40 +70,40 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden sm:inline-flex h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent"
+                  className="hidden sm:inline-flex h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
                 >
-                  <Plus className="h-4.5 w-4.5" />
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">Ação rápida</TooltipContent>
             </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+          <DropdownMenuContent align="end" className="w-56 rounded-xl p-1.5">
             <DropdownMenuLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2">
               Ações Rápidas
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
               <Link to="/agenda">
-                <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                <CalendarPlus className="h-4 w-4 text-primary" />
                 Nova Consulta
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
               <Link to="/pacientes">
-                <span className="h-2 w-2 rounded-full bg-success shrink-0" />
+                <UserPlus className="h-4 w-4 text-emerald-500" />
                 Novo Paciente
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
               <Link to="/prescricoes">
-                <span className="h-2 w-2 rounded-full bg-info shrink-0" />
+                <FileText className="h-4 w-4 text-blue-500" />
                 Nova Prescrição
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
               <Link to="/exames">
-                <span className="h-2 w-2 rounded-full bg-warning shrink-0" />
+                <FlaskConical className="h-4 w-4 text-amber-500" />
                 Solicitar Exame
               </Link>
             </DropdownMenuItem>
@@ -121,11 +121,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent"
+                  className="relative h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
                 >
-                  <Bell className="h-[18px] w-[18px]" />
+                  <Bell className="h-[17px] w-[17px]" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-2 w-2">
+                    <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
                     </span>
@@ -173,21 +173,21 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Separator */}
-        <div className="hidden md:block w-px h-7 bg-border/40 mx-1.5" />
+        {/* Divider */}
+        <div className="hidden md:block w-px h-8 bg-border/50 mx-1" />
 
         {/* User */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 px-1.5 py-1 rounded-full hover:bg-accent/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-xs font-bold">
+            <button className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-xl hover:bg-accent/60 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-9 w-9 ring-2 ring-emerald-500/30 shadow-sm">
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xs font-bold">
                   {profile?.nome ? getInitials(profile.nome) : 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden md:flex flex-col items-start pr-1">
-                <span className="text-sm font-semibold leading-tight">{profile?.nome?.split(' ')[0]}</span>
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground leading-tight">
+              <div className="hidden md:flex flex-col items-start">
+                <span className="text-[13px] font-semibold leading-tight">{profile?.nome?.split(' ')[0]}</span>
+                <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium leading-tight">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Online
                 </span>
@@ -200,16 +200,16 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               <p className="text-xs text-muted-foreground truncate mt-0.5">{profile?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
-              <Link to="/configuracoes"><User className="h-4 w-4" />Meu Perfil</Link>
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
+              <Link to="/configuracoes"><User className="h-4 w-4 text-muted-foreground" />Meu Perfil</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2">
-              <Link to="/configuracoes"><Settings className="h-4 w-4" />Configurações</Link>
+            <DropdownMenuItem asChild className="rounded-lg gap-2.5 py-2.5">
+              <Link to="/configuracoes"><Settings className="h-4 w-4 text-muted-foreground" />Configurações</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}
-              className="rounded-lg gap-2.5 py-2 text-destructive focus:text-destructive"
+              className="rounded-lg gap-2.5 py-2.5 text-destructive focus:text-destructive"
             >
               <LogOut className="h-4 w-4" />Sair
             </DropdownMenuItem>
