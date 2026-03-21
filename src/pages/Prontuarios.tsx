@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, FileText, Plus, Save, CalendarCheck, FileDown, History,
@@ -444,6 +444,10 @@ export default function Prontuarios() {
   const [showDischargeReport, setShowDischargeReport] = useState(false);
   const [sinaisVitais, setSinaisVitais] = useState<SinaisVitais>(emptySinaisVitais);
   const [isEditing, setIsEditing] = useState(false);
+  const [autoSaveTime, setAutoSaveTime] = useState<string | null>(null);
+  const [showExamSolicitation, setShowExamSolicitation] = useState(false);
+  const [examForm, setExamForm] = useState({ tipo_exame: '', descricao: '', observacoes: '' });
+  const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
@@ -557,10 +561,11 @@ export default function Prontuarios() {
 
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
 
-  const handleSave = async () => {
+  // ─── Core save logic (used by manual save and auto-save) ───
+  const performSave = async (silent = false): Promise<string | null> => {
     if (!currentProntuario.queixa_principal) {
-      toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
-      return;
+      if (!silent) toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      return null;
     }
     try {
       const payload = {
@@ -600,9 +605,13 @@ export default function Prontuarios() {
         }).select().single();
         if (error) throw error;
         prontuarioId = data.id;
+        setCurrentProntuario(prev => ({ ...prev, id: prontuarioId }));
       }
 
-      if (!currentProntuario.id) {
+      // ─── Save prescriptions (create + update) ───
+      if (prontuarioId) {
+        // Delete existing prescriptions for this prontuário, then re-insert
+        await supabase.from('prescricoes').delete().eq('prontuario_id', prontuarioId);
         for (const presc of prescricoes) {
           if (presc.medicamento) {
             await supabase.from('prescricoes').insert({
@@ -613,32 +622,104 @@ export default function Prontuarios() {
               observacoes: presc.observacoes || null,
               data_emissao: format(new Date(), 'yyyy-MM-dd'), tipo: 'simples',
             });
+
+            // ─── Stock deduction ───
+            const { data: estoqueItem } = await supabase.from('estoque')
+              .select('id, quantidade, nome')
+              .ilike('nome', `%${presc.medicamento}%`)
+              .gt('quantidade', 0)
+              .limit(1)
+              .maybeSingle();
+            if (estoqueItem) {
+              const qtd = parseInt(presc.quantidade) || 1;
+              const newQtd = Math.max(0, estoqueItem.quantidade - qtd);
+              await supabase.from('estoque').update({ quantidade: newQtd }).eq('id', estoqueItem.id);
+              await supabase.from('movimentacoes_estoque').insert({
+                item_id: estoqueItem.id, tipo: 'saida', quantidade: qtd,
+                motivo: `Prescrição — ${selectedPaciente?.nome || 'paciente'}`,
+              });
+            }
           }
         }
       }
 
+      // ─── Audit log ───
       try {
-        const changes = currentProntuario.id ? {
-          campos_alterados: Object.keys(payload).filter(k =>
-            JSON.stringify((currentProntuario as any)[k]) !== JSON.stringify((payload as any)[k])
-          ),
-          editado_em: new Date().toISOString(),
-        } : undefined;
         await supabase.from('audit_log').insert({
-          action: currentProntuario.id ? 'update' : 'create',
+          action: currentProntuario.id && !silent ? 'update' : 'create',
           collection: 'prontuarios', record_id: prontuarioId,
           record_name: selectedPaciente?.nome || '',
           user_id: user?.id || null, user_name: user?.nome || null,
-          changes: changes || null,
         });
       } catch { /* silent */ }
 
-      refetchProntuarios();
-      setIsProntuarioOpen(false);
-      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
+      if (silent) {
+        setAutoSaveTime(format(new Date(), 'HH:mm'));
+      } else {
+        refetchProntuarios();
+        // Reload history
+        const { data: hist } = await supabase.from('prontuarios')
+          .select('id, data, queixa_principal, historia_doenca_atual, exames_fisicos, hipotese_diagnostica, conduta, sinais_vitais, diagnostico_principal, plano_terapeutico, medicos(nome, crm, especialidade)')
+          .eq('paciente_id', currentProntuario.paciente_id)
+          .order('data', { ascending: false }).limit(50);
+        setHistoricoEvolucoes(hist ?? []);
+      }
+
+      return prontuarioId;
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
-      toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
+      if (!silent) toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const handleSave = async () => {
+    const id = await performSave(false);
+    if (id) {
+      setIsProntuarioOpen(false);
+      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
+    }
+  };
+
+  // ─── Auto-save every 60s ───
+  useEffect(() => {
+    if (isProntuarioOpen && isEditing && currentProntuario.queixa_principal) {
+      autoSaveRef.current = setInterval(() => {
+        performSave(true);
+      }, 60000);
+      return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current); };
+    }
+    return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current); };
+  }, [isProntuarioOpen, isEditing, currentProntuario, sinaisVitais, prescricoes]);
+
+  // Reset auto-save time when dialog closes
+  useEffect(() => {
+    if (!isProntuarioOpen) setAutoSaveTime(null);
+  }, [isProntuarioOpen]);
+
+  // ─── Exam solicitation ───
+  const handleSolicitarExame = async () => {
+    if (!examForm.tipo_exame) {
+      toast({ title: 'Erro', description: 'Informe o tipo do exame.', variant: 'destructive' });
+      return;
+    }
+    const resolvedMedicoId = medicoId || medicos.find(m => m.ativo !== false)?.id;
+    if (!resolvedMedicoId || !selectedPacienteId) return;
+    const { error } = await supabase.from('exames').insert({
+      paciente_id: selectedPacienteId,
+      medico_solicitante_id: resolvedMedicoId,
+      tipo_exame: examForm.tipo_exame,
+      descricao: examForm.descricao || null,
+      observacoes: examForm.observacoes || null,
+      status: 'solicitado',
+      data_solicitacao: format(new Date(), 'yyyy-MM-dd'),
+    });
+    if (!error) {
+      toast({ title: 'Exame solicitado', description: `${examForm.tipo_exame} registrado.` });
+      setExamForm({ tipo_exame: '', descricao: '', observacoes: '' });
+      setShowExamSolicitation(false);
+    } else {
+      toast({ title: 'Erro', description: 'Erro ao solicitar exame.', variant: 'destructive' });
     }
   };
 
@@ -1337,7 +1418,7 @@ export default function Prontuarios() {
           {/* Footer */}
           <DialogFooter className="flex-shrink-0 pt-3 border-t border-border/40">
             <div className="flex items-center gap-2 w-full justify-between">
-              <div className="flex-1">
+              <div className="flex items-center gap-3 flex-1">
                 {currentProntuario.id && (
                   <DigitalSignature
                     documentId={currentProntuario.id}
@@ -1347,8 +1428,16 @@ export default function Prontuarios() {
                     compact
                   />
                 )}
+                {autoSaveTime && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-2.5 w-2.5" />Salvo às {autoSaveTime}
+                  </span>
+                )}
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowExamSolicitation(true)} className="rounded-xl text-xs gap-1">
+                  <TestTube className="h-3.5 w-3.5" />Solicitar Exame
+                </Button>
                 <Button variant="outline" onClick={() => setIsProntuarioOpen(false)} size="sm" className="rounded-xl text-xs">Cancelar</Button>
                 {!isReadOnly && (
                   <Button onClick={handleSave} size="sm" className="gap-1.5 rounded-xl text-xs"><Save className="h-3.5 w-3.5" />Salvar Prontuário</Button>
@@ -1368,6 +1457,35 @@ export default function Prontuarios() {
       </Dialog>
 
       <DischargeReport isOpen={showDischargeReport} onClose={() => setShowDischargeReport(false)} data={getDischargeReportData()} />
+
+      {/* Exam Solicitation Dialog */}
+      <Dialog open={showExamSolicitation} onOpenChange={setShowExamSolicitation}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <TestTube className="h-4 w-4 text-primary" />Solicitar Exame
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Tipo do Exame *</Label>
+              <Input placeholder="Ex: Hemograma, Glicemia, TSH..." value={examForm.tipo_exame} onChange={e => setExamForm(f => ({ ...f, tipo_exame: e.target.value }))} className="text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Descrição</Label>
+              <Input placeholder="Detalhes adicionais" value={examForm.descricao} onChange={e => setExamForm(f => ({ ...f, descricao: e.target.value }))} className="text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Observações</Label>
+              <Textarea placeholder="Jejum, preparo..." value={examForm.observacoes} onChange={e => setExamForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} className="text-xs" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowExamSolicitation(false)} className="text-xs">Cancelar</Button>
+            <Button size="sm" onClick={handleSolicitarExame} className="gap-1.5 text-xs"><TestTube className="h-3.5 w-3.5" />Solicitar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
