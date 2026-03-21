@@ -233,6 +233,7 @@ export default function Recepcao() {
 
   // ─── Actions ──────────────────────────────────────────
    async function handleCheckin(agId: string) {
+     if (!checkCaixaAberto()) return;
      setIsProcessing(true);
      try {
        const result = await autoCheckin(agId);
