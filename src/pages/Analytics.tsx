@@ -155,7 +155,9 @@ export default function Analytics() {
   // ─── KPI calculations ──────────────────────────────────
   const totalAg = agendamentos.length;
   const finalizados = agendamentos.filter(a => a.status === 'finalizado').length;
+  const cancelados = agendamentos.filter(a => a.status === 'cancelado').length;
   const taxaComparecimento = totalAg > 0 ? Math.round((finalizados / totalAg) * 100) : 0;
+  const taxaCancelamento = totalAg > 0 ? Math.round((cancelados / totalAg) * 100) : 0;
 
   const prevTotalAg = prevAgendamentos.length;
   const prevFinalizados = prevAgendamentos.filter((a: any) => a.status === 'finalizado').length;
@@ -163,8 +165,12 @@ export default function Analytics() {
 
   const receitaTotal = lancamentos.filter(l => l.tipo === 'receita' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
   const despesaTotal = lancamentos.filter(l => l.tipo === 'despesa' && l.status === 'pago').reduce((acc, l) => acc + Number(l.valor), 0);
+  const lucroLiquido = receitaTotal - despesaTotal;
+  const margemLucro = receitaTotal > 0 ? Math.round((lucroLiquido / receitaTotal) * 100) : 0;
+  const ticketMedio = finalizados > 0 ? receitaTotal / finalizados : 0;
 
   const prevReceita = prevLancamentos.filter((l: any) => l.tipo === 'receita' && l.status === 'pago').reduce((acc: number, l: any) => acc + Number(l.valor), 0);
+  const prevDespesa = prevLancamentos.filter((l: any) => l.tipo === 'despesa' && l.status === 'pago').reduce((acc: number, l: any) => acc + Number(l.valor), 0);
 
   const calcChange = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;
