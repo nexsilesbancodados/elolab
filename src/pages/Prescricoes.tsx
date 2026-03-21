@@ -177,7 +177,7 @@ export default function Prescricoes() {
 
   const handleSaveAndGenerate = async () => {
     if (!form.paciente_id || !form.medico_id || !form.medicamentos_texto.trim()) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      toast.error('Preencha todos os campos');
       return;
     }
 
