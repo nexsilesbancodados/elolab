@@ -547,34 +547,96 @@ export default function Recepcao() {
                                   </Button>
                                 )}
 
-                                {step === 3 && lanc && (
-                                  <div className="flex gap-1.5">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleChamarBalcao(lanc, pac)}
-                                      disabled={isProcessing}
-                                      className="gap-1"
-                                    >
-                                      <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => openPagamento(lanc, pac)}
-                                      disabled={isProcessing}
-                                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                    >
-                                      <DollarSign className="h-3.5 w-3.5" />
-                                      Receber R$ {lanc.valor?.toFixed(2)}
-                                    </Button>
+                                {step === 3 && (
+                                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                    {/* Primary actions row */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleChamarBalcao(lanc, pac)}
+                                        disabled={isProcessing}
+                                        className="gap-1"
+                                      >
+                                        <Bell className="h-3.5 w-3.5" /> Chamar ao Balcão
+                                      </Button>
+                                      {lanc && (
+                                        <Button
+                                          size="sm"
+                                          onClick={() => openPagamento(lanc, pac)}
+                                          disabled={isProcessing}
+                                          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        >
+                                          <DollarSign className="h-3.5 w-3.5" />
+                                          Receber R$ {lanc.valor?.toFixed(2)}
+                                        </Button>
+                                      )}
+                                    </div>
+                                    {/* Secondary post-consultation actions */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}
+                                      >
+                                        <CalendarPlus className="h-3 w-3" /> Reagendar
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/retornos?paciente=${ag.paciente_id}`)}
+                                      >
+                                        <RotateCcw className="h-3 w-3" /> Retorno
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}
+                                      >
+                                        <FlaskConical className="h-3 w-3" /> Exames
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/prontuarios?paciente=${ag.paciente_id}`)}
+                                      >
+                                        <ClipboardList className="h-3 w-3" /> Prontuário
+                                      </Button>
+                                    </div>
                                   </div>
                                 )}
 
-                                {step === 4 && lanc && (
-                                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Pago — {lanc.forma_pagamento}
-                                  </Badge>
+                                {step === 4 && (
+                                  <div className="flex flex-col gap-2 items-end">
+                                    {lanc && (
+                                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        Pago — {lanc.forma_pagamento}
+                                      </Badge>
+                                    )}
+                                    <div className="flex flex-wrap gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/agenda?reagendar=${ag.paciente_id}`)}
+                                      >
+                                        <CalendarPlus className="h-3 w-3" /> Reagendar
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="gap-1 text-xs h-7"
+                                        onClick={() => navigate(`/exames?paciente=${ag.paciente_id}`)}
+                                      >
+                                        <FlaskConical className="h-3 w-3" /> Exames
+                                      </Button>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </div>
