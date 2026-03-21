@@ -416,11 +416,26 @@ export default function CaixaDiario() {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
-      toast.success(`Pagamento confirmado — ${getPaciente(selectedLancamento.paciente_id).nome}`, {
-        description: `${FORMAS_PAGAMENTO.find(f => f.value === baixaForm.forma_pagamento)?.label} • R$ ${valorFinal.toFixed(2)}`,
+      const pac = getPaciente(selectedLancamento);
+      const fp = FORMAS_PAGAMENTO.find(f => f.value === baixaForm.forma_pagamento);
+      setCupomData({
+        paciente: pac.nome || 'Particular',
+        cpf: pac.cpf || '',
+        telefone: pac.telefone || '',
+        descricao: selectedLancamento.descricao || 'Consulta',
+        categoria: selectedLancamento.categoria || '',
+        formaPagamento: fp?.label || baixaForm.forma_pagamento,
+        valorOriginal: Number(selectedLancamento.valor || 0),
+        desconto: baixaForm.desconto,
+        acrescimo: baixaForm.acrescimo,
+        valorFinal,
+        operador: profile?.nome || 'Sistema',
+        dataHora: format(now, "dd/MM/yyyy 'às' HH:mm"),
+        data: format(now, 'dd/MM/yyyy'),
       });
       setShowBaixa(false);
-      setSelectedLancamento(null);
+      setShowCupom(true);
+      toast.success('Pagamento confirmado!');
     } catch (err: any) {
       toast.error('Erro ao confirmar: ' + (err?.message || ''));
     } finally {
