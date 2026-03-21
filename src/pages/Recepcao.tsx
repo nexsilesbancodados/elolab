@@ -196,19 +196,33 @@ export default function Recepcao() {
    }), [enriched]);
 
   // ─── Actions ──────────────────────────────────────────
-  async function handleCheckin(agId: string) {
-    setIsProcessing(true);
-    try {
-      const result = await autoCheckin(agId);
-      if (!result.success) throw new Error(result.message);
-      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
-      toast.success('Check-in realizado!', { description: result.actions.join(' • ') });
-    } catch (err: any) {
-      toast.error('Erro ao realizar check-in: ' + err.message);
-    }
-    setIsProcessing(false);
-  }
+   async function handleCheckin(agId: string) {
+     setIsProcessing(true);
+     try {
+       const result = await autoCheckin(agId);
+       if (!result.success) throw new Error(result.message);
+
+       // Generate billing entry at check-in so price is ready at the counter
+       const item = enriched.find(e => e.ag.id === agId);
+       if (item) {
+         await createAutoBilling({
+           agendamentoId: agId,
+           pacienteId: item.ag.paciente_id,
+           pacienteNome: item.pac?.nome || 'Paciente',
+           convenioId: item.pac?.convenio_id,
+           tipoConsulta: item.ag.tipo,
+         });
+       }
+
+       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+       toast.success('Check-in realizado!', { description: 'Paciente encaminhado ao balcão para pagamento' });
+     } catch (err: any) {
+       toast.error('Erro ao realizar check-in: ' + err.message);
+     }
+     setIsProcessing(false);
+   }
 
   async function handleChamar(filaId: string) {
     setIsProcessing(true);
