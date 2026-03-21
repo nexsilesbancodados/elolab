@@ -1066,7 +1066,7 @@ export default function CaixaDiario() {
                     <User className="h-5 w-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-sm truncate">{getPaciente(selectedLancamento.paciente_id).nome}</p>
+                    <p className="font-bold text-sm truncate">{getPaciente(selectedLancamento).nome}</p>
                     <p className="text-xs text-muted-foreground truncate">{selectedLancamento.descricao}</p>
                   </div>
                 </div>
@@ -1132,7 +1132,7 @@ export default function CaixaDiario() {
           {selectedLancamento && (
             <div className="space-y-4">
               <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-3 text-sm">
-                <p><strong>{getPaciente(selectedLancamento.paciente_id).nome}</strong></p>
+                <p><strong>{getPaciente(selectedLancamento).nome}</strong></p>
                 <p className="text-muted-foreground text-xs">{selectedLancamento.descricao} — R$ {Number(selectedLancamento.valor || 0).toFixed(2)}</p>
               </div>
               <div className="space-y-1.5">
@@ -1158,7 +1158,7 @@ export default function CaixaDiario() {
             <DialogDescription>Informações do lançamento.</DialogDescription>
           </DialogHeader>
           {selectedLancamento && (() => {
-            const pac = getPaciente(selectedLancamento.paciente_id);
+            const pac = getPaciente(selectedLancamento);
             const fp = FORMAS_PAGAMENTO.find(f => f.value === selectedLancamento.forma_pagamento);
             return (
               <div className="space-y-3 text-sm">
