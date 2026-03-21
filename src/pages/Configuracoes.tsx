@@ -180,7 +180,7 @@ function SalasManager() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ nome: '', tipo: 'consultorio', ativo: true, equipamentos: '' });
+  const [form, setForm] = useState({ nome: '', tipo: 'consultorio', ativo: true, equipamentos: '' as string });
   const [saving, setSaving] = useState(false);
 
   const { data: salas = [], isLoading } = useQuery({
