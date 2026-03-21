@@ -23,6 +23,11 @@ import { AuditLog } from '@/components/AuditLog';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const TiposConsulta = lazy(() => import('@/pages/TiposConsulta'));
+const PrecosExames = lazy(() => import('@/pages/PrecosExames'));
+const Convenios = lazy(() => import('@/pages/Convenios'));
 
 interface ConfiguracaoClinica {
   nomeClinica: string;
