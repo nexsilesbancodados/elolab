@@ -182,7 +182,7 @@ export default function ContasPagar() {
 
   const handlePagamento = (id: string) => {
     setSelectedId(id);
-    setPagamentoData({ forma_pagamento: 'pix' });
+    setPagamentoData({ forma_pagamento: 'pix', observacoes: '' });
     setIsPagamentoOpen(true);
   };
 
