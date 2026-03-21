@@ -416,6 +416,7 @@ export default function CaixaDiario() {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-historico'] });
       const pac = getPaciente(selectedLancamento);
       const fp = FORMAS_PAGAMENTO.find(f => f.value === baixaForm.forma_pagamento);
       setCupomData({
