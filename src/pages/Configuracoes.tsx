@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
   Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
-  Key, RefreshCw, CloudOff, Cloud,
+  Key, RefreshCw, CloudOff, Cloud, Stethoscope, FlaskConical, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,11 @@ import { AuditLog } from '@/components/AuditLog';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const TiposConsulta = lazy(() => import('@/pages/TiposConsulta'));
+const PrecosExames = lazy(() => import('@/pages/PrecosExames'));
+const Convenios = lazy(() => import('@/pages/Convenios'));
 
 interface ConfiguracaoClinica {
   nomeClinica: string;
@@ -188,12 +193,22 @@ export default function Configuracoes() {
   const tabItems = [
     { value: 'clinica', icon: Building, label: 'Clínica' },
     { value: 'horarios', icon: Clock, label: 'Horários' },
+    { value: 'consultas', icon: Stethoscope, label: 'Consultas' },
+    { value: 'exames', icon: FlaskConical, label: 'Exames' },
+    { value: 'convenios', icon: Building2, label: 'Convênios' },
     { value: 'notificacoes', icon: Bell, label: 'Notificações' },
     { value: 'aparencia', icon: Palette, label: 'Aparência' },
     { value: 'seguranca', icon: Shield, label: 'Segurança' },
     { value: 'backup', icon: Download, label: 'Backup' },
     { value: 'historico', icon: History, label: 'Auditoria' },
   ];
+
+  const LazyFallback = (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -327,6 +342,33 @@ export default function Configuracoes() {
                 </Button>
               </CardContent>
             </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Tipos de Consulta ─── */}
+        <TabsContent value="consultas">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <TiposConsulta />
+            </Suspense>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Preços de Exames ─── */}
+        <TabsContent value="exames">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <PrecosExames />
+            </Suspense>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Convênios ─── */}
+        <TabsContent value="convenios">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Suspense fallback={LazyFallback}>
+              <Convenios />
+            </Suspense>
           </motion.div>
         </TabsContent>
 
