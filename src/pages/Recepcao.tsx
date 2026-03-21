@@ -84,12 +84,13 @@ export default function Recepcao() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('todos');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPagamento, setShowPagamento] = useState(false);
-  const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
-  const [formaPagamento, setFormaPagamento] = useState('');
-  const [desconto, setDesconto] = useState(0);
-  const [acrescimo, setAcrescimo] = useState(0);
-  const [obsPagamento, setObsPagamento] = useState('');
+   const [showPagamento, setShowPagamento] = useState(false);
+   const [selectedLancamento, setSelectedLancamento] = useState<any>(null);
+   const [selectedPacienteBalcao, setSelectedPacienteBalcao] = useState<any>(null);
+   const [formaPagamento, setFormaPagamento] = useState('');
+   const [desconto, setDesconto] = useState(0);
+   const [acrescimo, setAcrescimo] = useState(0);
+   const [obsPagamento, setObsPagamento] = useState('');
   const [now, setNow] = useState(Date.now());
 
   // Refresh timer every 30s
