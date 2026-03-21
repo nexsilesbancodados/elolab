@@ -131,7 +131,7 @@ export default function CaixaDiario() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lancamentos')
-        .select('*')
+        .select('*, pacientes:paciente_id(id, nome, telefone, cpf)')
         .eq('tipo', 'receita')
         .eq('data', selectedDate)
         .order('created_at', { ascending: false });
