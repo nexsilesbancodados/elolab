@@ -134,22 +134,41 @@ export default function Recepcao() {
     },
   });
 
-  // Check if caixa is open
-  const { data: caixaAberto = false } = useQuery({
+  // Check if caixa is open (for current user OR any user in the clinic)
+  const { data: caixaAberto = false, refetch: refetchCaixa } = useQuery({
     queryKey: ['caixa-estado-recepcao', profile?.id],
     queryFn: async () => {
       if (!profile?.id) return false;
-      const { data } = await supabase
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      
+      // First check current user's caixa
+      const { data: own } = await supabase
         .from('configuracoes_clinica')
         .select('valor')
         .eq('chave', 'caixa_estado')
         .eq('user_id', profile.id)
         .maybeSingle();
-      if (!data?.valor) return false;
-      const estado = data.valor as any;
-      return estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto === true;
+      if (own?.valor) {
+        const estado = own.valor as any;
+        if (estado.data === todayStr && estado.aberto === true) return true;
+      }
+      
+      // Fallback: check if any colleague has caixa open today
+      const { data: all } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'caixa_estado');
+      if (all) {
+        return all.some((row: any) => {
+          const e = row.valor as any;
+          return e?.data === todayStr && e?.aberto === true;
+        });
+      }
+      
+      return false;
     },
     enabled: !!profile?.id,
+    refetchInterval: 15000, // Re-check every 15s
   });
 
   function checkCaixaAberto(): boolean {
@@ -180,6 +199,9 @@ export default function Recepcao() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lancamentos' }, () => {
         queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracoes_clinica' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['caixa-estado-recepcao'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
