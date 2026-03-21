@@ -293,7 +293,15 @@ export default function Prescricoes() {
               </TableHeader>
               <TableBody>
                 {filteredPrescricoes.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground"><Pill className="h-10 w-10 mx-auto mb-2 opacity-40" /><p>Nenhuma prescrição</p></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-12">
+                    <div className="flex flex-col items-center">
+                      <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+                        <Pill className="h-7 w-7 text-primary" />
+                      </div>
+                      <p className="font-semibold text-foreground">Nenhuma prescrição</p>
+                      <p className="text-sm text-muted-foreground mt-1">Crie sua primeira prescrição médica</p>
+                    </div>
+                  </TableCell></TableRow>
                 ) : filteredPrescricoes.map(p => (
                   <TableRow key={p.id}>
                     <TableCell>{p.data_emissao ? format(new Date(p.data_emissao + 'T12:00:00'), 'dd/MM/yyyy') : '—'}</TableCell>
