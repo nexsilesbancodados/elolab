@@ -478,28 +478,17 @@ export default function CaixaDiario() {
   const handleImprimirRecibo = (l: any) => {
     const pac = getPaciente(l);
     const fp = FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento);
-    const w = window.open('', '_blank', 'width=400,height=600');
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Recibo</title>
-      <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 350px; margin: 20px auto; font-size: 13px; color: #333; }
-        .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
-        .header h2 { margin: 0; font-size: 18px; }
-        .row { display: flex; justify-content: space-between; padding: 4px 0; }
-        .row.total { border-top: 2px solid #333; margin-top: 8px; padding-top: 8px; font-weight: bold; font-size: 16px; }
-        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; border-top: 1px dashed #ccc; padding-top: 10px; }
-        @media print { body { margin: 0; } }
-      </style></head><body>
-      <div class="header"><h2>RECIBO DE PAGAMENTO</h2><p>${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p></div>
-      <div class="row"><span>Paciente:</span><strong>${pac.nome}</strong></div>
-      ${pac.cpf ? `<div class="row"><span>CPF:</span><span>${pac.cpf}</span></div>` : ''}
-      <div class="row"><span>Descrição:</span><span>${l.descricao || '—'}</span></div>
-      <div class="row"><span>Forma Pgto:</span><span>${fp?.label || l.forma_pagamento || '—'}</span></div>
-      <div class="row total"><span>VALOR PAGO:</span><span>R$ ${Number(l.valor || 0).toFixed(2)}</span></div>
-      <div class="footer"><p>Recebido por: ${profile?.nome || 'Sistema'}</p><p>Documento sem valor fiscal</p></div>
-      <script>window.onload = function() { window.print(); }</script>
-    </body></html>`);
-    w.document.close();
+    printReceiptPdf({
+      titulo: 'RECIBO DE PAGAMENTO',
+      dataHora: format(new Date(), "dd/MM/yyyy 'às' HH:mm"),
+      paciente: pac.nome || '—',
+      cpf: pac.cpf || '',
+      descricao: l.descricao || '—',
+      formaPagamento: fp?.label || l.forma_pagamento || '—',
+      valorOriginal: Number(l.valor || 0),
+      valorFinal: Number(l.valor || 0),
+      operador: profile?.nome || 'Sistema',
+    });
   };
 
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
