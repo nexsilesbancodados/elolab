@@ -325,9 +325,14 @@ export default function Recepcao() {
         tipoConsulta: item.ag.tipo,
       });
 
+      if (!result.success) {
+        throw new Error(result.message || 'Falha ao finalizar');
+      }
+
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       toast.success('Atendimento finalizado!', { description: result.actions.join(' • ') });
     } catch (err: any) {
       console.error('Erro ao finalizar:', err);
