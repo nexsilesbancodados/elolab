@@ -248,9 +248,15 @@ export default function CaixaDiario() {
   // ===== Filtered list =====
   const filtered = useMemo(() => {
     return lancamentos.filter((l: any) => {
-      const matchSearch = !search ||
-        getPaciente(l).nome.toLowerCase().includes(search.toLowerCase()) ||
-        (l.descricao || '').toLowerCase().includes(search.toLowerCase());
+      if (!search) return tabFilter === 'todos' || l.status === tabFilter;
+      const q = search.toLowerCase();
+      const pac = getPaciente(l);
+      const matchSearch =
+        pac.nome?.toLowerCase().includes(q) ||
+        pac.cpf?.includes(search) ||
+        pac.telefone?.includes(search) ||
+        (l.descricao || '').toLowerCase().includes(q) ||
+        (l.categoria || '').toLowerCase().includes(q);
       const matchTab = tabFilter === 'todos' || l.status === tabFilter;
       return matchSearch && matchTab;
     });
