@@ -190,9 +190,18 @@ export default function ContasPagar() {
     if (!selectedId) return;
     setIsSubmitting(true);
     try {
+      const now = new Date();
       const { error } = await supabase
         .from('lancamentos')
-        .update({ status: 'pago' as StatusPagamento, forma_pagamento: pagamentoData.forma_pagamento })
+        .update({
+          status: 'pago' as StatusPagamento,
+          forma_pagamento: pagamentoData.forma_pagamento,
+          observacoes: [
+            contas.find(c => c.id === selectedId)?.observacoes,
+            pagamentoData.observacoes,
+            `Pago em ${format(now, "dd/MM/yyyy 'às' HH:mm")} por ${profile?.nome || 'Sistema'}`,
+          ].filter(Boolean).join(' | ') || null,
+        })
         .eq('id', selectedId);
       if (error) throw error;
       toast.success('Pagamento registrado!');
