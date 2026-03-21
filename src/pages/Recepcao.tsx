@@ -399,7 +399,7 @@ export default function Recepcao() {
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm">
-                <Lock className="h-4 w-4 text-destructive" />
+                <LockIcon className="h-4 w-4 text-destructive" />
                 <span className="font-medium text-destructive">Caixa fechado</span>
                 <span className="text-muted-foreground">— Abra o caixa para realizar check-ins e pagamentos.</span>
               </div>
