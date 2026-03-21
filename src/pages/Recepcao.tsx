@@ -371,10 +371,11 @@ export default function Recepcao() {
     }
     setIsProcessing(true);
     try {
-      const valorFinal = selectedLancamento.valor - desconto + acrescimo;
+      const valorFinal = (selectedLancamento.valor || 0) - desconto + acrescimo;
       await supabase.from('lancamentos').update({
         status: 'pago',
         forma_pagamento: formaPagamento,
+        valor: valorFinal,
         observacoes: obsPagamento || null,
       }).eq('id', selectedLancamento.id);
 
@@ -382,6 +383,17 @@ export default function Recepcao() {
       setShowPagamento(false);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
     } catch { toast.error('Erro ao confirmar pagamento'); }
+    setIsProcessing(false);
+  }
+
+  async function handleConcluir(agId: string, filaId: string) {
+    setIsProcessing(true);
+    try {
+      await supabase.from('fila_atendimento').update({ status: 'concluido' }).eq('id', filaId);
+      queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
+      queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+      toast.success('Atendimento concluído!');
+    } catch { toast.error('Erro ao concluir'); }
     setIsProcessing(false);
   }
 
