@@ -39,7 +39,7 @@ const FORMAS_PAGAMENTO = [
   { value: 'transferencia', label: 'Transferência', icon: Landmark, color: 'text-muted-foreground' },
 ];
 
-const STEP_LABELS = ['Check-in', 'Fila', 'Atendimento', 'Pagamento', 'Concluído'] as const;
+const STEP_LABELS = ['Check-in', 'Fila', 'Atendimento', 'Balcão', 'Concluído'] as const;
 
 function calcEspera(ts: string | null): string {
   if (!ts) return '—';
