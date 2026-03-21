@@ -12,9 +12,13 @@ export function useSupabaseQuery<T>(
     filters?: Array<{ column: string; operator: string; value: unknown }>;
     enabled?: boolean;
     staleTime?: number;
+    limit?: number;
+    page?: number;
   }
 ) {
   const { user } = useSupabaseAuth();
+  const limit = options?.limit ?? 5000;
+  const page = options?.page ?? 0;
 
   return useQuery({
     queryKey: [tableName, options],
@@ -34,6 +38,11 @@ export function useSupabaseQuery<T>(
           ascending: options.orderBy.ascending ?? true,
         });
       }
+
+      // Server-side pagination
+      const from = page * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
 
       const { data, error } = await query;
 

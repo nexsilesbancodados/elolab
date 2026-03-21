@@ -118,7 +118,7 @@ export default function Agenda() {
   const [recurrence, setRecurrence] = useState<RecurrenceConfig>({ type: 'none', occurrences: 4 });
   const [isSaving, setIsSaving] = useState(false);
   const [isRemarkMode, setIsRemarkMode] = useState(false);
-  
+  const [draggedAg, setDraggedAg] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -194,6 +194,39 @@ export default function Agenda() {
       (ag) => ag.data === dataStr && (ag.hora_inicio === hora || ag.hora_inicio?.slice(0, 5) === hora)
     );
   };
+
+  // ─── Drag & Drop to reschedule ─────────────────────────
+  const handleDragStart = (e: React.DragEvent, agId: string) => {
+    e.dataTransfer.setData('text/plain', agId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedAg(agId);
+  };
+
+  const handleDrop = async (e: React.DragEvent, data: Date, hora: string) => {
+    e.preventDefault();
+    setDraggedAg(null);
+    const agId = e.dataTransfer.getData('text/plain');
+    if (!agId) return;
+    if (isSlotBlocked(data, hora)) { toast.error('Horário bloqueado'); return; }
+    const existing = getAgendamentoForSlot(data, hora);
+    if (existing && existing.id !== agId) { toast.error('Horário já ocupado'); return; }
+    const ag = filteredAgendamentos.find(a => a.id === agId);
+    if (!ag) return;
+    if (ag.status === 'finalizado' || ag.status === 'cancelado') {
+      toast.error('Não é possível mover agendamentos finalizados/cancelados');
+      return;
+    }
+    const newDate = format(data, 'yyyy-MM-dd');
+    if (ag.data === newDate && ag.hora_inicio?.slice(0, 5) === hora) return; // same slot
+    const { error } = await supabase.from('agendamentos')
+      .update({ data: newDate, hora_inicio: hora } as any)
+      .eq('id', agId);
+    if (error) { toast.error('Erro ao reagendar: ' + error.message); return; }
+    queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+    toast.success(`Reagendado para ${format(data, 'dd/MM', { locale: ptBR })} às ${hora}`);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
 
   const handleSlotClick = (data: Date, hora: string) => {
     if (isSlotBlocked(data, hora)) {
@@ -753,8 +786,11 @@ export default function Agenda() {
                         className={cn(
                           'flex items-stretch min-h-[72px] transition-colors',
                           blocked ? 'bg-muted/40' : 'hover:bg-muted/20 cursor-pointer',
+                          draggedAg && !blocked && 'hover:bg-primary/10',
                         )}
                         onClick={() => !blocked && handleSlotClick(currentWeek, hora)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, currentWeek, hora)}
                       >
                         <div className="w-20 flex-shrink-0 flex items-center justify-center border-r bg-muted/20 text-sm font-medium text-muted-foreground">
                           {hora}
@@ -769,7 +805,15 @@ export default function Agenda() {
                             <motion.div
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
-                              className={cn('rounded-lg p-3 border', STATUS_COLORS[agendamento.status || 'agendado'])}
+                              draggable={agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado'}
+                              onDragStart={(e) => handleDragStart(e as any, agendamento.id)}
+                              onDragEnd={() => setDraggedAg(null)}
+                              className={cn(
+                                'rounded-lg p-3 border',
+                                STATUS_COLORS[agendamento.status || 'agendado'],
+                                agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado' && 'cursor-grab active:cursor-grabbing',
+                                draggedAg === agendamento.id && 'opacity-40',
+                              )}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
@@ -877,9 +921,12 @@ export default function Agenda() {
                                 blocked 
                                   ? 'bg-muted/60 cursor-not-allowed' 
                                   : 'cursor-pointer hover:bg-muted/30',
-                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5'
+                                isSameDay(day, new Date()) && !blocked && 'bg-primary/5',
+                                draggedAg && !blocked && 'hover:bg-primary/10 hover:ring-1 hover:ring-primary/30',
                               )}
                               onClick={() => handleSlotClick(day, hora)}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, day, hora)}
                             >
                               {blocked && !agendamento && (
                                 <div className="rounded p-1.5 text-xs bg-muted text-muted-foreground/60 border border-dashed border-muted-foreground/20 h-full flex items-center justify-center">
@@ -888,9 +935,14 @@ export default function Agenda() {
                               )}
                               {agendamento && (
                                 <div
+                                  draggable={agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado'}
+                                  onDragStart={(e) => handleDragStart(e, agendamento.id)}
+                                  onDragEnd={() => setDraggedAg(null)}
                                   className={cn(
                                     'rounded p-1.5 text-xs border relative',
-                                    STATUS_COLORS[agendamento.status || 'agendado']
+                                    STATUS_COLORS[agendamento.status || 'agendado'],
+                                    agendamento.status !== 'finalizado' && agendamento.status !== 'cancelado' && 'cursor-grab active:cursor-grabbing',
+                                    draggedAg === agendamento.id && 'opacity-40',
                                   )}
                                 >
                                   <p className="font-medium truncate">
