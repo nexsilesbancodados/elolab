@@ -764,6 +764,7 @@ export default function ContasReceber() {
             <DialogTitle className="flex items-center gap-2 text-success">
               <Receipt className="h-5 w-5" /> Confirmar Recebimento
             </DialogTitle>
+            <DialogDescription>Registre o pagamento recebido.</DialogDescription>
           </DialogHeader>
           {selectedConta && (
             <div className="space-y-4">

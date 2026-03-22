@@ -387,6 +387,7 @@ export default function Prescricoes() {
               <Clipboard className="h-5 w-5 text-primary" />
               Receita Gerada!
             </DialogTitle>
+            <DialogDescription>Baixe o PDF e assine digitalmente.</DialogDescription>
           </DialogHeader>
 
           <p className="text-muted-foreground text-sm">
