@@ -714,7 +714,7 @@ export default function Prontuarios() {
       data_solicitacao: format(new Date(), 'yyyy-MM-dd'),
     });
     if (!error) {
-      toast({ title: 'Exame solicitado', description: `${examForm.tipo_exame} registrado.` });
+      toast.success('Exame solicitado', { description: `${examForm.tipo_exame} registrado.` });
       setExamForm({ tipo_exame: '', descricao: '', observacoes: '' });
       setShowExamSolicitation(false);
     } else {
@@ -733,7 +733,7 @@ export default function Prontuarios() {
     if (protocol.orientacoes) conduta += `\n\n[Protocolo: ${protocol.nome}]\n${protocol.orientacoes}`;
     updateField('conduta', conduta.trim());
     setShowProtocols(false);
-    toast({ title: 'Protocolo aplicado', description: `"${protocol.nome}" aplicado.` });
+    toast.success('Protocolo aplicado', { description: `"${protocol.nome}" aplicado.` });
   };
 
   const getDischargeReportData = () => ({
@@ -1160,7 +1160,7 @@ export default function Prontuarios() {
                         ].map(t => (
                           <Button key={t.label} variant="outline" size="sm" className="text-[10px] h-6 gap-1 px-2" onClick={() => {
                             Object.entries(t.data).forEach(([f, v]) => { if (v) updateField(f, v); });
-                            toast({ title: 'Template aplicado', description: `"${t.label}" preenchido.` });
+                            toast.success('Template aplicado', { description: `"${t.label}" preenchido.` });
                           }}>
                             <Clipboard className="h-2.5 w-2.5" />{t.label}
                           </Button>

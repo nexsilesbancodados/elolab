@@ -124,10 +124,7 @@ export default function Automacoes() {
 
       if (error) throw error;
 
-      toast({
-        title: !currentState ? 'Automação ativada' : 'Automação desativada',
-        description: `A automação "${AUTOMATIONS.find(a => a.key === key)?.name}" foi ${!currentState ? 'ativada' : 'desativada'}.`,
-      });
+      toast.success(!currentState ? 'Automação ativada' : 'Automação desativada', { description: `A automação "${AUTOMATIONS.find(a => a.key === key)?.name}" foi ${!currentState ? 'ativada' : 'desativada'}.` });
       refetchSettings();
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error toggling automation:', error);

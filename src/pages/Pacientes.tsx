@@ -620,7 +620,7 @@ export default function Pacientes() {
       if (error) throw error;
       const portalUrl = `${window.location.origin}/portal-paciente?token=${data.token}`;
       await navigator.clipboard.writeText(portalUrl);
-      toast({ title: 'Link copiado!', description: `Link do portal de ${pacienteNome} copiado.` });
+      toast.success('Link copiado!', { description: `Link do portal de ${pacienteNome} copiado.` });
     } catch {
       toast.error('Erro ao gerar link do portal');
     }
