@@ -521,6 +521,7 @@ export default function TriagemPage() {
               <Activity className="h-5 w-5 text-primary" />
               Registrar Triagem
             </DialogTitle>
+            <DialogDescription>Classifique o risco e registre os sinais vitais do paciente.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-2">
