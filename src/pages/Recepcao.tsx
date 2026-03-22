@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -475,7 +475,10 @@ export default function Recepcao() {
 
       await queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      toast.success('Atendimento concluído!');
+      await queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
+      toast.success('Atendimento concluído com sucesso!');
     } catch (err: any) {
       console.error('Erro ao concluir:', err);
       toast.error('Erro ao concluir: ' + (err?.message || 'Erro desconhecido'));
@@ -877,7 +880,7 @@ export default function Recepcao() {
               <Receipt className="h-5 w-5 text-emerald-600" />
               Confirmar Pagamento
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">Registre o pagamento do paciente.</p>
+            <DialogDescription>Registre o pagamento do paciente.</DialogDescription>
           </DialogHeader>
 
           {selectedLancamento && (

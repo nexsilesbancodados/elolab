@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -521,6 +521,7 @@ export default function TriagemPage() {
               <Activity className="h-5 w-5 text-primary" />
               Registrar Triagem
             </DialogTitle>
+            <DialogDescription>Classifique o risco e registre os sinais vitais do paciente.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-2">
