@@ -475,7 +475,10 @@ export default function Recepcao() {
 
       await queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-      toast.success('Atendimento concluído!');
+      await queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
+      toast.success('Atendimento concluído com sucesso!');
     } catch (err: any) {
       console.error('Erro ao concluir:', err);
       toast.error('Erro ao concluir: ' + (err?.message || 'Erro desconhecido'));
