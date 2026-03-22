@@ -836,8 +836,16 @@ export default function Pacientes() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Telefone *</Label>
-                    <Input value={formData.telefone} onChange={e => setFormData({ ...formData, telefone: e.target.value })} placeholder="(00) 00000-0000" />
+                    <Label>Telefone <span className="text-destructive">*</span></Label>
+                    <Input value={formData.telefone} onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let masked = digits;
+                      if (digits.length > 0) masked = `(${digits.slice(0, 2)}`;
+                      if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                      if (digits.length > 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                      else if (digits.length > 6) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+                      setFormData({ ...formData, telefone: masked });
+                    }} placeholder="(00) 00000-0000" />
                   </div>
                   <div className="space-y-2">
                     <Label>Email</Label>
