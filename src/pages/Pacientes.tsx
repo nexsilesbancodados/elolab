@@ -801,7 +801,7 @@ export default function Pacientes() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Nome Completo *</Label>
+                    <Label>Nome Completo <span className="text-destructive">*</span></Label>
                     <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Nome completo" />
                   </div>
                   <div className="space-y-2">
@@ -812,11 +812,18 @@ export default function Pacientes() {
                     <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
                   </div>
                   <div className="space-y-2">
-                    <Label>CPF *</Label>
-                    <Input value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" />
+                    <Label>CPF <span className="text-destructive">*</span></Label>
+                    <Input value={formData.cpf} onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let masked = digits;
+                      if (digits.length > 3) masked = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+                      if (digits.length > 6) masked = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+                      if (digits.length > 9) masked = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+                      setFormData({ ...formData, cpf: masked });
+                    }} placeholder="000.000.000-00" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Nascimento *</Label>
+                    <Label>Data de Nascimento <span className="text-destructive">*</span></Label>
                     <Input type="date" value={formData.data_nascimento} onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })} />
                   </div>
                   <div className="space-y-2">
@@ -829,8 +836,16 @@ export default function Pacientes() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Telefone *</Label>
-                    <Input value={formData.telefone} onChange={e => setFormData({ ...formData, telefone: e.target.value })} placeholder="(00) 00000-0000" />
+                    <Label>Telefone <span className="text-destructive">*</span></Label>
+                    <Input value={formData.telefone} onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let masked = digits;
+                      if (digits.length > 0) masked = `(${digits.slice(0, 2)}`;
+                      if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                      if (digits.length > 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                      else if (digits.length > 6) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+                      setFormData({ ...formData, telefone: masked });
+                    }} placeholder="(00) 00000-0000" />
                   </div>
                   <div className="space-y-2">
                     <Label>Email</Label>
@@ -917,7 +932,11 @@ export default function Pacientes() {
                   <div className="relative">
                     <Input
                       value={formData.cep}
-                      onChange={e => setFormData({ ...formData, cep: e.target.value })}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        const masked = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+                        setFormData({ ...formData, cep: masked });
+                      }}
                       onBlur={e => buscarCep(e.target.value)}
                       placeholder="00000-000"
                       className="pr-8"
