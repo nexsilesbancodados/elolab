@@ -26,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { usePacientes } from '@/hooks/useSupabaseData';
 import { useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { EtiquetaPaciente } from '@/components/EtiquetaPaciente';
@@ -161,7 +161,6 @@ export default function Pacientes() {
   const [exameForm, setExameForm] = useState<Record<string, string>>({});
   const [savingExame, setSavingExame] = useState(false);
 
-  const { toast } = useToast();
   const { profile: authProfile } = useSupabaseAuth();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
   const { data: pacientes = [], isLoading, refetch } = usePacientes();
@@ -267,7 +266,7 @@ export default function Pacientes() {
 
   const handleSaveProntuario = async () => {
     if (!prontuarioForm.queixa_principal) {
-      toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      toast.error('Erro', { description: 'Preencha a queixa principal.' });
       return;
     }
     setSavingProntuario(true);
@@ -344,14 +343,14 @@ export default function Pacientes() {
         });
       } catch { /* silent */ }
 
-      toast({ title: 'Prontuário salvo com sucesso!' });
+      toast.success('Prontuário salvo com sucesso!');
       if (selectedPacienteId) loadProntuarios(selectedPacienteId);
       setProntuarioTab('lista');
       setIsEditingProntuario(false);
       setActiveProntuario(null);
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
-      toast({ title: 'Erro ao salvar prontuário', variant: 'destructive' });
+      toast.error('Erro ao salvar prontuário');
     } finally {
       setSavingProntuario(false);
     }
@@ -499,11 +498,11 @@ export default function Pacientes() {
     try {
       const { error } = await supabase.from('pacientes').delete().eq('id', selectedPacienteId);
       if (error) throw error;
-      toast({ title: 'Paciente excluído com sucesso' });
+      toast.success('Paciente excluído com sucesso');
       refetch();
     } catch (error) {
       if (import.meta.env.DEV) console.error('Erro ao excluir:', error);
-      toast({ title: 'Erro ao excluir paciente', variant: 'destructive' });
+      toast.error('Erro ao excluir paciente');
     } finally {
       setIsDeleting(false);
       setIsDeleteOpen(false);
@@ -512,19 +511,19 @@ export default function Pacientes() {
 
   const handleSave = async () => {
     if (!formData.nome || !formData.cpf || !formData.telefone || !formData.data_nascimento) {
-      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios (Nome, CPF, Nascimento, Telefone).', variant: 'destructive' });
+      toast.error('Erro', { description: 'Preencha os campos obrigatórios (Nome, CPF, Nascimento, Telefone).' });
       return;
     }
 
     // Validate CPF digits
     const cpfDigits = formData.cpf.replace(/\D/g, '');
     if (cpfDigits.length !== 11) {
-      toast({ title: 'CPF inválido', description: 'O CPF deve conter 11 dígitos.', variant: 'destructive' });
+      toast.error('CPF inválido', { description: 'O CPF deve conter 11 dígitos.' });
       return;
     }
     // CPF checksum validation
     if (/^(\d)\1+$/.test(cpfDigits)) {
-      toast({ title: 'CPF inválido', description: 'CPF com todos os dígitos iguais não é válido.', variant: 'destructive' });
+      toast.error('CPF inválido', { description: 'CPF com todos os dígitos iguais não é válido.' });
       return;
     }
     let sum = 0;
@@ -532,7 +531,7 @@ export default function Pacientes() {
     let rem = (sum * 10) % 11;
     if (rem === 10 || rem === 11) rem = 0;
     if (rem !== parseInt(cpfDigits[9])) {
-      toast({ title: 'CPF inválido', description: 'O CPF informado não é válido. Verifique os dígitos.', variant: 'destructive' });
+      toast.error('CPF inválido', { description: 'O CPF informado não é válido. Verifique os dígitos.' });
       return;
     }
     sum = 0;
@@ -540,26 +539,26 @@ export default function Pacientes() {
     rem = (sum * 10) % 11;
     if (rem === 10 || rem === 11) rem = 0;
     if (rem !== parseInt(cpfDigits[10])) {
-      toast({ title: 'CPF inválido', description: 'O CPF informado não é válido. Verifique os dígitos.', variant: 'destructive' });
+      toast.error('CPF inválido', { description: 'O CPF informado não é válido. Verifique os dígitos.' });
       return;
     }
 
     // Validate email if provided
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast({ title: 'E-mail inválido', description: 'Informe um e-mail válido.', variant: 'destructive' });
+      toast.error('E-mail inválido', { description: 'Informe um e-mail válido.' });
       return;
     }
 
     // Validate birthdate is not in the future
     if (formData.data_nascimento > format(new Date(), 'yyyy-MM-dd')) {
-      toast({ title: 'Data inválida', description: 'A data de nascimento não pode ser no futuro.', variant: 'destructive' });
+      toast.error('Data inválida', { description: 'A data de nascimento não pode ser no futuro.' });
       return;
     }
 
     // Validate phone has at least 10 digits
     const phoneDigits = formData.telefone.replace(/\D/g, '');
     if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      toast({ title: 'Telefone inválido', description: 'O telefone deve ter 10 ou 11 dígitos.', variant: 'destructive' });
+      toast.error('Telefone inválido', { description: 'O telefone deve ter 10 ou 11 dígitos.' });
       return;
     }
 
@@ -594,18 +593,18 @@ export default function Pacientes() {
       if (selectedPacienteId) {
         const { error } = await supabase.from('pacientes').update(dataToSave).eq('id', selectedPacienteId);
         if (error) throw error;
-        toast({ title: 'Paciente atualizado com sucesso' });
+        toast.success('Paciente atualizado com sucesso');
       } else {
         const { error } = await supabase.from('pacientes').insert(dataToSave);
         if (error) throw error;
-        toast({ title: 'Paciente cadastrado com sucesso' });
+        toast.success('Paciente cadastrado com sucesso');
       }
       refetch();
       setIsFormOpen(false);
     } catch (error: any) {
       console.error('Erro ao salvar paciente:', error);
       const msg = error?.message || error?.details || 'Verifique os dados e tente novamente.';
-      toast({ title: 'Erro ao salvar paciente', description: msg, variant: 'destructive' });
+      toast.error('Erro ao salvar paciente');
     } finally {
       setIsSubmitting(false);
     }
@@ -621,9 +620,9 @@ export default function Pacientes() {
       if (error) throw error;
       const portalUrl = `${window.location.origin}/portal-paciente?token=${data.token}`;
       await navigator.clipboard.writeText(portalUrl);
-      toast({ title: 'Link copiado!', description: `Link do portal de ${pacienteNome} copiado.` });
+      toast.success('Link copiado!', { description: `Link do portal de ${pacienteNome} copiado.` });
     } catch {
-      toast({ title: 'Erro ao gerar link do portal', variant: 'destructive' });
+      toast.error('Erro ao gerar link do portal');
     }
   };
 
@@ -1196,7 +1195,7 @@ export default function Pacientes() {
                           <Button variant="outline" size="sm" onClick={() => setShowAgendamentoForm(false)} className="text-xs h-7">Cancelar</Button>
                           <LoadingButton size="sm" className="text-xs h-7" isLoading={savingAgendamento} loadingText="Salvando..." onClick={async () => {
                             if (!agendamentoForm.data || !agendamentoForm.hora_inicio || !agendamentoForm.medico_id) {
-                              toast({ title: 'Preencha data, horário e médico', variant: 'destructive' });
+                              toast.error('Preencha data, horário e médico');
                               return;
                             }
                             setSavingAgendamento(true);
@@ -1212,11 +1211,11 @@ export default function Pacientes() {
                                 clinica_id: authProfile?.clinica_id || null,
                               });
                               if (error) throw error;
-                              toast({ title: 'Consulta agendada!' });
+                              toast.info('Consulta agendada!');
                               setShowAgendamentoForm(false);
                               loadAgendamentos(selectedPacienteId!);
                             } catch (err: any) {
-                              toast({ title: 'Erro ao agendar', description: err?.message, variant: 'destructive' });
+                              toast.error('Erro ao agendar');
                             } finally { setSavingAgendamento(false); }
                           }}>Agendar</LoadingButton>
                         </div>
@@ -1307,7 +1306,7 @@ export default function Pacientes() {
                           <Button variant="outline" size="sm" onClick={() => setShowExameForm(false)} className="text-xs h-7">Cancelar</Button>
                           <LoadingButton size="sm" className="text-xs h-7" isLoading={savingExame} loadingText="Salvando..." onClick={async () => {
                             if (!exameForm.tipo_exame || !exameForm.medico_solicitante_id) {
-                              toast({ title: 'Preencha tipo de exame e médico', variant: 'destructive' });
+                              toast.error('Preencha tipo de exame e médico');
                               return;
                             }
                             setSavingExame(true);
@@ -1322,11 +1321,11 @@ export default function Pacientes() {
                                 clinica_id: authProfile?.clinica_id || null,
                               });
                               if (error) throw error;
-                              toast({ title: 'Exame solicitado!' });
+                              toast.success('Exame solicitado!');
                               setShowExameForm(false);
                               loadExames(selectedPacienteId!);
                             } catch (err: any) {
-                              toast({ title: 'Erro ao solicitar exame', description: err?.message, variant: 'destructive' });
+                              toast.error('Erro ao solicitar exame');
                             } finally { setSavingExame(false); }
                           }}>Solicitar</LoadingButton>
                         </div>
