@@ -381,7 +381,7 @@ export default function Dashboard() {
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}
         <motion.div variants={fadeUp}>
-          <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card">
+          <div className="relative overflow-hidden rounded-2xl border border-border/30 bg-card">
             {/* Decorative elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-success/5" />
             <div className="absolute top-0 right-0 w-80 h-80 bg-primary/4 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
