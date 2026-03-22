@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -322,6 +322,7 @@ export default function Prescricoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Pill className="h-5 w-5 text-primary" />Nova Prescrição</DialogTitle>
+            <DialogDescription>Preencha os dados da prescrição médica.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -386,6 +387,7 @@ export default function Prescricoes() {
               <Clipboard className="h-5 w-5 text-primary" />
               Receita Gerada!
             </DialogTitle>
+            <DialogDescription>Baixe o PDF e assine digitalmente.</DialogDescription>
           </DialogHeader>
 
           <p className="text-muted-foreground text-sm">
