@@ -1091,6 +1091,13 @@ export type Database = {
             referencedRelation: "funcionarios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "employee_invitations_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       encaminhamentos: {
@@ -3797,7 +3804,62 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      funcionarios_safe: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          clinica_id: string | null
+          created_at: string | null
+          data_admissao: string | null
+          departamento: string | null
+          email: string | null
+          id: string | null
+          nome: string | null
+          salario: number | null
+          telefone: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: string | null
+          clinica_id?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          departamento?: string | null
+          email?: string | null
+          id?: string | null
+          nome?: string | null
+          salario?: never
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: string | null
+          clinica_id?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          departamento?: string | null
+          email?: string | null
+          id?: string | null
+          nome?: string | null
+          salario?: never
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_clinica_id_fkey"
+            columns: ["clinica_id"]
+            isOneToOne: false
+            referencedRelation: "clinicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_employee_invitation:
@@ -3845,6 +3907,10 @@ export type Database = {
       }
       user_has_feature: {
         Args: { _feature: string; _user_id: string }
+        Returns: boolean
+      }
+      user_in_same_clinica: {
+        Args: { _target_user_id: string }
         Returns: boolean
       }
     }
