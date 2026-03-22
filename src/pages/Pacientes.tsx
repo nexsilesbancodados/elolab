@@ -801,7 +801,7 @@ export default function Pacientes() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Nome Completo *</Label>
+                    <Label>Nome Completo <span className="text-destructive">*</span></Label>
                     <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Nome completo" />
                   </div>
                   <div className="space-y-2">
