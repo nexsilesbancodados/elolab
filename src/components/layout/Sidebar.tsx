@@ -48,7 +48,6 @@ export function Sidebar() {
     isAdmin()
   );
 
-  // Filter by search
   const searchedGroups = search.trim()
     ? filteredMenuGroups
         .map(g => ({
@@ -89,34 +88,35 @@ export function Sidebar() {
     <aside
       className={cn(
         'flex h-screen flex-col transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-        'bg-sidebar border-r border-sidebar-border/50',
-        collapsed ? 'w-[68px]' : 'w-[256px]'
+        'bg-sidebar border-r border-sidebar-border/40',
+        collapsed ? 'w-[66px]' : 'w-[252px]'
       )}
+      style={{ background: 'var(--gradient-sidebar)' }}
     >
       {/* ─── Header ─── */}
       <div className={cn(
         'flex items-center shrink-0',
-        collapsed ? 'justify-center px-2 h-[72px]' : 'justify-between px-4 h-[72px]'
+        collapsed ? 'justify-center px-2 h-16' : 'justify-between px-4 h-16'
       )}>
         {!collapsed ? (
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl shrink-0 overflow-hidden bg-gradient-to-br from-emerald-400/20 to-teal-500/10 ring-1 ring-emerald-500/20 shadow-sm">
-              <img src={logoIcon} alt="EloLab" className="h-8 w-8 object-contain" />
-              <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar animate-pulse" />
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl shrink-0 overflow-hidden bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/15">
+              <img src={logoIcon} alt="EloLab" className="h-7 w-7 object-contain" />
+              <div className="absolute -right-px -top-px h-2 w-2 rounded-full bg-primary ring-2 ring-sidebar animate-pulse" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[16px] font-extrabold text-sidebar-foreground tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+              <span className="text-[15px] font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 EloLab
               </span>
-              <span className="text-[10.5px] text-sidebar-foreground/40 font-medium mt-0.5 tracking-wide uppercase">
+              <span className="text-[10px] text-sidebar-foreground/35 font-medium mt-0.5 tracking-widest uppercase">
                 Gestão Clínica
               </span>
             </div>
           </div>
         ) : (
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-emerald-400/20 to-teal-500/10 ring-1 ring-emerald-500/20 shadow-sm">
-            <img src={logoIcon} alt="EloLab" className="h-8 w-8 object-contain" />
-            <div className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[2.5px] ring-sidebar animate-pulse" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/15">
+            <img src={logoIcon} alt="EloLab" className="h-7 w-7 object-contain" />
+            <div className="absolute -right-px -top-px h-2 w-2 rounded-full bg-primary ring-2 ring-sidebar animate-pulse" />
           </div>
         )}
 
@@ -125,7 +125,7 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(true)}
-            className="h-7 w-7 rounded-lg text-sidebar-foreground/30 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            className="h-7 w-7 rounded-lg text-sidebar-foreground/25 hover:text-sidebar-foreground/60 hover:bg-sidebar-accent/60"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -136,12 +136,12 @@ export function Sidebar() {
       {!collapsed && (
         <div className="px-3 pb-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/30" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/25" />
             <Input
               placeholder="Buscar..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="h-8 pl-8 text-xs bg-sidebar-accent/50 border-sidebar-border/40 rounded-lg placeholder:text-sidebar-foreground/25 focus-visible:ring-sidebar-primary/30"
+              className="h-8 pl-8 text-xs bg-sidebar-accent/40 border-sidebar-border/30 rounded-lg placeholder:text-sidebar-foreground/20 focus-visible:ring-sidebar-primary/25 focus-visible:bg-sidebar-accent/70"
             />
           </div>
         </div>
@@ -156,7 +156,7 @@ export function Sidebar() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setCollapsed(false)}
-                className="w-full h-8 rounded-lg text-sidebar-foreground/30 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                className="w-full h-8 rounded-lg text-sidebar-foreground/25 hover:text-sidebar-foreground/60 hover:bg-sidebar-accent/60"
               >
                 <PanelLeftOpen className="h-3.5 w-3.5" />
               </Button>
@@ -167,8 +167,8 @@ export function Sidebar() {
       )}
 
       {/* ─── Navigation ─── */}
-      <ScrollArea className="flex-1 px-2.5 py-1">
-        <nav className="flex flex-col gap-px">
+      <ScrollArea className="flex-1 px-2 py-1">
+        <nav className="flex flex-col gap-0.5">
           {searchedGroups.map((group) => (
             <SidebarMenuGroup
               key={group.label}
@@ -184,9 +184,9 @@ export function Sidebar() {
 
       {/* ─── Footer ─── */}
       {!collapsed && (
-        <div className="shrink-0 border-t border-sidebar-border/30 px-4 py-2.5">
-          <p className="text-[10px] text-sidebar-foreground/20 text-center font-medium tracking-wide">
-            v2.0
+        <div className="shrink-0 border-t border-sidebar-border/20 px-4 py-2">
+          <p className="text-[9px] text-sidebar-foreground/15 text-center font-medium tracking-widest uppercase">
+            v2.0 • EloLab
           </p>
         </div>
       )}
@@ -209,25 +209,24 @@ function SidebarMenuGroup({ group, collapsed, isOpen, onToggle, currentPath }: S
   const hasActiveChild = group.items.some(item => item.href === currentPath);
 
   return (
-    <div className="mb-1">
-      {/* Group Header */}
+    <div className="mb-0.5">
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             onClick={() => !collapsed && onToggle()}
             className={cn(
-              'w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors duration-150',
+              'w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors duration-150',
               collapsed && 'justify-center',
               hasActiveChild
-                ? 'text-sidebar-foreground/70'
-                : 'text-sidebar-foreground/35 hover:text-sidebar-foreground/55',
+                ? 'text-sidebar-foreground/65'
+                : 'text-sidebar-foreground/30 hover:text-sidebar-foreground/50',
             )}
           >
             {collapsed ? (
               <div
-                className="h-7 w-7 rounded-lg flex items-center justify-center"
+                className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors"
                 style={{
-                  backgroundColor: `${group.color}12`,
+                  backgroundColor: `${group.color}10`,
                   color: group.color,
                 }}
               >
@@ -238,7 +237,7 @@ function SidebarMenuGroup({ group, collapsed, isOpen, onToggle, currentPath }: S
                 <span className="flex-1 text-left">{group.label}</span>
                 <ChevronDown
                   className={cn(
-                    'h-3 w-3 text-sidebar-foreground/20 transition-transform duration-200',
+                    'h-3 w-3 text-sidebar-foreground/15 transition-transform duration-200',
                     isOpen && 'rotate-180'
                   )}
                 />
@@ -253,7 +252,6 @@ function SidebarMenuGroup({ group, collapsed, isOpen, onToggle, currentPath }: S
         )}
       </Tooltip>
 
-      {/* Expanded Items */}
       <AnimatePresence initial={false}>
         {isOpen && !collapsed && (
           <motion.div
@@ -272,7 +270,6 @@ function SidebarMenuGroup({ group, collapsed, isOpen, onToggle, currentPath }: S
         )}
       </AnimatePresence>
 
-      {/* Collapsed Items */}
       {collapsed && (
         <div className="space-y-px">
           {group.items.map((item) => (

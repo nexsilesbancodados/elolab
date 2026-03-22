@@ -112,13 +112,13 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, s
 
   const content = (
     <motion.div variants={fadeUp} custom={delay}>
-      <Card className="group relative overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border-border/40">
+      <Card className="group relative overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-350 cursor-pointer border-border/30 bg-card">
         <CardContent className="pt-5 pb-4">
           <div className="flex items-start justify-between mb-2">
             <div className="space-y-1 flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{title}</p>
+              <p className="text-[10.5px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em]">{title}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold font-display tracking-tight tabular-nums truncate">{value}</p>
+                <p className="text-[26px] font-bold font-display tracking-tight tabular-nums truncate">{value}</p>
                 {trend !== undefined && trend !== 0 && (
                   <span className={cn('text-[11px] font-semibold flex items-center gap-0.5',
                     trend > 0 ? 'text-success' : 'text-destructive'
@@ -128,14 +128,14 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, delay = 0, s
                   </span>
                 )}
               </div>
-              {subtitle && <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>}
+              {subtitle && <p className="text-[11px] text-muted-foreground/60 truncate">{subtitle}</p>}
             </div>
-            <div className={cn('h-11 w-11 rounded-xl flex items-center justify-center ring-1 shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3', c.bg, c.ring)}>
+            <div className={cn('h-11 w-11 rounded-xl flex items-center justify-center ring-1 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md', c.bg, c.ring)}>
               <Icon className={cn('h-5 w-5', c.text)} />
             </div>
           </div>
           {sparkData && sparkData.length > 1 && (
-            <div className="opacity-40 group-hover:opacity-100 transition-opacity -mx-1 mt-1">
+            <div className="opacity-30 group-hover:opacity-100 transition-opacity duration-300 -mx-1 mt-1">
               <Sparkline data={sparkData} color={c.spark} />
             </div>
           )}
@@ -381,7 +381,7 @@ export default function Dashboard() {
       <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
         {/* ─── Welcome Hero ─── */}
         <motion.div variants={fadeUp}>
-          <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card">
+          <div className="relative overflow-hidden rounded-2xl border border-border/30 bg-card">
             {/* Decorative elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-success/5" />
             <div className="absolute top-0 right-0 w-80 h-80 bg-primary/4 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />

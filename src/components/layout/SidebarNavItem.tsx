@@ -24,14 +24,14 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
       rel={item.external ? 'noopener noreferrer' : undefined}
       style={({ isActive }: { isActive: boolean }) =>
         isActive && !item.external && groupColor
-          ? { backgroundColor: `${groupColor}14`, '--active-color': groupColor } as React.CSSProperties
+          ? { backgroundColor: `${groupColor}0D`, '--active-color': groupColor } as React.CSSProperties
           : undefined
       }
       className={({ isActive }) =>
         cn(
-          'group relative flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200',
-          'text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
-          isActive && !item.external && 'font-semibold shadow-[0_1px_3px_hsl(220_20%_20%/0.06)]',
+          'group relative flex items-center gap-2.5 rounded-xl px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200',
+          'text-sidebar-foreground/50 hover:text-sidebar-foreground/80 hover:bg-sidebar-accent/50',
+          isActive && !item.external && 'font-semibold text-sidebar-foreground/90',
           collapsed && 'justify-center px-2',
           !collapsed && 'ml-1'
         )
@@ -42,19 +42,19 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
           {/* Active indicator */}
           {isActive && !item.external && !collapsed && (
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full"
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full transition-all"
               style={{ backgroundColor: groupColor || 'hsl(var(--sidebar-primary))' }}
             />
           )}
 
           {/* Icon */}
           <Icon
-            className="h-4 w-4 shrink-0 transition-colors duration-150"
+            className="h-[15px] w-[15px] shrink-0 transition-colors duration-150"
             style={{
               color: isActive && !item.external
                 ? groupColor || 'hsl(var(--sidebar-primary))'
                 : groupColor
-                  ? `${groupColor}99`
+                  ? `${groupColor}80`
                   : undefined,
             }}
           />
@@ -71,7 +71,7 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
 
           {/* Badge */}
           {!collapsed && item.badge && item.badge > 0 && (
-            <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary/10 px-1 text-[10px] font-bold text-primary tabular-nums">
+            <span className="ml-auto flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-primary/10 px-1 text-[9px] font-bold text-primary tabular-nums">
               {item.badge}
             </span>
           )}
@@ -91,7 +91,7 @@ export function SidebarNavItem({ item, collapsed, groupColor }: SidebarNavItemPr
           >
             {item.label}
             {item.badge && item.badge > 0 && (
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary/10 px-1 text-[10px] font-bold text-primary">
+              <span className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-primary/10 px-1 text-[9px] font-bold text-primary">
                 {item.badge}
               </span>
             )}
