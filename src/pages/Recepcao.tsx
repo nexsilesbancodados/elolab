@@ -880,7 +880,7 @@ export default function Recepcao() {
               <Receipt className="h-5 w-5 text-emerald-600" />
               Confirmar Pagamento
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">Registre o pagamento do paciente.</p>
+            <DialogDescription>Registre o pagamento do paciente.</DialogDescription>
           </DialogHeader>
 
           {selectedLancamento && (
