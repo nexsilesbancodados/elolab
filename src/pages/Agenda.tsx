@@ -121,6 +121,8 @@ export default function Agenda() {
   const [isRemarkMode, setIsRemarkMode] = useState(false);
   const [draggedAg, setDraggedAg] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [confirmFaltaOpen, setConfirmFaltaOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
