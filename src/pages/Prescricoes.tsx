@@ -322,6 +322,7 @@ export default function Prescricoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Pill className="h-5 w-5 text-primary" />Nova Prescrição</DialogTitle>
+            <DialogDescription>Preencha os dados da prescrição médica.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
