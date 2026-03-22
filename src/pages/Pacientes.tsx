@@ -823,7 +823,7 @@ export default function Pacientes() {
                     }} placeholder="000.000.000-00" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Nascimento *</Label>
+                    <Label>Data de Nascimento <span className="text-destructive">*</span></Label>
                     <Input type="date" value={formData.data_nascimento} onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })} />
                   </div>
                   <div className="space-y-2">
