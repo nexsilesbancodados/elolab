@@ -812,8 +812,15 @@ export default function Pacientes() {
                     <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
                   </div>
                   <div className="space-y-2">
-                    <Label>CPF *</Label>
-                    <Input value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" />
+                    <Label>CPF <span className="text-destructive">*</span></Label>
+                    <Input value={formData.cpf} onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let masked = digits;
+                      if (digits.length > 3) masked = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+                      if (digits.length > 6) masked = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+                      if (digits.length > 9) masked = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+                      setFormData({ ...formData, cpf: masked });
+                    }} placeholder="000.000.000-00" />
                   </div>
                   <div className="space-y-2">
                     <Label>Data de Nascimento *</Label>
