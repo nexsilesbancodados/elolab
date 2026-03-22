@@ -428,28 +428,33 @@ export default function Recepcao() {
     });
   }
 
-  async function handleConfirmarPagamento() {
+   async function handleConfirmarPagamento() {
     if (!formaPagamento || !selectedLancamento) {
       toast.error('Selecione a forma de pagamento');
       return;
     }
     setIsProcessing(true);
     try {
-      const valorFinal = (selectedLancamento.valor || 0) - desconto + acrescimo;
-      await supabase.from('lancamentos').update({
-        status: 'pago',
+      const valorFinal = Math.max(0, (selectedLancamento.valor || 0) - desconto + acrescimo);
+      const { error } = await supabase.from('lancamentos').update({
+        status: 'pago' as any,
         forma_pagamento: formaPagamento,
         valor: valorFinal,
         observacoes: obsPagamento || null,
       }).eq('id', selectedLancamento.id);
+      if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      await queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
       setShowPagamento(false);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
 
       // Emit receipt automatically
       gerarComprovante(selectedLancamento, selectedPacienteBalcao, formaPagamento, valorFinal);
-    } catch { toast.error('Erro ao confirmar pagamento'); }
+    } catch (err: any) {
+      toast.error('Erro ao confirmar pagamento: ' + (err?.message || 'Erro desconhecido'));
+    }
     setIsProcessing(false);
   }
 
