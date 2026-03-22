@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSupabaseQuery, useSupabaseUpdate } from '@/hooks/useSupabaseData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
@@ -99,7 +99,6 @@ const AUTOMATIONS = [
 
 export default function Automacoes() {
   const [isRunning, setIsRunning] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
 
   const { data: logs = [], isLoading: loadingLogs, refetch: refetchLogs } = useSupabaseQuery<AutomationLog>('automation_logs', {
     orderBy: { column: 'created_at', ascending: false }
@@ -132,20 +131,13 @@ export default function Automacoes() {
       refetchSettings();
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error toggling automation:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao alterar status da automação.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Erro ao alterar status da automação.' });
     }
   };
 
   const runAutomation = async (key: string, endpoint: string | null) => {
     if (!endpoint) {
-      toast({
-        title: 'Automação baseada em trigger',
-        description: 'Esta automação é executada automaticamente pelo banco de dados.',
-      });
+      toast.info('Automação baseada em trigger', { description: 'Esta automação é executada automaticamente pelo banco de dados.' });
       return;
     }
 
@@ -156,18 +148,11 @@ export default function Automacoes() {
 
       if (error) throw error;
 
-      toast({
-        title: 'Automação executada',
-        description: `A automação foi executada com sucesso.`,
-      });
+      toast.success('Automação executada', { description: `A automação foi executada com sucesso.` });
       refetchLogs();
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error running automation:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao executar automação.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Erro ao executar automação.' });
     } finally {
       setIsRunning(prev => ({ ...prev, [key]: false }));
     }

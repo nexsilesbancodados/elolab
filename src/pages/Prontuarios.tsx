@@ -25,7 +25,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   AllergyAlert, Cid10Search, ClinicalProtocols,
@@ -448,7 +448,6 @@ export default function Prontuarios() {
   const [showExamSolicitation, setShowExamSolicitation] = useState(false);
   const [examForm, setExamForm] = useState({ tipo_exame: '', descricao: '', observacoes: '' });
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { toast } = useToast();
   const { profile: user } = useSupabaseAuth();
 
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
@@ -504,7 +503,7 @@ export default function Prontuarios() {
     // Use linked medicoId, or fallback to first active medico (for admins)
     const resolvedMedicoId = medicoId || medicos.find(m => m.ativo !== false)?.id || '';
     if (!resolvedMedicoId) {
-      toast({ title: 'Erro', description: 'Nenhum médico cadastrado no sistema.', variant: 'destructive' });
+      toast.error('Erro', { description: 'Nenhum médico cadastrado no sistema.' });
       return;
     }
     setCurrentProntuario({
@@ -556,7 +555,7 @@ export default function Prontuarios() {
       });
     } catch { /* silent */ }
     setIsEditing(true);
-    toast({ title: 'Modo de edição ativado', description: 'Alterações serão auditadas.' });
+    toast.success('Modo de edição ativado', { description: 'Alterações serão auditadas.' });
   };
 
   const updateField = (field: string, value: any) => setCurrentProntuario(prev => ({ ...prev, [field]: value }));
@@ -564,7 +563,7 @@ export default function Prontuarios() {
   // ─── Core save logic (used by manual save and auto-save) ───
   const performSave = async (silent = false): Promise<string | null> => {
     if (!currentProntuario.queixa_principal) {
-      if (!silent) toast({ title: 'Erro', description: 'Preencha a queixa principal.', variant: 'destructive' });
+      if (!silent) toast.error('Erro', { description: 'Preencha a queixa principal.' });
       return null;
     }
     try {
@@ -668,7 +667,7 @@ export default function Prontuarios() {
       return prontuarioId;
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error saving prontuario:', error);
-      if (!silent) toast({ title: 'Erro', description: 'Erro ao salvar prontuário.', variant: 'destructive' });
+      if (!silent) toast.error('Erro', { description: 'Erro ao salvar prontuário.' });
       return null;
     }
   };
@@ -677,7 +676,7 @@ export default function Prontuarios() {
     const id = await performSave(false);
     if (id) {
       setIsProntuarioOpen(false);
-      toast({ title: 'Prontuário salvo', description: 'Registro salvo com sucesso.' });
+      toast.success('Prontuário salvo', { description: 'Registro salvo com sucesso.' });
     }
   };
 
@@ -700,7 +699,7 @@ export default function Prontuarios() {
   // ─── Exam solicitation ───
   const handleSolicitarExame = async () => {
     if (!examForm.tipo_exame) {
-      toast({ title: 'Erro', description: 'Informe o tipo do exame.', variant: 'destructive' });
+      toast.error('Erro', { description: 'Informe o tipo do exame.' });
       return;
     }
     const resolvedMedicoId = medicoId || medicos.find(m => m.ativo !== false)?.id;
@@ -719,7 +718,7 @@ export default function Prontuarios() {
       setExamForm({ tipo_exame: '', descricao: '', observacoes: '' });
       setShowExamSolicitation(false);
     } else {
-      toast({ title: 'Erro', description: 'Erro ao solicitar exame.', variant: 'destructive' });
+      toast.error('Erro', { description: 'Erro ao solicitar exame.' });
     }
   };
 
@@ -973,7 +972,7 @@ export default function Prontuarios() {
                                 })),
                               };
                               downloadClinicalExport(exportToFHIR(exportData), `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'json');
-                              toast({ title: 'Exportado', description: 'FHIR JSON baixado.' });
+                              toast.success('Exportado', { description: 'FHIR JSON baixado.' });
                             }}>
                               <FileDown className="h-3.5 w-3.5" />Exportar FHIR
                             </Button>
@@ -1000,7 +999,7 @@ export default function Prontuarios() {
                                 })),
                               };
                               downloadClinicalExport(exportToXML(exportData), `prontuario-${selectedPaciente.nome.replace(/\s+/g, '-')}`, 'xml');
-                              toast({ title: 'Exportado', description: 'XML CDA baixado.' });
+                              toast.success('Exportado', { description: 'XML CDA baixado.' });
                             }}>
                               <FileDown className="h-3.5 w-3.5" />Exportar XML
                             </Button>
@@ -1075,7 +1074,7 @@ export default function Prontuarios() {
                       <Button variant="outline" size="sm" onClick={() => downloadPDF(buildPDF(), fn)} className="gap-1 text-xs h-7"><Printer className="h-3 w-3" />PDF</Button>
                       <Button variant="outline" size="sm" onClick={() => {
                         sharePDFWhatsApp(buildPDF(), fn, selectedPaciente?.telefone);
-                        toast({ title: 'WhatsApp', description: 'PDF baixado! Cole na conversa.' });
+                        toast.info('WhatsApp', { description: 'PDF baixado! Cole na conversa.' });
                       }} className="gap-1 text-xs h-7 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-950">
                         <MessageCircle className="h-3 w-3" />WhatsApp
                       </Button>
