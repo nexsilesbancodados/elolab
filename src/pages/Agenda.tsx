@@ -1231,21 +1231,13 @@ export default function Agenda() {
                 variant="outline"
                 className="text-warning border-warning/30 hover:bg-warning/10"
                 disabled={isSaving}
-                onClick={async () => {
-                  if (!formData.id) return;
-                  setIsSaving(true);
-                  const result = await autoCancelarAgendamento({ agendamentoId: formData.id, motivo: 'faltou' });
-                  toast.success('Falta registrada!', { description: result.actions.join(' • ') });
-                  queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
-                  setIsFormOpen(false);
-                  setIsSaving(false);
-                }}
+                onClick={() => setConfirmFaltaOpen(true)}
               >
                 Faltou
               </Button>
             )}
             {formData.id && formData.status !== 'cancelado' && formData.status !== 'faltou' && formData.status !== 'finalizado' && (
-              <Button variant="destructive" disabled={isSaving} onClick={handleDelete}>
+              <Button variant="destructive" disabled={isSaving} onClick={() => setConfirmCancelOpen(true)}>
                 Cancelar Consulta
               </Button>
             )}
@@ -1266,6 +1258,57 @@ export default function Agenda() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Cancel Dialog */}
+      <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Consulta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este agendamento? O paciente da lista de espera poderá ser convocado automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Falta Dialog */}
+      <AlertDialog open={confirmFaltaOpen} onOpenChange={setConfirmFaltaOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registrar Falta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirma que o paciente não compareceu à consulta? Esta ação será registrada no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
+              onClick={async () => {
+                if (!formData.id) return;
+                setIsSaving(true);
+                const result = await autoCancelarAgendamento({ agendamentoId: formData.id, motivo: 'faltou' });
+                toast.success('Falta registrada!', { description: result.actions.join(' • ') });
+                queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
+                setIsFormOpen(false);
+                setIsSaving(false);
+                setConfirmFaltaOpen(false);
+              }}
+            >
+              Sim, registrar falta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

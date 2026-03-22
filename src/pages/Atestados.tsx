@@ -353,9 +353,15 @@ export default function Atestados() {
               <TableBody>
                 {filteredAtestados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum atestado encontrado</p>
+                    <TableCell colSpan={6} className="text-center py-12">
+                      <div className="flex flex-col items-center">
+                        <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                          <FileText className="h-8 w-8 text-primary" />
+                        </div>
+                        <p className="font-semibold text-foreground">Nenhum atestado encontrado</p>
+                        <p className="text-sm text-muted-foreground mt-1">Emita o primeiro atestado para o paciente</p>
+                        <Button className="mt-4 gap-2" onClick={handleNew}><Plus className="h-4 w-4" />Novo Atestado</Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
