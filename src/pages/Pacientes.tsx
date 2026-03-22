@@ -932,7 +932,11 @@ export default function Pacientes() {
                   <div className="relative">
                     <Input
                       value={formData.cep}
-                      onChange={e => setFormData({ ...formData, cep: e.target.value })}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        const masked = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+                        setFormData({ ...formData, cep: masked });
+                      }}
                       onBlur={e => buscarCep(e.target.value)}
                       placeholder="00000-000"
                       className="pr-8"
