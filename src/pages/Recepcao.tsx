@@ -867,11 +867,12 @@ export default function Recepcao() {
       {/* Payment Dialog */}
       <Dialog open={showPagamento} onOpenChange={setShowPagamento}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Receipt className="h-5 w-5 text-emerald-600" />
               Confirmar Pagamento
             </DialogTitle>
+            <p className="text-sm text-muted-foreground">Registre o pagamento do paciente.</p>
           </DialogHeader>
 
           {selectedLancamento && (
