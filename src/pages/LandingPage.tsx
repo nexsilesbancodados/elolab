@@ -148,6 +148,68 @@ const testimonials = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState<'trial' | 'buy'>('trial');
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [formData, setFormData] = useState({ nome: '', email: '', telefone: '', clinica: '' });
+  const [loading, setLoading] = useState(false);
+
+  const openCheckout = (plan: typeof plans[0], mode: 'trial' | 'buy') => {
+    setSelectedPlan(plan);
+    setCheckoutMode(mode);
+    setCheckoutOpen(true);
+  };
+
+  const handleCheckout = async () => {
+    if (!formData.nome || !formData.email || !selectedPlan) {
+      toast.error('Preencha nome e e-mail');
+      return;
+    }
+    setLoading(true);
+    try {
+      // First get the plan ID from the database
+      const { data: plano } = await supabase
+        .from('planos')
+        .select('id')
+        .eq('slug', selectedPlan.slug)
+        .single();
+
+      if (!plano) {
+        toast.error('Plano não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('public-checkout', {
+        body: {
+          plano_id: plano.id,
+          plano_slug: selectedPlan.slug,
+          nome: formData.nome,
+          email: formData.email,
+          telefone: formData.telefone,
+          clinica: formData.clinica,
+          mode: checkoutMode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (checkoutMode === 'buy' && data?.checkout_url) {
+        toast.success('Redirecionando para pagamento...');
+        window.location.href = data.checkout_url;
+      } else if (data?.success) {
+        toast.success('Verifique seu e-mail para o código de ativação!');
+        setCheckoutOpen(false);
+        setFormData({ nome: '', email: '', telefone: '', clinica: '' });
+      }
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      toast.error(err.message || 'Erro ao processar. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
