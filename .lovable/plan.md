@@ -1,117 +1,123 @@
 
 
-# Plano: Auditoria Completa + Correções + Melhorias de UX
+# Plano: Suíte de Testes Completa para EloLab SaaS
 
-## Visao Geral
+## Visão Geral
 
-Revisao sistematica de todos os modulos do EloLab, corrigindo bugs de uso, inconsistencias e melhorando drasticamente a experiencia do usuario.
-
----
-
-## Fase 1 — Bugs Criticos e Problemas de Funcionamento
-
-### 1.1 Faturamento Duplicado (Auto-Billing)
-- O trigger `auto_billing_on_appointment_complete` no banco E o `createAutoBilling()` no codigo podem gerar lancamentos duplicados em race conditions
-- **Correcao**: Remover o trigger do banco (migration) e manter apenas o `createAutoBilling()` no codigo, que ja tem check de duplicata (`existing.length > 0`)
-
-### 1.2 Realtime Channel Error
-- Console mostra `CHANNEL_ERROR` repetidamente — o hook `useRealtimeSubscription` ja faz fallback para polling, mas gera spam de warnings
-- **Correcao**: Silenciar o warning apos o primeiro ocorrencia e adicionar exponential backoff
-
-### 1.3 Prontuarios nao acessivel para medicos na sidebar
-- O menu lateral mostra Prontuarios apenas para admin/medico, mas a rota existe — o item nao esta no sidebarMenu
-- **Correcao**: Verificar se `Prontuarios`, `Prescricoes`, `Atestados`, `Encaminhamentos` estao no menu (eles foram consolidados dentro de Pacientes, mas as rotas independentes ainda existem)
-
-### 1.4 GlobalSearch referencia paginas que nao existem mais
-- O GlobalSearch.tsx lista `/prontuarios`, `/prescricoes`, `/atestados` como paginas separadas — precisa alinhar com o menu atual
+Configurar infraestrutura completa de testes (unitários, integração, E2E, segurança RLS) e CI/CD, sem alterar componentes ou lógica existente.
 
 ---
 
-## Fase 2 — Melhorias de UX Criticas
+## ETAPA 1 — Dependências e Configuração
 
-### 2.1 Feedback Visual em Acoes
-- Adicionar `toast` de sucesso/erro consistente em TODOS os formularios (Agenda, Pacientes, Estoque, Triagem, Fila)
-- Usar `LoadingButton` em vez de `Button` + estado loading manual em todos os forms
+**Instalar pacotes:**
+- `@testing-library/user-event`, `msw`, `@playwright/test` (os demais já existem)
 
-### 2.2 Confirmacao em Acoes Destrutivas
-- Garantir que deletar paciente, cancelar agendamento, excluir item do estoque usam `ConfirmDialog` ou `AlertDialog`
-- Verificar cada modulo: Pacientes, Agenda, Estoque, Contas, Fila
-
-### 2.3 Empty States Melhores
-- Verificar que todos os modulos com listas vazias exibem um `EmptyState` amigavel com acao primaria (ex: "Nenhum paciente cadastrado — Cadastrar Primeiro Paciente")
-- Modulos a verificar: Triagem, Laboratorio, Prescricoes, Atestados, Encaminhamentos, Contas a Pagar
-
-### 2.4 Validacao de Formularios
-- CPF: adicionar validacao de digito verificador (nao apenas length)
-- Telefone: mascara automatica
-- Email: feedback visual inline
-- Campos obrigatorios com asterisco vermelho
-- Focar no primeiro campo com erro apos submit
-
-### 2.5 Navegacao e Breadcrumbs
-- Garantir que o botao "Voltar" funcione em todos os contextos de ficha/detalhe
-- Breadcrumbs devem refletir a hierarquia real (ex: Pacientes > Joao > Prontuario)
+**Arquivos de configuração:**
+- Atualizar `package.json` com scripts `test:run`, `test:e2e`, `test:e2e:ui`
+- Manter `vitest.config.ts` existente (já correto)
+- Criar `playwright.config.ts` com baseURL `http://localhost:5173`, timeout 30s, 1 retry, screenshot/video on failure, apenas chromium
 
 ---
 
-## Fase 3 — Polimento de Interface
+## ETAPA 2 — Testes Unitários
 
-### 3.1 Transicoes e Animacoes
-- Adicionar `animate-fade-in` nos modulos que ainda nao tem (verificar Triagem, Laboratorio, Contas)
-- Skeleton loaders em todos os modulos com dados async
+**`src/lib/__tests__/formatters.test.ts`** — Testar todas as funções: `formatCPF`, `formatCNPJ`, `formatPhone`, `formatCEP`, `formatCurrency`, `formatDate`, `formatTime` com edge cases (strings vazias, valores inválidos, limites)
 
-### 3.2 Responsividade Mobile
-- Verificar que tabelas largas usam `ScrollArea` horizontal em telas pequenas
-- Cards de KPI empilham corretamente em mobile
-- Dialogs de formulario nao cortam em telas menores
+**`src/lib/__tests__/utils.test.ts`** — Testar `cn()` com classes conflitantes e vazias
 
-### 3.3 Acessibilidade
-- Labels em todos os inputs de formulario
-- `aria-label` em botoes de icone
-- Focus trap em dialogs (ja coberto pelo Radix, mas verificar)
+**`src/hooks/__tests__/useFormValidation.test.ts`** — Renderizar hook com `renderHook`, testar `required`, `minLength`, `maxLength`, `pattern`, `custom` validators
 
-### 3.4 Consistencia Visual
-- Padronizar uso de `rounded-xl` vs `rounded-lg` em cards
-- Padronizar espacamento de header de pagina (titulo + descricao + acao)
-- Padronizar cores de status entre modulos (verde=sucesso, amarelo=pendente, vermelho=erro)
+**`src/hooks/__tests__/useFormState.test.ts`** — Testar estado inicial, `handleChange`, `reset`
+
+**`src/components/__tests__/SupabaseProtectedRoute.test.tsx`** — Mockar `useSupabaseAuth`, testar: sem user → redirect `/auth`; sem roles → tela pendente; com role errada → acesso negado; com role correta → renderiza children
+
+**`src/components/__tests__/ErrorBoundary.test.tsx`** — Testar que captura erro e exibe fallback
+
+**`src/components/__tests__/EmptyState.test.tsx`** — Testar renderização com props
 
 ---
 
-## Fase 4 — Funcionalidades Faltantes
+## ETAPA 3 — Testes de Integração com MSW
 
-### 4.1 Configuracoes na Nuvem
-- O `Configuracoes.tsx` ja usa Supabase (tabela `configuracoes_clinica`) — verificar se o save funciona e se carrega corretamente ao reabrir
+**`src/mocks/handlers.ts`** — Handlers REST interceptando `https://gebygucrpipaufrlyqqj.supabase.co/rest/v1/*` para tabelas `pacientes`, `agendamentos`, `medicos`
 
-### 4.2 Pagina de Recepcao — Fluxo Completo
-- Verificar que o fluxo Check-in > Triagem > Atendimento > Pagamento funciona de ponta a ponta
-- Testar transicao de status do agendamento em cada etapa
+**`src/mocks/server.ts`** — Setup MSW com `setupServer(...handlers)`
 
-### 4.3 Medicos sem acesso a Prontuario direto
-- Adicionar rota de prontuario no menu clinico para medicos (atualmente so acessivel via ficha de paciente)
+**`src/test/setup.ts`** — Adicionar `beforeAll/afterAll/afterEach` do MSW server
+
+**`src/components/__tests__/PatientListIntegration.test.tsx`** — Testar:
+1. GET retorna lista → cards renderizam
+2. POST cria registro → item aparece
+3. DELETE remove → item desaparece
+4. Status 500 → mensagem de erro exibida
 
 ---
 
-## Detalhes Tecnicos
+## ETAPA 4 — Testes E2E com Playwright
 
-```text
-Arquivos principais afetados:
-├── src/hooks/useRealtimeSubscription.ts  (silenciar spam)
-├── src/lib/autoBilling.ts                (manter, remover trigger DB)
-├── src/config/sidebarMenu.ts             (ajustar itens clinicos)
-├── src/components/GlobalSearch.tsx        (alinhar com menu)
-├── src/pages/Pacientes.tsx               (validacao CPF, UX)
-├── src/pages/Agenda.tsx                   (confirm dialogs)
-├── src/pages/Estoque.tsx                  (empty states)
-├── src/pages/Triagem.tsx                  (animacoes, skeleton)
-├── src/pages/Recepcao.tsx                 (fluxo completo)
-├── src/pages/Prescricoes.tsx              (consistencia)
-├── src/pages/Atestados.tsx                (consistencia)
-├── src/pages/Laboratorio.tsx              (empty states)
-├── src/pages/ContasPagar.tsx              (UX)
-├── src/pages/ContasReceber.tsx            (UX)
-├── migration: remover trigger duplicado
-└── ~15 arquivos menores de ajuste
-```
+**`tests/auth.spec.ts`** — Login válido, senha errada, redirect sem auth, logout
 
-**Estimativa**: ~8-10 mensagens de implementacao sequencial, priorizando bugs criticos primeiro.
+**`tests/crud.spec.ts`** — Criar/editar/deletar registro, validação de formulário vazio
+
+**`tests/navigation.spec.ts`** — Todas as rotas do menu carregam, 404, responsividade mobile/desktop
+
+**`tests/ui.spec.ts`** — Sem erros de console, loading states, empty states
+
+---
+
+## ETAPA 5 — Testes RLS
+
+**`tests/rls.spec.ts`** — Usando fetch direto à API REST do Supabase:
+1. Sem auth header → 0 registros
+2. User A não lê dados de User B
+3. User A não atualiza registro de User B
+- Usar credenciais de teste e cleanup com `delete`
+
+---
+
+## ETAPA 6 — GitHub Actions CI/CD
+
+**`.github/workflows/test.yml`**:
+- Trigger: push `dev`, PR `main`
+- Node 20, `npm ci`
+- `npm run test:run` (Vitest)
+- `npx playwright install --with-deps chromium`
+- `npm run test:e2e`
+- Secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+---
+
+## ETAPA 7 — TEST_PLAN.md
+
+Documento na raiz listando todos os arquivos, comandos, cobertura esperada e instruções de secrets do GitHub.
+
+---
+
+## Arquivos a criar/modificar
+
+| Ação | Arquivo |
+|------|---------|
+| Modificar | `package.json` (scripts) |
+| Modificar | `src/test/setup.ts` (MSW) |
+| Criar | `playwright.config.ts` |
+| Criar | `src/mocks/handlers.ts` |
+| Criar | `src/mocks/server.ts` |
+| Criar | `src/lib/__tests__/formatters.test.ts` |
+| Criar | `src/lib/__tests__/utils.test.ts` |
+| Criar | `src/hooks/__tests__/useFormValidation.test.ts` |
+| Criar | `src/hooks/__tests__/useFormState.test.ts` |
+| Criar | `src/components/__tests__/SupabaseProtectedRoute.test.tsx` |
+| Criar | `src/components/__tests__/ErrorBoundary.test.tsx` |
+| Criar | `src/components/__tests__/EmptyState.test.tsx` |
+| Criar | `src/components/__tests__/PatientListIntegration.test.tsx` |
+| Criar | `tests/auth.spec.ts` |
+| Criar | `tests/crud.spec.ts` |
+| Criar | `tests/navigation.spec.ts` |
+| Criar | `tests/ui.spec.ts` |
+| Criar | `tests/rls.spec.ts` |
+| Criar | `.github/workflows/test.yml` |
+| Criar | `TEST_PLAN.md` |
+
+Nenhum componente, página ou estilo existente será alterado.
 
