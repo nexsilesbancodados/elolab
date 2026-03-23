@@ -661,7 +661,7 @@ export default function LandingPage() {
         )}
 
         {/* ══ TESTIMONIALS ══ */}
-        <section id="depoimentos" className="py-20 md:py-28 bg-white/40">
+        <section id="depoimentos" className="py-20 md:py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
