@@ -490,7 +490,7 @@ export default function LandingPage() {
         </section>
 
         {/* ══ PRICING CARDS ══ */}
-        <section id="planos" className="py-20 md:py-28 bg-white/50">
+        <section id="planos" className="py-20 md:py-28">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
