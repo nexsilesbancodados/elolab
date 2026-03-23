@@ -6,9 +6,13 @@ import {
   Zap, Lock, FlaskConical, Receipt, Menu, X, Phone, Mail,
   Clock, Activity, Pill, ClipboardList, Building2, MonitorPlay,
   BellRing, FileBarChart, Warehouse, CreditCard, UserCheck,
-  Microscope, HeartPulse, QrCode, Globe, SmartphoneNfc
+  Microscope, HeartPulse, QrCode, Globe, SmartphoneNfc,
+  Crown, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import elolabLogo from '@/assets/elolab-logo.png';
 import landingHero from '@/assets/landing-hero.webp';
 import landingEfficiency from '@/assets/landing-efficiency.webp';
