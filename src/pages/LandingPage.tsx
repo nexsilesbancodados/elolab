@@ -28,12 +28,28 @@ import stripComunica from '@/assets/strip-comunicacao.webp';
 import stripFinanc from '@/assets/strip-financeiro.webp';
 import modClinica1 from '@/assets/mod-clinica1.webp';
 import modClinica2 from '@/assets/mod-clinica2.webp';
+import modClinica3 from '@/assets/mod-clinica3.webp';
+import modClinica4 from '@/assets/mod-clinica4.webp';
+import modClinica5 from '@/assets/mod-clinica5.webp';
+import modClinica6 from '@/assets/mod-clinica6.webp';
 import modLab1 from '@/assets/mod-lab1.webp';
 import modLab2 from '@/assets/mod-lab2.webp';
+import modLab3 from '@/assets/mod-lab3.webp';
+import modLab4 from '@/assets/mod-lab4.webp';
+import modLab5 from '@/assets/mod-lab5.webp';
+import modLab6 from '@/assets/mod-lab6.webp';
 import modComunica1 from '@/assets/mod-comunica1.webp';
 import modComunica2 from '@/assets/mod-comunica2.webp';
+import modComunica3 from '@/assets/mod-comunica3.webp';
+import modComunica4 from '@/assets/mod-comunica4.webp';
+import modComunica5 from '@/assets/mod-comunica5.webp';
+import modComunica6 from '@/assets/mod-comunica6.webp';
 import modFinanc1 from '@/assets/mod-financ1.webp';
 import modFinanc2 from '@/assets/mod-financ2.webp';
+import modFinanc3 from '@/assets/mod-financ3.webp';
+import modFinanc4 from '@/assets/mod-financ4.webp';
+import modFinanc5 from '@/assets/mod-financ5.webp';
+import modFinanc6 from '@/assets/mod-financ6.webp';
 
 /* ─── Colors ─── */
 const C = {
