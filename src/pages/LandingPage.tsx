@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 import elolabLogo from '@/assets/elolab-logo.png';
 import landingHero from '@/assets/landing-hero.webp';
 import landingEfficiency from '@/assets/landing-efficiency.webp';
