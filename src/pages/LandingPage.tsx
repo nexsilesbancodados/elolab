@@ -424,7 +424,7 @@ export default function LandingPage() {
         {/* ══ FEATURE SECTIONS (Alternating) ══ */}
         <div id="recursos">
           {featureSections.map((f, i) => (
-            <section key={i} className={`py-16 md:py-24 ${i % 2 === 1 ? 'bg-white/50' : 'bg-white/30'}`}>
+            <section key={i} className="py-16 md:py-24">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                   <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
