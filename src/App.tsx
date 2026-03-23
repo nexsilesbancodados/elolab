@@ -55,6 +55,7 @@ import TiposConsulta from "@/pages/TiposConsulta";
 import Recepcao from "@/pages/Recepcao";
 import Auth from "@/pages/Auth";
 import AceitarConvite from "@/pages/AceitarConvite";
+import LandingPage from "@/pages/LandingPage";
 import PainelTV from "@/pages/PainelTV";
 import PortalPaciente from "@/pages/PortalPaciente";
 import NotFound from "@/pages/NotFound";
