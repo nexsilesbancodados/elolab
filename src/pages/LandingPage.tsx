@@ -858,7 +858,7 @@ export default function LandingPage() {
                 <h4 className="font-bold text-sm text-white mb-4">Contato</h4>
                 <ul className="space-y-2 text-sm text-white/50">
                   <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> suporte@elolab.com.br</li>
-                  <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> (11) 9999-9999</li>
+                  <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> (11) 93768-7369</li>
                 </ul>
               </div>
             </div>
