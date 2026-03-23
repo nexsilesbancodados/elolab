@@ -199,12 +199,26 @@ const plans = [
 ];
 
 const testimonials = [
-  { name: 'Dra. Mariana Silva', clinic: 'CardioVida - Cardiologia', text: 'O EloLab se reinventa auxiliando na gestão da clínica. O atendimento é super top! Indico!' },
-  { name: 'Dr. Carlos Mendes', clinic: 'MedCenter - Clínico Geral', text: 'Equipe atenciosa, suporte eficiente. O sistema nunca ficou inoperante.' },
-  { name: 'Ana Paula Costa', clinic: 'EstéticaPrime - Estética', text: 'A maior vantagem é o fácil acesso e prontidão da equipe técnica.' },
-  { name: 'Dr. Roberto Alves', clinic: 'OrthoPlus - Ortopedia', text: 'Sistema muito prático e completo. Recomendo para qualquer clínica.' },
-  { name: 'Dra. Fernanda Lima', clinic: 'DermaVita - Dermatologia', text: 'Nos ajuda no operacional e no estratégico. Financeiro integrado é um diferencial.' },
-  { name: 'Dr. Henrique Souza', clinic: 'PediatraCare - Pediatria', text: 'Excelente ferramenta de gestão. Prontuário intuitivo e seguro.' },
+  { name: 'Dra. Mariana Silva', clinic: 'CardioVida - Cardiologia', text: 'O EloLab se reinventa auxiliando na gestão da clínica. O atendimento é super top! Indico!', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Carlos Mendes', clinic: 'MedCenter - Clínico Geral', text: 'Equipe atenciosa, suporte eficiente. O sistema nunca ficou inoperante.', avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Ana Paula Costa', clinic: 'EstéticaPrime - Estética', text: 'A maior vantagem é o fácil acesso e prontidão da equipe técnica.', avatar: 'https://images.unsplash.com/photo-1594824476967-48c8b964ac31?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Roberto Alves', clinic: 'OrthoPlus - Ortopedia', text: 'Sistema muito prático e completo. Recomendo para qualquer clínica.', avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Fernanda Lima', clinic: 'DermaVita - Dermatologia', text: 'Nos ajuda no operacional e no estratégico. Financeiro integrado é um diferencial.', avatar: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Henrique Souza', clinic: 'PediatraCare - Pediatria', text: 'Excelente ferramenta de gestão. Prontuário intuitivo e seguro.', avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Camila Rocha', clinic: 'NutriVida - Nutrição', text: 'Agenda integrada com WhatsApp mudou meu dia a dia. Reduzi faltas em 40%.', avatar: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. André Martins', clinic: 'OftalmoCenter - Oftalmologia', text: 'O módulo financeiro é fantástico. Controlo tudo em um só lugar.', avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Patrícia Oliveira', clinic: 'LabAnalytica - Laboratório', text: 'Rastreio de amostras com código de barras eliminou erros de coleta.', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Marcos Ferreira', clinic: 'UroMed - Urologia', text: 'Melhor custo-benefício do mercado. Suporte responde em minutos.', avatar: 'https://images.unsplash.com/photo-1556157382-97eded29296d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Juliana Pires', clinic: 'GinecoSaúde - Ginecologia', text: 'Prescrição digital com QR Code é um diferencial para minhas pacientes.', avatar: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Lucas Santos', clinic: 'FisioAtiva - Fisioterapia', text: 'O painel TV na recepção profissionalizou minha clínica. Pacientes amam.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Beatriz Nunes', clinic: 'EndoVita - Endocrinologia', text: 'Triagem Manchester integrada agilizou nosso fluxo de emergência.', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Felipe Cardoso', clinic: 'NeuroPlus - Neurologia', text: 'Encaminhamentos com contra-referência ficaram 100% rastreáveis.', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Amanda Lopes', clinic: 'OdontoSmile - Odontologia', text: 'Portal do paciente aumentou a satisfação e reduziu ligações no consultório.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Ricardo Braga', clinic: 'PneumoCenter - Pneumologia', text: 'LGPD e assinatura digital nos dão segurança jurídica total.', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Isabela Campos', clinic: 'ReumatoVida - Reumatologia', text: 'CID-10 integrado ao prontuário economiza tempo em cada atendimento.', avatar: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Thiago Ribeiro', clinic: 'LabExcel - Análises Clínicas', text: 'Laudos laboratoriais ficaram padronizados e profissionais. Clientes elogiam.', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dra. Renata Duarte', clinic: 'AlergoClin - Alergologia', text: 'Alertas de alergia no prontuário salvam vidas. Funcionalidade essencial.', avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Dr. Gustavo Pereira', clinic: 'GastroMed - Gastroenterologia', text: 'Relatórios analíticos me ajudam a tomar decisões estratégicas para a clínica.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' },
 ];
 
 export default function LandingPage() {
@@ -745,26 +759,55 @@ export default function LandingPage() {
           </div>
         )}
 
-        {/* ══ TESTIMONIALS ══ */}
-        <section id="depoimentos" className="py-20 md:py-28">
+        {/* ══ TESTIMONIALS CAROUSEL ══ */}
+        <section id="depoimentos" className="py-20 md:py-28 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
                 O que estão falando sobre o{' '}
                 <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>EloLab?</span>
               </h2>
+              <p className="mt-3 text-lg" style={{ color: C.textL }}>Mais de 500 profissionais de saúde confiam no EloLab</p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {testimonials.map((t, i) => (
-                <div key={i} className="bg-white/80 rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-md transition-shadow duration-200">
-                  <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.textL }}>{t.clinic}</p>
-                  <div className="flex gap-0.5 mt-3">
-                    {[1,2,3,4,5].map(j => (
-                      <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />
-                    ))}
+          </div>
+
+          {/* Row 1 - scrolls left */}
+          <div className="relative mb-5">
+            <div className="flex gap-5 animate-[scrollLeft_60s_linear_infinite] w-max">
+              {[...testimonials, ...testimonials].map((t, i) => (
+                <div key={`r1-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
+                      <p className="text-xs" style={{ color: C.textL }}>{t.clinic}</p>
+                    </div>
                   </div>
-                  <p className="text-sm leading-relaxed mt-4" style={{ color: C.text }}>"{t.text}"</p>
+                  <div className="flex gap-0.5 mb-3">
+                    {[1,2,3,4,5].map(j => <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />)}
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.text }}>"{t.text}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - scrolls right */}
+          <div className="relative">
+            <div className="flex gap-5 animate-[scrollRight_55s_linear_infinite] w-max">
+              {[...testimonials.slice(10), ...testimonials.slice(0, 10), ...testimonials.slice(10), ...testimonials.slice(0, 10)].map((t, i) => (
+                <div key={`r2-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
+                      <p className="text-xs" style={{ color: C.textL }}>{t.clinic}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-0.5 mb-3">
+                    {[1,2,3,4,5].map(j => <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />)}
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.text }}>"{t.text}"</p>
                 </div>
               ))}
             </div>
