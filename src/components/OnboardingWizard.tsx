@@ -55,6 +55,11 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     if (!profile) return;
+
+    // Check localStorage first (instant, avoids flicker)
+    const localKey = `onboarding_done_${profile.id}`;
+    if (localStorage.getItem(localKey) === 'true') return;
+
     const checkOnboarding = async () => {
       const { data } = await supabase
         .from('configuracoes_clinica')
@@ -62,8 +67,12 @@ export function OnboardingWizard() {
         .eq('chave', 'onboarding_completed')
         .eq('user_id', profile.id)
         .maybeSingle();
-      if (!data) {
-        setTimeout(() => setOpen(true), 1000);
+
+      if (data) {
+        // Already completed — cache locally so we never ask again
+        localStorage.setItem(localKey, 'true');
+      } else {
+        setTimeout(() => setOpen(true), 1200);
       }
     };
     checkOnboarding();
@@ -71,6 +80,8 @@ export function OnboardingWizard() {
 
   const handleComplete = async () => {
     if (profile) {
+      const localKey = `onboarding_done_${profile.id}`;
+      localStorage.setItem(localKey, 'true');
       await supabase.from('configuracoes_clinica').upsert({
         chave: 'onboarding_completed',
         user_id: profile.id,
