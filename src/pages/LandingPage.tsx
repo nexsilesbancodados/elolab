@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="block w-full text-left py-3 text-sm font-bold tracking-wide" style={{ color: C.dark }}>{l}</button>
               ))}
               <div className="pt-3 flex flex-col gap-2">
-                <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold text-white" style={{ background: '#25D366' }}>
                   <Phone className="w-4 h-4" /> CHAMAR
                 </a>
