@@ -530,8 +530,104 @@ export default function PainelAdmin() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Metrics Tab */}
+        <TabsContent value="metrics" className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/10"><TrendingUp className="h-5 w-5 text-green-600" /></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">MRR</p>
+                    <p className="text-2xl font-bold text-green-600">R$ {revenue.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">Receita Mensal Recorrente</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/10"><Users className="h-5 w-5 text-blue-600" /></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinantes Ativos</p>
+                    <p className="text-2xl font-bold">{activeSubs}</p>
+                    <p className="text-xs text-green-600">{conversionRate}% conversão</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10"><TrendingDown className="h-5 w-5 text-amber-600" /></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Churn Rate</p>
+                    <p className="text-2xl font-bold text-amber-600">{churnRate}%</p>
+                    <p className="text-xs text-muted-foreground">{expiredSubs + cancelledSubs} perdidos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/10"><Clock className="h-5 w-5 text-purple-600" /></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Em Trial</p>
+                    <p className="text-2xl font-bold">{trialSubs}</p>
+                    <p className="text-xs text-muted-foreground">aguardando conversão</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="text-base">Evolução MRR (6 meses)</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="month" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
+                    <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'MRR']} />
+                    <Area type="monotone" dataKey="mrr" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-base">Distribuição</CardTitle></CardHeader>
+              <CardContent>
+                {pieData.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                          {pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-wrap gap-3 justify-center mt-2">
+                      {pieData.map((d) => (
+                        <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                          <span className="text-muted-foreground">{d.name}: {d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">Sem dados</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
-      {/* Metrics content rendered inside Tabs but added via separate section */}
 
       {/* Edit Dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
