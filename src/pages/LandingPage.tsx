@@ -98,6 +98,45 @@ const featureSections = [
   },
 ];
 
+const plans = [
+  {
+    slug: 'max',
+    name: 'EloLab Max',
+    price: 299,
+    popular: false,
+    features: [
+      'Agenda Inteligente',
+      'Prontuário Eletrônico (PEP)',
+      'Financeiro Completo',
+      'Gestão de Pacientes',
+      'Estoque & Insumos',
+      'Relatórios & Analytics',
+      'Automações (16 fluxos)',
+      'LGPD & Auditoria',
+      'PWA Mobile',
+      'Suporte via Chat',
+    ],
+  },
+  {
+    slug: 'ultra',
+    name: 'EloLab Ultra',
+    price: 399,
+    popular: true,
+    features: [
+      'Tudo do plano Max +',
+      'WhatsApp IA (Agente 24h)',
+      'Agendamento Online',
+      'Confirmação Automática',
+      'Laboratório & Laudos',
+      'Triagem Manchester',
+      'Portal do Paciente',
+      'Painel TV Recepção',
+      'Suporte Prioritário',
+      'Migração de Dados Grátis',
+    ],
+  },
+];
+
 const testimonials = [
   { name: 'Dra. Mariana Silva', clinic: 'CardioVida - Cardiologia', text: 'O EloLab se reinventa auxiliando na gestão da clínica. O atendimento é super top! Indico!' },
   { name: 'Dr. Carlos Mendes', clinic: 'MedCenter - Clínico Geral', text: 'Equipe atenciosa, suporte eficiente. O sistema nunca ficou inoperante.' },
