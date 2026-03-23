@@ -4,38 +4,110 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import QRCode from 'qrcode';
 
+import { supabase } from '@/integrations/supabase/client';
+
 interface ClinicaInfo {
   nome: string;
   endereco: string;
   telefone: string;
   cnpj: string;
+  logoUrl?: string;
 }
 
-const CLINICA: ClinicaInfo = {
+const DEFAULT_CLINICA: ClinicaInfo = {
   nome: 'EloLab Clínica Médica',
   endereco: 'Av. Principal, 1000 - Centro - São Paulo/SP',
   telefone: '(11) 3000-0000',
   cnpj: '00.000.000/0001-00',
 };
 
-// Header padrão para documentos
-function addHeader(doc: jsPDF, titulo: string) {
+let _cachedClinica: ClinicaInfo | null = null;
+let _cacheTime = 0;
+
+export async function getClinicaInfo(): Promise<ClinicaInfo> {
+  // Cache for 5 minutes
+  if (_cachedClinica && Date.now() - _cacheTime < 5 * 60 * 1000) {
+    return _cachedClinica;
+  }
+
+  try {
+    const { data: configs } = await supabase
+      .from('configuracoes_clinica')
+      .select('chave, valor')
+      .in('chave', ['clinica_info', 'clinica_logo']);
+
+    if (configs && configs.length > 0) {
+      const infoConfig = configs.find(c => c.chave === 'clinica_info');
+      const logoConfig = configs.find(c => c.chave === 'clinica_logo');
+      
+      const info = infoConfig?.valor as any;
+      _cachedClinica = {
+        nome: info?.nome || DEFAULT_CLINICA.nome,
+        endereco: info?.endereco || DEFAULT_CLINICA.endereco,
+        telefone: info?.telefone || DEFAULT_CLINICA.telefone,
+        cnpj: info?.cnpj || DEFAULT_CLINICA.cnpj,
+        logoUrl: (logoConfig?.valor as any)?.url || info?.logoUrl || undefined,
+      };
+    } else {
+      _cachedClinica = { ...DEFAULT_CLINICA };
+    }
+  } catch {
+    _cachedClinica = { ...DEFAULT_CLINICA };
+  }
+
+  _cacheTime = Date.now();
+  return _cachedClinica;
+}
+
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Header padrão para documentos - agora com logo dinâmico
+async function addHeader(doc: jsPDF, titulo: string, clinica?: ClinicaInfo) {
+  const info = clinica || await getClinicaInfo();
+  let startY = 20;
+
+  // Try to add logo
+  if (info.logoUrl) {
+    const logoBase64 = await loadImageAsBase64(info.logoUrl);
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', 15, 10, 25, 25);
+        startY = 18;
+      } catch {
+        // Logo failed to load, continue without it
+      }
+    }
+  }
+
   doc.setFontSize(18);
   doc.setTextColor(0, 102, 204);
-  doc.text(CLINICA.nome, 105, 20, { align: 'center' });
+  doc.text(info.nome, 105, startY, { align: 'center' });
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text(CLINICA.endereco, 105, 28, { align: 'center' });
-  doc.text(`Tel: ${CLINICA.telefone} | CNPJ: ${CLINICA.cnpj}`, 105, 34, { align: 'center' });
+  doc.text(info.endereco, 105, startY + 8, { align: 'center' });
+  doc.text(`Tel: ${info.telefone} | CNPJ: ${info.cnpj}`, 105, startY + 14, { align: 'center' });
 
   doc.setDrawColor(0, 102, 204);
   doc.setLineWidth(0.5);
-  doc.line(20, 40, 190, 40);
+  doc.line(20, startY + 20, 190, startY + 20);
 
   doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  doc.text(titulo, 105, 50, { align: 'center' });
+  doc.text(titulo, 105, startY + 30, { align: 'center' });
 }
 
 // Footer padrão
