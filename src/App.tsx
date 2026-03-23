@@ -58,7 +58,10 @@ import AceitarConvite from "@/pages/AceitarConvite";
 import PainelTV from "@/pages/PainelTV";
 import PortalPaciente from "@/pages/PortalPaciente";
 import NotFound from "@/pages/NotFound";
-
+import PoliticaPrivacidade from "@/pages/PoliticaPrivacidade";
+import PoliticaCookies from "@/pages/PoliticaCookies";
+import TermosUso from "@/pages/TermosUso";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
