@@ -112,10 +112,10 @@ const moduleGroups = [
     modules: [
       { icon: Receipt, title: 'Financeiro Completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios.', img: modFinanc1 },
       { icon: CreditCard, title: 'Pagamentos Online', desc: 'Assinaturas via Mercado Pago com trial, bloqueio por inadimplência.', img: modFinanc2 },
-      { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.', img: modFinanc1 },
-      { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.', img: modFinanc2 },
-      { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.', img: modFinanc1 },
-      { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.', img: modFinanc2 },
+      { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.', img: modFinanc3 },
+      { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.', img: modFinanc4 },
+      { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.', img: modFinanc5 },
+      { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.', img: modFinanc6 },
     ],
   },
 ];
