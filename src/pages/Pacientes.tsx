@@ -999,8 +999,8 @@ export default function Pacientes() {
                       size="sm"
                       variant={formData.convenio_id ? 'default' : 'outline'}
                       onClick={() => {
-                        if (!formData.convenio_id && convenios.length > 0) {
-                          setFormData({ ...formData, convenio_id: (convenios[0] as any).id });
+                        if (!formData.convenio_id) {
+                          setFormData({ ...formData, convenio_id: convenios.length > 0 ? (convenios[0] as any).id : 'pending' });
                         }
                       }}
                     >
