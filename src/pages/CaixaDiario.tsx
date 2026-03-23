@@ -290,7 +290,10 @@ export default function CaixaDiario() {
   // ===== Actions =====
   const saveCaixaState = async (estado: any) => {
     if (!profile) return;
-    // Try upsert first
+    // Always save to localStorage first (reliable, instant)
+    localStorage.setItem(caixaLocalKey, JSON.stringify(estado));
+
+    // Then persist to Supabase (best-effort)
     const { error } = await supabase.from('configuracoes_clinica').upsert({
       chave: 'caixa_estado',
       user_id: profile.id,
@@ -298,8 +301,7 @@ export default function CaixaDiario() {
     }, { onConflict: 'user_id,chave' });
     
     if (error) {
-      console.error('Erro ao salvar estado do caixa (upsert):', error);
-      // Fallback: try to find existing and update, or insert new
+      console.warn('Upsert caixa falhou, tentando fallback:', error.message);
       const { data: existing } = await supabase
         .from('configuracoes_clinica')
         .select('id')
@@ -308,16 +310,14 @@ export default function CaixaDiario() {
         .maybeSingle();
       
       if (existing) {
-        const { error: updateErr } = await supabase
+        await supabase
           .from('configuracoes_clinica')
           .update({ valor: estado as any })
           .eq('id', existing.id);
-        if (updateErr) console.error('Erro ao atualizar estado do caixa:', updateErr);
       } else {
-        const { error: insertErr } = await supabase
+        await supabase
           .from('configuracoes_clinica')
           .insert({ chave: 'caixa_estado', user_id: profile.id, valor: estado as any });
-        if (insertErr) console.error('Erro ao inserir estado do caixa:', insertErr);
       }
     }
   };
