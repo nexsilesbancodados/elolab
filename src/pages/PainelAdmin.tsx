@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, AppRole } from '@/contexts/SupabaseAuthContext';
 import { Navigate } from 'react-router-dom';
 import {
-  Shield, Users, CreditCard, Activity, Search, Edit, Trash2,
+  Shield, Users, CreditCard, Activity, Search, Edit, Trash2, TrendingUp, TrendingDown,
   UserCheck, UserX, Loader2, Crown, Clock, Ban, CheckCircle2,
   BarChart3, Building2, RefreshCw,
 } from 'lucide-react';
@@ -31,6 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'contato@elolab.com.br';
 
@@ -148,6 +149,33 @@ export default function PainelAdmin() {
   const revenue = subscriptions
     .filter((s: any) => s.status === 'ativa')
     .reduce((sum: number, s: any) => sum + (s.planos?.valor || 0), 0);
+  const expiredSubs = subscriptions.filter((s: any) => s.status === 'expirada').length;
+  const cancelledSubs = subscriptions.filter((s: any) => s.status === 'cancelada').length;
+  const churnRate = totalSubs > 0 ? ((expiredSubs + cancelledSubs) / totalSubs * 100).toFixed(1) : '0';
+  const conversionRate = totalSubs > 0 ? ((activeSubs / totalSubs) * 100).toFixed(1) : '0';
+  const pieData = [
+    { name: 'Ativas', value: subscriptions.filter((s: any) => s.status === 'ativa').length, color: '#22c55e' },
+    { name: 'Trial', value: trialSubs, color: '#3b82f6' },
+    { name: 'Expiradas', value: expiredSubs, color: '#f59e0b' },
+    { name: 'Canceladas', value: cancelledSubs, color: '#ef4444' },
+  ].filter(d => d.value > 0);
+  const monthlyData = useMemo(() => {
+    const months: Record<string, { month: string; mrr: number }> = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months[key] = { month: d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }), mrr: 0 };
+    }
+    subscriptions.forEach((s: any) => {
+      if (s.status !== 'ativa' && s.status !== 'trial') return;
+      const created = s.data_inicio ? new Date(s.data_inicio) : null;
+      if (!created) return;
+      const key = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}`;
+      Object.keys(months).forEach(mk => { if (mk >= key) months[mk].mrr += s.planos?.valor || 0; });
+    });
+    return Object.values(months);
+  }, [subscriptions]);
 
   // Handlers
   const handleEdit = (u: any) => {
@@ -321,6 +349,7 @@ export default function PainelAdmin() {
         <TabsList>
           <TabsTrigger value="users" className="gap-2"><Users className="h-4 w-4" />Usuários</TabsTrigger>
           <TabsTrigger value="subscriptions" className="gap-2"><CreditCard className="h-4 w-4" />Assinaturas</TabsTrigger>
+          <TabsTrigger value="metrics" className="gap-2"><BarChart3 className="h-4 w-4" />Métricas</TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
@@ -502,6 +531,7 @@ export default function PainelAdmin() {
           </Card>
         </TabsContent>
       </Tabs>
+      {/* Metrics content rendered inside Tabs but added via separate section */}
 
       {/* Edit Dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
