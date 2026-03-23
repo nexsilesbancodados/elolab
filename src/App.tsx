@@ -11,6 +11,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
 import Dashboard from "@/pages/Dashboard";
 import Agenda from "@/pages/Agenda";
@@ -93,7 +94,9 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                     <Route
                       element={
                         <SupabaseProtectedRoute>
-                          <MainLayout />
+                          <SubscriptionGuard>
+                            <MainLayout />
+                          </SubscriptionGuard>
                         </SupabaseProtectedRoute>
                       }
                     >
