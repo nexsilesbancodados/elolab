@@ -133,7 +133,7 @@ export default function LandingPage() {
           scrolled ? 'bg-white/90 shadow-sm' : 'bg-transparent'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-18">
-            <img src={elolabLogo} alt="EloLab" className="h-8 w-auto" />
+            <img src={elolabLogo} alt="EloLab" className="h-12 md:h-14 w-auto" />
             <div className="hidden md:flex items-center gap-8 text-sm font-semibold" style={{ color: C.text }}>
               {[{ id: 'recursos', l: 'Recursos' }, { id: 'modulos', l: 'Módulos' }, { id: 'depoimentos', l: 'Depoimentos' }].map(n => (
                 <button key={n.id} onClick={() => scrollTo(n.id)} className="hover:opacity-70 transition-opacity">{n.l}</button>
