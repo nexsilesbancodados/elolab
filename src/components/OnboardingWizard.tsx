@@ -80,6 +80,8 @@ export function OnboardingWizard() {
 
   const handleComplete = async () => {
     if (profile) {
+      const localKey = `onboarding_done_${profile.id}`;
+      localStorage.setItem(localKey, 'true');
       await supabase.from('configuracoes_clinica').upsert({
         chave: 'onboarding_completed',
         user_id: profile.id,
