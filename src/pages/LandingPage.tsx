@@ -247,7 +247,7 @@ export default function LandingPage() {
         .from('planos')
         .select('id')
         .eq('slug', selectedPlan.slug)
-        .single();
+        .maybeSingle();
 
       if (!plano) {
         toast.error('Plano não encontrado');

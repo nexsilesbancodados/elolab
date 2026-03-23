@@ -156,7 +156,7 @@ export default function Auth() {
         .select('id, status, expires_at, plano_slug')
         .eq('codigo_convite', data.codigoConvite)
         .in('status', ['pendente', 'pago'])
-        .single();
+        .maybeSingle();
 
       if (regError || !registro) {
         toast.error('Código de convite inválido ou já utilizado.');
