@@ -6,9 +6,13 @@ import {
   Zap, Lock, FlaskConical, Receipt, Menu, X, Phone, Mail,
   Clock, Activity, Pill, ClipboardList, Building2, MonitorPlay,
   BellRing, FileBarChart, Warehouse, CreditCard, UserCheck,
-  Microscope, HeartPulse, QrCode, Globe, SmartphoneNfc
+  Microscope, HeartPulse, QrCode, Globe, SmartphoneNfc,
+  Crown, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import elolabLogo from '@/assets/elolab-logo.png';
 import landingHero from '@/assets/landing-hero.webp';
 import landingEfficiency from '@/assets/landing-efficiency.webp';
@@ -94,6 +98,45 @@ const featureSections = [
   },
 ];
 
+const plans = [
+  {
+    slug: 'max',
+    name: 'EloLab Max',
+    price: 299,
+    popular: false,
+    features: [
+      'Agenda Inteligente',
+      'Prontuário Eletrônico (PEP)',
+      'Financeiro Completo',
+      'Gestão de Pacientes',
+      'Estoque & Insumos',
+      'Relatórios & Analytics',
+      'Automações (16 fluxos)',
+      'LGPD & Auditoria',
+      'PWA Mobile',
+      'Suporte via Chat',
+    ],
+  },
+  {
+    slug: 'ultra',
+    name: 'EloLab Ultra',
+    price: 399,
+    popular: true,
+    features: [
+      'Tudo do plano Max +',
+      'WhatsApp IA (Agente 24h)',
+      'Agendamento Online',
+      'Confirmação Automática',
+      'Laboratório & Laudos',
+      'Triagem Manchester',
+      'Portal do Paciente',
+      'Painel TV Recepção',
+      'Suporte Prioritário',
+      'Migração de Dados Grátis',
+    ],
+  },
+];
+
 const testimonials = [
   { name: 'Dra. Mariana Silva', clinic: 'CardioVida - Cardiologia', text: 'O EloLab se reinventa auxiliando na gestão da clínica. O atendimento é super top! Indico!' },
   { name: 'Dr. Carlos Mendes', clinic: 'MedCenter - Clínico Geral', text: 'Equipe atenciosa, suporte eficiente. O sistema nunca ficou inoperante.' },
@@ -105,6 +148,68 @@ const testimonials = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState<'trial' | 'buy'>('trial');
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [formData, setFormData] = useState({ nome: '', email: '', telefone: '', clinica: '' });
+  const [loading, setLoading] = useState(false);
+
+  const openCheckout = (plan: typeof plans[0], mode: 'trial' | 'buy') => {
+    setSelectedPlan(plan);
+    setCheckoutMode(mode);
+    setCheckoutOpen(true);
+  };
+
+  const handleCheckout = async () => {
+    if (!formData.nome || !formData.email || !selectedPlan) {
+      toast.error('Preencha nome e e-mail');
+      return;
+    }
+    setLoading(true);
+    try {
+      // First get the plan ID from the database
+      const { data: plano } = await supabase
+        .from('planos')
+        .select('id')
+        .eq('slug', selectedPlan.slug)
+        .single();
+
+      if (!plano) {
+        toast.error('Plano não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('public-checkout', {
+        body: {
+          plano_id: plano.id,
+          plano_slug: selectedPlan.slug,
+          nome: formData.nome,
+          email: formData.email,
+          telefone: formData.telefone,
+          clinica: formData.clinica,
+          mode: checkoutMode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (checkoutMode === 'buy' && data?.checkout_url) {
+        toast.success('Redirecionando para pagamento...');
+        window.location.href = data.checkout_url;
+      } else if (data?.success) {
+        toast.success('Verifique seu e-mail para o código de ativação!');
+        setCheckoutOpen(false);
+        setFormData({ nome: '', email: '', telefone: '', clinica: '' });
+      }
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      toast.error(err.message || 'Erro ao processar. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -135,7 +240,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-18">
             <img src={elolabLogo} alt="EloLab" className="h-12 md:h-14 w-auto" />
             <div className="hidden md:flex items-center gap-8 text-sm font-semibold" style={{ color: C.text }}>
-              {[{ id: 'recursos', l: 'Recursos' }, { id: 'modulos', l: 'Módulos' }, { id: 'depoimentos', l: 'Depoimentos' }].map(n => (
+              {[{ id: 'recursos', l: 'Recursos' }, { id: 'modulos', l: 'Módulos' }, { id: 'planos', l: 'Planos' }, { id: 'depoimentos', l: 'Depoimentos' }].map(n => (
                 <button key={n.id} onClick={() => scrollTo(n.id)} className="hover:opacity-70 transition-opacity">{n.l}</button>
               ))}
             </div>
@@ -264,6 +369,176 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* ══ PRICING CARDS ══ */}
+        <section id="planos" className="py-20 md:py-28 bg-white/50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
+                Escolha o plano{' '}
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>ideal para você</span>
+              </h2>
+              <p className="mt-3 text-lg" style={{ color: C.textL }}>
+                Comece com 3 dias grátis. Cancele quando quiser.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {plans.map((plan) => (
+                <div
+                  key={plan.slug}
+                  className={`relative rounded-3xl p-8 border-2 transition-all duration-200 ${
+                    plan.popular
+                      ? 'border-[hsl(12,76%,61%)] shadow-xl scale-[1.02]'
+                      : 'border-[hsl(20,30%,90%)] bg-white/70 hover:shadow-lg'
+                  }`}
+                  style={plan.popular ? {
+                    background: 'linear-gradient(160deg, hsl(40,60%,97%), hsl(38,80%,95%), hsl(30,70%,96%))',
+                  } : undefined}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5"
+                      style={{ background: C.grad }}>
+                      <Crown className="w-3.5 h-3.5" /> Mais Popular
+                    </div>
+                  )}
+                  <h3 className="text-xl font-extrabold" style={{ color: C.dark }}>{plan.name}</h3>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold" style={{ color: plan.popular ? C.coral : C.dark }}>
+                      R$ {plan.price}
+                    </span>
+                    <span className="text-sm font-medium" style={{ color: C.textL }}>/mês</span>
+                  </div>
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2.5 text-sm" style={{ color: C.text }}>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: plan.popular ? C.grad : 'hsl(12,76%,61%,0.12)' }}>
+                          <Check className="w-3 h-3" style={{ color: plan.popular ? '#fff' : C.coral }} />
+                        </div>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-8 space-y-3">
+                    <Button
+                      onClick={() => openCheckout(plan, 'trial')}
+                      className="w-full rounded-full py-3 font-bold text-white border-0"
+                      style={{ background: C.grad, boxShadow: plan.popular ? '0 8px 24px -4px hsl(12,76%,61%,0.4)' : undefined }}
+                    >
+                      <Clock className="w-4 h-4 mr-2" /> Teste Grátis 3 Dias
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => openCheckout(plan, 'buy')}
+                      className="w-full rounded-full py-3 font-bold border-2"
+                      style={{ borderColor: C.coral, color: C.coral }}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" /> Assinar Agora
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══ CHECKOUT MODAL ══ */}
+        {checkoutOpen && selectedPlan && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => !loading && setCheckoutOpen(false)}>
+            <div className="absolute inset-0 bg-black/50" />
+            <div
+              className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => !loading && setCheckoutOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="w-5 h-5" style={{ color: C.textL }} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-3"
+                  style={{ background: 'hsl(12,76%,61%,0.12)' }}>
+                  {checkoutMode === 'trial' ? (
+                    <Clock className="w-6 h-6" style={{ color: C.coral }} />
+                  ) : (
+                    <CreditCard className="w-6 h-6" style={{ color: C.coral }} />
+                  )}
+                </div>
+                <h3 className="text-xl font-extrabold" style={{ color: C.dark }}>
+                  {checkoutMode === 'trial' ? 'Iniciar Teste Grátis' : 'Assinar Plano'}
+                </h3>
+                <p className="text-sm mt-1" style={{ color: C.textL }}>
+                  {selectedPlan.name} — R$ {selectedPlan.price}/mês
+                  {checkoutMode === 'trial' && ' (3 dias grátis)'}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Nome completo *</label>
+                  <Input
+                    value={formData.nome}
+                    onChange={(e) => setFormData(p => ({ ...p, nome: e.target.value }))}
+                    placeholder="Seu nome"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>E-mail *</label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                    placeholder="seu@email.com"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Telefone</label>
+                  <Input
+                    value={formData.telefone}
+                    onChange={(e) => setFormData(p => ({ ...p, telefone: e.target.value }))}
+                    placeholder="(00) 00000-0000"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Nome da Clínica</label>
+                  <Input
+                    value={formData.clinica}
+                    onChange={(e) => setFormData(p => ({ ...p, clinica: e.target.value }))}
+                    placeholder="Sua clínica"
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full mt-6 rounded-full py-3 font-bold text-white border-0"
+                style={{ background: C.grad }}
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processando...</>
+                ) : checkoutMode === 'trial' ? (
+                  <>Começar Teste Grátis <ArrowRight className="w-4 h-4 ml-2" /></>
+                ) : (
+                  <>Ir para Pagamento <ArrowRight className="w-4 h-4 ml-2" /></>
+                )}
+              </Button>
+
+              <p className="text-center text-xs mt-4" style={{ color: C.textL }}>
+                {checkoutMode === 'trial'
+                  ? 'Sem cartão de crédito. Após o teste, assine para continuar.'
+                  : 'Pagamento seguro via Mercado Pago. Cancele quando quiser.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ══ TESTIMONIALS ══ */}
         <section id="depoimentos" className="py-20 md:py-28 bg-white/40">
