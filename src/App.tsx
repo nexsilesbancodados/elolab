@@ -91,6 +91,9 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/aceitar-convite" element={<AceitarConvite />} />
+                    <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+                    <Route path="/politica-cookies" element={<PoliticaCookies />} />
+                    <Route path="/termos-uso" element={<TermosUso />} />
                     <Route path="/portal-paciente" element={<PortalPaciente />} />
                     <Route path="/painel-tv" element={<SupabaseProtectedRoute><PainelTV /></SupabaseProtectedRoute>} />
 
