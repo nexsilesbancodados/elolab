@@ -465,92 +465,97 @@ export default function LandingPage() {
 
         </section>
 
-        {/* ══ FEATURE SECTIONS with Banner Strips ══ */}
+        {/* ══ FEATURE SECTIONS ══ */}
         <div id="recursos">
           {featureSections.map((f, i) => (
-            <React.Fragment key={i}>
-              {bannerStrips[i] && (
-                <div className="relative h-[180px] md:h-[220px] overflow-hidden">
-                  <img src={bannerStrips[i].img} alt={bannerStrips[i].text} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, hsl(20,25%,18%,0.7), hsl(12,76%,61%,0.4))' }} />
-                  <div className="relative z-10 flex items-center justify-center h-full px-4">
-                    <h3 className="text-xl md:text-3xl font-extrabold text-white text-center tracking-tight drop-shadow-lg">
-                      {bannerStrips[i].text}
-                    </h3>
+            <section key={i} className="py-16 md:py-24">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                  <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
+                    <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
+                  </div>
+                  <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
+                      {f.title}{' '}
+                      <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
+                    </h2>
+                    <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
+                    {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
+                    {f.checks && (
+                      <ul className="mt-6 space-y-3">
+                        {f.checks.map((c, j) => (
+                          <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
+                              <Check className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
+                      style={{ background: C.grad }}>
+                      {f.cta}
+                    </Button>
                   </div>
                 </div>
-              )}
-              <section className="py-16 md:py-24">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                    <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
-                      <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
-                    </div>
-                    <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
-                        {f.title}{' '}
-                        <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
-                      </h2>
-                      <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
-                      {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
-                      {f.checks && (
-                        <ul className="mt-6 space-y-3">
-                          {f.checks.map((c, j) => (
-                            <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
-                                <Check className="w-3.5 h-3.5 text-white" />
-                              </div>
-                              {c}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
-                        style={{ background: C.grad }}>
-                        {f.cta}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </React.Fragment>
+              </div>
+            </section>
           ))}
         </div>
 
-        {/* ══ ALL MODULES GRID ══ */}
-        <section id="modulos" className="py-20 md:py-28">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
-                Tudo que o{' '}
-                <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>EloLab</span>
-                {' '}oferece
-              </h2>
-              <p className="mt-3 text-lg" style={{ color: C.textL }}>
-                +24 módulos integrados para sua clínica funcionar com máxima eficiência
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {allModules.map((m, i) => (
-                <div key={i} className="relative group rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-200 overflow-hidden">
-                  <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
-                  <div className="h-32 overflow-hidden">
-                    <img src={m.img} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2.5 mb-2">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: 'hsl(12,76%,61%,0.1)' }}>
-                        <m.icon className="w-4 h-4" style={{ color: C.coral }} />
-                      </div>
-                      <h3 className="text-sm font-bold" style={{ color: C.dark }}>{m.title}</h3>
-                    </div>
-                    <p className="text-xs leading-relaxed" style={{ color: C.textL }}>{m.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* ══ GROUPED MODULES (4 groups × 6 cards with banner strips) ══ */}
+        <section id="modulos">
+          <div className="text-center py-16 md:py-20">
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
+              Tudo que o{' '}
+              <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>EloLab</span>
+              {' '}oferece
+            </h2>
+            <p className="mt-3 text-lg" style={{ color: C.textL }}>
+              +24 módulos integrados para sua clínica funcionar com máxima eficiência
+            </p>
           </div>
+
+          {moduleGroups.map((group, gi) => (
+            <React.Fragment key={gi}>
+              {/* Banner strip */}
+              <div className="relative h-[180px] md:h-[220px] overflow-hidden">
+                <img src={group.strip} alt={group.stripText} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, hsl(20,25%,18%,0.75), hsl(12,76%,61%,0.45))' }} />
+                <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">
+                  <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                    {group.stripText}
+                  </h3>
+                  <p className="mt-2 text-sm md:text-base text-white/80 max-w-xl">{group.subtitle}</p>
+                </div>
+              </div>
+
+              {/* 6 cards grid */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {group.modules.map((m, mi) => (
+                    <div key={mi} className="relative group rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-200 overflow-hidden">
+                      <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
+                      <div className="h-36 overflow-hidden">
+                        <img src={m.img} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      </div>
+                      <div className="p-5">
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ background: 'hsl(12,76%,61%,0.1)' }}>
+                            <m.icon className="w-4 h-4" style={{ color: C.coral }} />
+                          </div>
+                          <h3 className="text-sm font-bold" style={{ color: C.dark }}>{m.title}</h3>
+                        </div>
+                        <p className="text-xs leading-relaxed" style={{ color: C.textL }}>{m.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
         </section>
 
         {/* ══ PRICING CARDS ══ */}
