@@ -419,12 +419,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Bottom curve */}
-          <div className="absolute bottom-0 left-0 right-0 z-10">
-            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
-              <path d="M0 80V30C200 0 400 0 720 30C1040 60 1240 60 1440 30V80H0Z" fill="hsl(35,70%,95%)" />
-            </svg>
-          </div>
         </section>
 
         {/* ══ FEATURE SECTIONS (Alternating) ══ */}
