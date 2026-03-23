@@ -507,13 +507,13 @@ export function gerarProntuarioPDF(
   doc.setFontSize(16);
   doc.setTextColor(0, 102, 68);
   doc.setFont('helvetica', 'bold');
-  doc.text(CLINICA.nome, pageWidth / 2, 18, { align: 'center' });
+  doc.text(DEFAULT_CLINICA.nome, pageWidth / 2, 18, { align: 'center' });
 
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
   doc.setFont('helvetica', 'normal');
-  doc.text(CLINICA.endereco, pageWidth / 2, 24, { align: 'center' });
-  doc.text(`Tel: ${CLINICA.telefone} | CNPJ: ${CLINICA.cnpj}`, pageWidth / 2, 29, { align: 'center' });
+  doc.text(DEFAULT_CLINICA.endereco, pageWidth / 2, 24, { align: 'center' });
+  doc.text(`Tel: ${DEFAULT_CLINICA.telefone} | CNPJ: ${DEFAULT_CLINICA.cnpj}`, pageWidth / 2, 29, { align: 'center' });
 
   // Title bar
   doc.setFillColor(240, 248, 245);
@@ -734,7 +734,7 @@ export function gerarProntuarioPDF(
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} — Prontuário digital ${CLINICA.nome} — Pág. ${i}/${totalPages}`,
+      `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} — Prontuário digital ${DEFAULT_CLINICA.nome} — Pág. ${i}/${totalPages}`,
       pageWidth / 2,
       pageHeight - 6,
       { align: 'center' }
@@ -832,7 +832,7 @@ export function sharePDFWhatsApp(doc: jsPDF, filename: string, telefone?: string
 
   // Build WhatsApp message
   const msg = encodeURIComponent(
-    `📋 *Prontuário Digital - ${CLINICA.nome}*\n\nOlá! Segue em anexo o prontuário do atendimento.\n\n_Documento gerado digitalmente pelo sistema EloLab._`
+    `📋 *Prontuário Digital - ${DEFAULT_CLINICA.nome}*\n\nOlá! Segue em anexo o prontuário do atendimento.\n\n_Documento gerado digitalmente pelo sistema EloLab._`
   );
 
   const phone = telefone?.replace(/\D/g, '') || '';
