@@ -22,16 +22,18 @@ import landingOnline from '@/assets/landing-online.webp';
 import landingEhr from '@/assets/landing-ehr.webp';
 import landingFinancial from '@/assets/landing-financial.webp';
 import landingSupport from '@/assets/landing-support.webp';
-import bannerClinic from '@/assets/banner-clinic.webp';
-import bannerTech from '@/assets/banner-tech.webp';
-import bannerLab from '@/assets/banner-lab.webp';
-import bannerFinance from '@/assets/banner-finance.webp';
-import cardAgenda from '@/assets/card-agenda.webp';
-import cardProntuario from '@/assets/card-prontuario.webp';
-import cardFinanceiro from '@/assets/card-financeiro.webp';
-import cardWhatsapp from '@/assets/card-whatsapp.webp';
-import cardLab from '@/assets/card-lab.webp';
-import cardPacientes from '@/assets/card-pacientes.webp';
+import stripClinica from '@/assets/strip-clinica.webp';
+import stripLab from '@/assets/strip-laboratorio.webp';
+import stripComunica from '@/assets/strip-comunicacao.webp';
+import stripFinanc from '@/assets/strip-financeiro.webp';
+import modClinica1 from '@/assets/mod-clinica1.webp';
+import modClinica2 from '@/assets/mod-clinica2.webp';
+import modLab1 from '@/assets/mod-lab1.webp';
+import modLab2 from '@/assets/mod-lab2.webp';
+import modComunica1 from '@/assets/mod-comunica1.webp';
+import modComunica2 from '@/assets/mod-comunica2.webp';
+import modFinanc1 from '@/assets/mod-financ1.webp';
+import modFinanc2 from '@/assets/mod-financ2.webp';
 
 /* ─── Colors ─── */
 const C = {
@@ -42,40 +44,64 @@ const C = {
   textL: 'hsl(20,10%,50%)',
 };
 
-/* ─── All modules data ─── */
-const allModules = [
-  { icon: Calendar, title: 'Agenda Inteligente', desc: 'Agendamento com confirmação automática, bloqueios, retornos e painel TV.', img: cardAgenda },
-  { icon: FileText, title: 'Prontuário Eletrônico', desc: 'PEP com assinatura digital ICP-Brasil, timeline, CID-10 e exportação HL7 FHIR.', img: cardProntuario },
-  { icon: Receipt, title: 'Financeiro Completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios.', img: cardFinanceiro },
-  { icon: MessageSquare, title: 'WhatsApp IA', desc: 'Agente inteligente para agendamentos automáticos, lembretes e atendimento 24h.', img: cardWhatsapp },
-  { icon: FlaskConical, title: 'Laboratório', desc: 'Worklist de coletas, laudos digitais, mapa de coleta e rastreabilidade.', img: cardLab },
-  { icon: Users, title: 'Gestão de Pacientes', desc: 'Cadastro completo, lista de espera, convênios e portal do paciente.', img: cardPacientes },
-  { icon: Stethoscope, title: 'Módulo Clínico', desc: 'Prescrições, atestados, encaminhamentos e verificador de interações.', img: cardProntuario },
-  { icon: HeartPulse, title: 'Triagem Manchester', desc: 'Classificação de risco integrada à fila de atendimento com priorização.', img: cardPacientes },
-  { icon: Pill, title: 'Prescrições Digitais', desc: 'Prescrição com QR Code, baixa automática de estoque e dispensação.', img: cardLab },
-  { icon: ClipboardList, title: 'Encaminhamentos', desc: 'Ciclo completo de encaminhamento com contra-referência e rastreio.', img: cardProntuario },
-  { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.', img: cardLab },
-  { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.', img: cardAgenda },
-  { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.', img: cardPacientes },
-  { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.', img: cardWhatsapp },
-  { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.', img: cardFinanceiro },
-  { icon: CreditCard, title: 'Pagamentos Online', desc: 'Assinaturas via Mercado Pago com trial, bloqueio por inadimplência.', img: cardFinanceiro },
-  { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.', img: cardPacientes },
-  { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.', img: cardProntuario },
-  { icon: Microscope, title: 'Exames & Laudos', desc: 'Do pedido ao laudo com faturamento automático ao liberar resultados.', img: cardLab },
-  { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.', img: cardPacientes },
-  { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.', img: cardLab },
-  { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.', img: cardWhatsapp },
-  { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.', img: cardProntuario },
-  { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.', img: cardFinanceiro },
-];
-
-/* Banner strips between sections */
-const bannerStrips = [
-  { img: bannerClinic, text: 'Gestão completa para clínicas modernas' },
-  { img: bannerTech, text: 'Tecnologia a serviço da saúde' },
-  { img: bannerLab, text: 'Laboratório integrado e rastreável' },
-  { img: bannerFinance, text: 'Controle financeiro total' },
+/* ─── Grouped modules (4 groups × 6 cards) ─── */
+const moduleGroups = [
+  {
+    title: 'Gestão Clínica',
+    subtitle: 'Ferramentas essenciais para o atendimento médico do dia a dia',
+    strip: stripClinica,
+    stripText: 'Gestão Clínica Inteligente',
+    modules: [
+      { icon: Calendar, title: 'Agenda Inteligente', desc: 'Agendamento com confirmação automática, bloqueios, retornos e painel TV.', img: modClinica1 },
+      { icon: FileText, title: 'Prontuário Eletrônico', desc: 'PEP com assinatura digital ICP-Brasil, timeline, CID-10 e exportação HL7 FHIR.', img: modClinica2 },
+      { icon: Stethoscope, title: 'Módulo Clínico', desc: 'Prescrições, atestados, encaminhamentos e verificador de interações.', img: modClinica1 },
+      { icon: HeartPulse, title: 'Triagem Manchester', desc: 'Classificação de risco integrada à fila de atendimento com priorização.', img: modClinica2 },
+      { icon: Pill, title: 'Prescrições Digitais', desc: 'Prescrição com QR Code, baixa automática de estoque e dispensação.', img: modClinica1 },
+      { icon: ClipboardList, title: 'Encaminhamentos', desc: 'Ciclo completo de encaminhamento com contra-referência e rastreio.', img: modClinica2 },
+    ],
+  },
+  {
+    title: 'Laboratório e Diagnóstico',
+    subtitle: 'Do pedido ao laudo, com rastreabilidade completa',
+    strip: stripLab,
+    stripText: 'Laboratório Integrado',
+    modules: [
+      { icon: FlaskConical, title: 'Laboratório', desc: 'Worklist de coletas, laudos digitais, mapa de coleta e rastreabilidade.', img: modLab1 },
+      { icon: Microscope, title: 'Exames & Laudos', desc: 'Do pedido ao laudo com faturamento automático ao liberar resultados.', img: modLab2 },
+      { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.', img: modLab1 },
+      { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.', img: modLab2 },
+      { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.', img: modLab1 },
+      { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.', img: modLab2 },
+    ],
+  },
+  {
+    title: 'Comunicação e Pacientes',
+    subtitle: 'Engaje pacientes e automatize a comunicação da clínica',
+    strip: stripComunica,
+    stripText: 'Comunicação e Atendimento',
+    modules: [
+      { icon: MessageSquare, title: 'WhatsApp IA', desc: 'Agente inteligente para agendamentos automáticos, lembretes e atendimento 24h.', img: modComunica1 },
+      { icon: Users, title: 'Gestão de Pacientes', desc: 'Cadastro completo, lista de espera, convênios e portal do paciente.', img: modComunica2 },
+      { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.', img: modComunica1 },
+      { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.', img: modComunica2 },
+      { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.', img: modComunica1 },
+      { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.', img: modComunica2 },
+    ],
+  },
+  {
+    title: 'Financeiro e Gestão',
+    subtitle: 'Controle total das finanças, equipe e segurança da clínica',
+    strip: stripFinanc,
+    stripText: 'Financeiro e Administração',
+    modules: [
+      { icon: Receipt, title: 'Financeiro Completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios.', img: modFinanc1 },
+      { icon: CreditCard, title: 'Pagamentos Online', desc: 'Assinaturas via Mercado Pago com trial, bloqueio por inadimplência.', img: modFinanc2 },
+      { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.', img: modFinanc1 },
+      { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.', img: modFinanc2 },
+      { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.', img: modFinanc1 },
+      { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.', img: modFinanc2 },
+    ],
+  },
 ];
 
 const featureSections = [
