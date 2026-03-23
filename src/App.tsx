@@ -55,6 +55,7 @@ import TiposConsulta from "@/pages/TiposConsulta";
 import Recepcao from "@/pages/Recepcao";
 import Auth from "@/pages/Auth";
 import AceitarConvite from "@/pages/AceitarConvite";
+import LandingPage from "@/pages/LandingPage";
 import PainelTV from "@/pages/PainelTV";
 import PortalPaciente from "@/pages/PortalPaciente";
 import NotFound from "@/pages/NotFound";
@@ -87,7 +88,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
               <SupabaseAuthProvider>
                 <NotificationBanner />
                 <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/aceitar-convite" element={<AceitarConvite />} />
