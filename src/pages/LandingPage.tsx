@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 import elolabLogo from '@/assets/elolab-logo.png';
 import landingHero from '@/assets/landing-hero.webp';
 import landingEfficiency from '@/assets/landing-efficiency.webp';
@@ -357,7 +358,8 @@ export default function LandingPage() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {allModules.map((m, i) => (
-                <div key={i} className="group p-5 rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:border-[hsl(12,76%,61%,0.3)] hover:shadow-md transition-all duration-200">
+                <div key={i} className="relative group p-5 rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-md transition-all duration-200">
+                  <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors"
                     style={{ background: 'hsl(12,76%,61%,0.1)' }}>
                     <m.icon className="w-5 h-5" style={{ color: C.coral }} />
@@ -395,6 +397,7 @@ export default function LandingPage() {
                     background: 'linear-gradient(160deg, hsl(40,60%,97%), hsl(38,80%,95%), hsl(30,70%,96%))',
                   } : undefined}
                 >
+                  <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5"
                       style={{ background: C.grad }}>
