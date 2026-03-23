@@ -358,7 +358,8 @@ export default function LandingPage() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {allModules.map((m, i) => (
-                <div key={i} className="group p-5 rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:border-[hsl(12,76%,61%,0.3)] hover:shadow-md transition-all duration-200">
+                <div key={i} className="relative group p-5 rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-md transition-all duration-200">
+                  <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors"
                     style={{ background: 'hsl(12,76%,61%,0.1)' }}>
                     <m.icon className="w-5 h-5" style={{ color: C.coral }} />
