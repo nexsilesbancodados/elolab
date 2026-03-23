@@ -759,26 +759,55 @@ export default function LandingPage() {
           </div>
         )}
 
-        {/* ══ TESTIMONIALS ══ */}
-        <section id="depoimentos" className="py-20 md:py-28">
+        {/* ══ TESTIMONIALS CAROUSEL ══ */}
+        <section id="depoimentos" className="py-20 md:py-28 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
                 O que estão falando sobre o{' '}
                 <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>EloLab?</span>
               </h2>
+              <p className="mt-3 text-lg" style={{ color: C.textL }}>Mais de 500 profissionais de saúde confiam no EloLab</p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {testimonials.map((t, i) => (
-                <div key={i} className="bg-white/80 rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-md transition-shadow duration-200">
-                  <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.textL }}>{t.clinic}</p>
-                  <div className="flex gap-0.5 mt-3">
-                    {[1,2,3,4,5].map(j => (
-                      <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />
-                    ))}
+          </div>
+
+          {/* Row 1 - scrolls left */}
+          <div className="relative mb-5">
+            <div className="flex gap-5 animate-[scrollLeft_60s_linear_infinite] w-max">
+              {[...testimonials, ...testimonials].map((t, i) => (
+                <div key={`r1-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
+                      <p className="text-xs" style={{ color: C.textL }}>{t.clinic}</p>
+                    </div>
                   </div>
-                  <p className="text-sm leading-relaxed mt-4" style={{ color: C.text }}>"{t.text}"</p>
+                  <div className="flex gap-0.5 mb-3">
+                    {[1,2,3,4,5].map(j => <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />)}
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.text }}>"{t.text}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - scrolls right */}
+          <div className="relative">
+            <div className="flex gap-5 animate-[scrollRight_55s_linear_infinite] w-max">
+              {[...testimonials.slice(10), ...testimonials.slice(0, 10), ...testimonials.slice(10), ...testimonials.slice(0, 10)].map((t, i) => (
+                <div key={`r2-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: C.dark }}>{t.name}</p>
+                      <p className="text-xs" style={{ color: C.textL }}>{t.clinic}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-0.5 mb-3">
+                    {[1,2,3,4,5].map(j => <Star key={j} className="w-4 h-4 fill-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)]" />)}
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.text }}>"{t.text}"</p>
                 </div>
               ))}
             </div>
