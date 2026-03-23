@@ -58,7 +58,10 @@ import AceitarConvite from "@/pages/AceitarConvite";
 import PainelTV from "@/pages/PainelTV";
 import PortalPaciente from "@/pages/PortalPaciente";
 import NotFound from "@/pages/NotFound";
-
+import PoliticaPrivacidade from "@/pages/PoliticaPrivacidade";
+import PoliticaCookies from "@/pages/PoliticaCookies";
+import TermosUso from "@/pages/TermosUso";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +91,9 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/aceitar-convite" element={<AceitarConvite />} />
+                    <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+                    <Route path="/politica-cookies" element={<PoliticaCookies />} />
+                    <Route path="/termos-uso" element={<TermosUso />} />
                     <Route path="/portal-paciente" element={<PortalPaciente />} />
                     <Route path="/painel-tv" element={<SupabaseProtectedRoute><PainelTV /></SupabaseProtectedRoute>} />
 
@@ -156,6 +162,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 <InstallPWA />
+                <CookieConsent />
               </SupabaseAuthProvider>
             </BrowserRouter>
           </TooltipProvider>
