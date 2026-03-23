@@ -98,10 +98,10 @@ const moduleGroups = [
     modules: [
       { icon: MessageSquare, title: 'WhatsApp IA', desc: 'Agente inteligente para agendamentos automáticos, lembretes e atendimento 24h.', img: modComunica1 },
       { icon: Users, title: 'Gestão de Pacientes', desc: 'Cadastro completo, lista de espera, convênios e portal do paciente.', img: modComunica2 },
-      { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.', img: modComunica1 },
-      { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.', img: modComunica2 },
-      { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.', img: modComunica1 },
-      { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.', img: modComunica2 },
+      { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.', img: modComunica3 },
+      { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.', img: modComunica4 },
+      { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.', img: modComunica5 },
+      { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.', img: modComunica6 },
     ],
   },
   {
