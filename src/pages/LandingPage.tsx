@@ -334,7 +334,7 @@ export default function LandingPage() {
             </div>
             <div className="hidden md:flex items-center gap-3">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/5511937687369"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="block w-full text-left py-3 text-sm font-bold tracking-wide" style={{ color: C.dark }}>{l}</button>
               ))}
               <div className="pt-3 flex flex-col gap-2">
-                <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold text-white" style={{ background: '#25D366' }}>
                   <Phone className="w-4 h-4" /> CHAMAR
                 </a>
@@ -858,7 +858,7 @@ export default function LandingPage() {
                 <h4 className="font-bold text-sm text-white mb-4">Contato</h4>
                 <ul className="space-y-2 text-sm text-white/50">
                   <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> suporte@elolab.com.br</li>
-                  <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> (11) 9999-9999</li>
+                  <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> (11) 93768-7369</li>
                 </ul>
               </div>
             </div>
