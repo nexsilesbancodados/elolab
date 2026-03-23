@@ -142,7 +142,17 @@ export default function Recepcao() {
       if (!profile?.id) return false;
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       
-      // First check current user's caixa
+      // 1. Check localStorage first (instant, most reliable)
+      const localKey = `caixa_estado_${profile.id}`;
+      const local = localStorage.getItem(localKey);
+      if (local) {
+        try {
+          const estado = JSON.parse(local);
+          if (estado.data === todayStr && estado.aberto === true) return true;
+        } catch { /* ignore */ }
+      }
+      
+      // 2. Check current user's caixa in Supabase
       const { data: own } = await supabase
         .from('configuracoes_clinica')
         .select('valor')
@@ -151,10 +161,13 @@ export default function Recepcao() {
         .maybeSingle();
       if (own?.valor) {
         const estado = own.valor as any;
-        if (estado.data === todayStr && estado.aberto === true) return true;
+        if (estado.data === todayStr && estado.aberto === true) {
+          localStorage.setItem(localKey, JSON.stringify(estado));
+          return true;
+        }
       }
       
-      // Fallback: check if any colleague has caixa open today
+      // 3. Fallback: check if any colleague has caixa open today
       const { data: all } = await supabase
         .from('configuracoes_clinica')
         .select('valor')
@@ -169,7 +182,7 @@ export default function Recepcao() {
       return false;
     },
     enabled: !!profile?.id,
-    refetchInterval: 15000, // Re-check every 15s
+    refetchInterval: 10000,
   });
 
   function checkCaixaAberto(): boolean {
