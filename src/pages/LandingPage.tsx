@@ -439,42 +439,55 @@ export default function LandingPage() {
 
         </section>
 
-        {/* ══ FEATURE SECTIONS (Alternating) ══ */}
+        {/* ══ FEATURE SECTIONS with Banner Strips ══ */}
         <div id="recursos">
           {featureSections.map((f, i) => (
-            <section key={i} className="py-16 md:py-24">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                  <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
-                    <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
-                  </div>
-                  <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
-                      {f.title}{' '}
-                      <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
-                    </h2>
-                    <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
-                    {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
-                    {f.checks && (
-                      <ul className="mt-6 space-y-3">
-                        {f.checks.map((c, j) => (
-                          <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
-                              <Check className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            {c}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
-                      style={{ background: C.grad }}>
-                      {f.cta}
-                    </Button>
+            <React.Fragment key={i}>
+              {bannerStrips[i] && (
+                <div className="relative h-[180px] md:h-[220px] overflow-hidden">
+                  <img src={bannerStrips[i].img} alt={bannerStrips[i].text} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, hsl(20,25%,18%,0.7), hsl(12,76%,61%,0.4))' }} />
+                  <div className="relative z-10 flex items-center justify-center h-full px-4">
+                    <h3 className="text-xl md:text-3xl font-extrabold text-white text-center tracking-tight drop-shadow-lg">
+                      {bannerStrips[i].text}
+                    </h3>
                   </div>
                 </div>
-              </div>
-            </section>
+              )}
+              <section className="py-16 md:py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                    <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
+                      <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
+                    </div>
+                    <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
+                        {f.title}{' '}
+                        <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
+                      </h2>
+                      <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
+                      {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
+                      {f.checks && (
+                        <ul className="mt-6 space-y-3">
+                          {f.checks.map((c, j) => (
+                            <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
+                                <Check className="w-3.5 h-3.5 text-white" />
+                              </div>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
+                        style={{ background: C.grad }}>
+                        {f.cta}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </React.Fragment>
           ))}
         </div>
 
