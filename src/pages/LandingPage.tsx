@@ -22,6 +22,16 @@ import landingOnline from '@/assets/landing-online.webp';
 import landingEhr from '@/assets/landing-ehr.webp';
 import landingFinancial from '@/assets/landing-financial.webp';
 import landingSupport from '@/assets/landing-support.webp';
+import bannerClinic from '@/assets/banner-clinic.webp';
+import bannerTech from '@/assets/banner-tech.webp';
+import bannerLab from '@/assets/banner-lab.webp';
+import bannerFinance from '@/assets/banner-finance.webp';
+import cardAgenda from '@/assets/card-agenda.webp';
+import cardProntuario from '@/assets/card-prontuario.webp';
+import cardFinanceiro from '@/assets/card-financeiro.webp';
+import cardWhatsapp from '@/assets/card-whatsapp.webp';
+import cardLab from '@/assets/card-lab.webp';
+import cardPacientes from '@/assets/card-pacientes.webp';
 
 /* ─── Colors ─── */
 const C = {
