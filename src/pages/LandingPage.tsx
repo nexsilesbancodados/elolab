@@ -334,7 +334,7 @@ export default function LandingPage() {
             </div>
             <div className="hidden md:flex items-center gap-3">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/5511937687369"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
