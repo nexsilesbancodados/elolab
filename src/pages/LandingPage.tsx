@@ -370,6 +370,176 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ══ PRICING CARDS ══ */}
+        <section id="planos" className="py-20 md:py-28 bg-white/50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
+                Escolha o plano{' '}
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>ideal para você</span>
+              </h2>
+              <p className="mt-3 text-lg" style={{ color: C.textL }}>
+                Comece com 3 dias grátis. Cancele quando quiser.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {plans.map((plan) => (
+                <div
+                  key={plan.slug}
+                  className={`relative rounded-3xl p-8 border-2 transition-all duration-200 ${
+                    plan.popular
+                      ? 'border-[hsl(12,76%,61%)] shadow-xl scale-[1.02]'
+                      : 'border-[hsl(20,30%,90%)] bg-white/70 hover:shadow-lg'
+                  }`}
+                  style={plan.popular ? {
+                    background: 'linear-gradient(160deg, hsl(40,60%,97%), hsl(38,80%,95%), hsl(30,70%,96%))',
+                  } : undefined}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5"
+                      style={{ background: C.grad }}>
+                      <Crown className="w-3.5 h-3.5" /> Mais Popular
+                    </div>
+                  )}
+                  <h3 className="text-xl font-extrabold" style={{ color: C.dark }}>{plan.name}</h3>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold" style={{ color: plan.popular ? C.coral : C.dark }}>
+                      R$ {plan.price}
+                    </span>
+                    <span className="text-sm font-medium" style={{ color: C.textL }}>/mês</span>
+                  </div>
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2.5 text-sm" style={{ color: C.text }}>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: plan.popular ? C.grad : 'hsl(12,76%,61%,0.12)' }}>
+                          <Check className="w-3 h-3" style={{ color: plan.popular ? '#fff' : C.coral }} />
+                        </div>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-8 space-y-3">
+                    <Button
+                      onClick={() => openCheckout(plan, 'trial')}
+                      className="w-full rounded-full py-3 font-bold text-white border-0"
+                      style={{ background: C.grad, boxShadow: plan.popular ? '0 8px 24px -4px hsl(12,76%,61%,0.4)' : undefined }}
+                    >
+                      <Clock className="w-4 h-4 mr-2" /> Teste Grátis 3 Dias
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => openCheckout(plan, 'buy')}
+                      className="w-full rounded-full py-3 font-bold border-2"
+                      style={{ borderColor: C.coral, color: C.coral }}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" /> Assinar Agora
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══ CHECKOUT MODAL ══ */}
+        {checkoutOpen && selectedPlan && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => !loading && setCheckoutOpen(false)}>
+            <div className="absolute inset-0 bg-black/50" />
+            <div
+              className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => !loading && setCheckoutOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="w-5 h-5" style={{ color: C.textL }} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-3"
+                  style={{ background: 'hsl(12,76%,61%,0.12)' }}>
+                  {checkoutMode === 'trial' ? (
+                    <Clock className="w-6 h-6" style={{ color: C.coral }} />
+                  ) : (
+                    <CreditCard className="w-6 h-6" style={{ color: C.coral }} />
+                  )}
+                </div>
+                <h3 className="text-xl font-extrabold" style={{ color: C.dark }}>
+                  {checkoutMode === 'trial' ? 'Iniciar Teste Grátis' : 'Assinar Plano'}
+                </h3>
+                <p className="text-sm mt-1" style={{ color: C.textL }}>
+                  {selectedPlan.name} — R$ {selectedPlan.price}/mês
+                  {checkoutMode === 'trial' && ' (3 dias grátis)'}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Nome completo *</label>
+                  <Input
+                    value={formData.nome}
+                    onChange={(e) => setFormData(p => ({ ...p, nome: e.target.value }))}
+                    placeholder="Seu nome"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>E-mail *</label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                    placeholder="seu@email.com"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Telefone</label>
+                  <Input
+                    value={formData.telefone}
+                    onChange={(e) => setFormData(p => ({ ...p, telefone: e.target.value }))}
+                    placeholder="(00) 00000-0000"
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.text }}>Nome da Clínica</label>
+                  <Input
+                    value={formData.clinica}
+                    onChange={(e) => setFormData(p => ({ ...p, clinica: e.target.value }))}
+                    placeholder="Sua clínica"
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full mt-6 rounded-full py-3 font-bold text-white border-0"
+                style={{ background: C.grad }}
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processando...</>
+                ) : checkoutMode === 'trial' ? (
+                  <>Começar Teste Grátis <ArrowRight className="w-4 h-4 ml-2" /></>
+                ) : (
+                  <>Ir para Pagamento <ArrowRight className="w-4 h-4 ml-2" /></>
+                )}
+              </Button>
+
+              <p className="text-center text-xs mt-4" style={{ color: C.textL }}>
+                {checkoutMode === 'trial'
+                  ? 'Sem cartão de crédito. Após o teste, assine para continuar.'
+                  : 'Pagamento seguro via Mercado Pago. Cancele quando quiser.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ══ TESTIMONIALS ══ */}
         <section id="depoimentos" className="py-20 md:py-28 bg-white/40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
