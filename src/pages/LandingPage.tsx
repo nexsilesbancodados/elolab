@@ -297,38 +297,133 @@ export default function LandingPage() {
         </nav>
 
         {/* ══ HERO ══ */}
-        <section className="relative pt-28 md:pt-36 pb-16 md:pb-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative pt-[72px] overflow-hidden" id="inicio">
+          {/* Blue curved background */}
+          <div className="absolute inset-0 z-0" style={{
+            background: 'linear-gradient(135deg, hsl(210,70%,35%) 0%, hsl(215,75%,30%) 50%, hsl(220,65%,25%) 100%)',
+            clipPath: 'ellipse(85% 100% at 30% 0%)',
+          }} />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 lg:py-36">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+              {/* Left: Text */}
               <div className="animate-fade-in">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6"
-                  style={{ background: 'hsl(12,76%,61%,0.12)', color: C.coral }}>
-                  <Zap className="w-3.5 h-3.5" /> O melhor
-                </span>
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.08] tracking-tight" style={{ color: C.dark }}>
-                  sistema de gestão{' '}
-                  <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>para sua clínica.</span>
+                <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-light leading-[1.15] tracking-tight text-white">
+                  O melhor<br />
+                  <span className="font-extrabold">sistema de gestão</span><br />
+                  para sua clínica.
                 </h1>
-                <p className="mt-6 text-lg max-w-lg leading-relaxed" style={{ color: C.textL }}>
-                  Agenda, prontuário, financeiro, laboratório, WhatsApp IA, triagem, estoque e muito mais.{' '}
-                  <strong style={{ color: C.dark }}>Tudo em um único sistema.</strong>
-                </p>
                 <div className="mt-10">
-                  <Button size="xl" onClick={() => navigate('/auth')} className="rounded-full px-10 text-base font-bold text-white border-0"
-                    style={{ background: C.grad, boxShadow: '0 10px 30px -5px hsl(12,76%,61%,0.35)' }}>
+                  <Button
+                    onClick={() => scrollTo('planos')}
+                    className="rounded-lg px-8 py-3.5 text-sm font-bold border-2 border-white bg-white hover:bg-white/90 transition-colors"
+                    style={{ color: 'hsl(215,75%,30%)' }}
+                  >
                     Quero começar agora
                   </Button>
                 </div>
-                <div className="mt-6 flex items-center gap-5 text-xs font-medium" style={{ color: C.textL }}>
+                <div className="mt-6 flex items-center gap-5 text-xs font-medium text-white/70">
                   <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> LGPD</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 3 dias grátis</span>
                   <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> 100% seguro</span>
                 </div>
               </div>
-              <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                <img src={landingHero} alt="EloLab Dashboard" className="w-full max-w-[540px] rounded-3xl shadow-2xl" loading="eager" />
+
+              {/* Right: Floating mockups */}
+              <div className="flex items-end justify-center lg:justify-end gap-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                {/* Desktop mockup */}
+                <div className="relative" style={{ animation: 'heroFloat 4s ease-in-out infinite' }}>
+                  <div className="w-[320px] md:w-[380px] rounded-xl overflow-hidden shadow-2xl border border-white/10">
+                    {/* Title bar */}
+                    <div className="h-8 bg-gray-200 flex items-center px-3 gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                      <span className="ml-3 text-[10px] text-gray-500 font-medium">EloLab — Dashboard</span>
+                    </div>
+                    {/* Screen */}
+                    <div className="bg-white p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: C.grad }}>
+                          <BarChart3 className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold" style={{ color: C.dark }}>Painel</p>
+                          <p className="text-[8px]" style={{ color: C.textL }}>Hoje, 23 Mar 2026</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {[
+                          { label: 'Agendamentos', val: '55', icon: Calendar },
+                          { label: 'Pacientes', val: '248', icon: Users },
+                          { label: 'Receita', val: 'R$ 29.9k', icon: Receipt },
+                        ].map((s, i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-2 text-center">
+                            <s.icon className="w-3 h-3 mx-auto mb-1" style={{ color: C.coral }} />
+                            <p className="text-xs font-extrabold" style={{ color: C.dark }}>{s.val}</p>
+                            <p className="text-[7px]" style={{ color: C.textL }}>{s.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="h-16 rounded-lg bg-gradient-to-r from-blue-50 to-teal-50 flex items-center justify-center">
+                        <div className="flex items-end gap-1">
+                          {[30, 50, 35, 60, 45, 70, 55].map((h, i) => (
+                            <div key={i} className="w-4 rounded-t" style={{ height: `${h * 0.6}px`, background: i === 5 ? C.coral : 'hsl(210,60%,85%)' }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Desktop stand */}
+                  <div className="mx-auto w-20 h-5 bg-gray-300 rounded-b-lg" />
+                  <div className="mx-auto w-32 h-2 bg-gray-200 rounded-b-lg" />
+                </div>
+
+                {/* Phone mockup */}
+                <div className="relative -mb-4" style={{ animation: 'heroFloat 4s ease-in-out infinite 1s' }}>
+                  <div className="w-[140px] md:w-[160px] rounded-[24px] overflow-hidden shadow-2xl border-4 border-gray-800 bg-gray-800">
+                    {/* Notch */}
+                    <div className="h-5 bg-gray-800 flex justify-center">
+                      <div className="w-16 h-3 bg-gray-900 rounded-b-xl" />
+                    </div>
+                    {/* Screen */}
+                    <div className="bg-white p-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: C.grad }}>
+                          <Calendar className="w-2.5 h-2.5 text-white" />
+                        </div>
+                        <p className="text-[8px] font-bold" style={{ color: C.dark }}>Agenda</p>
+                      </div>
+                      {[
+                        { time: '08:00', name: 'Maria Silva', type: 'Consulta' },
+                        { time: '09:30', name: 'João Costa', type: 'Retorno' },
+                        { time: '10:00', name: 'Ana Lima', type: 'Exame' },
+                        { time: '11:00', name: 'Pedro Santos', type: 'Consulta' },
+                      ].map((a, i) => (
+                        <div key={i} className="flex items-center gap-1.5 py-1.5 border-b border-gray-50 last:border-0">
+                          <span className="text-[7px] font-mono font-bold w-7 shrink-0" style={{ color: C.coral }}>{a.time}</span>
+                          <div className="min-w-0">
+                            <p className="text-[7px] font-bold truncate" style={{ color: C.dark }}>{a.name}</p>
+                            <p className="text-[6px]" style={{ color: C.textL }}>{a.type}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Home bar */}
+                    <div className="h-4 bg-gray-800 flex justify-center items-center">
+                      <div className="w-10 h-1 bg-gray-600 rounded-full" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Bottom curve */}
+          <div className="absolute bottom-0 left-0 right-0 z-10">
+            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
+              <path d="M0 80V30C200 0 400 0 720 30C1040 60 1240 60 1440 30V80H0Z" fill="hsl(35,70%,95%)" />
+            </svg>
           </div>
         </section>
 
