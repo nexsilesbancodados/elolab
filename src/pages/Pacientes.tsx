@@ -83,7 +83,6 @@ const SEXO_OPTIONS = [
   { value: 'M', label: 'Masculino' },
   { value: 'F', label: 'Feminino' },
   { value: 'O', label: 'Outro' },
-  { value: 'outro', label: 'Outro' },
 ];
 
 const ESTADO_CIVIL_OPTIONS = [
@@ -579,7 +578,7 @@ export default function Pacientes() {
         bairro: formData.bairro || null,
         cidade: formData.cidade || null,
         estado: formData.estado || null,
-        convenio_id: formData.convenio_id && formData.convenio_id !== '' && formData.convenio_id !== 'none' ? formData.convenio_id : null,
+        convenio_id: formData.convenio_id && formData.convenio_id !== '' && formData.convenio_id !== 'none' && formData.convenio_id !== 'pending' ? formData.convenio_id : null,
         numero_carteira: formData.numero_carteira || null,
         validade_carteira: formData.validade_carteira || null,
         alergias: formData.alergias,
@@ -1000,8 +999,8 @@ export default function Pacientes() {
                       size="sm"
                       variant={formData.convenio_id ? 'default' : 'outline'}
                       onClick={() => {
-                        if (!formData.convenio_id && convenios.length > 0) {
-                          setFormData({ ...formData, convenio_id: (convenios[0] as any).id });
+                        if (!formData.convenio_id) {
+                          setFormData({ ...formData, convenio_id: convenios.length > 0 ? (convenios[0] as any).id : 'pending' });
                         }
                       }}
                     >
