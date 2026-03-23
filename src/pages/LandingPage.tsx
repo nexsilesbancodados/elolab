@@ -419,18 +419,12 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Bottom curve */}
-          <div className="absolute bottom-0 left-0 right-0 z-10">
-            <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
-              <path d="M0 80V30C200 0 400 0 720 30C1040 60 1240 60 1440 30V80H0Z" fill="hsl(35,70%,95%)" />
-            </svg>
-          </div>
         </section>
 
         {/* ══ FEATURE SECTIONS (Alternating) ══ */}
         <div id="recursos">
           {featureSections.map((f, i) => (
-            <section key={i} className={`py-16 md:py-24 ${i % 2 === 1 ? 'bg-white/50' : 'bg-white/30'}`}>
+            <section key={i} className="py-16 md:py-24">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                   <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
@@ -467,7 +461,7 @@ export default function LandingPage() {
         </div>
 
         {/* ══ ALL MODULES GRID ══ */}
-        <section id="modulos" className="py-20 md:py-28 bg-white/60">
+        <section id="modulos" className="py-20 md:py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
@@ -496,7 +490,7 @@ export default function LandingPage() {
         </section>
 
         {/* ══ PRICING CARDS ══ */}
-        <section id="planos" className="py-20 md:py-28 bg-white/50">
+        <section id="planos" className="py-20 md:py-28">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
@@ -667,7 +661,7 @@ export default function LandingPage() {
         )}
 
         {/* ══ TESTIMONIALS ══ */}
-        <section id="depoimentos" className="py-20 md:py-28 bg-white/40">
+        <section id="depoimentos" className="py-20 md:py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
@@ -693,7 +687,7 @@ export default function LandingPage() {
         </section>
 
         {/* ══ FINAL CTA ══ */}
-        <section className="py-20 md:py-28 bg-white/50">
+        <section className="py-20 md:py-28">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
               Pronto para transformar sua clínica?
