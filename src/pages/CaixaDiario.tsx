@@ -78,10 +78,28 @@ export default function CaixaDiario() {
   const [motivoEstorno, setMotivoEstorno] = useState('');
   const [valorAbertura, setValorAbertura] = useState(0);
 
-  // Load caixa state from Supabase
+  const caixaLocalKey = profile ? `caixa_estado_${profile.id}` : '';
+
+  // Load caixa state: localStorage first (instant), then Supabase as fallback
   useEffect(() => {
-    if (!profile) return;
-    const loadCaixaState = async () => {
+    if (!profile || !caixaLocalKey) return;
+    const hoje = format(new Date(), 'yyyy-MM-dd');
+
+    // 1. Check localStorage (instant, survives page reload)
+    const local = localStorage.getItem(caixaLocalKey);
+    if (local) {
+      try {
+        const estado = JSON.parse(local);
+        if (estado.data === hoje && estado.aberto) {
+          setCaixaAberto(true);
+          setValorAbertura(estado.valorAbertura || 0);
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+
+    // 2. Fallback: Supabase
+    const loadFromDB = async () => {
       const { data } = await supabase
         .from('configuracoes_clinica')
         .select('valor')
@@ -90,14 +108,15 @@ export default function CaixaDiario() {
         .maybeSingle();
       if (data?.valor) {
         const estado = data.valor as any;
-        if (estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto) {
+        if (estado.data === hoje && estado.aberto) {
           setCaixaAberto(true);
           setValorAbertura(estado.valorAbertura || 0);
+          localStorage.setItem(caixaLocalKey, JSON.stringify(estado));
         }
       }
     };
-    loadCaixaState();
-  }, [profile]);
+    loadFromDB();
+  }, [profile, caixaLocalKey]);
   const [showAbertura, setShowAbertura] = useState(false);
   const [baixaForm, setBaixaForm] = useState<BaixaForm>({
     forma_pagamento: 'dinheiro',
