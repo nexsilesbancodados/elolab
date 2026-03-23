@@ -84,10 +84,10 @@ const moduleGroups = [
     modules: [
       { icon: FlaskConical, title: 'Laboratório', desc: 'Worklist de coletas, laudos digitais, mapa de coleta e rastreabilidade.', img: modLab1 },
       { icon: Microscope, title: 'Exames & Laudos', desc: 'Do pedido ao laudo com faturamento automático ao liberar resultados.', img: modLab2 },
-      { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.', img: modLab1 },
-      { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.', img: modLab2 },
-      { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.', img: modLab1 },
-      { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.', img: modLab2 },
+      { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.', img: modLab3 },
+      { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.', img: modLab4 },
+      { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.', img: modLab5 },
+      { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.', img: modLab6 },
     ],
   },
   {
