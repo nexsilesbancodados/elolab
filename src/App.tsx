@@ -105,6 +105,9 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                   {mode === 'landing' ? (
                     <>
                       <Route path="/" element={<LandingPage />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/login" element={<Navigate to="/auth" replace />} />
+                      <Route path="/aceitar-convite" element={<AceitarConvite />} />
                       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
                       <Route path="/politica-cookies" element={<PoliticaCookies />} />
                       <Route path="/termos-uso" element={<TermosUso />} />
