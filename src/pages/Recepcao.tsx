@@ -44,6 +44,37 @@ const FORMAS_PAGAMENTO = [
 
 const STEP_LABELS = ['Check-in', 'Balcão', 'Atendimento', 'Finalizado', 'Concluído'] as const;
 
+type CaixaEstadoPersistido = {
+  aberto?: boolean;
+  data?: string;
+  valorAbertura?: number;
+  operador?: string;
+};
+
+function isCaixaAbertoHoje(estado: CaixaEstadoPersistido | null | undefined, today: string): boolean {
+  return Boolean(estado?.aberto === true && estado?.data === today);
+}
+
+function readCaixaEstadoLocal(userId?: string, clinicaId?: string, today = format(new Date(), 'yyyy-MM-dd')): CaixaEstadoPersistido | null {
+  const keys = [
+    userId ? `caixa_estado_${userId}` : null,
+    clinicaId ? `caixa_estado_clinica_${clinicaId}` : null,
+  ].filter(Boolean) as string[];
+
+  for (const key of keys) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const estado = JSON.parse(raw) as CaixaEstadoPersistido;
+      if (isCaixaAbertoHoje(estado, today)) return estado;
+    } catch {
+      // ignore malformed local cache
+    }
+  }
+
+  return null;
+}
+
 function calcEspera(ts: string | null): string {
   if (!ts) return '—';
   const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
@@ -137,20 +168,17 @@ export default function Recepcao() {
 
   // Check if caixa is open (for current user OR any user in the clinic)
   const { data: caixaAberto = false, refetch: refetchCaixa } = useQuery({
-    queryKey: ['caixa-estado-recepcao', profile?.id],
+    queryKey: ['caixa-estado-recepcao', profile?.id, profile?.clinica_id],
+    initialData: () => Boolean(readCaixaEstadoLocal(profile?.id, profile?.clinica_id)),
     queryFn: async () => {
       if (!profile?.id) return false;
       const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const localKey = `caixa_estado_${profile.id}`;
+      const clinicaKey = profile.clinica_id ? `caixa_estado_clinica_${profile.clinica_id}` : null;
       
       // 1. Check localStorage first (instant, most reliable)
-      const localKey = `caixa_estado_${profile.id}`;
-      const local = localStorage.getItem(localKey);
-      if (local) {
-        try {
-          const estado = JSON.parse(local);
-          if (estado.data === todayStr && estado.aberto === true) return true;
-        } catch { /* ignore */ }
-      }
+      const localEstado = readCaixaEstadoLocal(profile.id, profile.clinica_id, todayStr);
+      if (isCaixaAbertoHoje(localEstado, todayStr)) return true;
       
       // 2. Check current user's caixa in Supabase
       const { data: own } = await supabase
@@ -159,24 +187,28 @@ export default function Recepcao() {
         .eq('chave', 'caixa_estado')
         .eq('user_id', profile.id)
         .maybeSingle();
-      if (own?.valor) {
-        const estado = own.valor as any;
-        if (estado.data === todayStr && estado.aberto === true) {
-          localStorage.setItem(localKey, JSON.stringify(estado));
-          return true;
-        }
+      if (isCaixaAbertoHoje(own?.valor as CaixaEstadoPersistido | undefined, todayStr)) {
+        localStorage.setItem(localKey, JSON.stringify(own?.valor));
+        if (clinicaKey) localStorage.setItem(clinicaKey, JSON.stringify(own?.valor));
+        return true;
       }
+
+      if (!profile.clinica_id) return false;
       
       // 3. Fallback: check if any colleague has caixa open today
       const { data: all } = await supabase
         .from('configuracoes_clinica')
-        .select('valor')
-        .eq('chave', 'caixa_estado');
-      if (all) {
-        return all.some((row: any) => {
-          const e = row.valor as any;
-          return e?.data === todayStr && e?.aberto === true;
-        });
+        .select('valor, user_id')
+        .eq('chave', 'caixa_estado')
+        .eq('clinica_id', profile.clinica_id);
+
+      const openRow = all?.find((row: any) => isCaixaAbertoHoje(row?.valor as CaixaEstadoPersistido | undefined, todayStr));
+      if (openRow?.valor) {
+        if (clinicaKey) localStorage.setItem(clinicaKey, JSON.stringify(openRow.valor));
+        if (openRow.user_id === profile.id) {
+          localStorage.setItem(localKey, JSON.stringify(openRow.valor));
+        }
+        return true;
       }
       
       return false;
