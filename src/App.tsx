@@ -162,6 +162,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 <InstallPWA />
+                <CookieConsent />
               </SupabaseAuthProvider>
             </BrowserRouter>
           </TooltipProvider>
