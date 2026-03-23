@@ -235,34 +235,62 @@ export default function LandingPage() {
       <div className="min-h-screen overflow-x-hidden font-sans">
 
         {/* ══ NAVBAR ══ */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-          scrolled ? 'bg-white/90 shadow-sm' : 'bg-transparent'
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? 'bg-white shadow-md' : 'bg-white'
         }`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-18">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[72px]">
             <img src={elolabLogo} alt="EloLab" className="h-12 md:h-14 w-auto" />
-            <div className="hidden md:flex items-center gap-8 text-sm font-semibold" style={{ color: C.text }}>
-              {[{ id: 'recursos', l: 'Recursos' }, { id: 'modulos', l: 'Módulos' }, { id: 'planos', l: 'Planos' }, { id: 'depoimentos', l: 'Depoimentos' }].map(n => (
-                <button key={n.id} onClick={() => scrollTo(n.id)} className="hover:opacity-70 transition-opacity">{n.l}</button>
+            <div className="hidden lg:flex items-center gap-7">
+              {[
+                { id: 'inicio', l: 'INÍCIO' },
+                { id: 'recursos', l: 'RECURSOS' },
+                { id: 'planos', l: 'PREÇOS' },
+                { id: 'modulos', l: 'FAQ' },
+                { id: 'depoimentos', l: 'CONTATO' },
+              ].map(n => (
+                <button
+                  key={n.id}
+                  onClick={() => scrollTo(n.id)}
+                  className="text-[13px] font-bold tracking-wide hover:text-[hsl(12,76%,61%)] transition-colors relative pb-1"
+                  style={{ color: C.dark }}
+                >
+                  {n.l}
+                </button>
               ))}
             </div>
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate('/auth')} className="font-semibold" style={{ color: C.text }}>Entrar</Button>
-              <Button onClick={() => navigate('/auth')} className="rounded-full px-6 font-bold text-white border-0" style={{ background: C.grad }}>
-                Teste Grátis
+              <a
+                href="https://wa.me/5511999999999"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                style={{ background: '#25D366' }}
+              >
+                <Phone className="w-4 h-4" /> CHAMAR
+              </a>
+              <Button
+                onClick={() => navigate('/auth')}
+                className="px-6 py-2.5 rounded-lg text-sm font-bold text-white border-0 transition-transform hover:scale-105"
+                style={{ background: C.dark }}
+              >
+                ENTRAR
               </Button>
             </div>
-            <button className="md:hidden p-2" style={{ color: C.dark }} onClick={() => setMobileMenu(!mobileMenu)}>
+            <button className="lg:hidden p-2" style={{ color: C.dark }} onClick={() => setMobileMenu(!mobileMenu)} aria-label="Menu">
               {mobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
           {mobileMenu && (
-            <div className="md:hidden bg-white/95 border-t border-[hsl(20,30%,90%)] px-6 pb-6 space-y-1 animate-fade-in">
-              {['Recursos', 'Módulos', 'Depoimentos'].map(l => (
-                <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="block w-full text-left py-3 text-sm font-semibold" style={{ color: C.text }}>{l}</button>
+            <div className="lg:hidden bg-white border-t border-gray-100 px-6 pb-6 space-y-1 animate-fade-in shadow-lg">
+              {['INÍCIO', 'RECURSOS', 'PREÇOS', 'FAQ', 'CONTATO'].map(l => (
+                <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="block w-full text-left py-3 text-sm font-bold tracking-wide" style={{ color: C.dark }}>{l}</button>
               ))}
-              <div className="pt-3 space-y-2">
-                <Button variant="ghost" onClick={() => navigate('/auth')} className="w-full">Entrar</Button>
-                <Button onClick={() => navigate('/auth')} className="w-full rounded-full font-bold text-white border-0" style={{ background: C.grad }}>Teste Grátis</Button>
+              <div className="pt-3 flex flex-col gap-2">
+                <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold text-white" style={{ background: '#25D366' }}>
+                  <Phone className="w-4 h-4" /> CHAMAR
+                </a>
+                <Button onClick={() => navigate('/auth')} className="w-full rounded-lg font-bold text-white border-0 py-3" style={{ background: C.dark }}>ENTRAR</Button>
               </div>
             </div>
           )}
