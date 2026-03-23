@@ -88,7 +88,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
               <SupabaseAuthProvider>
                 <NotificationBanner />
                 <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/aceitar-convite" element={<AceitarConvite />} />
