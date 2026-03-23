@@ -687,7 +687,7 @@ export default function LandingPage() {
         </section>
 
         {/* ══ FINAL CTA ══ */}
-        <section className="py-20 md:py-28 bg-white/50">
+        <section className="py-20 md:py-28">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
               Pronto para transformar sua clínica?
