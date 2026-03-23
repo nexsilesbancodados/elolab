@@ -83,7 +83,6 @@ const SEXO_OPTIONS = [
   { value: 'M', label: 'Masculino' },
   { value: 'F', label: 'Feminino' },
   { value: 'O', label: 'Outro' },
-  { value: 'outro', label: 'Outro' },
 ];
 
 const ESTADO_CIVIL_OPTIONS = [
