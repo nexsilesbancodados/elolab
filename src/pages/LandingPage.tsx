@@ -22,6 +22,16 @@ import landingOnline from '@/assets/landing-online.webp';
 import landingEhr from '@/assets/landing-ehr.webp';
 import landingFinancial from '@/assets/landing-financial.webp';
 import landingSupport from '@/assets/landing-support.webp';
+import bannerClinic from '@/assets/banner-clinic.webp';
+import bannerTech from '@/assets/banner-tech.webp';
+import bannerLab from '@/assets/banner-lab.webp';
+import bannerFinance from '@/assets/banner-finance.webp';
+import cardAgenda from '@/assets/card-agenda.webp';
+import cardProntuario from '@/assets/card-prontuario.webp';
+import cardFinanceiro from '@/assets/card-financeiro.webp';
+import cardWhatsapp from '@/assets/card-whatsapp.webp';
+import cardLab from '@/assets/card-lab.webp';
+import cardPacientes from '@/assets/card-pacientes.webp';
 
 /* ─── Colors ─── */
 const C = {
@@ -34,30 +44,38 @@ const C = {
 
 /* ─── All modules data ─── */
 const allModules = [
-  { icon: Calendar, title: 'Agenda Inteligente', desc: 'Agendamento com confirmação automática, bloqueios, retornos e painel TV.' },
-  { icon: FileText, title: 'Prontuário Eletrônico', desc: 'PEP com assinatura digital ICP-Brasil, timeline, CID-10 e exportação HL7 FHIR.' },
-  { icon: Receipt, title: 'Financeiro Completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios.' },
-  { icon: MessageSquare, title: 'WhatsApp IA', desc: 'Agente inteligente para agendamentos automáticos, lembretes e atendimento 24h.' },
-  { icon: FlaskConical, title: 'Laboratório', desc: 'Worklist de coletas, laudos digitais, mapa de coleta e rastreabilidade.' },
-  { icon: Users, title: 'Gestão de Pacientes', desc: 'Cadastro completo, lista de espera, convênios e portal do paciente.' },
-  { icon: Stethoscope, title: 'Módulo Clínico', desc: 'Prescrições, atestados, encaminhamentos e verificador de interações.' },
-  { icon: HeartPulse, title: 'Triagem Manchester', desc: 'Classificação de risco integrada à fila de atendimento com priorização.' },
-  { icon: Pill, title: 'Prescrições Digitais', desc: 'Prescrição com QR Code, baixa automática de estoque e dispensação.' },
-  { icon: ClipboardList, title: 'Encaminhamentos', desc: 'Ciclo completo de encaminhamento com contra-referência e rastreio.' },
-  { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.' },
-  { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.' },
-  { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.' },
-  { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.' },
-  { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.' },
-  { icon: CreditCard, title: 'Pagamentos Online', desc: 'Assinaturas via Mercado Pago com trial, bloqueio por inadimplência.' },
-  { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.' },
-  { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.' },
-  { icon: Microscope, title: 'Exames & Laudos', desc: 'Do pedido ao laudo com faturamento automático ao liberar resultados.' },
-  { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.' },
-  { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.' },
-  { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.' },
-  { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.' },
-  { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.' },
+  { icon: Calendar, title: 'Agenda Inteligente', desc: 'Agendamento com confirmação automática, bloqueios, retornos e painel TV.', img: cardAgenda },
+  { icon: FileText, title: 'Prontuário Eletrônico', desc: 'PEP com assinatura digital ICP-Brasil, timeline, CID-10 e exportação HL7 FHIR.', img: cardProntuario },
+  { icon: Receipt, title: 'Financeiro Completo', desc: 'Fluxo de caixa, contas a pagar/receber, faturamento TISS e relatórios.', img: cardFinanceiro },
+  { icon: MessageSquare, title: 'WhatsApp IA', desc: 'Agente inteligente para agendamentos automáticos, lembretes e atendimento 24h.', img: cardWhatsapp },
+  { icon: FlaskConical, title: 'Laboratório', desc: 'Worklist de coletas, laudos digitais, mapa de coleta e rastreabilidade.', img: cardLab },
+  { icon: Users, title: 'Gestão de Pacientes', desc: 'Cadastro completo, lista de espera, convênios e portal do paciente.', img: cardPacientes },
+  { icon: Stethoscope, title: 'Módulo Clínico', desc: 'Prescrições, atestados, encaminhamentos e verificador de interações.', img: cardProntuario },
+  { icon: HeartPulse, title: 'Triagem Manchester', desc: 'Classificação de risco integrada à fila de atendimento com priorização.', img: cardPacientes },
+  { icon: Pill, title: 'Prescrições Digitais', desc: 'Prescrição com QR Code, baixa automática de estoque e dispensação.', img: cardLab },
+  { icon: ClipboardList, title: 'Encaminhamentos', desc: 'Ciclo completo de encaminhamento com contra-referência e rastreio.', img: cardProntuario },
+  { icon: Warehouse, title: 'Estoque', desc: 'Controle de medicamentos, insumos, lotes, validade e ponto de pedido.', img: cardLab },
+  { icon: Building2, title: 'Salas e Leitos', desc: 'Gestão de salas de atendimento, ocupação e disponibilidade em tempo real.', img: cardAgenda },
+  { icon: MonitorPlay, title: 'Painel TV', desc: 'Tela de chamada para recepção com fila de pacientes em tempo real.', img: cardPacientes },
+  { icon: BellRing, title: 'Automações', desc: '16 fluxos automáticos: lembretes, cobranças, aniversários e alertas.', img: cardWhatsapp },
+  { icon: FileBarChart, title: 'Relatórios & Analytics', desc: 'Dashboards em tempo real, exportação Excel/PDF e métricas de desempenho.', img: cardFinanceiro },
+  { icon: CreditCard, title: 'Pagamentos Online', desc: 'Assinaturas via Mercado Pago com trial, bloqueio por inadimplência.', img: cardFinanceiro },
+  { icon: UserCheck, title: 'Gestão de Equipe', desc: 'Funcionários, convites por e-mail, cargos e permissões por papel.', img: cardPacientes },
+  { icon: Shield, title: 'LGPD & Segurança', desc: 'Consentimentos digitais, audit trail, backup automático e RLS completo.', img: cardProntuario },
+  { icon: Microscope, title: 'Exames & Laudos', desc: 'Do pedido ao laudo com faturamento automático ao liberar resultados.', img: cardLab },
+  { icon: Globe, title: 'Portal do Paciente', desc: 'Acesso seguro para pacientes visualizarem exames e agendamentos.', img: cardPacientes },
+  { icon: QrCode, title: 'Etiquetas & QR Code', desc: 'Impressão de etiquetas para pacientes e QR Code em prescrições.', img: cardLab },
+  { icon: SmartphoneNfc, title: 'PWA Mobile', desc: 'Funciona em qualquer dispositivo sem baixar app. Instale como PWA.', img: cardWhatsapp },
+  { icon: Activity, title: 'Sinais Vitais', desc: 'Gráficos de sinais vitais com histórico e alertas de variação.', img: cardProntuario },
+  { icon: BarChart3, title: 'Dashboard Analítico', desc: 'KPIs, sparklines, ocupação, fluxo de caixa e atalhos rápidos.', img: cardFinanceiro },
+];
+
+/* Banner strips between sections */
+const bannerStrips = [
+  { img: bannerClinic, text: 'Gestão completa para clínicas modernas' },
+  { img: bannerTech, text: 'Tecnologia a serviço da saúde' },
+  { img: bannerLab, text: 'Laboratório integrado e rastreável' },
+  { img: bannerFinance, text: 'Controle financeiro total' },
 ];
 
 const featureSections = [
@@ -421,42 +439,55 @@ export default function LandingPage() {
 
         </section>
 
-        {/* ══ FEATURE SECTIONS (Alternating) ══ */}
+        {/* ══ FEATURE SECTIONS with Banner Strips ══ */}
         <div id="recursos">
           {featureSections.map((f, i) => (
-            <section key={i} className="py-16 md:py-24">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                  <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
-                    <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
-                  </div>
-                  <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
-                      {f.title}{' '}
-                      <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
-                    </h2>
-                    <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
-                    {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
-                    {f.checks && (
-                      <ul className="mt-6 space-y-3">
-                        {f.checks.map((c, j) => (
-                          <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
-                              <Check className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            {c}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
-                      style={{ background: C.grad }}>
-                      {f.cta}
-                    </Button>
+            <React.Fragment key={i}>
+              {bannerStrips[i] && (
+                <div className="relative h-[180px] md:h-[220px] overflow-hidden">
+                  <img src={bannerStrips[i].img} alt={bannerStrips[i].text} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, hsl(20,25%,18%,0.7), hsl(12,76%,61%,0.4))' }} />
+                  <div className="relative z-10 flex items-center justify-center h-full px-4">
+                    <h3 className="text-xl md:text-3xl font-extrabold text-white text-center tracking-tight drop-shadow-lg">
+                      {bannerStrips[i].text}
+                    </h3>
                   </div>
                 </div>
-              </div>
-            </section>
+              )}
+              <section className="py-16 md:py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                    <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
+                      <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
+                    </div>
+                    <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
+                        {f.title}{' '}
+                        <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>{f.highlight}</span>
+                      </h2>
+                      <p className="mt-5 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc}</p>
+                      {f.desc2 && <p className="mt-3 leading-relaxed text-base md:text-lg" style={{ color: C.text }}>{f.desc2}</p>}
+                      {f.checks && (
+                        <ul className="mt-6 space-y-3">
+                          {f.checks.map((c, j) => (
+                            <li key={j} className="flex items-center gap-3 text-sm font-medium" style={{ color: C.dark }}>
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: C.grad }}>
+                                <Check className="w-3.5 h-3.5 text-white" />
+                              </div>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
+                        style={{ background: C.grad }}>
+                        {f.cta}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </React.Fragment>
           ))}
         </div>
 
@@ -473,16 +504,23 @@ export default function LandingPage() {
                 +24 módulos integrados para sua clínica funcionar com máxima eficiência
               </p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {allModules.map((m, i) => (
-                <div key={i} className="relative group p-5 rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-md transition-all duration-200">
+                <div key={i} className="relative group rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-200 overflow-hidden">
                   <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    style={{ background: 'hsl(12,76%,61%,0.1)' }}>
-                    <m.icon className="w-5 h-5" style={{ color: C.coral }} />
+                  <div className="h-32 overflow-hidden">
+                    <img src={m.img} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                   </div>
-                  <h3 className="text-sm font-bold mb-1" style={{ color: C.dark }}>{m.title}</h3>
-                  <p className="text-xs leading-relaxed" style={{ color: C.textL }}>{m.desc}</p>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: 'hsl(12,76%,61%,0.1)' }}>
+                        <m.icon className="w-4 h-4" style={{ color: C.coral }} />
+                      </div>
+                      <h3 className="text-sm font-bold" style={{ color: C.dark }}>{m.title}</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: C.textL }}>{m.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
