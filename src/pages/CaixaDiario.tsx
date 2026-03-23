@@ -78,10 +78,28 @@ export default function CaixaDiario() {
   const [motivoEstorno, setMotivoEstorno] = useState('');
   const [valorAbertura, setValorAbertura] = useState(0);
 
-  // Load caixa state from Supabase
+  const caixaLocalKey = profile ? `caixa_estado_${profile.id}` : '';
+
+  // Load caixa state: localStorage first (instant), then Supabase as fallback
   useEffect(() => {
-    if (!profile) return;
-    const loadCaixaState = async () => {
+    if (!profile || !caixaLocalKey) return;
+    const hoje = format(new Date(), 'yyyy-MM-dd');
+
+    // 1. Check localStorage (instant, survives page reload)
+    const local = localStorage.getItem(caixaLocalKey);
+    if (local) {
+      try {
+        const estado = JSON.parse(local);
+        if (estado.data === hoje && estado.aberto) {
+          setCaixaAberto(true);
+          setValorAbertura(estado.valorAbertura || 0);
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+
+    // 2. Fallback: Supabase
+    const loadFromDB = async () => {
       const { data } = await supabase
         .from('configuracoes_clinica')
         .select('valor')
@@ -90,14 +108,15 @@ export default function CaixaDiario() {
         .maybeSingle();
       if (data?.valor) {
         const estado = data.valor as any;
-        if (estado.data === format(new Date(), 'yyyy-MM-dd') && estado.aberto) {
+        if (estado.data === hoje && estado.aberto) {
           setCaixaAberto(true);
           setValorAbertura(estado.valorAbertura || 0);
+          localStorage.setItem(caixaLocalKey, JSON.stringify(estado));
         }
       }
     };
-    loadCaixaState();
-  }, [profile]);
+    loadFromDB();
+  }, [profile, caixaLocalKey]);
   const [showAbertura, setShowAbertura] = useState(false);
   const [baixaForm, setBaixaForm] = useState<BaixaForm>({
     forma_pagamento: 'dinheiro',
@@ -271,7 +290,10 @@ export default function CaixaDiario() {
   // ===== Actions =====
   const saveCaixaState = async (estado: any) => {
     if (!profile) return;
-    // Try upsert first
+    // Always save to localStorage first (reliable, instant)
+    localStorage.setItem(caixaLocalKey, JSON.stringify(estado));
+
+    // Then persist to Supabase (best-effort)
     const { error } = await supabase.from('configuracoes_clinica').upsert({
       chave: 'caixa_estado',
       user_id: profile.id,
@@ -279,8 +301,7 @@ export default function CaixaDiario() {
     }, { onConflict: 'user_id,chave' });
     
     if (error) {
-      console.error('Erro ao salvar estado do caixa (upsert):', error);
-      // Fallback: try to find existing and update, or insert new
+      console.warn('Upsert caixa falhou, tentando fallback:', error.message);
       const { data: existing } = await supabase
         .from('configuracoes_clinica')
         .select('id')
@@ -289,16 +310,14 @@ export default function CaixaDiario() {
         .maybeSingle();
       
       if (existing) {
-        const { error: updateErr } = await supabase
+        await supabase
           .from('configuracoes_clinica')
           .update({ valor: estado as any })
           .eq('id', existing.id);
-        if (updateErr) console.error('Erro ao atualizar estado do caixa:', updateErr);
       } else {
-        const { error: insertErr } = await supabase
+        await supabase
           .from('configuracoes_clinica')
           .insert({ chave: 'caixa_estado', user_id: profile.id, valor: estado as any });
-        if (insertErr) console.error('Erro ao inserir estado do caixa:', insertErr);
       }
     }
   };
