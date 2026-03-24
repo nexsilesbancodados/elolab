@@ -17,7 +17,7 @@ import {
   HeartPulse,
   DoorOpen,
   ClockAlert,
-  HandCoins,
+  
   FolderKanban,
   Sparkles,
   BotMessageSquare,
