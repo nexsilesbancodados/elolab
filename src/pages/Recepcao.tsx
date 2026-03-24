@@ -117,7 +117,7 @@ const fadeUp = {
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 
 // ─── Main Component ─────────────────────────────────────
-export default function Recepcao() {
+export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { profile } = useSupabaseAuth();
