@@ -22,7 +22,7 @@ export default function RecepcaoCaixa() {
         </TabsList>
 
         <TabsContent value="recepcao" className="mt-4">
-          <Recepcao />
+          <Recepcao onOpenCaixa={() => setActiveTab('caixa')} />
         </TabsContent>
 
         <TabsContent value="caixa" className="mt-4">
