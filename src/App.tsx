@@ -50,9 +50,8 @@ import MapaColeta from "@/pages/MapaColeta";
 import LaudosLab from "@/pages/LaudosLab";
 import Documentacao from "@/pages/Documentacao";
 import PainelAdmin from "@/pages/PainelAdmin";
-import CaixaDiario from "@/pages/CaixaDiario";
 import TiposConsulta from "@/pages/TiposConsulta";
-import Recepcao from "@/pages/Recepcao";
+import RecepcaoCaixa from "@/pages/RecepcaoCaixa";
 import Auth from "@/pages/Auth";
 import AceitarConvite from "@/pages/AceitarConvite";
 import LandingPage from "@/pages/LandingPage";
@@ -158,8 +157,8 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                         <Route path="/templates" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Templates /></SupabaseProtectedRoute>} />
                         <Route path="/lista-espera" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><ListaEspera /></SupabaseProtectedRoute>} />
                         <Route path="/tarefas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem', 'financeiro', 'medico']}><Tarefas /></SupabaseProtectedRoute>} />
-                        <Route path="/caixa" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro', 'recepcao']}><CaixaDiario /></SupabaseProtectedRoute>} />
-                        <Route path="/recepcao" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Recepcao /></SupabaseProtectedRoute>} />
+                        <Route path="/recepcao" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'financeiro']}><RecepcaoCaixa /></SupabaseProtectedRoute>} />
+                        <Route path="/caixa" element={<Navigate to="/recepcao" replace />} />
                         <Route path="/financeiro" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Financeiro /></SupabaseProtectedRoute>} />
                         <Route path="/contas-receber" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasReceber /></SupabaseProtectedRoute>} />
                         <Route path="/contas-pagar" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasPagar /></SupabaseProtectedRoute>} />

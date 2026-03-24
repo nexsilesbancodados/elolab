@@ -17,7 +17,7 @@ import {
   HeartPulse,
   DoorOpen,
   ClockAlert,
-  HandCoins,
+  
   FolderKanban,
   Sparkles,
   BotMessageSquare,
@@ -61,11 +61,10 @@ export const menuGroups: MenuGroup[] = [
     color: '#6366f1',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'Recepção', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao'] },
+      { label: 'Recepção & Caixa', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao', 'financeiro'] },
       { label: 'Agenda', icon: CalendarRange, href: '/agenda' },
       { label: 'Pacientes', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
       { label: 'Fila / Triagem', icon: ClipboardCheck, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
-      { label: 'Caixa Diário', icon: HandCoins, href: '/caixa', roles: ['admin', 'financeiro', 'recepcao'] },
       { label: 'Tarefas', icon: ListChecks, href: '/tarefas', roles: ['admin', 'recepcao', 'enfermagem', 'financeiro'] },
     ],
   },
