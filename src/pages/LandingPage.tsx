@@ -179,7 +179,7 @@ const plans = [
     ],
   },
   {
-    slug: 'ultra',
+    slug: 'elolab-ultra',
     name: 'EloLab Ultra',
     price: 399,
     popular: true,
