@@ -161,7 +161,7 @@ const featureSections = [
 
 const plans = [
   {
-    slug: 'max',
+    slug: 'elolab-max',
     name: 'EloLab Max',
     price: 299,
     popular: false,
@@ -179,7 +179,7 @@ const plans = [
     ],
   },
   {
-    slug: 'ultra',
+    slug: 'elolab-ultra',
     name: 'EloLab Ultra',
     price: 399,
     popular: true,
