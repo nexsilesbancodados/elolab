@@ -286,6 +286,15 @@ export default function LandingPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const goToAuth = () => {
+    const host = window.location.hostname;
+    if (host === 'elolab.com.br' || host === 'www.elolab.com.br') {
+      window.location.href = 'https://app.elolab.com.br/auth';
+    } else {
+      navigate('/auth');
+    }
+  };
+
   return (
     <>
       {/* Fixed gradient bg */}
@@ -330,7 +339,7 @@ export default function LandingPage() {
                 <Phone className="w-4 h-4" /> CHAMAR
               </a>
               <Button
-                onClick={() => navigate('/auth')}
+                onClick={goToAuth}
                 className="px-6 py-2.5 rounded-lg text-sm font-bold text-white border-0 transition-transform hover:scale-105"
                 style={{ background: C.dark }}
               >
@@ -351,7 +360,7 @@ export default function LandingPage() {
                   className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold text-white" style={{ background: '#25D366' }}>
                   <Phone className="w-4 h-4" /> CHAMAR
                 </a>
-                <Button onClick={() => navigate('/auth')} className="w-full rounded-lg font-bold text-white border-0 py-3" style={{ background: C.dark }}>ENTRAR</Button>
+                <Button onClick={goToAuth} className="w-full rounded-lg font-bold text-white border-0 py-3" style={{ background: C.dark }}>ENTRAR</Button>
               </div>
             </div>
           )}
@@ -510,7 +519,7 @@ export default function LandingPage() {
                         ))}
                       </ul>
                     )}
-                    <Button onClick={() => navigate('/auth')} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
+                    <Button onClick={goToAuth} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
                       style={{ background: C.grad }}>
                       {f.cta}
                     </Button>
@@ -810,7 +819,7 @@ export default function LandingPage() {
             <p className="mt-4 text-lg" style={{ color: C.textL }}>
               Comece agora com 3 dias grátis. Sem cartão de crédito. Sem compromisso.
             </p>
-            <Button size="xl" onClick={() => navigate('/auth')} className="mt-10 rounded-full px-10 text-base font-bold text-white border-0"
+            <Button size="xl" onClick={goToAuth} className="mt-10 rounded-full px-10 text-base font-bold text-white border-0"
               style={{ background: C.grad, boxShadow: '0 10px 30px -5px hsl(12,76%,61%,0.35)' }}>
               Quero começar agora <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
