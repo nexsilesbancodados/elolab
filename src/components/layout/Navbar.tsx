@@ -1,7 +1,7 @@
 import { Bell, Menu, LogOut, User, Settings, Plus, CalendarPlus, UserPlus, FileText, FlaskConical } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -110,8 +110,6 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Theme */}
-        <ThemeToggle variant="dropdown" />
 
         {/* Notifications */}
         <DropdownMenu>
