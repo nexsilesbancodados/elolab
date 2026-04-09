@@ -21,22 +21,37 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await req.json()
     const { plano_id, plano_slug, nome, email, telefone, clinica, mode = 'trial' } = body
+    const normalizedPlanSlug = typeof plano_slug === 'string' ? plano_slug.trim().toLowerCase() : ''
 
-    if (!nome || !email || !plano_slug) {
+    if (!nome || !email || !normalizedPlanSlug) {
       return new Response(
         JSON.stringify({ error: 'Nome, e-mail e plano são obrigatórios' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Get plan details
-    const { data: plano, error: planoError } = await supabase
+    // Resolve plan server-side by slug to avoid depender do ID no cliente
+    let { data: plano, error: planoError } = await supabase
       .from('planos')
       .select('*')
-      .eq('id', plano_id)
-      .single()
+      .ilike('slug', normalizedPlanSlug)
+      .eq('ativo', true)
+      .maybeSingle()
+
+    if ((!plano || planoError) && plano_id) {
+      const fallbackResult = await supabase
+        .from('planos')
+        .select('*')
+        .eq('id', plano_id)
+        .eq('ativo', true)
+        .maybeSingle()
+
+      plano = fallbackResult.data
+      planoError = fallbackResult.error
+    }
 
     if (planoError || !plano) {
+      console.error('Plano não encontrado no public-checkout:', { plano_id, plano_slug: normalizedPlanSlug, planoError })
       return new Response(
         JSON.stringify({ error: 'Plano não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

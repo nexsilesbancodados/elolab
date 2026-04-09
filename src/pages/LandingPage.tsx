@@ -242,22 +242,8 @@ export default function LandingPage() {
     }
     setLoading(true);
     try {
-      // First get the plan ID from the database
-      const { data: plano } = await supabase
-        .from('planos')
-        .select('id')
-        .eq('slug', selectedPlan.slug)
-        .maybeSingle();
-
-      if (!plano) {
-        toast.error('Plano não encontrado');
-        setLoading(false);
-        return;
-      }
-
       const { data, error } = await supabase.functions.invoke('public-checkout', {
         body: {
-          plano_id: plano.id,
           plano_slug: selectedPlan.slug,
           nome: formData.nome,
           email: formData.email,
@@ -268,6 +254,7 @@ export default function LandingPage() {
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       if (checkoutMode === 'buy' && data?.checkout_url) {
         toast.success('Redirecionando para pagamento...');
@@ -277,9 +264,9 @@ export default function LandingPage() {
         setCheckoutOpen(false);
         setFormData({ nome: '', email: '', telefone: '', clinica: '' });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Checkout error:', err);
-      toast.error(err.message || 'Erro ao processar. Tente novamente.');
+      toast.error(err instanceof Error ? err.message : 'Erro ao processar. Tente novamente.');
     } finally {
       setLoading(false);
     }
