@@ -25,12 +25,12 @@ const statusConfig: Record<string, { bg: string; label: string }> = {
   finalizado: { bg: 'bg-muted text-muted-foreground', label: 'Finalizado' },
   cancelado: { bg: 'bg-destructive/10 text-destructive', label: 'Cancelado' },
   faltou: { bg: 'bg-destructive/10 text-destructive', label: 'Faltou' },
-  aprovado: { bg: 'bg-green-500/10 text-green-700 label: 'Aprovado' },
-  pendente: { bg: 'bg-amber-500/10 text-amber-700 label: 'Pendente' },
-  solicitado: { bg: 'bg-blue-500/10 text-blue-700 label: 'Solicitado' },
-  laudo_disponivel: { bg: 'bg-green-500/10 text-green-700 label: 'Laudo Disponível' },
-  em_andamento: { bg: 'bg-blue-500/10 text-blue-700 label: 'Em Andamento' },
-  pago: { bg: 'bg-green-500/10 text-green-700 label: 'Pago' },
+  aprovado: { bg: 'bg-green-500/10 text-green-700', label: 'Aprovado' },
+  pendente: { bg: 'bg-amber-500/10 text-amber-700', label: 'Pendente' },
+  solicitado: { bg: 'bg-blue-500/10 text-blue-700', label: 'Solicitado' },
+  laudo_disponivel: { bg: 'bg-green-500/10 text-green-700', label: 'Laudo Disponível' },
+  em_andamento: { bg: 'bg-blue-500/10 text-blue-700', label: 'Em Andamento' },
+  pago: { bg: 'bg-green-500/10 text-green-700', label: 'Pago' },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -569,12 +569,12 @@ export default function PortalPaciente() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        <Card className={`transition-all hover:shadow-md ${isLaudo ? 'border-green-300 : ''}`}>
+                        <Card className={`transition-all hover:shadow-md ${isLaudo ? 'border-green-300' : ''}`}>
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-start gap-3">
                                 <div className={`p-2.5 rounded-xl ${isLaudo ? 'bg-green-500/10' : 'bg-muted'}`}>
-                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 : 'text-muted-foreground'}`} />',
+                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600' : 'text-muted-foreground'}`} />
                                 </div>
                                 <div className="space-y-0.5">
                                   <p className="font-semibold text-sm flex items-center gap-2">

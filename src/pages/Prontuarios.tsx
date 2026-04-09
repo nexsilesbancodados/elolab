@@ -379,9 +379,9 @@ function RelatedRecords({ pacienteId }: { pacienteId: string }) {
   if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-10" />)}</div>;
 
   const sc = (s: string) => {
-    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-green-500/10 text-green-700'
-    if (s === 'pendente' || s === 'solicitado') return 'bg-amber-500/10 text-amber-700'
-    if (s === 'em_andamento') return 'bg-blue-500/10 text-blue-700'
+    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-green-500/10 text-green-700';
+    if (s === 'pendente' || s === 'solicitado') return 'bg-amber-500/10 text-amber-700';
+    if (s === 'em_andamento') return 'bg-blue-500/10 text-blue-700';
     return 'bg-muted text-muted-foreground';
   };
 

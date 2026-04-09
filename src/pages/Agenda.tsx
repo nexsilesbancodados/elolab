@@ -65,16 +65,16 @@ const MEDICO_COLORS = [
 ];
 
 const MEDICO_BG_COLORS = [
-  'bg-blue-50 border-blue-200'
-  'bg-emerald-50 border-emerald-200'
-  'bg-violet-50 border-violet-200'
-  'bg-amber-50 border-amber-200'
-  'bg-rose-50 border-rose-200'
-  'bg-cyan-50 border-cyan-200'
-  'bg-pink-50 border-pink-200'
-  'bg-teal-50 border-teal-200'
-  'bg-indigo-50 border-indigo-200'
-  'bg-orange-50 border-orange-200'
+  'bg-blue-50 border-blue-200',
+  'bg-emerald-50 border-emerald-200',
+  'bg-violet-50 border-violet-200',
+  'bg-amber-50 border-amber-200',
+  'bg-rose-50 border-rose-200',
+  'bg-cyan-50 border-cyan-200',
+  'bg-pink-50 border-pink-200',
+  'bg-teal-50 border-teal-200',
+  'bg-indigo-50 border-indigo-200',
+  'bg-orange-50 border-orange-200',
 ];
 
 const STATUS_LABELS: Record<StatusAgendamento, string> = {
@@ -547,8 +547,8 @@ export default function Agenda() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
               { label: 'Consultas hoje', value: statsHoje.total, color: 'text-primary', bg: 'bg-primary/10', icon: CalendarCheck },
-              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-green-600 bg: 'bg-green-500/10', icon: Users },
-              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-amber-600 bg: 'bg-amber-500/10', icon: Clock },
+              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-green-600', bg: 'bg-green-500/10', icon: Users },
+              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: Clock },
               { label: 'Finalizados', value: statsHoje.finalizados, color: 'text-muted-foreground', bg: 'bg-muted', icon: CalendarCheck },
               { label: 'Cancelados/Faltas', value: statsHoje.cancelados + agendamentosHoje.filter(a => a.status === 'faltou').length, color: 'text-destructive', bg: 'bg-destructive/10', icon: AlertTriangle },
             ].map(s => (

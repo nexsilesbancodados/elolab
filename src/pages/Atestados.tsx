@@ -276,9 +276,9 @@ export default function Atestados() {
   const getTipoBadge = (tipo: string | null) => {
     switch (tipo) {
       case 'comparecimento': return 'bg-primary/10 text-primary';
-      case 'afastamento': return 'bg-amber-500/10 text-amber-700'
-      case 'aptidao': return 'bg-green-500/10 text-green-700'
-      case 'acompanhante': return 'bg-purple-500/10 text-purple-700'
+      case 'afastamento': return 'bg-amber-500/10 text-amber-700';
+      case 'aptidao': return 'bg-green-500/10 text-green-700';
+      case 'acompanhante': return 'bg-purple-500/10 text-purple-700';
       default: return '';
     }
   };

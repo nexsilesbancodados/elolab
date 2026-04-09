@@ -658,7 +658,7 @@ export default function Exames() {
                             <div key={i} className="flex items-center gap-0.5">
                               <div className={cn(
                                 'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
-                                i < step && 'bg-emerald-100 text-emerald-700'
+                                i < step && 'bg-emerald-100 text-emerald-700',
                                 i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                 i > step && 'bg-muted text-muted-foreground/40',
                                 step === -1 && 'bg-muted text-muted-foreground line-through',

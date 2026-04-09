@@ -59,11 +59,11 @@ interface FuncionarioWithRoles {
 }
 
 const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: string }[] = [
-  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-purple-100 text-purple-800 },
-  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-blue-100 text-blue-800 },
-  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-cyan-100 text-cyan-800 },
-  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-green-100 text-green-800 },
-  { role: 'financeiro', label: 'Financeiro', description: 'Contas, lançamentos e relatórios', color: 'bg-yellow-100 text-yellow-800 },
+  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-purple-100 text-purple-800' },
+  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-blue-100 text-blue-800' },
+  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-cyan-100 text-cyan-800' },
+  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-green-100 text-green-800' },
+  { role: 'financeiro', label: 'Financeiro', description: 'Contas, lançamentos e relatórios', color: 'bg-yellow-100 text-yellow-800' },
 ];
 
 export default function Funcionarios() {
@@ -489,7 +489,7 @@ export default function Funcionarios() {
                         {func.cargo || '-'}
                       </TableCell>
                       <TableCell>
-                        <Badge className={func.ativo ? 'bg-green-100 text-green-800 : 'bg-gray-100 text-gray-600
+                        <Badge className={func.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
                           {func.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>

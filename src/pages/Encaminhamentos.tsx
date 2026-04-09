@@ -65,8 +65,8 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 
 const URGENCIA_CONFIG: Record<string, { label: string; className: string }> = {
   eletivo: { label: 'Eletivo', className: 'bg-muted text-muted-foreground' },
-  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700 },
-  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700 },
+  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700' },
+  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700' },
   emergencia: { label: 'Emergência', className: 'bg-destructive/10 text-destructive' },
 };
 

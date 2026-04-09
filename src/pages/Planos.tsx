@@ -226,7 +226,7 @@ export default function Planos() {
                     const isPremium = premiumFeatures.includes(feature);
                     return (
                       <li key={feature} className="flex items-start gap-3 text-sm">
-                        <div className={`mt-0.5 shrink-0 rounded-full p-0.5 ${isPremium ? 'bg-amber-500/15 text-amber-600 : 'bg-success/15 text-success'}`}>',
+                        <div className={`mt-0.5 shrink-0 rounded-full p-0.5 ${isPremium ? 'bg-amber-500/15 text-amber-600' : 'bg-success/15 text-success'}`}>
                           <Check className="h-3.5 w-3.5" strokeWidth={3} />
                         </div>
                         <span className="text-foreground/90">
