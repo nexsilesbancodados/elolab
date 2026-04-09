@@ -92,9 +92,13 @@ function RouteFallback() {
  */
 function getRoutingMode(): 'landing' | 'app' {
   const host = window.location.hostname;
-  if (host === 'elolab.com.br' || host === 'www.elolab.com.br') {
+  if (
+    host === 'elolab.com.br' ||
+    host === 'www.elolab.com.br'
+  ) {
     return 'landing';
   }
+  // app.elolab.com.br / localhost / preview → Full SaaS app
   return 'app';
 }
 
@@ -127,7 +131,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                       </>
                     ) : (
                       <>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/" element={<LandingPage />} />
                         <Route path="/landing" element={<LandingPage />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Navigate to="/auth" replace />} />
