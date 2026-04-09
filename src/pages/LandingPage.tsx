@@ -286,6 +286,15 @@ export default function LandingPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const goToAuth = () => {
+    const host = window.location.hostname;
+    if (host === 'elolab.com.br' || host === 'www.elolab.com.br') {
+      window.location.href = 'https://app.elolab.com.br/auth';
+    } else {
+      navigate('/auth');
+    }
+  };
+
   return (
     <>
       {/* Fixed gradient bg */}
