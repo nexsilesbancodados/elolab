@@ -3913,6 +3913,7 @@ export type Database = {
         Args: { _target_user_id: string }
         Returns: boolean
       }
+      validate_invite_code: { Args: { _codigo: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "medico" | "recepcao" | "enfermagem" | "financeiro"
