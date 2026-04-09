@@ -17,7 +17,7 @@ export default function TermosUso() {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Termos de Uso</h1>
         </div>
 
-        <div className="prose prose-sm max-w-none space-y-6 text-muted-foreground">
+        <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
           <p className="text-xs">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
 
           <section>

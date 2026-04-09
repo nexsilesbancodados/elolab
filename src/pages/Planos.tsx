@@ -28,7 +28,7 @@ const planConfig: Record<string, {
   'elolab-ultra': {
     icon: <Sparkles className="h-7 w-7" />,
     gradient: 'from-amber-500/8 via-transparent to-transparent',
-    iconBg: 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 text-amber-600',
+    iconBg: 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 text-amber-600 dark:text-amber-400',
     borderAccent: 'border-amber-400/30 hover:border-amber-400/60',
     btnClass: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 border-0',
   },
@@ -226,13 +226,13 @@ export default function Planos() {
                     const isPremium = premiumFeatures.includes(feature);
                     return (
                       <li key={feature} className="flex items-start gap-3 text-sm">
-                        <div className={`mt-0.5 shrink-0 rounded-full p-0.5 ${isPremium ? 'bg-amber-500/15 text-amber-600 : 'bg-success/15 text-success'}`}>',
+                        <div className={`mt-0.5 shrink-0 rounded-full p-0.5 ${isPremium ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-success/15 text-success'}`}>
                           <Check className="h-3.5 w-3.5" strokeWidth={3} />
                         </div>
                         <span className="text-foreground/90">
                           {featureLabels[feature] || feature}
                           {isPremium && (
-                            <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 border-amber-400/40 text-amber-600">
+                            <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 border-amber-400/40 text-amber-600 dark:text-amber-400">
                               Exclusivo
                             </Badge>
                           )}

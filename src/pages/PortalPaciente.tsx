@@ -20,17 +20,17 @@ import { ptBR } from 'date-fns/locale';
 
 // ─── Status helpers ────────────────────────────────────────
 const statusConfig: Record<string, { bg: string; label: string }> = {
-  agendado: { bg: 'bg-blue-500/10 text-blue-700 border-blue-200', label: 'Agendado' },
-  confirmado: { bg: 'bg-green-500/10 text-green-700 border-green-200', label: 'Confirmado' },
+  agendado: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200', label: 'Agendado' },
+  confirmado: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-200', label: 'Confirmado' },
   finalizado: { bg: 'bg-muted text-muted-foreground', label: 'Finalizado' },
   cancelado: { bg: 'bg-destructive/10 text-destructive', label: 'Cancelado' },
   faltou: { bg: 'bg-destructive/10 text-destructive', label: 'Faltou' },
-  aprovado: { bg: 'bg-green-500/10 text-green-700 label: 'Aprovado' },
-  pendente: { bg: 'bg-amber-500/10 text-amber-700 label: 'Pendente' },
-  solicitado: { bg: 'bg-blue-500/10 text-blue-700 label: 'Solicitado' },
-  laudo_disponivel: { bg: 'bg-green-500/10 text-green-700 label: 'Laudo Disponível' },
-  em_andamento: { bg: 'bg-blue-500/10 text-blue-700 label: 'Em Andamento' },
-  pago: { bg: 'bg-green-500/10 text-green-700 label: 'Pago' },
+  aprovado: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Aprovado' },
+  pendente: { bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300', label: 'Pendente' },
+  solicitado: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', label: 'Solicitado' },
+  laudo_disponivel: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Laudo Disponível' },
+  em_andamento: { bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', label: 'Em Andamento' },
+  pago: { bg: 'bg-green-500/10 text-green-700 dark:text-green-300', label: 'Pago' },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -449,10 +449,10 @@ export default function PortalPaciente() {
           {/* ─── KPI Stats ─── */}
           <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { icon: Calendar, label: 'Consultas', value: totalConsultas, accent: 'text-blue-600 bg-blue-500/10' },
+              { icon: Calendar, label: 'Consultas', value: totalConsultas, accent: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
               { icon: Clock, label: 'Agendadas', value: consultasFuturas, accent: 'text-primary bg-primary/10' },
-              { icon: FlaskConical, label: 'Exames Pendentes', value: examesPendentes, accent: 'text-amber-600 bg-amber-500/10' },
-              { icon: FileText, label: 'Laudos Prontos', value: laudosDisponiveis, accent: 'text-green-600 bg-green-500/10' },
+              { icon: FlaskConical, label: 'Exames Pendentes', value: examesPendentes, accent: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+              { icon: FileText, label: 'Laudos Prontos', value: laudosDisponiveis, accent: 'text-green-600 dark:text-green-400 bg-green-500/10' },
             ].map(stat => (
               <Card key={stat.label} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4 flex items-center gap-3">
@@ -569,18 +569,18 @@ export default function PortalPaciente() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        <Card className={`transition-all hover:shadow-md ${isLaudo ? 'border-green-300 : ''}`}>
+                        <Card className={`transition-all hover:shadow-md ${isLaudo ? 'border-green-300 dark:border-green-700' : ''}`}>
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-start gap-3">
                                 <div className={`p-2.5 rounded-xl ${isLaudo ? 'bg-green-500/10' : 'bg-muted'}`}>
-                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 : 'text-muted-foreground'}`} />',
+                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`} />
                                 </div>
                                 <div className="space-y-0.5">
                                   <p className="font-semibold text-sm flex items-center gap-2">
                                     {e.tipo_exame}
                                     {isLaudo && (
-                                      <Badge className="bg-green-500/10 text-green-700 text-[9px] border-green-200">
+                                      <Badge className="bg-green-500/10 text-green-700 dark:text-green-300 text-[9px] border-green-200">
                                         ✓ Laudo pronto
                                       </Badge>
                                     )}

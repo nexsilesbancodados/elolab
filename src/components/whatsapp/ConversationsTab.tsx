@@ -44,9 +44,9 @@ export function ConversationsTab({ conversations }: ConversationsTabProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ativo':
-        return <Badge className="bg-green-500/10 text-green-700 border-green-200 text-[10px]">Ativa</Badge>;
+        return <Badge className="bg-green-500/10 text-green-700 dark:text-green-300 border-green-200 text-[10px]">Ativa</Badge>;
       case 'aguardando':
-        return <Badge className="bg-amber-500/10 text-amber-700 border-amber-200 text-[10px]">Aguardando</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 text-[10px]">Aguardando</Badge>;
       case 'encerrado':
         return <Badge variant="outline" className="text-[10px]">Encerrada</Badge>;
       default:

@@ -57,16 +57,16 @@ interface EncaminhamentoData {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pendente: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' },
-  em_andamento: { label: 'Em Andamento', className: 'bg-blue-500/10 text-blue-700 border-blue-500/20' },
-  concluido: { label: 'Concluído', className: 'bg-green-500/10 text-green-700 border-green-500/20' },
+  pendente: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20' },
+  em_andamento: { label: 'Em Andamento', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20' },
+  concluido: { label: 'Concluído', className: 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20' },
   cancelado: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
 };
 
 const URGENCIA_CONFIG: Record<string, { label: string; className: string }> = {
   eletivo: { label: 'Eletivo', className: 'bg-muted text-muted-foreground' },
-  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700' },
-  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700' },
+  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700 dark:text-green-300' },
+  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
   emergencia: { label: 'Emergência', className: 'bg-destructive/10 text-destructive' },
 };
 
@@ -389,7 +389,7 @@ export default function Encaminhamentos() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           {enc.contra_referencia ? (
-                            <Badge className="bg-green-500/10 text-green-700">Sim</Badge>
+                            <Badge className="bg-green-500/10 text-green-700 dark:text-green-300">Sim</Badge>
                           ) : (
                             <Badge variant="outline" className="text-muted-foreground">Não</Badge>
                           )}

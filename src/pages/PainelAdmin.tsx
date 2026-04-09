@@ -45,16 +45,16 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: 'bg-destructive/10 text-destructive',
-  medico: 'bg-blue-500/10 text-blue-700',
-  recepcao: 'bg-green-500/10 text-green-700',
-  enfermagem: 'bg-purple-500/10 text-purple-700',
-  financeiro: 'bg-amber-500/10 text-amber-700',
+  medico: 'bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  recepcao: 'bg-green-500/10 text-green-700 dark:text-green-300',
+  enfermagem: 'bg-purple-500/10 text-purple-700 dark:text-purple-300',
+  financeiro: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-  ativa: { label: 'Ativa', color: 'bg-green-500/10 text-green-700 icon: CheckCircle2' },
-  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-700 icon: Clock' },
-  expirada: { label: 'Expirada', color: 'bg-amber-500/10 text-amber-700 icon: Ban' },
+  ativa: { label: 'Ativa', color: 'bg-green-500/10 text-green-700 dark:text-green-300', icon: CheckCircle2 },
+  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', icon: Clock },
+  expirada: { label: 'Expirada', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-300', icon: Ban },
   cancelada: { label: 'Cancelada', color: 'bg-destructive/10 text-destructive', icon: Ban },
 };
 
@@ -501,7 +501,7 @@ export default function PainelAdmin() {
                             <TableCell>
                               {sub.em_trial ? (
                                 <div>
-                                  <Badge className="bg-blue-500/10 text-blue-700 text-xs">Em Trial</Badge>
+                                  <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs">Em Trial</Badge>
                                   <p className="text-xs text-muted-foreground mt-1">Até {formatDate(sub.trial_fim)}</p>
                                 </div>
                               ) : '—'}

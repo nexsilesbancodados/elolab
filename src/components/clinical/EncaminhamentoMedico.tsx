@@ -373,11 +373,11 @@ export function EncaminhamentoMedico({
                         </div>
                       </div>
                       {enc.contra_referencia && (
-                        <div className="mt-3 p-2 bg-green-50 rounded border border-green-200">
-                          <p className="text-xs font-medium text-green-800">
+                        <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                          <p className="text-xs font-medium text-green-800 dark:text-green-200">
                             Contra-referência ({enc.data_contra_referencia && format(new Date(enc.data_contra_referencia), 'dd/MM/yyyy')}):
                           </p>
-                          <p className="text-sm text-green-700 mt-1">
+                          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
                             {enc.contra_referencia}
                           </p>
                         </div>
@@ -581,7 +581,7 @@ export function EncaminhamentoMedico({
               )}
 
               {selectedEncaminhamento.contra_referencia && (
-                <div className="p-3 bg-green-50 rounded-lg">
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <Label className="text-muted-foreground">Contra-referência</Label>
                   <p className="mt-1">{selectedEncaminhamento.contra_referencia}</p>
                 </div>

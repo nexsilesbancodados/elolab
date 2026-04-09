@@ -285,9 +285,9 @@ export function DrugInteractionChecker({
                 key={index} 
                 className={cn(
                   "p-4 rounded-lg border-2",
-                  interaction.severity === 'alta' && "border-red-300 bg-red-50",
-                  interaction.severity === 'media' && "border-amber-300 bg-amber-50",
-                  interaction.severity === 'baixa' && "border-blue-300 bg-blue-50"
+                  interaction.severity === 'alta' && "border-red-300 bg-red-50 dark:bg-red-950/20",
+                  interaction.severity === 'media' && "border-amber-300 bg-amber-50 dark:bg-amber-950/20",
+                  interaction.severity === 'baixa' && "border-blue-300 bg-blue-50 dark:bg-blue-950/20"
                 )}
               >
                 <div className="flex items-center justify-between mb-2">

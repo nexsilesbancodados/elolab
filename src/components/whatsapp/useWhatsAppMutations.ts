@@ -21,7 +21,7 @@ export function useWhatsAppMutations() {
       toast.success('Agente criado com sucesso!');
     },
     onError: (error) => {
-      toast.error('Erro ao criar agente: ' + error.message);'
+      toast.error('Erro ao criar agente: ' + error.message);
     },
   });
 
@@ -68,7 +68,7 @@ export function useWhatsAppMutations() {
       toast.success('Sessão criada! Escaneie o QR Code.');
     },
     onError: (error) => {
-      toast.error('Erro ao criar sessão: ' + error.message);'
+      toast.error('Erro ao criar sessão: ' + error.message);
     },
   });
 

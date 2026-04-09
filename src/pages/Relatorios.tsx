@@ -369,7 +369,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
                 <Calendar className="h-6 w-6 text-blue-600" />
               </div>
               <div>
@@ -386,7 +386,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100">
+              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
               <div>
@@ -402,7 +402,7 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-red-100">
+              <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/30">
                 <TrendingDown className="h-6 w-6 text-red-600" />
               </div>
               <div>
