@@ -574,7 +574,7 @@ export default function PortalPaciente() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-start gap-3">
                                 <div className={`p-2.5 rounded-xl ${isLaudo ? 'bg-green-500/10' : 'bg-muted'}`}>
-                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 : 'text-muted-foreground'}`} />
+                                  <FlaskConical className={`h-4 w-4 ${isLaudo ? 'text-green-600 : 'text-muted-foreground'}`} />',
                                 </div>
                                 <div className="space-y-0.5">
                                   <p className="font-semibold text-sm flex items-center gap-2">

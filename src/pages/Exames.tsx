@@ -31,10 +31,10 @@ import { autoCreateColeta, autoProgressExame, autoVincularResultadoProntuario } 
 type StatusExame = Database['public']['Enums']['status_exame'];
 
 const STATUS_COLORS: Record<StatusExame, string> = {
-  solicitado: 'bg-yellow-100 text-yellow-800
-  agendado: 'bg-blue-100 text-blue-800
-  realizado: 'bg-purple-100 text-purple-800
-  laudo_disponivel: 'bg-green-100 text-green-800
+  solicitado: 'bg-yellow-100 text-yellow-800',
+  agendado: 'bg-blue-100 text-blue-800',
+  realizado: 'bg-purple-100 text-purple-800',
+  laudo_disponivel: 'bg-green-100 text-green-800',
   cancelado: 'bg-muted text-muted-foreground',
 };
 
@@ -658,7 +658,7 @@ export default function Exames() {
                             <div key={i} className="flex items-center gap-0.5">
                               <div className={cn(
                                 'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
-                                i < step && 'bg-emerald-100 text-emerald-700
+                                i < step && 'bg-emerald-100 text-emerald-700'
                                 i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                 i > step && 'bg-muted text-muted-foreground/40',
                                 step === -1 && 'bg-muted text-muted-foreground line-through',

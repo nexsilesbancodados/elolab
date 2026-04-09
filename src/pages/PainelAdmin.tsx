@@ -45,10 +45,10 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: 'bg-destructive/10 text-destructive',
-  medico: 'bg-blue-500/10 text-blue-700
-  recepcao: 'bg-green-500/10 text-green-700
-  enfermagem: 'bg-purple-500/10 text-purple-700
-  financeiro: 'bg-amber-500/10 text-amber-700
+  medico: 'bg-blue-500/10 text-blue-700',
+  recepcao: 'bg-green-500/10 text-green-700',
+  enfermagem: 'bg-purple-500/10 text-purple-700',
+  financeiro: 'bg-amber-500/10 text-amber-700',
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {

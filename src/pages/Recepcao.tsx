@@ -727,7 +727,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                   <div key={i} className="flex items-center gap-1">
                                     <div className={cn(
                                       'h-6 px-2.5 rounded-full flex items-center text-[10px] font-medium transition-colors',
-                                      i < step && 'bg-emerald-100 text-emerald-700
+                                      i < step && 'bg-emerald-100 text-emerald-700'
                                       i === step && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                       i > step && 'bg-muted text-muted-foreground/50',
                                     )}>

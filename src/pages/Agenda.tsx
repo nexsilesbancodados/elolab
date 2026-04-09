@@ -48,13 +48,13 @@ const HORARIOS = [
 ];
 
 const STATUS_COLORS: Record<StatusAgendamento, string> = {
-  agendado: 'bg-blue-100 text-blue-800 border-blue-200
-  confirmado: 'bg-green-100 text-green-800 border-green-200
-  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200
-  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200
-  finalizado: 'bg-gray-100 text-gray-600 border-gray-200
-  cancelado: 'bg-red-100 text-red-800 border-red-200
-  faltou: 'bg-orange-100 text-orange-800 border-orange-200
+  agendado: 'bg-blue-100 text-blue-800 border-blue-200',
+  confirmado: 'bg-green-100 text-green-800 border-green-200',
+  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200',
+  finalizado: 'bg-gray-100 text-gray-600 border-gray-200',
+  cancelado: 'bg-red-100 text-red-800 border-red-200',
+  faltou: 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
 // Color palette for doctors
@@ -65,16 +65,16 @@ const MEDICO_COLORS = [
 ];
 
 const MEDICO_BG_COLORS = [
-  'bg-blue-50 border-blue-200
-  'bg-emerald-50 border-emerald-200
-  'bg-violet-50 border-violet-200
-  'bg-amber-50 border-amber-200
-  'bg-rose-50 border-rose-200
-  'bg-cyan-50 border-cyan-200
-  'bg-pink-50 border-pink-200
-  'bg-teal-50 border-teal-200
-  'bg-indigo-50 border-indigo-200
-  'bg-orange-50 border-orange-200
+  'bg-blue-50 border-blue-200'
+  'bg-emerald-50 border-emerald-200'
+  'bg-violet-50 border-violet-200'
+  'bg-amber-50 border-amber-200'
+  'bg-rose-50 border-rose-200'
+  'bg-cyan-50 border-cyan-200'
+  'bg-pink-50 border-pink-200'
+  'bg-teal-50 border-teal-200'
+  'bg-indigo-50 border-indigo-200'
+  'bg-orange-50 border-orange-200'
 ];
 
 const STATUS_LABELS: Record<StatusAgendamento, string> = {

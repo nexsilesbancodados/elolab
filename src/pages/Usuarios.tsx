@@ -59,11 +59,11 @@ const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
-  admin: 'bg-red-100 text-red-800
-  medico: 'bg-blue-100 text-blue-800
-  recepcao: 'bg-green-100 text-green-800
-  enfermagem: 'bg-purple-100 text-purple-800
-  financeiro: 'bg-yellow-100 text-yellow-800
+  admin: 'bg-red-100 text-red-800',
+  medico: 'bg-blue-100 text-blue-800',
+  recepcao: 'bg-green-100 text-green-800',
+  enfermagem: 'bg-purple-100 text-purple-800',
+  financeiro: 'bg-yellow-100 text-yellow-800',
 };
 
 export default function Usuarios() {
