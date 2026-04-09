@@ -485,6 +485,56 @@ export default function Auth() {
                       />
                       <FormField
                         control={signupForm.control}
+                        name="telefone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Telefone</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                <MaskedInput
+                                  mask="phone"
+                                  placeholder="(11) 99999-9999"
+                                  autoComplete="tel"
+                                  className="h-11 pl-10 bg-muted/20 border-border/50 focus:border-primary focus:bg-card rounded-xl"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={signupForm.control}
+                        name="cpfCnpj"
+                        render={({ field }) => {
+                          const digits = field.value.replace(/\D/g, '');
+                          const isCnpj = digits.length > 11;
+                          return (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">CPF ou CNPJ</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                  <MaskedInput
+                                    mask={isCnpj ? 'cnpj' : 'cpf'}
+                                    placeholder="000.000.000-00"
+                                    autoComplete="off"
+                                    className="h-11 pl-10 bg-muted/20 border-border/50 focus:border-primary focus:bg-card rounded-xl"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                      <FormField
+                        control={signupForm.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
