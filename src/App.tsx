@@ -94,8 +94,7 @@ function getRoutingMode(): 'landing' | 'app' {
   const host = window.location.hostname;
   if (
     host === 'elolab.com.br' ||
-    host === 'www.elolab.com.br' ||
-    host === 'real-world-made.lovable.app'
+    host === 'www.elolab.com.br'
   ) {
     return 'landing';
   }
@@ -132,7 +131,7 @@ const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App
                       </>
                     ) : (
                       <>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/" element={<LandingPage />} />
                         <Route path="/landing" element={<LandingPage />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Navigate to="/auth" replace />} />
