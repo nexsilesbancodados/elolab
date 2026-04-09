@@ -79,9 +79,9 @@ export function AgentsTab({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total de Agentes', value: agents.length, accent: 'text-primary bg-primary/10' },
-          { label: 'Ativos', value: agents.filter(a => a.ativo).length, accent: 'text-green-600 dark:text-green-400 bg-green-500/10' },
-          { label: 'Inativos', value: agents.filter(a => !a.ativo).length, accent: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
-          { label: 'Tipos', value: new Set(agents.map(a => a.tipo)).size, accent: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
+          { label: 'Ativos', value: agents.filter(a => a.ativo).length, accent: 'text-green-600 bg-green-500/10' },
+          { label: 'Inativos', value: agents.filter(a => !a.ativo).length, accent: 'text-amber-600 bg-amber-500/10' },
+          { label: 'Tipos', value: new Set(agents.map(a => a.tipo)).size, accent: 'text-blue-600 bg-blue-500/10' },
         ].map(s => (
           <Card key={s.label} className="hover:shadow-md transition-shadow">
             <CardContent className="p-3 flex items-center gap-3">

@@ -25,9 +25,9 @@ import { Input } from '@/components/ui/input';
 import { exportAuditEntriesAsCsv, exportAuditEntriesAsJson } from '@/lib/auditExport';
 
 const ACTION_COLORS = {
-  create: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  update: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  delete: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  create: 'bg-green-100 text-green-800
+  update: 'bg-blue-100 text-blue-800
+  delete: 'bg-red-100 text-red-800
 };
 
 export function AuditLog() {

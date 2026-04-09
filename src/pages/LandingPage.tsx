@@ -55,7 +55,7 @@ import modFinanc6 from '@/assets/mod-financ6.webp';
 const C = {
   coral: 'hsl(12,76%,61%)',
   grad: 'linear-gradient(135deg, hsl(12,76%,61%), hsl(30,80%,55%))',
-  dark: 'hsl(20,25%,18%)',
+  'hsl(20,25%,18%)',
   text: 'hsl(20,15%,30%)',
   textL: 'hsl(20,10%,50%)',
 };
