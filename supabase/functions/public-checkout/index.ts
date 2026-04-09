@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
     // Only send welcome email with invite code for TRIAL mode
     // For BUY mode, the email is sent after payment approval via webhook
     if (brevoApiKey && mode === 'trial') {
-      const appUrl = 'https://real-world-made.lovable.app'
+      const appUrl = 'https://app.elolab.com.br'
       const activationLink = `${appUrl}/auth?codigo=${inviteCode}&email=${encodeURIComponent(email)}&plano=${plano.slug}`
 
       try {
