@@ -81,7 +81,7 @@ export default function Auth() {
   const signupForm = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      nome: '', email: urlEmail || '', password: '', confirmPassword: '',
+      nome: '', telefone: '', cpfCnpj: '', email: urlEmail || '', password: '', confirmPassword: '',
       codigoConvite: urlCodigo || '',
     },
   });
@@ -173,7 +173,7 @@ export default function Auth() {
         return;
       }
 
-      const result = await signUp(data.email, data.password, data.nome);
+      const result = await signUp(data.email, data.password, data.nome, data.telefone, data.cpfCnpj);
       if (result.error) {
         if (result.error.message.includes('User already registered')) toast.error('Este email já está cadastrado');
         else toast.error(result.error.message || 'Erro ao criar conta');
