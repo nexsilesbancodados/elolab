@@ -90,53 +90,61 @@ Deno.serve(async (req) => {
 
     let checkoutUrl = null
 
-    // MODE: BUY — create Mercado Pago subscription (preapproval) for recurring billing
+    // MODE: BUY — create Mercado Pago Checkout Pro with all payment methods
     if (mode === 'buy' && mpAccessToken) {
       try {
-        const appUrl = 'https://real-world-made.lovable.app'
+        const appUrl = 'https://app.elolab.com.br'
         const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`
 
-        // Use /preapproval for recurring monthly subscriptions (per MP API docs)
-        const preapprovalPayload = {
-          // payer_email is REQUIRED per MP docs for subscriptions without plan
-          payer_email: email,
-          reason: `${plano.nome} - EloLab`,
-          external_reference: registro.id,
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: Number(plano.valor),
+        // Use Checkout Pro preference which supports ALL payment methods (PIX, boleto, credit, debit, etc.)
+        const preferencePayload = {
+          items: [{
+            title: `${plano.nome} - Assinatura Mensal EloLab`,
+            description: plano.descricao || `Plano ${plano.nome}`,
+            unit_price: Number(plano.valor),
+            quantity: 1,
             currency_id: 'BRL',
-            // start_date defaults to now
-            // end_date is optional
+          }],
+          payer: {
+            name: nome,
+            email,
           },
-          back_url: `${appUrl}/?status=success&id=${registro.id}`,
+          external_reference: registro.id,
+          back_urls: {
+            success: `${appUrl}/auth?status=success&id=${registro.id}`,
+            failure: `${appUrl}/auth?status=error`,
+            pending: `${appUrl}/auth?status=pending`,
+          },
+          auto_return: 'approved',
           notification_url: webhookUrl,
-          status: 'pending', // subscription starts pending until user completes checkout
+          statement_descriptor: 'ELOLAB',
+          payment_methods: {
+            installments: 12,
+            default_installments: 1,
+          },
         }
 
-        console.log('Creating preapproval:', JSON.stringify(preapprovalPayload))
+        console.log('Creating checkout preference:', JSON.stringify(preferencePayload))
 
-        const preapprovalRes = await fetch(`${MP_API_BASE}/preapproval`, {
+        const preferenceRes = await fetch(`${MP_API_BASE}/checkout/preferences`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${mpAccessToken}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(preapprovalPayload),
+          body: JSON.stringify(preferencePayload),
         })
 
-        const preapprovalData = await preapprovalRes.json()
+        if (preferenceRes.ok) {
+          const prefData = await preferenceRes.json()
+          checkoutUrl = prefData.init_point || prefData.sandbox_init_point
+          console.log('Preference created with all payment methods:', prefData.id)
 
-        if (preapprovalRes.ok && preapprovalData.init_point) {
-          checkoutUrl = preapprovalData.init_point
-          console.log('Preapproval created:', preapprovalData.id)
-
-          // Save subscription reference in assinaturas_mercadopago
+          // Save reference
           await supabase
             .from('assinaturas_mercadopago')
             .insert({
-              mp_preapproval_id: preapprovalData.id,
+              mp_preapproval_id: prefData.id,
               nome_plano: plano.nome,
               descricao: plano.descricao || `Plano ${plano.nome} EloLab`,
               valor: Number(plano.valor),
@@ -147,68 +155,17 @@ Deno.serve(async (req) => {
                 registro_pendente_id: registro.id,
                 payer_email: email,
                 payer_name: nome,
+                checkout_type: 'preference',
               },
             })
 
-          // Update registro with MP reference
           await supabase
             .from('registros_pendentes')
-            .update({ mp_payment_id: preapprovalData.id })
+            .update({ mp_payment_id: prefData.id })
             .eq('id', registro.id)
         } else {
-          console.error('MP preapproval error:', JSON.stringify(preapprovalData))
-          
-          // Fallback to Checkout Pro preference for one-time payment
-          console.log('Falling back to checkout preference...')
-          const preferenceRes = await fetch(`${MP_API_BASE}/checkout/preferences`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${mpAccessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              items: [{
-                title: `${plano.nome} - Assinatura Mensal EloLab`,
-                description: plano.descricao || `Plano ${plano.nome}`,
-                unit_price: Number(plano.valor),
-                quantity: 1,
-                currency_id: 'BRL',
-              }],
-              payer: {
-                name: nome,
-                email,
-              },
-              external_reference: registro.id,
-              back_urls: {
-                success: `${appUrl}/?status=success&id=${registro.id}`,
-                failure: `${appUrl}/?status=error`,
-                pending: `${appUrl}/?status=pending`,
-              },
-              auto_return: 'approved',
-              notification_url: webhookUrl,
-              statement_descriptor: 'ELOLAB',
-              payment_methods: {
-                installments: 1,
-                excluded_payment_types: [
-                  { id: 'ticket' }, // exclude boleto for subscriptions
-                ],
-              },
-            }),
-          })
-
-          if (preferenceRes.ok) {
-            const prefData = await preferenceRes.json()
-            checkoutUrl = prefData.init_point || prefData.sandbox_init_point
-            console.log('Preference created:', prefData.id)
-
-            await supabase
-              .from('registros_pendentes')
-              .update({ mp_payment_id: prefData.id })
-              .eq('id', registro.id)
-          } else {
-            const errText = await preferenceRes.text()
-            console.error('MP preference error:', errText)
-          }
+          const errText = await preferenceRes.text()
+          console.error('MP preference error:', errText)
         }
       } catch (mpErr) {
         console.error('Erro Mercado Pago:', mpErr)
