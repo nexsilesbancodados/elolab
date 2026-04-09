@@ -2508,6 +2508,7 @@ export type Database = {
           ativo: boolean | null
           avatar: string | null
           clinica_id: string | null
+          cpf_cnpj: string | null
           created_at: string | null
           email: string
           id: string
@@ -2520,6 +2521,7 @@ export type Database = {
           ativo?: boolean | null
           avatar?: string | null
           clinica_id?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           email: string
           id: string
@@ -2532,6 +2534,7 @@ export type Database = {
           ativo?: boolean | null
           avatar?: string | null
           clinica_id?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           email?: string
           id?: string

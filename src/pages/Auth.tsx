@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { MaskedInput } from '@/components/ui/masked-input';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
-  Gift, CheckCircle2, Lock, Mail, User,
+  Gift, CheckCircle2, Lock, Mail, User, Phone, FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -28,6 +29,8 @@ const loginSchema = z.object({
 
 const signupSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  telefone: z.string().min(14, 'Telefone inválido'),
+  cpfCnpj: z.string().min(14, 'CPF ou CNPJ inválido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(1, 'Confirme a senha'),
@@ -78,7 +81,7 @@ export default function Auth() {
   const signupForm = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      nome: '', email: urlEmail || '', password: '', confirmPassword: '',
+      nome: '', telefone: '', cpfCnpj: '', email: urlEmail || '', password: '', confirmPassword: '',
       codigoConvite: urlCodigo || '',
     },
   });
@@ -170,7 +173,7 @@ export default function Auth() {
         return;
       }
 
-      const result = await signUp(data.email, data.password, data.nome);
+      const result = await signUp(data.email, data.password, data.nome, data.telefone, data.cpfCnpj);
       if (result.error) {
         if (result.error.message.includes('User already registered')) toast.error('Este email já está cadastrado');
         else toast.error(result.error.message || 'Erro ao criar conta');
@@ -479,6 +482,56 @@ export default function Auth() {
                             <FormMessage />
                           </FormItem>
                         )}
+                      />
+                      <FormField
+                        control={signupForm.control}
+                        name="telefone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Telefone</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                <MaskedInput
+                                  mask="phone"
+                                  placeholder="(11) 99999-9999"
+                                  autoComplete="tel"
+                                  className="h-11 pl-10 bg-muted/20 border-border/50 focus:border-primary focus:bg-card rounded-xl"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={signupForm.control}
+                        name="cpfCnpj"
+                        render={({ field }) => {
+                          const digits = field.value.replace(/\D/g, '');
+                          const isCnpj = digits.length > 11;
+                          return (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">CPF ou CNPJ</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                  <MaskedInput
+                                    mask={isCnpj ? 'cnpj' : 'cpf'}
+                                    placeholder="000.000.000-00"
+                                    autoComplete="off"
+                                    className="h-11 pl-10 bg-muted/20 border-border/50 focus:border-primary focus:bg-card rounded-xl"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                       <FormField
                         control={signupForm.control}
