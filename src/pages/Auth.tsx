@@ -510,21 +510,34 @@ export default function Auth() {
                         control={signupForm.control}
                         name="cpfCnpj"
                         render={({ field }) => {
-                          const digits = field.value.replace(/\D/g, '');
-                          const isCnpj = digits.length > 11;
+                          const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                            const digits = e.target.value.replace(/\D/g, '').slice(0, 14);
+                            let formatted = '';
+                            if (digits.length <= 11) {
+                              // Format as CPF
+                              if (digits.length <= 3) formatted = digits;
+                              else if (digits.length <= 6) formatted = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+                              else if (digits.length <= 9) formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+                              else formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+                            } else {
+                              // Format as CNPJ
+                              if (digits.length <= 12) formatted = `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+                              else formatted = `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+                            }
+                            field.onChange(formatted);
+                          };
                           return (
                             <FormItem>
                               <FormLabel className="text-sm font-medium">CPF ou CNPJ</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
-                                  <MaskedInput
-                                    mask={isCnpj ? 'cnpj' : 'cpf'}
+                                  <Input
                                     placeholder="000.000.000-00"
                                     autoComplete="off"
                                     className="h-11 pl-10 bg-muted/20 border-border/50 focus:border-primary focus:bg-card rounded-xl"
                                     value={field.value}
-                                    onChange={field.onChange}
+                                    onChange={handleCpfCnpjChange}
                                   />
                                 </div>
                               </FormControl>
