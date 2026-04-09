@@ -276,9 +276,9 @@ export default function Atestados() {
   const getTipoBadge = (tipo: string | null) => {
     switch (tipo) {
       case 'comparecimento': return 'bg-primary/10 text-primary';
-      case 'afastamento': return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
-      case 'aptidao': return 'bg-green-500/10 text-green-700 dark:text-green-300';
-      case 'acompanhante': return 'bg-purple-500/10 text-purple-700 dark:text-purple-300';
+      case 'afastamento': return 'bg-amber-500/10 text-amber-700';
+      case 'aptidao': return 'bg-green-500/10 text-green-700';
+      case 'acompanhante': return 'bg-purple-500/10 text-purple-700';
       default: return '';
     }
   };
@@ -561,7 +561,7 @@ export default function Atestados() {
               </div>
               {formData.incluirCid && (
                 <div className="space-y-1.5 pl-7">
-                  <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+                  <div className="flex items-center gap-2 text-xs text-amber-600">
                     <AlertTriangle className="h-3 w-3" />
                     <span>O CID só pode constar no atestado com autorização expressa do paciente (ética médica).</span>
                   </div>
@@ -602,7 +602,7 @@ export default function Atestados() {
             <div className="flex items-center gap-3 bg-green-500/5 border border-green-500/20 rounded-lg p-3">
               <BadgeCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-green-700 dark:text-green-300">Assinatura Digital ICP-Brasil</p>
+                <p className="font-medium text-green-700">Assinatura Digital ICP-Brasil</p>
                 <p className="text-xs text-muted-foreground">Documento com validade jurídica — assinatura eletrônica via Memed.</p>
               </div>
             </div>
@@ -717,7 +717,7 @@ export default function Atestados() {
                   <p className="text-sm whitespace-pre-wrap">{selectedAtestado.observacoes}</p>
                 </div>
               )}
-              <div className="flex items-center gap-2 text-xs text-green-700 dark:text-green-300 bg-green-500/5 rounded p-2">
+              <div className="flex items-center gap-2 text-xs text-green-700 bg-green-500/5 rounded p-2">
                 <BadgeCheck className="h-3.5 w-3.5" />
                 <span>Documento assinado digitalmente — ICP-Brasil via Memed</span>
               </div>

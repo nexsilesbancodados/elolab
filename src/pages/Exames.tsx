@@ -31,10 +31,10 @@ import { autoCreateColeta, autoProgressExame, autoVincularResultadoProntuario } 
 type StatusExame = Database['public']['Enums']['status_exame'];
 
 const STATUS_COLORS: Record<StatusExame, string> = {
-  solicitado: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  agendado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  realizado: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  laudo_disponivel: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  solicitado: 'bg-yellow-100 text-yellow-800',
+  agendado: 'bg-blue-100 text-blue-800',
+  realizado: 'bg-purple-100 text-purple-800',
+  laudo_disponivel: 'bg-green-100 text-green-800',
   cancelado: 'bg-muted text-muted-foreground',
 };
 
@@ -658,7 +658,7 @@ export default function Exames() {
                             <div key={i} className="flex items-center gap-0.5">
                               <div className={cn(
                                 'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
-                                i < step && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                i < step && 'bg-emerald-100 text-emerald-700',
                                 i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                 i > step && 'bg-muted text-muted-foreground/40',
                                 step === -1 && 'bg-muted text-muted-foreground line-through',
@@ -773,7 +773,7 @@ export default function Exames() {
             {/* Urgency justification */}
             {(formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && (
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-2">
-                <Label className="text-xs font-medium flex items-center gap-1 text-amber-700 dark:text-amber-300">
+                <Label className="text-xs font-medium flex items-center gap-1 text-amber-700">
                   <AlertTriangle className="h-3.5 w-3.5" />Justificativa de Urgência (obrigatória para autorização) *
                 </Label>
                 <Textarea

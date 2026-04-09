@@ -96,12 +96,12 @@ export function DigitalSignature({
         animate={{ opacity: 1, scale: 1 }}
         className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2"
       >
-        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-green-700 dark:text-green-300">
+          <p className="text-xs font-medium text-green-700">
             Assinado digitalmente
           </p>
-          <p className="text-[10px] text-green-600/70 dark:text-green-400/70 truncate">
+          <p className="text-[10px] text-green-600/70 truncate">
             {signatureData.signerName} — {new Date(signatureData.signedAt).toLocaleString('pt-BR')}
             {' • '}{signatureData.method === 'icp-brasil' ? 'ICP-Brasil' : 'Eletrônica'}
             {' • Hash: '}{signatureData.hash.substring(0, 8)}...

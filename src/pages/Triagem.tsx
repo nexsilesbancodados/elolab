@@ -38,7 +38,7 @@ const RISCO = {
     sublabel: 'Imediato',
     bg: 'bg-red-600 text-white',
     border: 'border-red-500',
-    light: 'bg-red-50 border-red-200 dark:bg-red-950/20',
+    light: 'bg-red-50 border-red-200',
     dot: 'bg-red-500 animate-pulse',
   },
   laranja: {
@@ -46,7 +46,7 @@ const RISCO = {
     sublabel: '10 min',
     bg: 'bg-orange-500 text-white',
     border: 'border-orange-400',
-    light: 'bg-orange-50 border-orange-200 dark:bg-orange-950/20',
+    light: 'bg-orange-50 border-orange-200',
     dot: 'bg-orange-500',
   },
   amarelo: {
@@ -54,7 +54,7 @@ const RISCO = {
     sublabel: '30 min',
     bg: 'bg-yellow-400 text-yellow-900',
     border: 'border-yellow-400',
-    light: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20',
+    light: 'bg-yellow-50 border-yellow-200',
     dot: 'bg-yellow-400',
   },
   verde: {
@@ -62,7 +62,7 @@ const RISCO = {
     sublabel: '120 min',
     bg: 'bg-green-500 text-white',
     border: 'border-green-400',
-    light: 'bg-green-50 border-green-200 dark:bg-green-950/20',
+    light: 'bg-green-50 border-green-200',
     dot: 'bg-green-500',
   },
   azul: {
@@ -70,7 +70,7 @@ const RISCO = {
     sublabel: '240 min',
     bg: 'bg-blue-500 text-white',
     border: 'border-blue-400',
-    light: 'bg-blue-50 border-blue-200 dark:bg-blue-950/20',
+    light: 'bg-blue-50 border-blue-200',
     dot: 'bg-blue-400',
   },
 };

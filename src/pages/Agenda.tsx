@@ -48,13 +48,13 @@ const HORARIOS = [
 ];
 
 const STATUS_COLORS: Record<StatusAgendamento, string> = {
-  agendado: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300',
-  confirmado: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300',
-  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300',
-  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300',
-  finalizado: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400',
-  cancelado: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300',
-  faltou: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
+  agendado: 'bg-blue-100 text-blue-800 border-blue-200',
+  confirmado: 'bg-green-100 text-green-800 border-green-200',
+  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200',
+  finalizado: 'bg-gray-100 text-gray-600 border-gray-200',
+  cancelado: 'bg-red-100 text-red-800 border-red-200',
+  faltou: 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
 // Color palette for doctors
@@ -65,16 +65,16 @@ const MEDICO_COLORS = [
 ];
 
 const MEDICO_BG_COLORS = [
-  'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
-  'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
-  'bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800',
-  'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
-  'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
-  'bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800',
-  'bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800',
-  'bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800',
-  'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800',
-  'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
+  'bg-blue-50 border-blue-200',
+  'bg-emerald-50 border-emerald-200',
+  'bg-violet-50 border-violet-200',
+  'bg-amber-50 border-amber-200',
+  'bg-rose-50 border-rose-200',
+  'bg-cyan-50 border-cyan-200',
+  'bg-pink-50 border-pink-200',
+  'bg-teal-50 border-teal-200',
+  'bg-indigo-50 border-indigo-200',
+  'bg-orange-50 border-orange-200',
 ];
 
 const STATUS_LABELS: Record<StatusAgendamento, string> = {
@@ -547,8 +547,8 @@ export default function Agenda() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
               { label: 'Consultas hoje', value: statsHoje.total, color: 'text-primary', bg: 'bg-primary/10', icon: CalendarCheck },
-              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10', icon: Users },
-              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10', icon: Clock },
+              { label: 'Confirmados', value: statsHoje.confirmados, color: 'text-green-600', bg: 'bg-green-500/10', icon: Users },
+              { label: 'Aguardando', value: statsHoje.aguardando, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: Clock },
               { label: 'Finalizados', value: statsHoje.finalizados, color: 'text-muted-foreground', bg: 'bg-muted', icon: CalendarCheck },
               { label: 'Cancelados/Faltas', value: statsHoje.cancelados + agendamentosHoje.filter(a => a.status === 'faltou').length, color: 'text-destructive', bg: 'bg-destructive/10', icon: AlertTriangle },
             ].map(s => (
@@ -568,14 +568,14 @@ export default function Agenda() {
           {/* Quick status actions for today's appointments */}
           {agendamentosHoje.filter(a => a.status === 'agendado').length > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
-              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-              <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+              <span className="text-sm text-amber-700 font-medium">
                 {agendamentosHoje.filter(a => a.status === 'agendado').length} agendamento(s) ainda não confirmado(s) hoje
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                className="ml-auto h-7 text-xs border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                className="ml-auto h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-500/10"
                 onClick={async () => {
                   const ids = agendamentosHoje.filter(a => a.status === 'agendado').map(a => a.id);
                   let count = 0;
@@ -592,7 +592,7 @@ export default function Agenda() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs border-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-500/10"
+                className="h-7 text-xs border-orange-300 text-orange-700 hover:bg-orange-500/10"
                 onClick={async () => {
                   const result = await autoMarcarFaltasHoje();
                   if (result.success) {
