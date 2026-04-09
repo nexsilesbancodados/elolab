@@ -900,17 +900,9 @@ export default function Configuracoes() {
               <CardContent className="space-y-6">
                 <div className="space-y-3">
                   <Label>Tema</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {([
-                      { value: 'light' as const, label: 'Claro', desc: 'Fundo branco e cores suaves' },
-                      { value: 'dark' as const, label: 'Escuro', desc: 'Fundo escuro, ideal para baixa luz' },
-                    ] satisfies { value: 'light' | 'dark'; label: string; desc: string }[]).map(opt => (
-                      <button key={opt.value} onClick={() => { setTheme(opt.value); toast.success(`Tema ${opt.label} aplicado!`); }}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${theme === opt.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/30'}`}>
-                        <p className="font-semibold text-sm">{opt.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
-                      </button>
-                    ))}
+                  <div className="p-4 rounded-xl border-2 border-primary bg-primary/5 shadow-sm text-left">
+                    <p className="font-semibold text-sm">Claro</p>
+                    <p className="text-xs text-muted-foreground mt-1">Fundo branco e cores suaves</p>
                   </div>
                 </div>
                 <Separator />
