@@ -319,7 +319,7 @@ export default function TriagemPage() {
       toast.error('Erro: ' + e.message);
     } finally {
       setIsSaving(false);
-    }
+    }'
   };
 
   const getPacienteNome = (id: string) => pacientes.find(p => p.id === id)?.nome ?? '—';

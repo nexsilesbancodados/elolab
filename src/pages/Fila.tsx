@@ -265,7 +265,7 @@ export default function Fila() {
       toast.error('Erro: ' + e.message);
     } finally {
       setIsSaving(false);
-    }
+    }'
   };
 
   // TTS voice call helper

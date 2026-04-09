@@ -65,15 +65,15 @@ const MEDICO_COLORS = [
 ];
 
 const MEDICO_BG_COLORS = [
-  'bg-blue-50 border-blue-200'
+  'bg-blue-50 border-blue-200',
   'bg-emerald-50 border-emerald-200'
-  'bg-violet-50 border-violet-200'
+  'bg-violet-50 border-violet-200',
   'bg-amber-50 border-amber-200'
-  'bg-rose-50 border-rose-200'
+  'bg-rose-50 border-rose-200',
   'bg-cyan-50 border-cyan-200'
-  'bg-pink-50 border-pink-200'
+  'bg-pink-50 border-pink-200',
   'bg-teal-50 border-teal-200'
-  'bg-indigo-50 border-indigo-200'
+  'bg-indigo-50 border-indigo-200',
   'bg-orange-50 border-orange-200'
 ];
 

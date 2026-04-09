@@ -52,9 +52,9 @@ const ROLE_COLORS: Record<AppRole, string> = {
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-  ativa: { label: 'Ativa', color: 'bg-green-500/10 text-green-700 icon: CheckCircle2 },
-  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-700 icon: Clock },
-  expirada: { label: 'Expirada', color: 'bg-amber-500/10 text-amber-700 icon: Ban },
+  ativa: { label: 'Ativa', color: 'bg-green-500/10 text-green-700 icon: CheckCircle2' },
+  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-700 icon: Clock' },
+  expirada: { label: 'Expirada', color: 'bg-amber-500/10 text-amber-700 icon: Ban' },
   cancelada: { label: 'Cancelada', color: 'bg-destructive/10 text-destructive', icon: Ban },
 };
 
