@@ -102,7 +102,7 @@ function getRoutingMode(): 'landing' | 'app' {
   return 'app';
 }
 
-const App = React.forwardRef<HTMLDivElement, Record<string, never>>(function App(_props, _ref) {
+function App() {
   const mode = getRoutingMode();
 
   return (
