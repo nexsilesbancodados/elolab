@@ -202,7 +202,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, nome: string, telefone?: string, cpfCnpj?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = 'https://app.elolab.com.br/';
     
     const { data, error } = await supabase.auth.signUp({
       email,

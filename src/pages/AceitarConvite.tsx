@@ -118,7 +118,7 @@ export default function AceitarConvite() {
         email: invitation.email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: 'https://app.elolab.com.br/dashboard',
           data: {
             nome: invitation.funcionario?.nome || invitation.email,
           },
