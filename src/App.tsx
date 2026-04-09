@@ -92,9 +92,14 @@ function RouteFallback() {
  */
 function getRoutingMode(): 'landing' | 'app' {
   const host = window.location.hostname;
-  if (host === 'elolab.com.br' || host === 'www.elolab.com.br') {
+  if (
+    host === 'elolab.com.br' ||
+    host === 'www.elolab.com.br' ||
+    host === 'real-world-made.lovable.app'
+  ) {
     return 'landing';
   }
+  // app.elolab.com.br / localhost / preview → Full SaaS app
   return 'app';
 }
 
