@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { MaskedInput } from '@/components/ui/masked-input';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
-  Gift, CheckCircle2, Lock, Mail, User,
+  Gift, CheckCircle2, Lock, Mail, User, Phone, FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
