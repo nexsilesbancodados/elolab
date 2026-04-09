@@ -151,43 +151,21 @@ export default function Auth() {
     }
     setIsLoading(true);
     try {
-      const { data: registro, error: regError } = await supabase
-        .from('registros_pendentes' as any)
-        .select('id, status, expires_at, plano_slug')
-        .eq('codigo_convite', data.codigoConvite)
-        .in('status', ['pendente', 'pago'])
-        .maybeSingle();
+      // Validate invite code via secure RPC (bypasses RLS)
+      const { data: validation, error: valError } = await supabase.rpc(
+        'validate_invite_code' as any,
+        { _codigo: data.codigoConvite }
+      );
 
-      if (regError || !registro) {
-        toast.error('Código de convite inválido ou já utilizado.');
+      if (valError) {
+        toast.error('Erro ao validar código. Tente novamente.');
         setIsLoading(false);
         return;
       }
 
-      const reg = registro as any;
-      if (new Date(reg.expires_at) < new Date()) {
-        toast.error('Código de convite expirado.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Pre-validate the invite code before creating the account
-      const { data: codeCheck } = await supabase
-        .from('registros_pendentes' as any)
-        .select('id, status, expires_at')
-        .eq('codigo_convite', data.codigoConvite)
-        .in('status', ['pendente', 'pago'])
-        .maybeSingle();
-
-      if (!codeCheck) {
-        toast.error('Código de convite inválido ou já utilizado.');
-        setIsLoading(false);
-        return;
-      }
-
-      const codeData = codeCheck as any;
-      if (new Date(codeData.expires_at) < new Date()) {
-        toast.error('Código de convite expirado.');
+      const valResult = validation as any;
+      if (!valResult?.valid) {
+        toast.error(valResult?.error || 'Código de convite inválido ou já utilizado.');
         setIsLoading(false);
         return;
       }
