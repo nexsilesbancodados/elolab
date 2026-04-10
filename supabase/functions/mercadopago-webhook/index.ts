@@ -23,12 +23,12 @@ Deno.serve(async (req) => {
     if (req.method === "GET") {
       const url = new URL(req.url);
       const status = url.searchParams.get("status") || "unknown";
-      const appUrl = "https://real-world-made.lovable.app";
+        const appUrl = "https://app.elolab.com.br";
       return new Response(null, {
         status: 302,
         headers: {
           ...corsHeaders,
-          Location: `${appUrl}/financeiro?mp_status=${status}`,
+            Location: `${appUrl}/planos?mp_status=${status}`,
         },
       });
     }
@@ -200,6 +200,68 @@ async function processPaymentNotification(
         // Send activation email with invite code AFTER payment approval
         await sendActivationEmail(registro, supabase);
       }
+
+      const { data: assinaturaMp } = await supabase
+        .from("assinaturas_mercadopago")
+        .select("id, detalhes")
+        .contains("detalhes", { checkout_reference: payment.external_reference })
+        .maybeSingle();
+
+      if (assinaturaMp) {
+        const detalhes = (assinaturaMp.detalhes || {}) as Record<string, unknown>;
+        const userId = typeof detalhes.user_id === "string" ? detalhes.user_id : null;
+        const planoId = typeof detalhes.plano_id === "string" ? detalhes.plano_id : null;
+        const planoSlug = typeof detalhes.plano_slug === "string" ? detalhes.plano_slug : null;
+
+        await supabase
+          .from("assinaturas_mercadopago")
+          .update({
+            status: "ativa",
+            detalhes: {
+              ...detalhes,
+              payment_id: payment.id?.toString() || null,
+              payment_status: payment.status,
+              payment_type: payment.payment_type_id || null,
+            },
+          })
+          .eq("id", assinaturaMp.id);
+
+        if (userId && planoId && planoSlug) {
+          const { data: existingPlan } = await supabase
+            .from("assinaturas_plano")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("plano_slug", planoSlug)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingPlan?.id) {
+            await supabase
+              .from("assinaturas_plano")
+              .update({
+                plano_id: planoId,
+                status: "ativa",
+                em_trial: false,
+                trial_fim: null,
+                data_cancelamento: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingPlan.id);
+          } else {
+            await supabase
+              .from("assinaturas_plano")
+              .insert({
+                user_id: userId,
+                plano_id: planoId,
+                plano_slug: planoSlug,
+                status: "ativa",
+                em_trial: false,
+                data_inicio: new Date().toISOString(),
+              });
+          }
+        }
+      }
     }
 
     // Mark webhook log as processed
@@ -307,7 +369,7 @@ async function sendActivationEmail(registro: any, supabase: any) {
       .eq("id", registro.plano_id)
       .single();
 
-    const appUrl = "https://real-world-made.lovable.app";
+    const appUrl = "https://app.elolab.com.br";
     const activationLink = `${appUrl}/auth?codigo=${registro.codigo_convite}&email=${encodeURIComponent(registro.email)}&plano=${registro.plano_slug}`;
     const planoNome = plano?.nome || registro.plano_slug;
     const planoValor = plano ? Number(plano.valor).toFixed(2) : "0.00";

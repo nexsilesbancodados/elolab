@@ -328,16 +328,36 @@ export default function Configuracoes() {
     if (!user?.id) return;
     setLoadingConfig(true);
     try {
-      const { data } = await supabase
-        .from('configuracoes_clinica')
-        .select('chave, valor')
-        .eq('user_id', user.id);
+      const [configResult, clinicaResult] = await Promise.all([
+        supabase
+          .from('configuracoes_clinica')
+          .select('chave, valor')
+          .eq('user_id', user.id),
+        profile?.clinica_id
+          ? supabase
+              .from('clinicas')
+              .select('nome, cnpj')
+              .eq('id', profile.clinica_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
 
-      if (data && data.length > 0) {
+      const data = configResult.data;
+      const clinicaBase = clinicaResult.data;
+
+      if ((data && data.length > 0) || clinicaBase) {
         setIsCloudSynced(true);
         const map: Record<string, any> = {};
         data.forEach(d => { map[d.chave] = d.valor; });
-        if (map['config_clinica']) setConfigClinica({ ...DEFAULT_CLINICA, ...(map['config_clinica'] as any) });
+        if (map['config_clinica'] || clinicaBase) {
+          const clinicaConfig = (map['config_clinica'] as Partial<ConfiguracaoClinica> | undefined) ?? {};
+          setConfigClinica({
+            ...DEFAULT_CLINICA,
+            ...clinicaConfig,
+            nomeClinica: clinicaConfig.nomeClinica || clinicaBase?.nome || DEFAULT_CLINICA.nomeClinica,
+            cnpj: clinicaConfig.cnpj || clinicaBase?.cnpj || DEFAULT_CLINICA.cnpj,
+          });
+        }
         if (map['config_notificacoes']) setConfigNotificacoes({ ...DEFAULT_NOTIFICACOES, ...(map['config_notificacoes'] as any) });
         if (map['config_financeiro']) setConfigFinanceiro({ ...DEFAULT_FINANCEIRO, ...(map['config_financeiro'] as any) });
         if (map['config_seguranca']) setConfigSeguranca({ ...DEFAULT_SEGURANCA, ...(map['config_seguranca'] as any) });
@@ -348,7 +368,7 @@ export default function Configuracoes() {
     } finally {
       setLoadingConfig(false);
     }
-  }, [user?.id]);
+  }, [profile?.clinica_id, user?.id]);
 
   useEffect(() => { loadConfigs(); }, [loadConfigs]);
 
@@ -356,10 +376,29 @@ export default function Configuracoes() {
     if (!user?.id) { toast.error('Faça login para salvar.'); return; }
     setSaving(prev => ({ ...prev, [chave]: true }));
     try {
+      if (chave === 'config_clinica' && profile?.clinica_id) {
+        const clinicaConfig = valor as ConfiguracaoClinica;
+        const { error: clinicError } = await supabase
+          .from('clinicas')
+          .update({
+            nome: clinicaConfig.nomeClinica?.trim() || 'Minha Clínica',
+            cnpj: clinicaConfig.cnpj?.trim() || null,
+          })
+          .eq('id', profile.clinica_id);
+
+        if (clinicError) throw clinicError;
+      }
+
       const { error } = await supabase
         .from('configuracoes_clinica')
         .upsert(
-          { user_id: user.id, chave, valor, updated_at: new Date().toISOString() },
+          {
+            user_id: user.id,
+            clinica_id: profile?.clinica_id ?? null,
+            chave,
+            valor,
+            updated_at: new Date().toISOString(),
+          },
           { onConflict: 'user_id,chave' }
         );
       if (error) throw error;

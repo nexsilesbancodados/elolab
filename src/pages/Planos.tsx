@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Sparkles, Zap, Clock, Gift, ArrowRight, Shield, Headphones } from 'lucide-react';
 import { useUserPlan, usePlanos, useStartTrial } from '@/hooks/useSubscriptionPlan';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -67,18 +68,25 @@ export default function Planos() {
   const { data: planos, isLoading } = usePlanos();
   const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
   const startTrial = useStartTrial();
+  const { user, profile } = useSupabaseAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const upgradeMutation = useMutation({
     mutationFn: async (plano: any) => {
+      if (!user?.email) throw new Error('Faça login novamente para continuar');
+
       const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
         body: {
           action: 'create_subscription',
+          plano_id: plano.id,
+          plano_slug: plano.slug,
           nome_plano: plano.nome,
           descricao: plano.descricao || `Plano ${plano.nome} EloLab`,
           valor: plano.valor,
           frequencia: 'mensal',
+          payer_email: user.email,
+          payer_name: profile?.nome || user.email,
         },
       });
       if (error) throw error;
@@ -87,7 +95,7 @@ export default function Planos() {
     onSuccess: (data: any) => {
       if (data?.checkout_url) {
         toast.success('Redirecionando para o Mercado Pago...', { duration: 4000 });
-        window.open(data.checkout_url, '_blank');
+        window.location.href = data.checkout_url;
       }
       queryClient.invalidateQueries({ queryKey: ['user_plan'] });
     },
