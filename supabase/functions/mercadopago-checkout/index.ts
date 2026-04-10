@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (action === "create_preference") {
       return await createPreference(body, mpToken, supabase, corsHeaders);
     } else if (action === "create_subscription") {
-      return await createSubscription(body, mpToken, supabase, corsHeaders);
+      return await createSubscription(body, mpToken, supabase, corsHeaders, user.id);
     } else if (action === "get_payment") {
       return await getPayment(body, mpToken, corsHeaders);
     } else if (action === "cancel_subscription") {
@@ -157,42 +157,48 @@ async function createSubscription(
   body: any,
   mpToken: string,
   supabase: any,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  authUserId: string
 ) {
-  const { paciente_id, nome_plano, descricao, valor, frequencia, payer_email } = body;
-
-  const frequenciaMap: Record<string, { frequency: number; frequency_type: string }> = {
-    mensal: { frequency: 1, frequency_type: "months" },
-    trimestral: { frequency: 3, frequency_type: "months" },
-    semestral: { frequency: 6, frequency_type: "months" },
-    anual: { frequency: 12, frequency_type: "months" },
-  };
-
-  const freq = frequenciaMap[frequencia] || frequenciaMap.mensal;
+  const { paciente_id, plano_id, plano_slug, nome_plano, descricao, valor, frequencia, payer_email, payer_name } = body;
+  const appUrl = "https://app.elolab.com.br";
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
+  const externalReference = crypto.randomUUID();
 
-  // POST /preapproval per MP API docs
-  // payer_email is REQUIRED for subscriptions without a plan
-  const preapproval = {
-    payer_email: payer_email || undefined,
-    reason: nome_plano,
-    external_reference: crypto.randomUUID(),
-    auto_recurring: {
-      frequency: freq.frequency,
-      frequency_type: freq.frequency_type,
-      transaction_amount: Number(valor),
-      currency_id: "BRL",
+  const preference = {
+    items: [
+      {
+        title: nome_plano,
+        description: descricao || `Plano ${nome_plano} EloLab`,
+        quantity: 1,
+        unit_price: Number(valor),
+        currency_id: "BRL",
+      },
+    ],
+    payer: {
+      ...(payer_name && { name: payer_name }),
+      ...(payer_email && { email: payer_email }),
     },
-    back_url: `${supabaseUrl}/functions/v1/mercadopago-webhook?type=subscription`,
+    external_reference: externalReference,
+    payment_methods: {
+      installments: 12,
+      default_installments: 1,
+    },
+    back_urls: {
+      success: `${appUrl}/planos?mp_status=success`,
+      failure: `${appUrl}/planos?mp_status=failure`,
+      pending: `${appUrl}/planos?mp_status=pending`,
+    },
+    auto_return: "approved",
     notification_url: webhookUrl,
-    status: "pending",
+    statement_descriptor: "ELOLAB",
   };
 
   const response = await callMercadoPagoWithRetry(
-    `${MP_API_BASE}/preapproval`,
+    `${MP_API_BASE}/checkout/preferences`,
     "POST",
-    preapproval,
+    preference,
     mpToken
   );
 
@@ -207,6 +213,14 @@ async function createSubscription(
       frequencia,
       checkout_url: response.init_point,
       status: "pendente",
+      detalhes: {
+        checkout_type: "preference",
+        checkout_reference: externalReference,
+        user_id: authUserId,
+        plano_id: plano_id ?? null,
+        plano_slug: plano_slug ?? null,
+        payer_email: payer_email ?? null,
+      },
     })
     .select()
     .single();

@@ -70,6 +70,14 @@ export default function Auth() {
   }, [urlCodigo]);
 
   useEffect(() => {
+    const host = window.location.hostname;
+    if (host === 'elolab.com.br' || host === 'www.elolab.com.br') {
+      const targetUrl = `https://app.elolab.com.br${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.replace(targetUrl);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!authLoading && user && profile) navigate('/dashboard');
   }, [user, profile, authLoading, navigate]);
 
