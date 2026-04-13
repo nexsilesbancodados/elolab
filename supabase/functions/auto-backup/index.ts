@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         backupData[table] = data || []
         totalRecords += (data || []).length
       } catch (e) {
-        errors.push(`${table}: ${e.message}`)
+        errors.push(`${table}: ${(e as Error).message}`)
       }
     }
 
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Auto backup error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
