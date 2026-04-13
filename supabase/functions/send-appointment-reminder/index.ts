@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
   }
 
   const startTime = Date.now()
-  
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -40,6 +40,9 @@ Deno.serve(async (req) => {
     const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Cache clinic configs
+    const clinicConfigCache: Record<string, any> = {}
 
     const { data: settings } = await supabase
       .from('automation_settings')
@@ -90,7 +93,7 @@ Deno.serve(async (req) => {
       const { data: agendamentos24h, error: err24h } = await supabase
         .from('agendamentos')
         .select(`
-          id, data, hora_inicio, status, tipo, paciente_id, medico_id,
+          id, data, hora_inicio, status, tipo, paciente_id, medico_id, clinica_id,
           pacientes!inner(nome, email, telefone),
           medicos!inner(crm, nome, especialidade)
         `)
@@ -116,6 +119,11 @@ Deno.serve(async (req) => {
           const medico = ag.medicos
           const medicoNome = medico.nome ? `Dr(a). ${medico.nome}` : `Dr(a). CRM ${medico.crm}`
 
+          // Fetch clinic config
+          const clinicConfig = await getClinicConfig(supabase, ag.clinica_id, clinicConfigCache)
+          const clinicaNome = clinicConfig?.nome_fantasia || 'Clínica Médica'
+          const clinicaEndereco = clinicConfig ? `${clinicConfig.endereco || ''} — ${clinicConfig.cidade || ''} / ${clinicConfig.uf || ''}` : 'Endereço da clínica'
+
           // === SEND VIA EMAIL ===
           if (brevoApiKey && paciente?.email && template24h) {
             let conteudo = template24h.conteudo
@@ -123,11 +131,11 @@ Deno.serve(async (req) => {
               .replace(/\{\{data\}\}/g, formatDate(ag.data))
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
               .replace(/\{\{medico_nome\}\}/g, medicoNome)
-              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
-              .replace(/\{\{clinica_endereco\}\}/g, 'Endereço da clínica')
+              .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
+              .replace(/\{\{clinica_endereco\}\}/g, clinicaEndereco)
 
             let assunto = (template24h.assunto || 'Lembrete de Consulta')
-              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+              .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
             try {
               const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
@@ -160,7 +168,7 @@ Deno.serve(async (req) => {
           // === SEND VIA WHATSAPP ===
           if (whatsappInstanceName && paciente?.telefone) {
             try {
-              const whatsappMsg = `⏰ *Lembrete de Consulta - EloLab*\n\nOlá, ${paciente.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${formatDate(ag.data)}\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n📋 Tipo: ${ag.tipo || 'Consulta'}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\nResponda *CONFIRMAR* para confirmar sua presença.\n\n_EloLab Clínica_`
+              const whatsappMsg = `⏰ *Lembrete de Consulta - ${clinicaNome}*\n\nOlá, ${paciente.nome}!\n\nLembramos que você tem uma consulta amanhã:\n📅 Data: ${formatDate(ag.data)}\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n📋 Tipo: ${ag.tipo || 'Consulta'}\n\nNão se esqueça de trazer seus documentos e exames anteriores.\n\nResponda *CONFIRMAR* para confirmar sua presença.\n\n_${clinicaNome}_`
 
               await sendWhatsAppMessage(evolutionApiUrl!, evolutionApiKey!, whatsappInstanceName, paciente.telefone, whatsappMsg)
 
@@ -188,7 +196,7 @@ Deno.serve(async (req) => {
       const { data: agendamentos2h, error: err2h } = await supabase
         .from('agendamentos')
         .select(`
-          id, data, hora_inicio, status, tipo, paciente_id, medico_id,
+          id, data, hora_inicio, status, tipo, paciente_id, medico_id, clinica_id,
           pacientes!inner(nome, email, telefone),
           medicos!inner(crm, nome, especialidade)
         `)
@@ -220,17 +228,21 @@ Deno.serve(async (req) => {
           const medico = ag.medicos
           const medicoNome = medico.nome ? `Dr(a). ${medico.nome}` : `Dr(a). CRM ${medico.crm}`
 
+          // Fetch clinic config
+          const clinicConfig2h = await getClinicConfig(supabase, ag.clinica_id, clinicConfigCache)
+          const clinicaNome2h = clinicConfig2h?.nome_fantasia || 'Clínica Médica'
+
           // === SEND VIA EMAIL ===
           if (brevoApiKey && paciente?.email && template2h) {
             let conteudo = template2h.conteudo
               .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
               .replace(/\{\{medico_nome\}\}/g, medicoNome)
-              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+              .replace(/\{\{clinica_nome\}\}/g, clinicaNome2h)
 
             let assunto = (template2h.assunto || 'Lembrete de Consulta')
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
-              .replace(/\{\{clinica_nome\}\}/g, 'EloLab Clínica')
+              .replace(/\{\{clinica_nome\}\}/g, clinicaNome2h)
 
             try {
               const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
@@ -261,7 +273,7 @@ Deno.serve(async (req) => {
           // === SEND VIA WHATSAPP ===
           if (whatsappInstanceName && paciente?.telefone) {
             try {
-              const whatsappMsg = `⏰ *Lembrete - EloLab*\n\nOlá, ${paciente.nome}! Sua consulta é daqui a 2 horas:\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n\nEstamos esperando por você!\n\n_EloLab Clínica_`
+              const whatsappMsg = `⏰ *Lembrete - ${clinicaNome2h}*\n\nOlá, ${paciente.nome}! Sua consulta é daqui a 2 horas:\n🕐 Horário: ${ag.hora_inicio}\n👨‍⚕️ Médico: ${medicoNome}\n\nEstamos esperando por você!\n\n_${clinicaNome2h}_`
 
               await sendWhatsAppMessage(evolutionApiUrl!, evolutionApiKey!, whatsappInstanceName, paciente.telefone, whatsappMsg)
 
@@ -319,6 +331,19 @@ Deno.serve(async (req) => {
 function formatDate(dateStr: string): string {
   const [year, month, day] = dateStr.split('-')
   return `${day}/${month}/${year}`
+}
+
+async function getClinicConfig(supabase: any, clinicId: string, cache: Record<string, any>): Promise<any> {
+  if (cache[clinicId]) return cache[clinicId]
+
+  const { data } = await supabase
+    .from('configuracoes_clinica')
+    .select('*')
+    .eq('clinica_id', clinicId)
+    .single()
+
+  cache[clinicId] = data || {}
+  return cache[clinicId]
 }
 
 async function sendBrevoEmail(apiKey: string, to: string, toName: string, subject: string, htmlContent: string): Promise<Response> {

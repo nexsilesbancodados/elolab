@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const brevoApiKey = Deno.env.get('BREVO_API_KEY')
+    const appUrl = Deno.env.get('APP_URL') || 'https://app.elolab.com.br'
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     if (!brevoApiKey) {
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
                 </ul>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://real-world-made.lovable.app/dashboard" 
+                  <a href="${appUrl}/dashboard"
                      style="background: linear-gradient(135deg, #0ea5e9, #6366f1); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
                     Acessar o Sistema
                   </a>

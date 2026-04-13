@@ -25,10 +25,10 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const brevoApiKey = Deno.env.get('BREVO_API_KEY')
 
-    if (!resendApiKey) {
-      throw new Error('RESEND_API_KEY não configurada')
+    if (!brevoApiKey) {
+      throw new Error('BREVO_API_KEY não configurada')
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -149,17 +149,17 @@ Deno.serve(async (req) => {
     // Enviar para cada admin
     for (const email of adminEmails) {
       try {
-        const emailRes = await fetch('https://api.resend.com/emails', {
+        const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
+            'api-key': brevoApiKey,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'EloLab <onboarding@resend.dev>',
-            to: [email],
+            sender: { name: 'EloLab Clínica', email: 'noreply@elolab.com.br' },
+            to: [{ email }],
             subject: `⚠️ Alerta: ${itensAlerta.length} ite${itensAlerta.length > 1 ? 'ns' : 'm'} com estoque crítico`,
-            html: htmlContent,
+            htmlContent,
           }),
         })
 

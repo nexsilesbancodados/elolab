@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
+import { useQuery } from '@tanstack/react-query';
 import {
   Pill, Plus, Search, Eye, FileDown, ExternalLink, Clipboard,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 /* ─── PDF Builder ─── */
@@ -31,6 +33,10 @@ function buildReceitaPdf(data: {
   crm: string;
   especialidade: string;
   medicamentosTexto: string;
+  clinicaNome?: string;
+  clinicaEndereco?: string;
+  clinicaTelefone?: string;
+  clinicaCnpj?: string;
 }): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const w = 210;
@@ -44,12 +50,12 @@ function buildReceitaPdf(data: {
   // ── Header / letterhead ──
   doc.setFontSize(18);
   doc.setTextColor(0, 102, 204);
-  doc.text('EloLab Clínica Médica', w / 2, 25, { align: 'center' });
+  doc.text(data.clinicaNome || 'Clínica Médica', w / 2, 25, { align: 'center' });
 
   doc.setFontSize(9);
   doc.setTextColor(120);
-  doc.text('Av. Principal, 1000 — Centro — São Paulo/SP', w / 2, 31, { align: 'center' });
-  doc.text('Tel: (11) 3000-0000 | CNPJ: 00.000.000/0001-00', w / 2, 36, { align: 'center' });
+  doc.text(data.clinicaEndereco || 'Endereço da clínica', w / 2, 31, { align: 'center' });
+  doc.text(`Tel: ${data.clinicaTelefone || '(00) 0000-0000'} | CNPJ: ${data.clinicaCnpj || '00.000.000/0001-00'}`, w / 2, 36, { align: 'center' });
 
   doc.setDrawColor(0, 102, 204);
   doc.setLineWidth(0.4);
@@ -137,7 +143,8 @@ function buildReceitaPdf(data: {
 
 /* ─── Component ─── */
 export default function Prescricoes() {
-  
+  const { profile } = useSupabaseAuth();
+
   const { data: pacientes = [], isLoading: loadingPac } = usePacientes();
   const { data: medicos = [], isLoading: loadingMed } = useMedicos();
   const { medicoId, isMedicoOnly } = useCurrentMedico();
@@ -145,6 +152,20 @@ export default function Prescricoes() {
   const { data: prescricoes = [], isLoading: loadingPresc, refetch } = useSupabaseQuery<Record<string, any>>('prescricoes', {
     orderBy: { column: 'created_at', ascending: false },
     ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
+  });
+
+  const { data: clinicConfig } = useQuery({
+    queryKey: ['configuracoes_clinica', profile?.clinica_id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return null;
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('*')
+        .eq('clinica_id', profile.clinica_id)
+        .single();
+      return data;
+    },
+    enabled: !!profile?.clinica_id,
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -206,6 +227,10 @@ export default function Prescricoes() {
       crm: medico.crm,
       especialidade: medico.especialidade || '',
       medicamentosTexto: form.medicamentos_texto,
+      clinicaNome: clinicConfig?.nome_fantasia || 'Clínica Médica',
+      clinicaEndereco: clinicConfig ? `${clinicConfig.endereco || ''} — ${clinicConfig.cidade || ''}/${clinicConfig.uf || ''}` : 'Endereço da clínica',
+      clinicaTelefone: clinicConfig?.telefone || '(00) 0000-0000',
+      clinicaCnpj: clinicConfig?.cnpj || '00.000.000/0001-00',
     });
 
     const blob = doc.output('blob');
