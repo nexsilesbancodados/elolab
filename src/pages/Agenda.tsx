@@ -1117,20 +1117,34 @@ export default function Agenda() {
             </div>
 
             <div className="space-y-2">
-              <Label>Médico *</Label>
+              <Label>Especialidade *</Label>
               <Select
                 value={formData.medico_id}
                 onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o médico" />
+                  <SelectValue placeholder="Selecione a especialidade" />
                 </SelectTrigger>
                 <SelectContent>
-                  {medicos.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.nome || m.crm} - {m.especialidade || 'Geral'}
-                    </SelectItem>
-                  ))}
+                  {(() => {
+                    const especialidadesMap = new Map<string, typeof medicos>();
+                    medicos.filter(m => m.ativo !== false).forEach(m => {
+                      const esp = m.especialidade || 'Clínico Geral';
+                      if (!especialidadesMap.has(esp)) especialidadesMap.set(esp, []);
+                      especialidadesMap.get(esp)!.push(m);
+                    });
+                    const items: React.ReactNode[] = [];
+                    especialidadesMap.forEach((docs, esp) => {
+                      docs.forEach(m => {
+                        items.push(
+                          <SelectItem key={m.id} value={m.id}>
+                            {esp} — {m.nome || m.crm}
+                          </SelectItem>
+                        );
+                      });
+                    });
+                    return items;
+                  })()}
                 </SelectContent>
               </Select>
             </div>
