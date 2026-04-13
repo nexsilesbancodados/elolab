@@ -34,7 +34,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const templates = [
   {
-    categoria: 'confirmacao_consulta',
+    categoria: 'confirmacao',
     tipo: 'email',
     nome: 'Confirmação de Consulta',
     assunto: 'Sua consulta foi confirmada - {{clinica_nome}}',
@@ -81,7 +81,7 @@ const templates = [
     ativo: true,
   },
   {
-    categoria: 'recibo_pagamento',
+    categoria: 'financeiro',
     tipo: 'email',
     nome: 'Recibo de Pagamento',
     assunto: 'Recibo de Pagamento - {{clinica_nome}}',

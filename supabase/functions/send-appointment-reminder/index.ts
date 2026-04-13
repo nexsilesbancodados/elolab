@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
 
           // === SEND VIA EMAIL ===
           if (brevoApiKey && paciente?.email && template24h) {
-            let conteudo = template24h.conteudo
+            const conteudo = template24h.conteudo
               .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
               .replace(/\{\{data\}\}/g, formatDate(ag.data))
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
               .replace(/\{\{clinica_endereco\}\}/g, clinicaEndereco)
 
-            let assunto = (template24h.assunto || 'Lembrete de Consulta')
+            const assunto = (template24h.assunto || 'Lembrete de Consulta')
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
             try {
@@ -234,13 +234,13 @@ Deno.serve(async (req) => {
 
           // === SEND VIA EMAIL ===
           if (brevoApiKey && paciente?.email && template2h) {
-            let conteudo = template2h.conteudo
+            const conteudo = template2h.conteudo
               .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
               .replace(/\{\{medico_nome\}\}/g, medicoNome)
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome2h)
 
-            let assunto = (template2h.assunto || 'Lembrete de Consulta')
+            const assunto = (template2h.assunto || 'Lembrete de Consulta')
               .replace(/\{\{horario\}\}/g, ag.hora_inicio)
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome2h)
 

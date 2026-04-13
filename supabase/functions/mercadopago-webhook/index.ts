@@ -78,14 +78,73 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Process authorized_payment (subscription payment)
+    // Process authorized_payment (subscription automatic renewal payment)
     if (
       body.type === "subscription_authorized_payment" ||
       body.action?.includes("authorized_payment")
     ) {
       const paymentId = body.data?.id;
       if (paymentId) {
+        console.log("Processing automatic subscription renewal payment:", paymentId);
         await processPaymentNotification(paymentId.toString(), mpToken, supabase);
+        // Also log this as a renewal in the subscription
+        const preapprovalId = body.data?.preapproval_id;
+        if (preapprovalId) {
+          const { data: assinatura } = await supabase
+            .from("assinaturas_mercadopago")
+            .select("detalhes, id")
+            .eq("mp_preapproval_id", preapprovalId)
+            .maybeSingle();
+
+          if (assinatura) {
+            const detalhes = (assinatura.detalhes || {}) as Record<string, unknown>;
+            const trialType = typeof detalhes.trial_type === "string" ? detalhes.trial_type : null;
+
+            await supabase
+              .from("assinaturas_mercadopago")
+              .update({
+                detalhes: {
+                  ...detalhes,
+                  ultima_renovacao: new Date().toISOString(),
+                  ultimo_pagamento_autorizado: paymentId,
+                },
+              })
+              .eq("mp_preapproval_id", preapprovalId);
+
+            // If this is a trial with payment method, activate the plan now that 3 days have passed
+            if (trialType === "with_payment_method") {
+              const userId = typeof detalhes.user_id === "string" ? detalhes.user_id : null;
+              const planoId = typeof detalhes.plano_id === "string" ? detalhes.plano_id : null;
+              const planoSlug = typeof detalhes.plano_slug === "string" ? detalhes.plano_slug : null;
+
+              if (userId && planoId && planoSlug) {
+                const { data: existingPlan } = await supabase
+                  .from("assinaturas_plano")
+                  .select("id")
+                  .eq("user_id", userId)
+                  .eq("plano_slug", planoSlug)
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+
+                if (existingPlan?.id) {
+                  // Activate the trial plan after first payment (trial ended)
+                  await supabase
+                    .from("assinaturas_plano")
+                    .update({
+                      status: "ativa",
+                      em_trial: false,
+                      trial_fim: null,
+                      data_cancelamento: null,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", existingPlan.id);
+                  console.log("Trial period ended and activated paid plan for user:", userId);
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -309,37 +368,154 @@ async function processSubscriptionNotification(
 
     const status = statusMap[preapproval.status] || preapproval.status;
 
-    // Update assinaturas_mercadopago
-    await supabase
+    // Update assinaturas_mercadopago with full preapproval details
+    const { data: existingAssinatura } = await supabase
       .from("assinaturas_mercadopago")
-      .update({
-        status,
-        data_inicio: preapproval.date_created,
-        detalhes: preapproval,
-      })
-      .eq("mp_preapproval_id", preapprovalId);
+      .select("id, detalhes")
+      .eq("mp_preapproval_id", preapprovalId)
+      .maybeSingle();
 
-    // If subscription is now authorized, activate the registro_pendente
-    if (preapproval.status === "authorized" && preapproval.external_reference) {
-      const { data: registro } = await supabase
-        .from("registros_pendentes")
-        .select("*")
-        .eq("id", preapproval.external_reference)
-        .eq("status", "aguardando_pagamento")
-        .single();
+    if (existingAssinatura) {
+      const detalhes = (existingAssinatura.detalhes || {}) as Record<string, unknown>;
+      await supabase
+        .from("assinaturas_mercadopago")
+        .update({
+          status,
+          data_inicio: preapproval.date_created,
+          detalhes: {
+            ...detalhes,
+            preapproval_status: preapproval.status,
+            preapproval_data: preapproval,
+          },
+        })
+        .eq("id", existingAssinatura.id);
+    } else {
+      // Create new record if not found
+      await supabase
+        .from("assinaturas_mercadopago")
+        .update({
+          status,
+          data_inicio: preapproval.date_created,
+          detalhes: preapproval,
+        })
+        .eq("mp_preapproval_id", preapprovalId);
+    }
 
-      if (registro) {
-        console.log("Activating registro_pendente from subscription:", registro.id);
-        await supabase
+    // If subscription is now authorized, handle activation or trial start
+    if (preapproval.status === "authorized") {
+      console.log("Subscription authorized:", preapprovalId);
+
+      // Find the subscription record
+      if (existingAssinatura) {
+        const detalhes = (existingAssinatura.detalhes || {}) as Record<string, unknown>;
+        const userId = typeof detalhes.user_id === "string" ? detalhes.user_id : null;
+        const planoId = typeof detalhes.plano_id === "string" ? detalhes.plano_id : null;
+        const planoSlug = typeof detalhes.plano_slug === "string" ? detalhes.plano_slug : null;
+        const trialType = typeof detalhes.trial_type === "string" ? detalhes.trial_type : null;
+        const trialEnd = typeof detalhes.trial_end === "string" ? detalhes.trial_end : null;
+
+        // Check if this is a trial with payment method
+        const isTrialWithPayment = trialType === "with_payment_method" && trialEnd;
+
+        // Activate or update the user's plan subscription
+        if (userId && planoId && planoSlug) {
+          const { data: existingPlan } = await supabase
+            .from("assinaturas_plano")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("plano_slug", planoSlug)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingPlan?.id) {
+            // Update existing plan subscription
+            if (isTrialWithPayment) {
+              // Keep trial active until trial_end is reached
+              await supabase
+                .from("assinaturas_plano")
+                .update({
+                  plano_id: planoId,
+                  status: "trial",
+                  em_trial: true,
+                  trial_fim: trialEnd,
+                  data_cancelamento: null,
+                  data_inicio: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", existingPlan.id);
+              console.log("Trial with payment method activated for user:", userId);
+            } else {
+              // Regular subscription activation
+              await supabase
+                .from("assinaturas_plano")
+                .update({
+                  plano_id: planoId,
+                  status: "ativa",
+                  em_trial: false,
+                  trial_fim: null,
+                  data_cancelamento: null,
+                  data_inicio: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", existingPlan.id);
+            }
+          } else {
+            // Create new plan subscription
+            if (isTrialWithPayment) {
+              // Create with trial status
+              await supabase
+                .from("assinaturas_plano")
+                .insert({
+                  user_id: userId,
+                  plano_id: planoId,
+                  plano_slug: planoSlug,
+                  status: "trial",
+                  em_trial: true,
+                  trial_fim: trialEnd,
+                  data_inicio: new Date().toISOString(),
+                });
+              console.log("Trial with payment method created for user:", userId);
+            } else {
+              // Create with active status
+              await supabase
+                .from("assinaturas_plano")
+                .insert({
+                  user_id: userId,
+                  plano_id: planoId,
+                  plano_slug: planoSlug,
+                  status: "ativa",
+                  em_trial: false,
+                  data_inicio: new Date().toISOString(),
+                });
+            }
+          }
+          console.log("Plan processed for user:", userId, "Plan:", planoSlug);
+        }
+      }
+
+      // Also handle registro_pendente if external_reference exists
+      if (preapproval.external_reference) {
+        const { data: registro } = await supabase
           .from("registros_pendentes")
-          .update({
-            status: "pago",
-            mp_payment_id: preapproval.id?.toString(),
-          })
-          .eq("id", registro.id);
+          .select("*")
+          .eq("id", preapproval.external_reference)
+          .eq("status", "aguardando_pagamento")
+          .maybeSingle();
 
-        // Send activation email with invite code AFTER subscription approval
-        await sendActivationEmail(registro, supabase);
+        if (registro) {
+          console.log("Activating registro_pendente from subscription:", registro.id);
+          await supabase
+            .from("registros_pendentes")
+            .update({
+              status: "pago",
+              mp_payment_id: preapproval.id?.toString(),
+            })
+            .eq("id", registro.id);
+
+          // Send activation email with invite code AFTER subscription approval
+          await sendActivationEmail(registro, supabase);
+        }
       }
     }
 

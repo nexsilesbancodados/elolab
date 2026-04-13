@@ -625,7 +625,7 @@ export default function Auth() {
           {/* Footer */}
           <div className="mt-8 space-y-3">
             <a
-              href="https://real-world-made.lovable.app"
+              href="https://app.elolab.com.br"
               className="flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />

@@ -11,7 +11,7 @@ import { autoCheckin, autoIniciarAtendimento, autoFinalizarAtendimento, autoConf
 import { useAgendamentos, usePacientes, useMedicos, useSalas } from '@/hooks/useSupabaseData';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, sanitizeText } from '@/lib/utils';
 import {
   UserCheck, Clock, Play, Check, Banknote, QrCode, CreditCard,
   Landmark, Search, Bell, ChevronRight, Users, Stethoscope,
@@ -27,6 +27,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -133,6 +137,8 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
    const [acrescimo, setAcrescimo] = useState(0);
    const [obsPagamento, setObsPagamento] = useState('');
   const [now, setNow] = useState(Date.now());
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{type: string; agId?: string; filaId?: string} | null>(null);
 
   // Refresh timer every 30s
   useEffect(() => {
@@ -149,7 +155,15 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
   const { data: filaItems = [] } = useQuery({
     queryKey: ['fila_atendimento'],
     queryFn: async () => {
-      const { data } = await supabase.from('fila_atendimento').select('*').order('posicao');
+      if (!profile?.clinica_id) {
+        console.warn('Clinic ID not found - cannot fetch fila_atendimento');
+        return [];
+      }
+      const { data } = await supabase
+        .from('fila_atendimento')
+        .select('*')
+        .eq('clinica_id', profile.clinica_id)
+        .order('posicao');
       return data || [];
     },
   });
@@ -157,9 +171,14 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
   const { data: lancamentos = [] } = useQuery({
     queryKey: ['lancamentos_hoje'],
     queryFn: async () => {
+      if (!profile?.clinica_id) {
+        console.warn('Clinic ID not found - cannot fetch lancamentos');
+        return [];
+      }
       const { data } = await supabase
         .from('lancamentos')
         .select('*')
+        .eq('clinica_id', profile.clinica_id)
         .eq('data', today)
         .eq('tipo', 'receita');
       return data || [];
@@ -338,7 +357,11 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       await supabase.from('fila_atendimento').update({ status: 'chamado' }).eq('id', filaId);
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       toast.success('Paciente chamado!');
-    } catch { toast.error('Erro ao chamar'); }
+    } catch (err: any) {
+      const msg = err?.message || 'Erro desconhecido';
+      console.error('handleChamar error:', err);
+      toast.error('Erro ao chamar: ' + msg);
+    }
     setIsProcessing(false);
   }
 
@@ -351,7 +374,10 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
       queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
       toast.success('Atendimento iniciado!', { description: result.actions.join(' • ') });
-    } catch { toast.error('Erro'); }
+    } catch (err: any) {
+      console.error('handleIniciarAtendimento error:', err);
+      toast.error('Erro ao iniciar atendimento: ' + (err?.message || 'Erro desconhecido'));
+    }
     setIsProcessing(false);
   }
 
@@ -478,14 +504,39 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       toast.error('Selecione a forma de pagamento');
       return;
     }
+
+    // Validar desconto e acréscimo
+    if (desconto < 0 || acrescimo < 0) {
+      toast.error('Desconto e acréscimo devem ser positivos');
+      return;
+    }
+
+    const valorBase = selectedLancamento.valor || 0;
+    if (desconto > valorBase) {
+      toast.error(`Desconto não pode ser maior que o valor da consulta (R$ ${valorBase.toFixed(2)})`);
+      return;
+    }
+
+    // Limite máximo de 50% de desconto
+    if (desconto > valorBase * 0.5) {
+      toast.error('Desconto máximo permitido é 50% do valor');
+      return;
+    }
+
+    // Limite de acréscimo (máximo 30%)
+    if (acrescimo > valorBase * 0.3) {
+      toast.error('Acréscimo máximo permitido é 30% do valor');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const valorFinal = Math.max(0, (selectedLancamento.valor || 0) - desconto + acrescimo);
+      const valorFinal = valorBase - desconto + acrescimo;
       const { error } = await supabase.from('lancamentos').update({
         status: 'pago' as any,
         forma_pagamento: formaPagamento,
         valor: valorFinal,
-        observacoes: obsPagamento || null,
+        observacoes: sanitizeText(obsPagamento),
       }).eq('id', selectedLancamento.id);
       if (error) throw error;
 
@@ -512,19 +563,27 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
     setIsProcessing(false);
   }
 
-  async function handleConcluir(agId: string, filaId: string) {
+  function handleConcluir(agId: string, filaId: string) {
+    setPendingAction({ type: 'concluir', agId, filaId });
+    setConfirmDialogOpen(true);
+  }
+
+  async function executarConcluir() {
+    if (!pendingAction || pendingAction.type !== 'concluir') return;
+    const { agId, filaId } = pendingAction;
+
     setIsProcessing(true);
     try {
       const { error: filaErr } = await supabase
         .from('fila_atendimento')
         .update({ status: 'concluido' })
-        .eq('id', filaId);
+        .eq('id', filaId!);
       if (filaErr) throw filaErr;
 
       const { error: agErr } = await supabase
         .from('agendamentos')
         .update({ status: 'finalizado' })
-        .eq('id', agId);
+        .eq('id', agId!);
       if (agErr) throw agErr;
 
       await queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
@@ -533,6 +592,8 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       toast.success('Atendimento concluído com sucesso!');
+      setConfirmDialogOpen(false);
+      setPendingAction(null);
     } catch (err: any) {
       console.error('Erro ao concluir:', err);
       toast.error('Erro ao concluir: ' + (err?.message || 'Erro desconhecido'));
@@ -1023,6 +1084,31 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation Dialog for Destructive Actions */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Ação</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.type === 'concluir'
+                ? 'Tem certeza que deseja concluir este atendimento? Ele será movido para o histórico.'
+                : 'Tem certeza que deseja executar esta ação? Não é possível desfazer.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executarConcluir}
+              disabled={isProcessing}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

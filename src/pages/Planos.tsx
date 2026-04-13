@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,8 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Sparkles, Zap, Clock, Gift, ArrowRight, Shield, Headphones } from 'lucide-react';
-import { useUserPlan, usePlanos, useStartTrial } from '@/hooks/useSubscriptionPlan';
+import { useUserPlan, usePlanos, useStartTrialWithPayment } from '@/hooks/useSubscriptionPlan';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { PaymentMethodDialog, type PaymentMethodData } from '@/components/PaymentMethodDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -67,10 +68,30 @@ const premiumFeatures = ['agente_ia', 'chatbot_whatsapp'];
 export default function Planos() {
   const { data: planos, isLoading } = usePlanos();
   const { planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
-  const startTrial = useStartTrial();
+  const startTrialWithPayment = useStartTrialWithPayment();
   const { user, profile } = useSupabaseAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // State for payment method dialog
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
+  const handleStartTrialWithPayment = (paymentData: PaymentMethodData) => {
+    if (!selectedPlan || !user?.email) return;
+
+    startTrialWithPayment.mutate({
+      plano_slug: selectedPlan.slug,
+      plano_nome: selectedPlan.nome,
+      plano_valor: selectedPlan.valor,
+      trial_dias: selectedPlan.trial_dias || 3,
+      payment_method: paymentData.method,
+      payer_email: user.email,
+      payer_name: profile?.nome || user.email,
+    });
+
+    setShowPaymentDialog(false);
+  };
 
   const upgradeMutation = useMutation({
     mutationFn: async (plano: any) => {
@@ -128,9 +149,9 @@ export default function Planos() {
           Potencialize sua clínica com as melhores ferramentas de gestão médica
         </p>
         {!hasActivePlan && (
-          <div className="inline-flex items-center gap-2 bg-success/10 text-success rounded-full px-5 py-2.5 text-sm font-medium border border-success/20">
+          <div className="inline-flex items-center gap-2 bg-warning/10 text-warning rounded-full px-5 py-2.5 text-sm font-medium border border-warning/20">
             <Gift className="h-4 w-4" />
-            Teste grátis por 3 dias — sem cartão de crédito!
+            Teste grátis por 3 dias — cartão ou PIX recorrente necessário
           </div>
         )}
       </div>
@@ -215,8 +236,8 @@ export default function Planos() {
                 </div>
                 {!hasActivePlan && (
                   <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
-                    <Gift className="h-3.5 w-3.5 text-success" />
-                    {plano.trial_dias || 3} dias grátis para experimentar
+                    <Gift className="h-3.5 w-3.5 text-warning" />
+                    {plano.trial_dias || 3} dias grátis — depois será cobrado
                   </p>
                 )}
               </div>
@@ -264,11 +285,14 @@ export default function Planos() {
                       <Button
                         className={`w-full h-12 text-base font-semibold ${isHighlighted ? config.btnClass : ''}`}
                         variant={isHighlighted ? 'default' : 'outline'}
-                        onClick={() => startTrial.mutate(plano.slug)}
-                        disabled={startTrial.isPending}
+                        onClick={() => {
+                          setSelectedPlan(plano);
+                          setShowPaymentDialog(true);
+                        }}
+                        disabled={startTrialWithPayment.isPending}
                       >
                         <Gift className="h-4 w-4 mr-2" />
-                        {startTrial.isPending ? 'Ativando...' : `Testar Grátis ${plano.trial_dias || 3} Dias`}
+                        {startTrialWithPayment.isPending ? 'Ativando...' : `Testar Grátis ${plano.trial_dias || 3} Dias`}
                       </Button>
                     )}
                     <Button
@@ -303,6 +327,18 @@ export default function Planos() {
           <span>Suporte prioritário</span>
         </div>
       </div>
+
+      {/* Payment Method Dialog */}
+      {selectedPlan && (
+        <PaymentMethodDialog
+          open={showPaymentDialog}
+          onOpenChange={setShowPaymentDialog}
+          onSubmit={handleStartTrialWithPayment}
+          isLoading={startTrialWithPayment.isPending}
+          planName={selectedPlan.nome}
+          trialDays={selectedPlan.trial_dias || 3}
+        />
+      )}
     </div>
   );
 }

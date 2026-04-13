@@ -305,6 +305,18 @@ export default function Agenda() {
       toast.error('O horário de fim deve ser após o horário de início.');
       return;
     }
+
+    // Validate duration (máximo 2 horas)
+    if (formData.hora_fim) {
+      const [horaI, minI] = formData.hora_inicio.split(':').map(Number);
+      const [horaF, minF] = formData.hora_fim.split(':').map(Number);
+      const duracao = (horaF * 60 + minF) - (horaI * 60 + minI);
+      if (duracao > 120) {
+        toast.error('Duração máxima é 2 horas por consulta.');
+        return;
+      }
+    }
+
     // Validate not scheduling in the past (only for new appointments)
     if (!formData.id) {
       const hoje = format(new Date(), 'yyyy-MM-dd');
@@ -314,18 +326,19 @@ export default function Agenda() {
         return;
       }
     }
-    // Check for scheduling conflicts
-    if (!formData.id) {
-      const conflito = agendamentos.find(ag =>
-        ag.medico_id === formData.medico_id &&
-        ag.data === formData.data &&
-        ag.status !== 'cancelado' &&
-        ag.hora_inicio === formData.hora_inicio
-      );
-      if (conflito) {
-        toast.error('Já existe um agendamento neste horário para este médico.');
-        return;
-      }
+
+    // Check for scheduling conflicts (BOTH for new AND existing appointments)
+    const conflito = agendamentos.find(ag =>
+      ag.medico_id === formData.medico_id &&
+      ag.data === formData.data &&
+      ag.status !== 'cancelado' &&
+      ag.id !== formData.id && // exclude current appointment if editing
+      ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) && // overlap check
+      ag.hora_fim > formData.hora_inicio
+    );
+    if (conflito) {
+      toast.error('Já existe um agendamento conflitante neste horário para este médico.');
+      return;
     }
 
     setIsSaving(true);
@@ -393,7 +406,48 @@ export default function Agenda() {
       } else {
         // Create new (possibly recurring)
         const dates = generateRecurringDates(formData.data!, recurrence);
-        
+
+        // Validate recurring appointments
+        if (dates.length > 12) {
+          toast.error('Máximo 12 agendamentos recorrentes permitido');
+          setIsSaving(false);
+          return;
+        }
+
+        // Validate each date for conflicts and valid dates
+        const validationErrors: string[] = [];
+        for (let i = 0; i < dates.length; i++) {
+          const date = dates[i];
+
+          // Check if date is in the past
+          const hoje = format(new Date(), 'yyyy-MM-dd');
+          const agora = format(new Date(), 'HH:mm');
+          if (date < hoje || (date === hoje && formData.hora_inicio < agora)) {
+            validationErrors.push(`Data ${format(parseISO(date), 'dd/MM')} já passou`);
+            continue;
+          }
+
+          // Check for conflicts
+          const conflito = agendamentos.find(ag =>
+            ag.medico_id === formData.medico_id &&
+            ag.data === date &&
+            ag.status !== 'cancelado' &&
+            ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
+            ag.hora_fim > formData.hora_inicio
+          );
+          if (conflito) {
+            validationErrors.push(`${format(parseISO(date), 'dd/MM')} - Conflito de horário`);
+          }
+        }
+
+        if (validationErrors.length > 0) {
+          toast.error(`${validationErrors.length} problema(s) encontrado(s)`, {
+            description: validationErrors.slice(0, 3).join('; ') + (validationErrors.length > 3 ? '...' : '')
+          });
+          setIsSaving(false);
+          return;
+        }
+
         const newAgendamentos = dates.map(date => ({
           paciente_id: formData.paciente_id!,
           medico_id: formData.medico_id!,

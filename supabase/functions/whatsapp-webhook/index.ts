@@ -229,7 +229,7 @@ DADOS DO PACIENTE:
             }
 
             // Construir system prompt baseado no tipo e humor do agente
-            let systemPrompt = buildSystemPrompt(agent, patientContext)
+            const systemPrompt = buildSystemPrompt(agent, patientContext)
 
             // Chamar IA
             const startTime = Date.now()

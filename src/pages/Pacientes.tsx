@@ -35,7 +35,7 @@ import { PatientPhoto, PatientTimeline, VitalSignsChart, AllergyAlert, Cid10Sear
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { Paciente } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, sanitizeText } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
 import { gerarProntuarioPDF, downloadPDF, openPDF } from '@/lib/pdfGenerator';
@@ -581,8 +581,8 @@ export default function Pacientes() {
         convenio_id: formData.convenio_id && formData.convenio_id !== '' && formData.convenio_id !== 'none' && formData.convenio_id !== 'pending' ? formData.convenio_id : null,
         numero_carteira: formData.numero_carteira || null,
         validade_carteira: formData.validade_carteira || null,
-        alergias: formData.alergias,
-        observacoes: formData.observacoes || null,
+        alergias: (formData.alergias || []).map((a: string) => sanitizeText(a) || 'Alergia').filter(Boolean),
+        observacoes: sanitizeText(formData.observacoes),
         nome_responsavel: formData.nome_responsavel || null,
         cpf_responsavel: formData.cpf_responsavel || null,
         parentesco_responsavel: formData.parentesco_responsavel || null,

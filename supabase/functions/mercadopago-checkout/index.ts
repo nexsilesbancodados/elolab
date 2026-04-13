@@ -166,11 +166,38 @@ async function createSubscription(
   const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
   const externalReference = crypto.randomUUID();
 
+  // Use Preapproval API for recurring subscriptions
+  // Reference: https://developers.mercadopago.com/en/reference/preapproval/_preapproval/post
+  const preapprovalPayload = {
+    payer_email: payer_email,
+    back_url: `${appUrl}/planos?mp_status=success`,
+    reason: nome_plano,
+    external_reference: externalReference,
+    auto_recurring: {
+      frequency: 1,
+      frequency_type: "months", // Monthly subscription
+      transaction_amount: Number(valor),
+      currency_id: "BRL",
+      start_date: new Date().toISOString(),
+      end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // 1 year validity
+    },
+    notification_url: webhookUrl,
+  };
+
+  const response = await callMercadoPagoWithRetry(
+    `${MP_API_BASE}/preapproval`,
+    "POST",
+    preapprovalPayload,
+    mpToken
+  );
+
+  // Create a preference for the initial payment (first month)
+  // Reference: https://developers.mercadopago.com/en/reference/preferences/_checkout_preferences/post
   const preference = {
     items: [
       {
         title: nome_plano,
-        description: descricao || `Plano ${nome_plano} EloLab`,
+        description: descricao || `Plano ${nome_plano} EloLab - 1º mês`,
         quantity: 1,
         unit_price: Number(valor),
         currency_id: "BRL",
@@ -182,7 +209,7 @@ async function createSubscription(
     },
     external_reference: externalReference,
     payment_methods: {
-      installments: 12,
+      installments: 1,
       default_installments: 1,
     },
     back_urls: {
@@ -195,7 +222,7 @@ async function createSubscription(
     statement_descriptor: "ELOLAB",
   };
 
-  const response = await callMercadoPagoWithRetry(
+  const preferenceResponse = await callMercadoPagoWithRetry(
     `${MP_API_BASE}/checkout/preferences`,
     "POST",
     preference,
@@ -210,16 +237,18 @@ async function createSubscription(
       nome_plano,
       descricao,
       valor: Number(valor),
-      frequencia,
-      checkout_url: response.init_point,
+      frequencia: "mensal",
+      checkout_url: preferenceResponse.init_point,
       status: "pendente",
       detalhes: {
-        checkout_type: "preference",
+        checkout_type: "preapproval",
+        preapproval_id: response.id,
         checkout_reference: externalReference,
         user_id: authUserId,
         plano_id: plano_id ?? null,
         plano_slug: plano_slug ?? null,
         payer_email: payer_email ?? null,
+        auto_recurring: preapprovalPayload.auto_recurring,
       },
     })
     .select()
@@ -232,9 +261,10 @@ async function createSubscription(
 
   return new Response(
     JSON.stringify({
-      checkout_url: response.init_point,
+      checkout_url: preferenceResponse.init_point,
       preapproval_id: response.id,
       assinatura_id: assinatura.id,
+      message: "Assinatura recorrente criada. Página de checkout aberta para pagamento do 1º mês.",
     }),
     { status: 200, headers: { ...headers, "Content-Type": "application/json" } }
   );

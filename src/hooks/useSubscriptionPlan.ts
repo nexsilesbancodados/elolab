@@ -141,3 +141,53 @@ export function useStartTrial() {
     },
   });
 }
+
+export interface TrialWithPaymentData {
+  plano_slug: string;
+  plano_nome: string;
+  plano_valor: number;
+  trial_dias: number;
+  payment_method: 'credit_card' | 'pix_recurring';
+  payer_email: string;
+  payer_name: string;
+}
+
+export function useStartTrialWithPayment() {
+  const { user, profile } = useSupabaseAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: TrialWithPaymentData) => {
+      if (!user?.email) throw new Error('Usuário não autenticado');
+
+      const { data: response, error } = await supabase.functions.invoke('trial-with-payment', {
+        body: {
+          plano_slug: data.plano_slug,
+          plano_nome: data.plano_nome,
+          plano_valor: data.plano_valor,
+          trial_dias: data.trial_dias,
+          payment_method: data.payment_method,
+          payer_email: data.payer_email || user.email,
+          payer_name: data.payer_name || profile?.nome || user.email,
+        },
+      });
+
+      if (error) throw error;
+      return response as unknown as {
+        success: boolean;
+        preapproval_id: string;
+        trial_id: string;
+        trial_end: string;
+        charge_date: string;
+        message: string;
+      };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['user_plan'] });
+      toast.success(data.message || 'Período de teste iniciado com sucesso!');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Erro ao iniciar período de teste');
+    },
+  });
+}
