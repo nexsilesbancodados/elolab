@@ -168,6 +168,49 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Validate date is in the future or today
+        const appointmentDate = new Date(data);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (appointmentDate < today) {
+          return new Response(
+            JSON.stringify({ error: "A data do agendamento não pode ser no passado" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validate doctor exists and is active
+        const { data: medico, error: medicoError } = await supabase
+          .from("medicos")
+          .select("id, ativo")
+          .eq("id", medico_id)
+          .eq("ativo", true)
+          .single();
+
+        if (medicoError || !medico) {
+          return new Response(
+            JSON.stringify({ error: "Médico não encontrado ou inativo" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check for existing appointment at the same time
+        const { data: existingAppointment } = await supabase
+          .from("agendamentos")
+          .select("id")
+          .eq("medico_id", medico_id)
+          .eq("data", data)
+          .eq("hora_inicio", hora_inicio)
+          .not("status", "in", '("cancelado")')
+          .limit(1);
+
+        if (existingAppointment && existingAppointment.length > 0) {
+          return new Response(
+            JSON.stringify({ error: "Este horário já está ocupado. Por favor, selecione outro." }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
         // Calculate end time (30 minutes after start)
         const [h, m] = hora_inicio.split(":").map(Number);
         const endTime = `${String(h).padStart(2, "0")}:${String((m + 30) % 60).padStart(2, "0")}`;
@@ -187,8 +230,11 @@ Deno.serve(async (req) => {
           .select()
           .single();
 
-        if (insertError) throw insertError;
-        result = { success: true, agendamento_id: newAgendamento.id };
+        if (insertError) {
+          console.error("Erro ao criar agendamento:", insertError);
+          throw insertError;
+        }
+        result = { success: true, agendamento_id: newAgendamento.id, message: "Agendamento criado com sucesso! Aguarde a confirmação do consultório." };
         break;
       }
 

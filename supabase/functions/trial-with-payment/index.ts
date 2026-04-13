@@ -49,10 +49,59 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { plano_slug, plano_nome, plano_valor, trial_dias, payer_email, payer_name, payment_method } = body;
 
+    // Validate required fields
     if (!plano_slug || !plano_valor || !trial_dias) {
       return new Response(
         JSON.stringify({ error: "Dados incompletos: plano_slug, plano_valor, trial_dias são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate payment method
+    if (!payment_method || !["credit_card", "pix_recurring"].includes(payment_method)) {
+      return new Response(
+        JSON.stringify({ error: "Método de pagamento inválido. Use 'credit_card' ou 'pix_recurring'" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate trial days (1-30 days reasonable limit)
+    if (typeof trial_dias !== "number" || trial_dias < 1 || trial_dias > 30) {
+      return new Response(
+        JSON.stringify({ error: "Período de teste deve estar entre 1 e 30 dias" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate price is positive
+    if (typeof plano_valor !== "number" || plano_valor <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Valor do plano inválido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!payer_email || !emailRegex.test(payer_email)) {
+      return new Response(
+        JSON.stringify({ error: "Email do pagador inválido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if user already has an active trial or subscription for this plan
+    const { data: existingSubscriptions } = await supabase
+      .from("assinaturas_plano")
+      .select("id, status, em_trial")
+      .eq("user_id", user.id)
+      .eq("plano_slug", plano_slug)
+      .in("status", ["trial", "ativa"]);
+
+    if (existingSubscriptions && existingSubscriptions.length > 0) {
+      return new Response(
+        JSON.stringify({ error: "Você já possui um plano ativo ou em período de teste. Cancele-o primeiro para ativar outro." }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
