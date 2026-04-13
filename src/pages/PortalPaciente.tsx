@@ -325,9 +325,21 @@ export default function PortalPaciente() {
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [prescricoes, setPrescricoes] = useState<any[]>([]);
 
-  const fetchData = async (accessToken: string, action: string) => {
+  // Scheduling form state
+  const [medicos, setMedicos] = useState<any[]>([]);
+  const [schedulingForm, setSchedulingForm] = useState({
+    medico_id: '',
+    data: '',
+    hora_inicio: '',
+    tipo: 'Consulta',
+  });
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [schedulingLoading, setSchedulingLoading] = useState(false);
+  const [schedulingError, setSchedulingError] = useState('');
+
+  const fetchData = async (accessToken: string, action: string, bodyData?: any) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
-      body: { action, token: accessToken },
+      body: { action, token: accessToken, ...bodyData },
     });
     if (error) throw error;
     return data;
@@ -347,20 +359,71 @@ export default function PortalPaciente() {
       setProfile(profileData);
       setAuthenticated(true);
 
-      const [ag, ex, pg, presc] = await Promise.all([
+      const [ag, ex, pg, presc, docs] = await Promise.all([
         fetchData(token, 'get_agendamentos'),
         fetchData(token, 'get_exames'),
         fetchData(token, 'get_pagamentos'),
         fetchData(token, 'get_prescricoes').catch(() => []),
+        fetchData(token, 'get_medicos'),
       ]);
       setAgendamentos(ag || []);
       setExames(ex || []);
       setPagamentos(pg || []);
       setPrescricoes(presc || []);
+      setMedicos(docs || []);
     } catch (err: any) {
       setError(err.message || 'Erro ao acessar portal');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAvailableSlots = async (medico_id: string, data: string) => {
+    if (!medico_id || !data || !token) return;
+    try {
+      setSchedulingLoading(true);
+      setSchedulingError('');
+      const slots = await fetchData(token, 'get_available_slots', {
+        medico_id,
+        data_inicio: data,
+        data_fim: data,
+      });
+      setAvailableSlots(slots || []);
+      setSchedulingForm(f => ({ ...f, hora_inicio: '' }));
+    } catch (err: any) {
+      setSchedulingError(err.message || 'Erro ao carregar horários disponíveis');
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
+  const handleCreateAgendamento = async () => {
+    if (!schedulingForm.medico_id || !schedulingForm.data || !schedulingForm.hora_inicio) {
+      setSchedulingError('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    try {
+      setSchedulingLoading(true);
+      setSchedulingError('');
+      const result = await fetchData(token, 'create_agendamento', {
+        medico_id: schedulingForm.medico_id,
+        data: schedulingForm.data,
+        hora_inicio: schedulingForm.hora_inicio,
+        tipo: schedulingForm.tipo,
+      });
+
+      if (result?.success) {
+        // Reload agendamentos to show the new one
+        const updatedAgendamentos = await fetchData(token, 'get_agendamentos');
+        setAgendamentos(updatedAgendamentos || []);
+        setSchedulingForm({ medico_id: '', data: '', hora_inicio: '', tipo: 'Consulta' });
+        setAvailableSlots([]);
+      }
+    } catch (err: any) {
+      setSchedulingError(err.message || 'Erro ao agendar consulta');
+    } finally {
+      setSchedulingLoading(false);
     }
   };
 
@@ -483,7 +546,11 @@ export default function PortalPaciente() {
           {/* ─── Tabs ─── */}
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="consultas" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-12">
+              <TabsList className="grid w-full grid-cols-6 h-12">
+                <TabsTrigger value="agendar" className="gap-1.5 data-[state=active]:bg-primary/10">
+                  <span className="text-lg">+</span>
+                  <span className="hidden sm:inline text-sm">Agendar</span>
+                </TabsTrigger>
                 <TabsTrigger value="consultas" className="gap-1.5 data-[state=active]:bg-primary/10">
                   <Calendar className="h-4 w-4" />
                   <span className="hidden sm:inline text-sm">Consultas</span>
@@ -505,6 +572,113 @@ export default function PortalPaciente() {
                   <span className="hidden sm:inline text-sm">Financeiro</span>
                 </TabsTrigger>
               </TabsList>
+
+              {/* ─── Agendar Tab ─── */}
+              <TabsContent value="agendar" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Agende uma Consulta
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">Escolha um médico, data e horário disponível</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {schedulingError && (
+                      <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                        {schedulingError}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Médico *</label>
+                      <select
+                        value={schedulingForm.medico_id}
+                        onChange={(e) => {
+                          setSchedulingForm(f => ({ ...f, medico_id: e.target.value, hora_inicio: '' }));
+                          setAvailableSlots([]);
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+                      >
+                        <option value="">Selecione um médico</option>
+                        {medicos.map(m => (
+                          <option key={m.id} value={m.id}>
+                            Dr(a). {m.nome} {m.especialidade && `— ${m.especialidade}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data *</label>
+                      <input
+                        type="date"
+                        value={schedulingForm.data}
+                        onChange={(e) => {
+                          setSchedulingForm(f => ({ ...f, data: e.target.value, hora_inicio: '' }));
+                          if (e.target.value && schedulingForm.medico_id) {
+                            loadAvailableSlots(schedulingForm.medico_id, e.target.value);
+                          }
+                        }}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+                      />
+                    </div>
+
+                    {schedulingForm.data && schedulingForm.medico_id && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Horário Disponível *</label>
+                        {schedulingLoading ? (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <div className="inline-block h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        ) : availableSlots.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-2">
+                            {availableSlots.map(slot => (
+                              <button
+                                key={slot}
+                                onClick={() => setSchedulingForm(f => ({ ...f, hora_inicio: slot }))}
+                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                                  schedulingForm.hora_inicio === slot
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted hover:bg-muted/80 text-foreground'
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-4 text-center">
+                            Nenhum horário disponível nesta data
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Tipo de Consulta</label>
+                      <input
+                        type="text"
+                        value={schedulingForm.tipo}
+                        onChange={(e) => setSchedulingForm(f => ({ ...f, tipo: e.target.value }))}
+                        placeholder="Ex: Consulta, Check-up"
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleCreateAgendamento}
+                      disabled={!schedulingForm.medico_id || !schedulingForm.data || !schedulingForm.hora_inicio || schedulingLoading}
+                      className="w-full gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      {schedulingLoading ? 'Agendando...' : 'Confirmar Agendamento'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
               {/* ─── Consultas Tab ─── */}
               <TabsContent value="consultas" className="mt-4 space-y-3">

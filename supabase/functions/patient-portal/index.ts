@@ -114,6 +114,84 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "get_medicos": {
+        const { data } = await supabase
+          .from("medicos")
+          .select("id, nome, crm, especialidade, foto_url")
+          .eq("ativo", true)
+          .order("nome");
+        result = data || [];
+        break;
+      }
+
+      case "get_available_slots": {
+        const { medico_id, data_inicio, data_fim } = body;
+        if (!medico_id || !data_inicio || !data_fim) {
+          return new Response(
+            JSON.stringify({ error: "medico_id, data_inicio, data_fim são obrigatórios" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Get all appointments for this doctor in the date range (excluding cancelled)
+        const { data: agendados } = await supabase
+          .from("agendamentos")
+          .select("hora_inicio, hora_fim")
+          .eq("medico_id", medico_id)
+          .gte("data", data_inicio)
+          .lte("data", data_fim)
+          .not("status", "in", '("cancelado")');
+
+        // Generate 30-minute slots from 8am to 6pm
+        const slots = [];
+        for (let hour = 8; hour < 18; hour++) {
+          for (let min of [0, 30]) {
+            const slotTime = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+            const isBooked = agendados?.some(
+              a => a.hora_inicio && a.hora_inicio.slice(0, 5) === slotTime
+            );
+            if (!isBooked) {
+              slots.push(slotTime);
+            }
+          }
+        }
+        result = slots;
+        break;
+      }
+
+      case "create_agendamento": {
+        const { medico_id, data, hora_inicio, tipo } = body;
+        if (!medico_id || !data || !hora_inicio || !tipo) {
+          return new Response(
+            JSON.stringify({ error: "medico_id, data, hora_inicio, tipo são obrigatórios" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Calculate end time (30 minutes after start)
+        const [h, m] = hora_inicio.split(":").map(Number);
+        const endTime = `${String(h).padStart(2, "0")}:${String((m + 30) % 60).padStart(2, "0")}`;
+
+        const { data: newAgendamento, error: insertError } = await supabase
+          .from("agendamentos")
+          .insert({
+            paciente_id: pacienteId,
+            medico_id: medico_id,
+            data: data,
+            hora_inicio: hora_inicio,
+            hora_fim: endTime,
+            tipo: tipo,
+            status: "pendente",
+            nota_cancelamento: null,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        result = { success: true, agendamento_id: newAgendamento.id };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Ação desconhecida: ${action}` }), {
           status: 400,
