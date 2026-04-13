@@ -368,8 +368,10 @@ export default function CaixaDiario() {
   };
 
   const handleAbrirCaixa = async () => {
+    console.log('[CaixaDiario] handleAbrirCaixa called, profile:', profile?.id, 'valorAbertura:', valorAbertura);
     const estado = { aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
     const saved = await saveCaixaState(estado);
+    console.log('[CaixaDiario] saveCaixaState result:', saved);
     if (!saved) return;
     setCaixaAberto(true);
     setShowAbertura(false);
