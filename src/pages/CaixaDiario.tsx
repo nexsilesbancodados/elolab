@@ -84,6 +84,7 @@ function readCaixaEstadoLocal(keys: string[], hoje: string): CaixaEstadoPersisti
 export default function CaixaDiario() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
+  console.log('[CaixaDiario] profile:', profile?.id, 'clinica:', profile?.clinica_id, 'nome:', profile?.nome);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('caixa');
@@ -367,8 +368,10 @@ export default function CaixaDiario() {
   };
 
   const handleAbrirCaixa = async () => {
+    console.log('[CaixaDiario] handleAbrirCaixa called, profile:', profile?.id, 'valorAbertura:', valorAbertura);
     const estado = { aberto: true, valorAbertura, data: format(new Date(), 'yyyy-MM-dd'), operador: profile?.nome || 'Sistema' };
     const saved = await saveCaixaState(estado);
+    console.log('[CaixaDiario] saveCaixaState result:', saved);
     if (!saved) return;
     setCaixaAberto(true);
     setShowAbertura(false);
