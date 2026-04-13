@@ -52,8 +52,20 @@ export function parseCurrency(value: string): number {
 }
 
 export function formatDate(date: Date | string, format: 'short' | 'long' | 'iso' = 'short'): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  
+  let d: Date;
+
+  if (typeof date === 'string') {
+    // Parse ISO date strings (YYYY-MM-DD) as local date, not UTC
+    const parts = date.split('T')[0].split('-');
+    if (parts.length === 3 && !date.includes('Z') && !date.includes('+') && !date.includes('-', 10)) {
+      d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    } else {
+      d = new Date(date);
+    }
+  } else {
+    d = date;
+  }
+
   switch (format) {
     case 'short':
       return d.toLocaleDateString('pt-BR');
