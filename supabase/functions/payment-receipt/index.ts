@@ -1,0 +1,183 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const brevoApiKey = Deno.env.get('BREVO_API_KEY')
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { lancamento_id } = await req.json()
+
+    if (!lancamento_id) {
+      return new Response(
+        JSON.stringify({ error: 'lancamento_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Fetch lancamento (transaction) details
+    const { data: lancamento, error: lancError } = await supabase
+      .from('lancamentos')
+      .select(`
+        id, tipo, valor, descricao, forma_pagamento, data, clinica_id,
+        created_at, paciente_id,
+        pacientes!inner(nome, email)
+      `)
+      .eq('id', lancamento_id)
+      .single()
+
+    if (lancError || !lancamento) {
+      return new Response(
+        JSON.stringify({ error: 'Lançamento não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Only send receipts for income (receita) transactions
+    if (lancamento.tipo !== 'receita') {
+      return new Response(
+        JSON.stringify({ success: true, message: 'Recibo apenas para receitas' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const paciente = lancamento.pacientes
+    if (!paciente?.email) {
+      return new Response(
+        JSON.stringify({ success: true, message: 'Paciente sem email configurado' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Fetch clinic config
+    const { data: clinicConfig } = await supabase
+      .from('configuracoes_clinica')
+      .select('*')
+      .eq('clinica_id', lancamento.clinica_id)
+      .single()
+
+    const clinicaNome = clinicConfig?.nome_fantasia || 'Clínica Médica'
+    const clinicaCnpj = clinicConfig?.cnpj || '00.000.000/0001-00'
+
+    // Fetch email template
+    const { data: template } = await supabase
+      .from('notification_templates')
+      .select('*')
+      .eq('categoria', 'recibo_pagamento')
+      .eq('tipo', 'email')
+      .eq('ativo', true)
+      .single()
+
+    // Format currency
+    const valorFormatado = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(lancamento.valor)
+
+    // Format date
+    const [year, month, day] = lancamento.data.split('-')
+    const dataFormatada = `${day}/${month}/${year}`
+
+    // Format forma_pagamento
+    const formasPagamento: Record<string, string> = {
+      dinheiro: 'Dinheiro',
+      pix: 'PIX',
+      credito: 'Cartão de Crédito',
+      debito: 'Cartão de Débito',
+      transferencia: 'Transferência Bancária',
+      cheque: 'Cheque',
+    }
+    const formaPagamentoFormatada = formasPagamento[lancamento.forma_pagamento] || lancamento.forma_pagamento
+
+    let emailSuccess = false
+
+    // === SEND EMAIL ===
+    if (brevoApiKey && template) {
+      try {
+        let conteudo = template.conteudo
+          .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
+          .replace(/\{\{valor\}\}/g, valorFormatado)
+          .replace(/\{\{forma_pagamento\}\}/g, formaPagamentoFormatada)
+          .replace(/\{\{data\}\}/g, dataFormatada)
+          .replace(/\{\{descricao\}\}/g, lancamento.descricao || 'Consulta/Serviço')
+          .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
+          .replace(/\{\{clinica_cnpj\}\}/g, clinicaCnpj)
+
+        let assunto = (template.assunto || 'Recibo de Pagamento')
+          .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
+
+        const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': brevoApiKey,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: clinicaNome, email: 'noreply@elolab.com.br' },
+            to: [{ email: paciente.email, name: paciente.nome }],
+            subject: assunto,
+            htmlContent: conteudo.replace(/\n/g, '<br>'),
+          }),
+        })
+
+        if (emailRes.ok) {
+          emailSuccess = true
+          await supabase.from('notification_queue').insert({
+            tipo: 'email',
+            destinatario_id: lancamento.paciente_id,
+            destinatario_email: paciente.email,
+            destinatario_nome: paciente.nome,
+            assunto,
+            conteudo,
+            dados_extras: { lancamento_id: lancamento.id, valor: lancamento.valor, tipo_notificacao: 'recibo' },
+            status: 'enviado',
+            enviado_em: new Date().toISOString(),
+          })
+        } else {
+          const error = await emailRes.json()
+          console.error('Brevo error:', error)
+        }
+      } catch (emailError) {
+        console.error('Email error:', emailError)
+      }
+    }
+
+    await supabase.from('automation_logs').insert({
+      tipo: 'recibo_pagamento',
+      nome: 'Envio de Recibo de Pagamento',
+      status: emailSuccess ? 'sucesso' : 'erro',
+      registros_processados: 1,
+      registros_sucesso: emailSuccess ? 1 : 0,
+      registros_erro: emailSuccess ? 0 : 1,
+      detalhes: { email: emailSuccess, valor: lancamento.valor, forma: formaPagamentoFormatada },
+      executado_por: 'event',
+    })
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Recibo enviado',
+        stats: { email: emailSuccess, valor: lancamento.valor },
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+})

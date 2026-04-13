@@ -355,9 +355,15 @@ export default function Agenda() {
 
         if (error) throw error;
 
-        // Send WhatsApp confirmation if status changed to confirmado
+        // Send email + WhatsApp confirmation if status changed to confirmado
         if (formData.status === 'confirmado') {
-          sendWhatsAppNotification(formData.id, 'send_appointment_confirmation');
+          try {
+            await supabase.functions.invoke('appointment-confirmation', {
+              body: { agendamento_id: formData.id }
+            });
+          } catch (e) {
+            if (import.meta.env.DEV) console.log('Confirmation notification skipped:', e);
+          }
         }
 
         // When finalized, auto-generate billing and notify
@@ -406,10 +412,19 @@ export default function Agenda() {
 
         if (error) throw error;
         
-        // Send WhatsApp confirmation + schedule reminder for each new appointment
+        // Send email + WhatsApp confirmation + schedule reminder for each new appointment
         if (inserted) {
           for (const ag of inserted) {
-            sendWhatsAppNotification(ag.id, 'send_appointment_confirmation');
+            // Send confirmation if status is confirmado
+            if (formData.status === 'confirmado') {
+              try {
+                await supabase.functions.invoke('appointment-confirmation', {
+                  body: { agendamento_id: ag.id }
+                });
+              } catch (e) {
+                if (import.meta.env.DEV) console.log('Confirmation notification skipped:', e);
+              }
+            }
           }
           // Schedule reminder notification (24h before) — best effort
           try {

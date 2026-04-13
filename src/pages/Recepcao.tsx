@@ -489,6 +489,15 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       }).eq('id', selectedLancamento.id);
       if (error) throw error;
 
+      // Send payment receipt to patient
+      try {
+        await supabase.functions.invoke('payment-receipt', {
+          body: { lancamento_id: selectedLancamento.id }
+        });
+      } catch (e) {
+        if (import.meta.env.DEV) console.log('Payment receipt notification skipped:', e);
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });

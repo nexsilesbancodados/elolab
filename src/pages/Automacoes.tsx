@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bot, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
+import {
+  Bot,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
   RefreshCw,
   Settings,
   Play,
-  Pause
-, Zap} from 'lucide-react';
+  Pause,
+  Zap,
+  Mail,
+  DollarSign,
+  Stethoscope
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -94,6 +98,30 @@ const AUTOMATIONS = [
     icon: Bot,
     color: 'text-pink-500',
     endpoint: 'birthday-greetings',
+  },
+  {
+    key: 'confirmacao_agendamento',
+    name: 'Confirmação de Agendamento',
+    description: 'Envia confirmação por email e WhatsApp quando consulta é confirmada',
+    icon: CheckCircle2,
+    color: 'text-green-500',
+    endpoint: null, // Event-driven
+  },
+  {
+    key: 'notificacao_resultado_exame',
+    name: 'Notificação de Resultado de Exame',
+    description: 'Envia resultado de exame para paciente quando liberado',
+    icon: Stethoscope,
+    color: 'text-purple-500',
+    endpoint: null, // Event-driven
+  },
+  {
+    key: 'recibo_pagamento',
+    name: 'Recibo de Pagamento',
+    description: 'Envia recibo de pagamento por email para paciente',
+    icon: DollarSign,
+    color: 'text-emerald-500',
+    endpoint: null, // Event-driven
   },
 ];
 

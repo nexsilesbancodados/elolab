@@ -19,6 +19,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { GlobalSearch } from '@/components/GlobalSearch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -111,7 +112,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         </DropdownMenu>
 
 
-        {/* Notifications */}
+        {/* Notification Center - Sent emails/WhatsApp */}
+        <NotificationCenter />
+
+        {/* System Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Tooltip>
@@ -131,13 +135,13 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                {unreadCount > 0 ? `${unreadCount} notificações` : 'Notificações'}
+                {unreadCount > 0 ? `${unreadCount} alertas` : 'Alertas'}
               </TooltipContent>
             </Tooltip>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80 rounded-xl p-1.5">
             <DropdownMenuLabel className="flex items-center justify-between px-2">
-              <span className="font-semibold">Notificações</span>
+              <span className="font-semibold">Alertas do Sistema</span>
               {unreadCount > 0 && (
                 <Badge variant="secondary" className="text-[10px] rounded-full px-2 h-5">
                   {unreadCount}
@@ -164,7 +168,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               )) : (
                 <div className="py-10 text-center text-sm text-muted-foreground/40">
                   <Bell className="h-7 w-7 mx-auto mb-2 opacity-10" />
-                  Sem notificações
+                  Sem alertas
                 </div>
               )}
             </ScrollArea>

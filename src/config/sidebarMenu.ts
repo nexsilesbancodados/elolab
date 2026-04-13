@@ -17,7 +17,8 @@ import {
   HeartPulse,
   DoorOpen,
   ClockAlert,
-  
+  MessageCircle,
+  Mail,
   FolderKanban,
   Sparkles,
   BotMessageSquare,
@@ -66,6 +67,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Pacientes', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
       { label: 'Fila / Triagem', icon: ClipboardCheck, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
       { label: 'Tarefas', icon: ListChecks, href: '/tarefas', roles: ['admin', 'recepcao', 'enfermagem', 'financeiro'] },
+      { label: 'Chat Interno', icon: MessageCircle, href: '/chat' },
     ],
   },
   {
@@ -134,6 +136,7 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Analytics', icon: ActivitySquare, href: '/analytics' },
       { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia' },
       { label: 'Automações', icon: Sparkles, href: '/automacoes' },
+      { label: 'Templates Email', icon: Mail, href: '/templates-email' },
       { label: 'Planos', icon: CreditCard, href: '/planos' },
       { label: 'Documentação', icon: BookMarked, href: '/documentacao' },
       { label: 'Configurações', icon: Settings2, href: '/configuracoes' },

@@ -65,6 +65,16 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
         .update({ liberado: true, data_liberacao: new Date().toISOString() })
         .eq('id', resultadoId);
       if (error) throw error;
+
+      // Send exam result notification to patient
+      try {
+        await supabase.functions.invoke('exam-result-notification', {
+          body: { resultado_id: resultadoId }
+        });
+      } catch (e) {
+        if (import.meta.env.DEV) console.log('Result notification skipped:', e);
+      }
+
       toast.success('Resultado liberado!');
       await fetchData();
       onUpdate();
@@ -82,6 +92,15 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
         await supabase.from('resultados_laboratorio')
           .update({ liberado: true, data_liberacao: new Date().toISOString() })
           .eq('id', r.id);
+
+        // Send exam result notification to patient
+        try {
+          await supabase.functions.invoke('exam-result-notification', {
+            body: { resultado_id: r.id }
+          });
+        } catch (e) {
+          if (import.meta.env.DEV) console.log('Result notification skipped:', e);
+        }
       }
       // Update coleta status to liberado
       await supabase.from('coletas_laboratorio')
