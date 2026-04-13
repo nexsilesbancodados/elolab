@@ -16,9 +16,9 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   Banknote, CreditCard, QrCode, Lock, LockOpen,
-  Plus, Minus, Loader2, AlertCircle, Trash2,
+  Plus, Minus, Loader2, AlertCircle, Trash2, Edit2, TrendingUp, Search,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 const FORMAS_PAGAMENTO = [
   { value: 'dinheiro', label: 'Dinheiro', icon: Banknote },
@@ -45,6 +45,16 @@ interface Lancamento {
   data: string;
 }
 
+interface CaixaHistorico {
+  data: string;
+  valor_abertura: number;
+  valor_fechamento?: number;
+  receita: number;
+  despesa: number;
+  sangria: number;
+  suprimento: number;
+}
+
 export default function CaixaDiario() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
@@ -53,9 +63,17 @@ export default function CaixaDiario() {
   const [showAbertura, setShowAbertura] = useState(false);
   const [showFechamento, setShowFechamento] = useState(false);
   const [showLancamento, setShowLancamento] = useState(false);
-  const [viewMode, setViewMode] = useState<'resumo' | 'detalhes' | 'historico'>('resumo');
+  const [showSangria, setShowSangria] = useState(false);
+  const [showSuprimento, setShowSuprimento] = useState(false);
+  const [viewMode, setViewMode] = useState<'resumo' | 'detalhes' | 'historico' | 'analise'>('resumo');
   const [valorAbertura, setValorAbertura] = useState(0);
   const [valorFechamento, setValorFechamento] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sangriaSuprimentoForm, setSangriaSuprimentoForm] = useState({
+    valor: 0,
+    motivo: '',
+  });
   const [lancamentoForm, setLancamentoForm] = useState({
     tipo: 'receita',
     valor: 0,
@@ -209,6 +227,90 @@ export default function CaixaDiario() {
     },
   });
 
+  const adicionarSangriaMutation = useMutation({
+    mutationFn: async () => {
+      if (sangriaSuprimentoForm.valor <= 0) throw new Error('Valor deve ser maior que zero');
+      const { data, error } = await supabase
+        .from('lancamentos')
+        .insert([{
+          tipo: 'sangria',
+          valor: sangriaSuprimentoForm.valor,
+          descricao: `Sangria - ${sangriaSuprimentoForm.motivo}`,
+          forma_pagamento: 'dinheiro',
+          data: hoje,
+          clinica_id: profile?.clinica_id,
+        }])
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Sangria registrada!');
+      setShowSangria(false);
+      setSangriaSuprimentoForm({ valor: 0, motivo: '' });
+      refetchLancamentos();
+    },
+    onError: (error: any) => {
+      toast.error('Erro: ' + error.message);
+    },
+  });
+
+  const adicionarSuprimentoMutation = useMutation({
+    mutationFn: async () => {
+      if (sangriaSuprimentoForm.valor <= 0) throw new Error('Valor deve ser maior que zero');
+      const { data, error } = await supabase
+        .from('lancamentos')
+        .insert([{
+          tipo: 'suprimento',
+          valor: sangriaSuprimentoForm.valor,
+          descricao: `Suprimento - ${sangriaSuprimentoForm.motivo}`,
+          forma_pagamento: 'dinheiro',
+          data: hoje,
+          clinica_id: profile?.clinica_id,
+        }])
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Suprimento registrado!');
+      setShowSuprimento(false);
+      setSangriaSuprimentoForm({ valor: 0, motivo: '' });
+      refetchLancamentos();
+    },
+    onError: (error: any) => {
+      toast.error('Erro: ' + error.message);
+    },
+  });
+
+  const editarLancamentoMutation = useMutation({
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { data, error } = await supabase
+        .from('lancamentos')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Lançamento atualizado!');
+      setEditingId(null);
+      refetchLancamentos();
+    },
+    onError: (error: any) => {
+      toast.error('Erro: ' + error.message);
+    },
+  });
+
+  const lancamentosFiltered = useMemo(() => {
+    if (!searchTerm) return lancamentos;
+    return lancamentos.filter(l =>
+      l.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [lancamentos, searchTerm]);
+
   const totaisPorForma = useMemo(() => {
     return FORMAS_PAGAMENTO.map(forma => ({
       ...forma,
@@ -226,20 +328,39 @@ export default function CaixaDiario() {
     .filter(l => l.tipo === 'despesa')
     .reduce((sum, l) => sum + l.valor, 0);
 
-  const saldoTotal = totalReceita - totalDespesa;
+  const totalSangria = lancamentos
+    .filter(l => l.tipo === 'sangria')
+    .reduce((sum, l) => sum + l.valor, 0);
+
+  const totalSuprimento = lancamentos
+    .filter(l => l.tipo === 'suprimento')
+    .reduce((sum, l) => sum + l.valor, 0);
+
+  const saldoTotal = totalReceita - totalDespesa - totalSangria + totalSuprimento;
   const diferenca = caixaHoje ? saldoTotal - caixaHoje.valor_abertura : 0;
 
   const dadosGrafico = useMemo(() => {
     const grupos: any = {};
     historico.forEach(l => {
       if (!grupos[l.data]) {
-        grupos[l.data] = { data: format(new Date(l.data), 'dd/MM'), receita: 0, despesa: 0 };
+        grupos[l.data] = { data: format(new Date(l.data), 'dd/MM'), receita: 0, despesa: 0, saldo: 0 };
       }
       if (l.tipo === 'receita') grupos[l.data].receita += l.valor;
       if (l.tipo === 'despesa') grupos[l.data].despesa += l.valor;
     });
-    return Object.values(grupos).sort((a: any, b: any) => a.data.localeCompare(b.data));
+    return Object.values(grupos)
+      .sort((a: any, b: any) => a.data.localeCompare(b.data))
+      .map((d: any) => ({
+        ...d,
+        saldo: d.receita - d.despesa,
+      }));
   }, [historico]);
+
+  const mediaDiaria = useMemo(() => {
+    if (dadosGrafico.length === 0) return 0;
+    const totalSaldo = dadosGrafico.reduce((sum: number, d: any) => sum + d.saldo, 0);
+    return totalSaldo / dadosGrafico.length;
+  }, [dadosGrafico]);
 
   if (!profile?.clinica_id) {
     return <div className="p-4 text-center">Carregando...</div>;
@@ -265,38 +386,70 @@ export default function CaixaDiario() {
         </div>
       </div>
 
+      <div className="flex gap-2 flex-wrap">
+        {!caixaHoje?.aberto && (
+          <Button onClick={() => setShowAbertura(true)} className="gap-2">
+            <LockOpen className="w-4 h-4" /> Abrir Caixa
+          </Button>
+        )}
+        {caixaHoje?.aberto && (
+          <>
+            <Button onClick={() => setShowLancamento(true)} variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" /> Lançamento
+            </Button>
+            <Button onClick={() => setShowSangria(true)} variant="outline" className="gap-2">
+              <Minus className="w-4 h-4" /> Sangria
+            </Button>
+            <Button onClick={() => setShowSuprimento(true)} variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" /> Suprimento
+            </Button>
+            <Button onClick={() => setShowFechamento(true)} variant="destructive" className="gap-2">
+              <Lock className="w-4 h-4" /> Fechar Caixa
+            </Button>
+          </>
+        )}
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Status do Caixa</span>
             <Badge variant={caixaHoje?.aberto ? 'default' : 'secondary'}>
-              {caixaHoje?.aberto ? 'Aberto' : 'Fechado'}
+              {caixaHoje?.aberto ? '🟢 Aberto' : '🔴 Fechado'}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Abertura</p>
-              <p className="text-xl font-bold">R$ {(caixaHoje?.valor_abertura || 0).toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">💰 Abertura</p>
+              <p className="text-lg font-bold">R$ {(caixaHoje?.valor_abertura || 0).toFixed(2)}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Receita</p>
-              <p className="text-xl font-bold text-green-600">+R$ {totalReceita.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">📊 Receita</p>
+              <p className="text-lg font-bold text-green-600">+R$ {totalReceita.toFixed(2)}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Despesa</p>
-              <p className="text-xl font-bold text-red-600">-R$ {totalDespesa.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">📋 Despesa</p>
+              <p className="text-lg font-bold text-red-600">-R$ {totalDespesa.toFixed(2)}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Saldo</p>
-              <p className={`text-xl font-bold ${saldoTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-sm text-muted-foreground">📉 Sangria</p>
+              <p className="text-lg font-bold text-orange-600">-R$ {totalSangria.toFixed(2)}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">📈 Suprimento</p>
+              <p className="text-lg font-bold text-blue-600">+R$ {totalSuprimento.toFixed(2)}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">✅ Saldo Total</p>
+              <p className={`text-lg font-bold ${saldoTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 R$ {saldoTotal.toFixed(2)}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Diferença</p>
-              <p className={`text-xl font-bold ${diferenca >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-sm text-muted-foreground">❌ Diferença</p>
+              <p className={`text-lg font-bold ${diferenca >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {diferenca >= 0 ? '+' : ''}R$ {diferenca.toFixed(2)}
               </p>
             </div>
@@ -305,10 +458,11 @@ export default function CaixaDiario() {
       </Card>
 
       <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="detalhes">Lançamentos</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
+          <TabsTrigger value="analise">Análise</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumo" className="space-y-4">
@@ -362,58 +516,84 @@ export default function CaixaDiario() {
         </TabsContent>
 
         <TabsContent value="detalhes" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Lançamentos de Hoje</h3>
-            <Button onClick={() => setShowLancamento(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> Novo Lançamento
-            </Button>
-          </div>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar lançamentos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
 
-          {loadingLancamentos ? (
-            <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto" />
-            </div>
-          ) : lancamentos.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <AlertCircle className="w-8 h-8 mb-2" />
-                Nenhum lançamento registrado hoje
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {lancamentos.map(l => (
-                <motion.div
-                  key={l.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <Card>
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex-1">
-                        <p className="font-medium">{l.descricao}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento)?.label}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <p className={`text-lg font-bold ${l.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
-                          {l.tipo === 'receita' ? '+' : '-'}R$ {l.valor.toFixed(2)}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deletarLancamentoMutation.mutate(l.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
+            {loadingLancamentos ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+              </div>
+            ) : lancamentosFiltered.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <AlertCircle className="w-8 h-8 mb-2" />
+                  {searchTerm ? 'Nenhum lançamento encontrado' : 'Nenhum lançamento registrado hoje'}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {lancamentosFiltered.map(l => (
+                  <motion.div
+                    key={l.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <Card className={cn('border-l-4', {
+                      'border-l-green-600': l.tipo === 'receita',
+                      'border-l-red-600': l.tipo === 'despesa',
+                      'border-l-orange-600': l.tipo === 'sangria',
+                      'border-l-blue-600': l.tipo === 'suprimento',
+                    })}>
+                      <CardContent className="flex items-center justify-between py-4">
+                        <div className="flex-1">
+                          <p className="font-medium">{l.descricao}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {FORMAS_PAGAMENTO.find(f => f.value === l.forma_pagamento)?.label || 'Dinheiro'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className={`text-lg font-bold ${
+                            l.tipo === 'receita' ? 'text-green-600' :
+                            l.tipo === 'despesa' ? 'text-red-600' :
+                            l.tipo === 'sangria' ? 'text-orange-600' :
+                            'text-blue-600'
+                          }`}>
+                            {l.tipo === 'receita' ? '+' : '-'}R$ {l.valor.toFixed(2)}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingId(editingId === l.id ? null : l.id)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deletarLancamentoMutation.mutate(l.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="historico" className="space-y-4">
@@ -454,12 +634,93 @@ export default function CaixaDiario() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="analise" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">📈 Receita Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-green-600">R$ {totalReceita.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">📉 Despesa Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-red-600">R$ {totalDespesa.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">📊 Média Diária</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-blue-600">R$ {mediaDiaria.toFixed(2)}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex gap-2">
+            {['hoje', 'semana', 'mes'].map(p => (
+              <Button
+                key={p}
+                variant={periodoBuscando === p ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPeriodoBuscando(p)}
+              >
+                {p === 'hoje' ? 'Hoje' : p === 'semana' ? '7 dias' : 'Mês'}
+              </Button>
+            ))}
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Evolução de Receita vs Despesa</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip formatter={(value: any) => `R$ ${value.toFixed(2)}`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="receita" stroke="#22c55e" name="Receita" />
+                  <Line type="monotone" dataKey="despesa" stroke="#ef4444" name="Despesa" />
+                  <Line type="monotone" dataKey="saldo" stroke="#3b82f6" name="Saldo" strokeDasharray="5 5" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Comparativo de Períodos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip formatter={(value: any) => `R$ ${value.toFixed(2)}`} />
+                  <Legend />
+                  <Bar dataKey="receita" fill="#22c55e" name="Receita" />
+                  <Bar dataKey="despesa" fill="#ef4444" name="Despesa" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <Dialog open={showAbertura} onOpenChange={setShowAbertura}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Abrir Caixa</DialogTitle>
+            <DialogTitle>💰 Abrir Caixa</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -586,6 +847,78 @@ export default function CaixaDiario() {
             <Button variant="outline" onClick={() => setShowLancamento(false)}>Cancelar</Button>
             <Button onClick={() => adicionarLancamentoMutation.mutate()} disabled={adicionarLancamentoMutation.isPending}>
               {adicionarLancamentoMutation.isPending ? 'Registrando...' : 'Registrar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSangria} onOpenChange={setShowSangria}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>📉 Sangria (Retirada)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="valor-sangria">Valor (R$)</Label>
+              <Input
+                id="valor-sangria"
+                type="number"
+                step="0.01"
+                value={sangriaSuprimentoForm.valor}
+                onChange={(e) => setSangriaSuprimentoForm({ ...sangriaSuprimentoForm, valor: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="motivo-sangria">Motivo</Label>
+              <Input
+                id="motivo-sangria"
+                value={sangriaSuprimentoForm.motivo}
+                onChange={(e) => setSangriaSuprimentoForm({ ...sangriaSuprimentoForm, motivo: e.target.value })}
+                placeholder="Ex: Retirada do operador, Pagamento de contas, etc"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSangria(false)}>Cancelar</Button>
+            <Button onClick={() => adicionarSangriaMutation.mutate()} disabled={adicionarSangriaMutation.isPending}>
+              {adicionarSangriaMutation.isPending ? 'Registrando...' : 'Registrar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSuprimento} onOpenChange={setShowSuprimento}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>📈 Suprimento (Adição)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="valor-suprimento">Valor (R$)</Label>
+              <Input
+                id="valor-suprimento"
+                type="number"
+                step="0.01"
+                value={sangriaSuprimentoForm.valor}
+                onChange={(e) => setSangriaSuprimentoForm({ ...sangriaSuprimentoForm, valor: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="motivo-suprimento">Motivo</Label>
+              <Input
+                id="motivo-suprimento"
+                value={sangriaSuprimentoForm.motivo}
+                onChange={(e) => setSangriaSuprimentoForm({ ...sangriaSuprimentoForm, motivo: e.target.value })}
+                placeholder="Ex: Complemento de caixa, Devolução, etc"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSuprimento(false)}>Cancelar</Button>
+            <Button onClick={() => adicionarSuprimentoMutation.mutate()} disabled={adicionarSuprimentoMutation.isPending}>
+              {adicionarSuprimentoMutation.isPending ? 'Registrando...' : 'Registrar'}
             </Button>
           </DialogFooter>
         </DialogContent>
