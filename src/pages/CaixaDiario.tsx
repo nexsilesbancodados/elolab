@@ -84,6 +84,7 @@ function readCaixaEstadoLocal(keys: string[], hoje: string): CaixaEstadoPersisti
 export default function CaixaDiario() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
+  console.log('[CaixaDiario] profile:', profile?.id, 'clinica:', profile?.clinica_id, 'nome:', profile?.nome);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('caixa');
