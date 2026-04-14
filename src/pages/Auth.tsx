@@ -615,6 +615,15 @@ export default function Auth() {
                       >
                         {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando...</> : 'Criar conta e ativar'}
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-11 font-bold rounded-xl text-sm border-primary/30 text-primary hover:bg-primary/5 transition-all"
+                        onClick={() => navigate('/#planos')}
+                      >
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Assinar um Plano
+                      </Button>
                     </form>
                   </Form>
                 )}
