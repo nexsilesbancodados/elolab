@@ -36,7 +36,7 @@ export interface ChatMensagem {
 }
 
 export function useChatInterno() {
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [usuarios, setUsuarios] = useState<ChatUsuario[]>([]);
   const [conversas, setConversas] = useState<ChatConversa[]>([]);
   const [mensagens, setMensagens] = useState<ChatMensagem[]>([]);
@@ -50,15 +50,21 @@ export function useChatInterno() {
   useEffect(() => { conversaAtivaRef.current = conversaAtiva; }, [conversaAtiva]);
   useEffect(() => { usuariosRef.current = usuarios; }, [usuarios]);
 
-  // Fetch all users (profiles) except current user
+  // Fetch all users (profiles) in same clinic except current user
   const fetchUsuarios = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    let query = supabase
       .from('profiles')
       .select('id, nome, email, avatar')
       .neq('id', user.id)
       .eq('ativo', true)
       .order('nome');
+
+    if (profile?.clinica_id) {
+      query = query.eq('clinica_id', profile.clinica_id);
+    }
+
+    const { data } = await query;
 
     if (data) {
       const mapped = data.map(p => ({
@@ -71,7 +77,7 @@ export function useChatInterno() {
       setUsuarios(mapped);
       usuariosRef.current = mapped;
     }
-  }, [user]);
+  }, [user, profile?.clinica_id]);
 
   // Fetch conversations for current user
   const fetchConversas = useCallback(async () => {
