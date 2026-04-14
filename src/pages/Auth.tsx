@@ -13,6 +13,7 @@ import { MaskedInput } from '@/components/ui/masked-input';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
   Gift, CheckCircle2, Lock, Mail, User, Phone, FileText, CreditCard,
+  Stethoscope, HeartPulse, MonitorSmartphone, UserCog,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
