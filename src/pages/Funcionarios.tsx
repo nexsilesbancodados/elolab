@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Pencil, Trash2, Users, Mail, Phone, Loader2, Send, CheckCircle, Stethoscope, Briefcase } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Users, Mail, Phone, Loader2, Send, CheckCircle, Stethoscope, Briefcase, Settings2, Save, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -33,12 +34,30 @@ interface FuncionarioWithRoles {
   hasInvitation?: boolean;
 }
 
-const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: string }[] = [
-  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-purple-100 text-purple-800' },
-  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-blue-100 text-blue-800' },
-  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-cyan-100 text-cyan-800' },
-  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-green-100 text-green-800' },
-  { role: 'financeiro', label: 'Financeiro', description: 'Contas, lançamentos e relatórios', color: 'bg-yellow-100 text-yellow-800' },
+interface RoleCustomization {
+  label: string;
+  description: string;
+  color: string;
+  modules: string[];
+}
+
+type RoleCustomizations = Record<string, RoleCustomization>;
+
+const DEFAULT_ROLE_CONFIG: { role: AppRole; label: string; description: string; color: string; modules: string[] }[] = [
+  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-purple-100 text-purple-800', modules: ['Todas as funcionalidades'] },
+  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-blue-100 text-blue-800', modules: ['Prontuários', 'Prescrições', 'Atestados', 'Exames', 'Encaminhamentos'] },
+  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-cyan-100 text-cyan-800', modules: ['Pacientes', 'Agenda', 'Fila', 'Lista de Espera'] },
+  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-green-100 text-green-800', modules: ['Triagem', 'Sinais Vitais', 'Estoque', 'Coletas'] },
+  { role: 'financeiro', label: 'Financeiro', description: 'Contas, lançamentos e relatórios', color: 'bg-yellow-100 text-yellow-800', modules: ['Contas a Pagar', 'Contas a Receber', 'Caixa', 'Relatórios Financeiros'] },
+];
+
+const ALL_MODULES = [
+  'Prontuários', 'Prescrições', 'Atestados', 'Exames', 'Encaminhamentos',
+  'Pacientes', 'Agenda', 'Fila', 'Lista de Espera',
+  'Triagem', 'Sinais Vitais', 'Estoque', 'Coletas',
+  'Contas a Pagar', 'Contas a Receber', 'Caixa', 'Relatórios Financeiros',
+  'Laboratório', 'Laudos', 'Convênios', 'Chat Interno', 'Tarefas',
+  'Configurações', 'Funcionários', 'Salas', 'Analytics',
 ];
 
 const TIPO_FUNCIONARIO_CONFIG: { value: string; label: string; registroLabel?: string; registroTipo?: string }[] = [
