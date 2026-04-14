@@ -49,6 +49,7 @@ export interface MenuItem {
   badge?: number;
   roles?: AppRole[];
   external?: boolean;
+  superAdminOnly?: boolean;
 }
 
 export interface MenuGroup {
@@ -57,6 +58,7 @@ export interface MenuGroup {
   color: string;
   items: MenuItem[];
   roles?: AppRole[];
+  superAdminOnly?: boolean;
 }
 
 export const menuGroups: MenuGroup[] = [
