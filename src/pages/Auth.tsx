@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { MaskedInput } from '@/components/ui/masked-input';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
-  Gift, CheckCircle2, Lock, Mail, User, Phone, FileText,
+  Gift, CheckCircle2, Lock, Mail, User, Phone, FileText, CreditCard,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
