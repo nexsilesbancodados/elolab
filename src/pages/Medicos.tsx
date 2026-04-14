@@ -43,6 +43,31 @@ const UFS = [
 
 const INTERVALOS = [10, 15, 20, 25, 30, 40, 45, 50, 60];
 
+const ESPECIALIDADES_SUGESTOES = [
+  'Clínico Geral', 'Cardiologia', 'Dermatologia', 'Endocrinologia', 'Gastroenterologia',
+  'Geriatria', 'Ginecologia e Obstetrícia', 'Infectologia', 'Medicina do Trabalho',
+  'Nefrologia', 'Neurologia', 'Oftalmologia', 'Oncologia', 'Ortopedia e Traumatologia',
+  'Otorrinolaringologia', 'Pediatria', 'Pneumologia', 'Psiquiatria', 'Radiologia',
+  'Reumatologia', 'Urologia', 'Cirurgia Geral', 'Cirurgia Plástica', 'Anestesiologia',
+  'Hematologia', 'Medicina de Família', 'Nutrologia', 'Proctologia', 'Mastologia',
+];
+
+function formatCpf(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 interface FormData {
   nome: string; email: string; crm: string; crm_uf: string; cpf: string;
   rqe: string; cns: string; especialidade: string; telefone: string;
