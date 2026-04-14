@@ -399,8 +399,8 @@ export default function Exames() {
   };
 
   const handleSave = async (emitir = false) => {
-    if (!formData.paciente_id || !formData.medico_solicitante_id) {
-      toast.error('Selecione paciente e médico.');
+    if (!formData.paciente_id) {
+      toast.error('Selecione o paciente.');
       return;
     }
     if (examesSelecionados.length === 0) {
