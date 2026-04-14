@@ -726,23 +726,29 @@ export default function Medicos() {
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-              {/* Foto */}
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  {formData.foto_url && <AvatarImage src={formData.foto_url} />}
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">{(formData.nome || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Foto de Perfil</Label>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-1 text-xs" disabled={uploadingPhoto}
-                      onClick={() => document.getElementById('foto-upload')?.click()}>
-                      <Upload className="h-3 w-3" />{uploadingPhoto ? 'Enviando...' : 'Upload'}
-                    </Button>
-                    {formData.foto_url && <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setFormData(p => ({ ...p, foto_url: '' }))}>Remover</Button>}
+              {/* Foto + Status side by side */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 ring-2 ring-primary/10">
+                    {formData.foto_url && <AvatarImage src={formData.foto_url} />}
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg">{(formData.nome || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Foto de Perfil</Label>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-1 text-xs" disabled={uploadingPhoto}
+                        onClick={() => document.getElementById('foto-upload')?.click()}>
+                        <Upload className="h-3 w-3" />{uploadingPhoto ? 'Enviando...' : 'Upload'}
+                      </Button>
+                      {formData.foto_url && <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setFormData(p => ({ ...p, foto_url: '' }))}>Remover</Button>}
+                    </div>
+                    <input id="foto-upload" type="file" accept="image/*" className="hidden"
+                      onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'patient-photos', 'foto_url')} />
                   </div>
-                  <input id="foto-upload" type="file" accept="image/*" className="hidden"
-                    onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'patient-photos', 'foto_url')} />
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <Label className="text-sm">Ativo</Label>
+                  <Switch checked={formData.ativo} onCheckedChange={checked => setFormData(p => ({ ...p, ativo: checked }))} />
                 </div>
               </div>
 
@@ -753,21 +759,35 @@ export default function Medicos() {
                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5"><User className="h-4 w-4" /> Dados Pessoais</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Nome Completo *</Label>
-                    <Input value={formData.nome} onChange={e => setFormData(p => ({ ...p, nome: e.target.value }))} placeholder="Dr. João Silva" />
+                    <Label className="text-xs">Nome Completo <span className="text-destructive">*</span></Label>
+                    <Input value={formData.nome} onChange={e => setFormData(p => ({ ...p, nome: e.target.value }))} placeholder="João da Silva" 
+                      className={!formData.nome && formData.crm ? 'border-destructive/50' : ''} />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">CPF</Label>
-                    <Input value={formData.cpf} onChange={e => setFormData(p => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" maxLength={14} />
+                    <Input value={formData.cpf} 
+                      onChange={e => setFormData(p => ({ ...p, cpf: formatCpf(e.target.value) }))} 
+                      placeholder="000.000.000-00" maxLength={14} />
+                    {formData.cpf && formData.cpf.replace(/\D/g, '').length > 0 && formData.cpf.replace(/\D/g, '').length < 11 && (
+                      <p className="text-[10px] text-amber-500">CPF incompleto</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">E-mail</Label>
-                    <Input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="medico@email.com" />
-                    {!editingId && formData.email && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" /> Convite de acesso será enviado automaticamente</p>}
+                    <Input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="medico@email.com"
+                      className={formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-destructive/50' : ''} />
+                    {!editingId && formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+                      <p className="text-[10px] text-emerald-600 flex items-center gap-1"><Mail className="h-3 w-3" /> Convite de acesso será enviado automaticamente</p>
+                    )}
+                    {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+                      <p className="text-[10px] text-destructive">E-mail inválido</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Telefone</Label>
-                    <Input value={formData.telefone} onChange={e => setFormData(p => ({ ...p, telefone: e.target.value }))} placeholder="(11) 99999-9999" />
+                    <Input value={formData.telefone} 
+                      onChange={e => setFormData(p => ({ ...p, telefone: formatPhone(e.target.value) }))} 
+                      placeholder="(11) 99999-9999" maxLength={15} />
                   </div>
                 </div>
               </div>
@@ -779,11 +799,17 @@ export default function Medicos() {
                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5"><BadgeCheck className="h-4 w-4" /> Registro Profissional</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">CRM *</Label>
-                    <Input value={formData.crm} onChange={e => setFormData(p => ({ ...p, crm: e.target.value }))} placeholder="123456" />
+                    <Label className="text-xs">CRM <span className="text-destructive">*</span></Label>
+                    <Input value={formData.crm} 
+                      onChange={e => setFormData(p => ({ ...p, crm: e.target.value.replace(/\D/g, '').slice(0, 10) }))} 
+                      placeholder="123456"
+                      className={!formData.crm && formData.nome ? 'border-destructive/50' : ''} />
+                    {formData.crm && (formData.crm.length < 4 || formData.crm.length > 10) && (
+                      <p className="text-[10px] text-amber-500">4 a 10 dígitos</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">UF do CRM *</Label>
+                    <Label className="text-xs">UF do CRM <span className="text-destructive">*</span></Label>
                     <Select value={formData.crm_uf} onValueChange={v => setFormData(p => ({ ...p, crm_uf: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{UFS.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}</SelectContent>
@@ -791,16 +817,41 @@ export default function Medicos() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">RQE</Label>
-                    <Input value={formData.rqe} onChange={e => setFormData(p => ({ ...p, rqe: e.target.value }))} placeholder="Ex: 12345" />
+                    <Input value={formData.rqe} onChange={e => setFormData(p => ({ ...p, rqe: e.target.value }))} placeholder="12345" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">CNS</Label>
-                    <Input value={formData.cns} onChange={e => setFormData(p => ({ ...p, cns: e.target.value }))} placeholder="Cartão Nacional de Saúde" />
+                    <Input value={formData.cns} onChange={e => setFormData(p => ({ ...p, cns: e.target.value }))} placeholder="Cartão Nacional" />
                   </div>
                 </div>
-                <div className="mt-3 space-y-1.5">
+
+                {/* Especialidade with suggestions */}
+                <div className="mt-4 space-y-1.5">
                   <Label className="text-xs">Especialidade</Label>
-                  <Input value={formData.especialidade} onChange={e => setFormData(p => ({ ...p, especialidade: e.target.value }))} placeholder="Cardiologia, Pediatria, etc." />
+                  <div className="relative">
+                    <Input value={formData.especialidade} 
+                      onChange={e => setFormData(p => ({ ...p, especialidade: e.target.value }))} 
+                      placeholder="Digite ou selecione uma especialidade"
+                      list="especialidades-list" />
+                    <datalist id="especialidades-list">
+                      {[...ESPECIALIDADES_SUGESTOES, ...especialidades.filter(e => !ESPECIALIDADES_SUGESTOES.includes(e))].sort().map(e => (
+                        <option key={e} value={e} />
+                      ))}
+                    </datalist>
+                  </div>
+                  {formData.especialidade && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {ESPECIALIDADES_SUGESTOES.filter(e => 
+                        e.toLowerCase().includes(formData.especialidade.toLowerCase()) && 
+                        e.toLowerCase() !== formData.especialidade.toLowerCase()
+                      ).slice(0, 4).map(sug => (
+                        <Badge key={sug} variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
+                          onClick={() => setFormData(p => ({ ...p, especialidade: sug }))}>
+                          {sug}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -809,30 +860,24 @@ export default function Medicos() {
               {/* Agenda */}
               <div>
                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5"><Clock className="h-4 w-4" /> Configurações de Agenda</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Intervalo Padrão de Consulta</Label>
-                    <Select value={String(formData.intervalo_consulta)} onValueChange={v => setFormData(p => ({ ...p, intervalo_consulta: Number(v) }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{INTERVALOS.map(i => <SelectItem key={i} value={String(i)}>{i} minutos</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <Label className="text-sm">Médico ativo</Label>
-                    <Switch checked={formData.ativo} onCheckedChange={checked => setFormData(p => ({ ...p, ativo: checked }))} />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Intervalo Padrão de Consulta</Label>
+                  <Select value={String(formData.intervalo_consulta)} onValueChange={v => setFormData(p => ({ ...p, intervalo_consulta: Number(v) }))}>
+                    <SelectTrigger className="w-full sm:w-64"><SelectValue /></SelectTrigger>
+                    <SelectContent>{INTERVALOS.map(i => <SelectItem key={i} value={String(i)}>{i} minutos</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              <Separator />
 
               {/* Horários de Disponibilidade */}
               {editingId && (
                 <>
-                  <MedicoAvailabilityManager medico_id={editingId} medico_nome={formData.nome} />
                   <Separator />
+                  <MedicoAvailabilityManager medico_id={editingId} medico_nome={formData.nome} />
                 </>
               )}
+
+              <Separator />
 
               {/* Carimbo */}
               <div>
@@ -859,7 +904,7 @@ export default function Medicos() {
 
             <DialogFooter className="flex-shrink-0 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>Cancelar</Button>
-              <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">{editingId ? 'Salvar' : 'Cadastrar'}</LoadingButton>
+              <LoadingButton onClick={handleSave} isLoading={isSubmitting} loadingText="Salvando...">{editingId ? 'Salvar Alterações' : 'Cadastrar Médico'}</LoadingButton>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -869,7 +914,7 @@ export default function Medicos() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-              <AlertDialogDescription>Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita.</AlertDialogDescription>
+              <AlertDialogDescription>Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita e removerá todos os vínculos de agenda.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
