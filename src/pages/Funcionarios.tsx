@@ -67,6 +67,7 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: s
 ];
 
 export default function Funcionarios() {
+  const { profile } = useSupabaseAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
