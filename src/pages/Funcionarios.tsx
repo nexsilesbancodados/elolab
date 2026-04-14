@@ -43,27 +43,12 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: s
 
 const TIPO_FUNCIONARIO_CONFIG: { value: string; label: string; registroLabel?: string; registroTipo?: string }[] = [
   { value: 'medico', label: 'Médico(a)', registroLabel: 'CRM', registroTipo: 'CRM' },
-  { value: 'enfermeiro', label: 'Enfermeiro(a)', registroLabel: 'COREN', registroTipo: 'COREN' },
+  { value: 'enfermeiro', label: 'Enfermeira(o)', registroLabel: 'COREN', registroTipo: 'COREN' },
   { value: 'tecnico_enfermagem', label: 'Técnico(a) de Enfermagem', registroLabel: 'COREN', registroTipo: 'COREN' },
-  { value: 'auxiliar_enfermagem', label: 'Auxiliar de Enfermagem', registroLabel: 'COREN', registroTipo: 'COREN' },
-  { value: 'biomedico', label: 'Biomédico(a)', registroLabel: 'CRBM', registroTipo: 'CRBM' },
-  { value: 'farmaceutico', label: 'Farmacêutico(a)', registroLabel: 'CRF', registroTipo: 'CRF' },
   { value: 'tecnico_laboratorio', label: 'Técnico(a) de Laboratório', registroLabel: 'CRT', registroTipo: 'CRT' },
-  { value: 'fisioterapeuta', label: 'Fisioterapeuta', registroLabel: 'CREFITO', registroTipo: 'CREFITO' },
-  { value: 'nutricionista', label: 'Nutricionista', registroLabel: 'CRN', registroTipo: 'CRN' },
-  { value: 'psicologo', label: 'Psicólogo(a)', registroLabel: 'CRP', registroTipo: 'CRP' },
-  { value: 'fonoaudiologo', label: 'Fonoaudiólogo(a)', registroLabel: 'CRFa', registroTipo: 'CRFa' },
-  { value: 'dentista', label: 'Dentista', registroLabel: 'CRO', registroTipo: 'CRO' },
-  { value: 'assistente_social', label: 'Assistente Social', registroLabel: 'CRESS', registroTipo: 'CRESS' },
-  { value: 'recepcionista', label: 'Recepcionista' },
+  { value: 'atendente', label: 'Atendente' },
+  { value: 'gerente', label: 'Gerente / Dono(a)' },
   { value: 'administrativo', label: 'Administrativo' },
-  { value: 'faturista', label: 'Faturista' },
-  { value: 'copeiro', label: 'Copeiro(a)' },
-  { value: 'servicos_gerais', label: 'Serviços Gerais' },
-  { value: 'motorista', label: 'Motorista' },
-  { value: 'seguranca', label: 'Segurança' },
-  { value: 'estagiario', label: 'Estagiário(a)' },
-  { value: 'outro', label: 'Outro' },
 ];
 
 const UF_OPTIONS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
@@ -99,7 +84,7 @@ interface FormDataType {
 const initialFormData: FormDataType = {
   nome: '', email: '', telefone: '', cargo: '', departamento: '', ativo: true,
   selectedRoles: [],
-  tipo_funcionario: 'outro', registro_profissional: '', tipo_registro: '', uf_registro: 'SP',
+  tipo_funcionario: 'atendente', registro_profissional: '', tipo_registro: '', uf_registro: 'SP',
   especialidade: '', data_nascimento: '', cpf: '', carga_horaria: '', turno: 'integral',
 };
 
@@ -152,7 +137,7 @@ export default function Funcionarios() {
           departamento: data.departamento || null,
           ativo: data.ativo,
           clinica_id: profile?.clinica_id || null,
-          tipo_funcionario: data.tipo_funcionario || 'outro',
+          tipo_funcionario: data.tipo_funcionario || 'atendente',
           registro_profissional: data.registro_profissional || null,
           tipo_registro: data.tipo_registro || null,
           uf_registro: data.uf_registro || null,
@@ -200,7 +185,7 @@ export default function Funcionarios() {
           cargo: data.cargo || null,
           departamento: data.departamento || null,
           ativo: data.ativo,
-          tipo_funcionario: data.tipo_funcionario || 'outro',
+          tipo_funcionario: data.tipo_funcionario || 'atendente',
           registro_profissional: data.registro_profissional || null,
           tipo_registro: data.tipo_registro || null,
           uf_registro: data.uf_registro || null,
@@ -279,7 +264,7 @@ export default function Funcionarios() {
         nome: func.nome, email: func.email || '', telefone: func.telefone || '',
         cargo: func.cargo || '', departamento: func.departamento || '',
         ativo: func.ativo ?? true, selectedRoles: func.roles || [],
-        tipo_funcionario: raw.tipo_funcionario || 'outro',
+        tipo_funcionario: raw.tipo_funcionario || 'atendente',
         registro_profissional: raw.registro_profissional || '',
         tipo_registro: raw.tipo_registro || '',
         uf_registro: raw.uf_registro || 'SP',
@@ -403,7 +388,7 @@ export default function Funcionarios() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <Badge variant="outline" className="text-xs">{tipoConfig?.label || 'Outro'}</Badge>
+                            <Badge variant="outline" className="text-xs">{tipoConfig?.label || 'Atendente'}</Badge>
                             {raw.registro_profissional && (
                               <p className="text-xs text-muted-foreground font-mono">
                                 {raw.tipo_registro}: {raw.registro_profissional}{raw.uf_registro ? `/${raw.uf_registro}` : ''}
