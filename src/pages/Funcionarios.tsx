@@ -84,7 +84,7 @@ interface FormDataType {
 const initialFormData: FormDataType = {
   nome: '', email: '', telefone: '', cargo: '', departamento: '', ativo: true,
   selectedRoles: [],
-  tipo_funcionario: 'outro', registro_profissional: '', tipo_registro: '', uf_registro: 'SP',
+  tipo_funcionario: 'atendente', registro_profissional: '', tipo_registro: '', uf_registro: 'SP',
   especialidade: '', data_nascimento: '', cpf: '', carga_horaria: '', turno: 'integral',
 };
 
