@@ -28,7 +28,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AppRole } from '@/contexts/SupabaseAuthContext';
+import { AppRole, useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +67,7 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: s
 ];
 
 export default function Funcionarios() {
+  const { profile } = useSupabaseAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -134,6 +135,7 @@ export default function Funcionarios() {
           cargo: data.cargo || null,
           departamento: data.departamento || null,
           ativo: data.ativo,
+          clinica_id: profile?.clinica_id || null,
         })
         .select()
         .single();
