@@ -210,7 +210,7 @@ function TarefaCard({ tarefa, onUpdate, onDelete }: {
 
 // ─── Main Page ─────────────────────────────────────────────
 export default function Tarefas() {
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showNew, setShowNew] = useState(false);

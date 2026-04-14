@@ -79,7 +79,7 @@ export default function TiposConsulta() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('tipos');
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { data: convenios = [] } = useConvenios();
 
