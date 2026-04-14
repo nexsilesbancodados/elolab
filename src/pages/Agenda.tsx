@@ -112,6 +112,7 @@ interface FormData {
 }
 
 export default function Agenda() {
+  const { clinicaId } = useSupabaseAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedMedico, setSelectedMedico] = useState<string>('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
