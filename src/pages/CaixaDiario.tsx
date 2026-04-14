@@ -266,7 +266,7 @@ export default function CaixaDiario() {
         tipo: lancamentoForm.tipo, valor: Number(lancamentoForm.valor),
         descricao: lancamentoForm.descricao, forma_pagamento: lancamentoForm.forma_pagamento,
         categoria: lancamentoForm.tipo === 'receita' ? 'receita_caixa' : 'despesa_caixa',
-        data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -287,7 +287,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'sangria', valor: Number(sangriaForm.valor),
         descricao: `Sangria — ${sangriaForm.motivo}`, forma_pagamento: 'dinheiro',
-        categoria: 'sangria', data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        categoria: 'sangria', data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -307,7 +307,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'suprimento', valor: Number(suprimentoForm.valor),
         descricao: suprimentoForm.descricao || 'Suprimento de Caixa', forma_pagamento: 'dinheiro',
-        categoria: 'suprimento', data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        categoria: 'suprimento', data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
