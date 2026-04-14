@@ -21,6 +21,9 @@ interface Laboratorio {
   ativo: boolean;
 }
 
+// Helper to bypass strict typing for tables not yet in generated types
+const db = supabase as any;
+
 export function GerenciadorLaboratorios() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
@@ -38,7 +41,7 @@ export function GerenciadorLaboratorios() {
     queryKey: ['laboratorios', profile?.clinica_id],
     queryFn: async () => {
       if (!profile?.clinica_id) return [];
-      const { data } = await (supabase as any)
+      const { data } = await db
         .from('laboratorios')
         .select('*')
         .eq('clinica_id', profile.clinica_id)
@@ -54,13 +57,13 @@ export function GerenciadorLaboratorios() {
       if (!form.nome.trim()) throw new Error('Nome obrigatório');
 
       if (editingId) {
-        const { error } = await supabase
+        const { error } = await db
           .from('laboratorios')
           .update(form)
           .eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await db
           .from('laboratorios')
           .insert({ ...form, clinica_id: profile.clinica_id });
         if (error) throw error;
@@ -77,7 +80,7 @@ export function GerenciadorLaboratorios() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await db
         .from('laboratorios')
         .delete()
         .eq('id', id);

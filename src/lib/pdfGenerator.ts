@@ -956,12 +956,13 @@ export async function gerarLaudoPDF(dados: LaudoData): Promise<jsPDF> {
     },
     didParseCell: (data) => {
       const row = dados.resultados[data.row.index];
+      const cell = data.cell as any;
       if (isResultadoAlterado(row)) {
-        data.cell.textColor = [220, 38, 38];
-        data.cell.fontStyle = 'bold';
+        cell.textColor = [220, 38, 38];
+        cell.fontStyle = 'bold';
       }
       if (row.liberado) {
-        data.cell.fillColor = [240, 253, 244];
+        cell.fillColor = [240, 253, 244];
       }
     },
     margin: { left: margin, right: margin },
