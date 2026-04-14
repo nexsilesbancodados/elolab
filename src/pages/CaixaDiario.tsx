@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import {
-  Lock, Unlock, Plus, Minus, Loader2, AlertCircle, Trash2, Search, ArrowUp, ArrowDown, Clock, Calendar,
+  Lock, Unlock, Plus, Minus, Loader2, AlertCircle, Trash2, Search, ArrowUp, ArrowDown, Clock, Calendar, Printer, Download,
 } from 'lucide-react';
+import { printReceiptPdf, downloadReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import {
   Table,
   TableBody,
@@ -375,6 +376,35 @@ export default function CaixaDiario() {
     );
   };
 
+  const buildReceiptData = (lancamento: Lancamento): ReceiptData => ({
+    titulo: 'COMPROVANTE DE PAGAMENTO',
+    dataHora: formatTime(lancamento.created_at),
+    docId: lancamento.id.slice(0, 8).toUpperCase(),
+    paciente: 'Paciente',
+    descricao: lancamento.descricao || 'Serviço/Consulta',
+    formaPagamento: lancamento.forma_pagamento.replace('cartao_', ''),
+    valorOriginal: lancamento.valor,
+    valorFinal: lancamento.valor,
+  });
+
+  const handlePrintRecibo = async (lancamento: Lancamento) => {
+    try {
+      const receiptData = buildReceiptData(lancamento);
+      printReceiptPdf(receiptData);
+    } catch (err: any) {
+      toast.error('Erro ao imprimir recibo');
+    }
+  };
+
+  const handleDownloadRecibo = async (lancamento: Lancamento) => {
+    try {
+      const receiptData = buildReceiptData(lancamento);
+      downloadReceiptPdf(receiptData);
+    } catch (err: any) {
+      toast.error('Erro ao baixar recibo');
+    }
+  };
+
   // ─── Render ─────────────────────────────────────
   if (!profile?.clinica_id) {
     return <div className="p-8 text-center">Carregando...</div>;
@@ -632,16 +662,40 @@ export default function CaixaDiario() {
                         {formatCurrency(lancamento.valor)}
                       </TableCell>
                       <TableCell>
-                        <AlertDialog>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => setConfirmDelete(lancamento.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialog>
+                        <div className="flex gap-1">
+                          {lancamento.tipo === 'receita' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Imprimir recibo"
+                                onClick={() => handlePrintRecibo(lancamento)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Baixar recibo"
+                                onClick={() => handleDownloadRecibo(lancamento)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <AlertDialog>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => setConfirmDelete(lancamento.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

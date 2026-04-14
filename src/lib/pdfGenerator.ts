@@ -813,6 +813,229 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+// ─── LAUDO LABORATORIAL ─────────────────────────────────────
+export interface LaudoData {
+  codigoAmostra: string;
+  pacienteNome: string;
+  pacienteCpf?: string;
+  pacienteDataNascimento?: string;
+  medicoNome?: string;
+  medicoCrm?: string;
+  dataColeta: string;
+  tipoAmostra?: string;
+  tubo?: string;
+  urgente?: boolean;
+  observacoes?: string;
+  resultados: Array<{
+    parametro: string;
+    resultado: string;
+    unidade?: string;
+    valorReferenciaMin?: number;
+    valorReferenciaMax?: number;
+    valorReferenciaTexto?: string;
+    metodo?: string;
+    tipoExame?: string;
+    liberado: boolean;
+  }>;
+}
+
+function isResultadoAlterado(resultado: LaudoData['resultados'][0]): boolean {
+  const numResult = parseFloat(resultado.resultado);
+  if (isNaN(numResult)) return false;
+  return (
+    (resultado.valorReferenciaMin != null && numResult < resultado.valorReferenciaMin) ||
+    (resultado.valorReferenciaMax != null && numResult > resultado.valorReferenciaMax)
+  );
+}
+
+export async function gerarLaudoPDF(dados: LaudoData): Promise<jsPDF> {
+  const doc = new jsPDF();
+  const clinica = await getClinicaInfo();
+
+  await addHeader(doc, 'LAUDO LABORATORIAL', clinica);
+
+  let y = 70;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  const contentWidth = doc.internal.pageSize.width - 2 * margin;
+
+  // Bloco 1: Paciente
+  doc.setFontSize(11);
+  doc.setTextColor(0, 102, 204);
+  doc.text('DADOS DO PACIENTE', margin, y);
+  y += 6;
+
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Nome: ${dados.pacienteNome}`, margin, y);
+  if (dados.pacienteCpf) doc.text(`CPF: ${dados.pacienteCpf}`, margin + 100, y);
+  y += 5;
+
+  if (dados.pacienteDataNascimento) {
+    doc.text(`Data Nascimento: ${dados.pacienteDataNascimento}`, margin, y);
+    y += 5;
+  }
+
+  doc.text(`Código da Amostra: ${dados.codigoAmostra}`, margin, y);
+  y += 5;
+
+  doc.text(`Data da Coleta: ${dados.dataColeta}`, margin, y);
+  if (dados.tipoAmostra) {
+    doc.text(`Material: ${dados.tipoAmostra}${dados.tubo ? ` (${dados.tubo})` : ''}`, margin + 85, y);
+  }
+  y += 8;
+
+  // Bloco 2: Médico solicitante
+  if (dados.medicoNome || dados.medicoCrm) {
+    doc.setFontSize(11);
+    doc.setTextColor(0, 102, 204);
+    doc.text('MÉDICO SOLICITANTE', margin, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    if (dados.medicoNome) doc.text(`${dados.medicoNome}`, margin, y);
+    if (dados.medicoCrm) doc.text(`CRM: ${dados.medicoCrm}`, margin + 100, y);
+    y += 8;
+  }
+
+  // Bloco 3: Badge Urgente (se aplicável)
+  if (dados.urgente) {
+    doc.setFillColor(220, 38, 38);
+    doc.rect(margin, y - 3, 30, 6, 'F');
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text('URGENTE', margin + 15, y + 1, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    y += 10;
+  } else {
+    y += 2;
+  }
+
+  // Bloco 4: Tabela de resultados
+  doc.setFontSize(11);
+  doc.setTextColor(0, 102, 204);
+  doc.text('RESULTADOS', margin, y);
+  y += 8;
+
+  const tableData = dados.resultados.map((r) => {
+    const alterado = isResultadoAlterado(r);
+    const statusText = r.liberado ? '✓ Liberado' : '⏳ Pendente';
+    const referencia = r.valorReferenciaTexto ||
+      (r.valorReferenciaMin != null && r.valorReferenciaMax != null
+        ? `${r.valorReferenciaMin} - ${r.valorReferenciaMax}`
+        : '—');
+
+    return [
+      r.parametro,
+      `${r.resultado} ${r.unidade || ''}`,
+      referencia,
+      r.metodo || '—',
+      statusText,
+    ];
+  });
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Parâmetro', 'Resultado', 'Referência', 'Método', 'Status']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [0, 102, 204],
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: 'bold',
+    },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: {
+      0: { cellWidth: 50 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 35 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 25 },
+    },
+    didParseCell: (data) => {
+      const row = dados.resultados[data.row.index];
+      if (isResultadoAlterado(row)) {
+        data.cell.textColor = [220, 38, 38];
+        data.cell.fontStyle = 'bold';
+      }
+      if (row.liberado) {
+        data.cell.fillColor = [240, 253, 244];
+      }
+    },
+    margin: { left: margin, right: margin },
+    tableWidth: contentWidth,
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 10;
+
+  // Bloco 5: Observações
+  if (dados.observacoes) {
+    if (y > pageHeight - 40) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('OBSERVAÇÕES:', margin, y);
+    y += 5;
+
+    doc.setFontSize(9);
+    const obsLines = doc.splitTextToSize(dados.observacoes, contentWidth);
+    doc.text(obsLines, margin, y);
+    y += obsLines.length * 4 + 5;
+  }
+
+  // Bloco 6: Assinatura
+  if (y > pageHeight - 30) {
+    doc.addPage();
+    y = margin;
+  }
+
+  doc.setFontSize(9);
+  doc.setDrawColor(100, 100, 100);
+  doc.line(margin, y + 15, margin + 50, y + 15);
+  doc.text('Assinatura do Responsável', margin + 25, y + 20, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  if (dados.medicoCrm) {
+    doc.text(`CRM: ${dados.medicoCrm}`, margin + 25, y + 25, { align: 'center' });
+  }
+  y += 35;
+
+  // Bloco 7: QR Code (validação)
+  try {
+    const qrUrl = `https://app.elolab.com.br/validar/${dados.codigoAmostra}`;
+    const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 80, margin: 1 });
+    doc.addImage(qrDataUrl, 'PNG', 140, y - 20, 30, 30);
+  } catch {
+    // QR code geração falhou, continua sem
+  }
+
+  // Bloco 8: Footer
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text(
+    `Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} - Código: ${dados.codigoAmostra}`,
+    doc.internal.pageSize.width / 2,
+    doc.internal.pageSize.height - 10,
+    { align: 'center' }
+  );
+
+  return doc;
+}
+
+export async function downloadLaudoPDF(dados: LaudoData): Promise<void> {
+  const doc = await gerarLaudoPDF(dados);
+  downloadPDF(doc, `laudo-${dados.codigoAmostra}`);
+}
+
+export async function printLaudoPDF(dados: LaudoData): Promise<void> {
+  const doc = await gerarLaudoPDF(dados);
+  openPDF(doc);
+}
+
 // Download PDF
 export function downloadPDF(doc: jsPDF, filename: string) {
   doc.save(`${filename}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);

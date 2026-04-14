@@ -17,9 +17,11 @@ import { cn } from '@/lib/utils';
 import {
   CreditCard, DollarSign, Check, Search,
   FileText, Loader2, Banknote, Building2, Clock, AlertCircle,
+  Printer, Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { printReceiptPdf, downloadReceiptPdf, ReceiptData } from '@/lib/pdfReceipt';
 
 const statusColors: Record<string, string> = {
   pendente: 'bg-warning/10 text-warning',
@@ -101,6 +103,45 @@ export default function Pagamentos() {
   const totalCobr = pagamentos?.length || 0;
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+  const buildReceiptData = (pagamento: any): ReceiptData => {
+    const formaPagamento = FORMAS_PAGAMENTO.find(f => f.value === pagamento.metodo_pagamento)?.label || pagamento.metodo_pagamento || 'Não especificado';
+    const dataHora = format(
+      new Date(pagamento.data_recebimento || pagamento.created_at),
+      "dd/MM/yyyy 'às' HH:mm",
+      { locale: ptBR }
+    );
+    return {
+      titulo: 'COMPROVANTE DE PAGAMENTO',
+      dataHora,
+      docId: pagamento.id.slice(0, 8).toUpperCase(),
+      paciente: pagamento.pacientes?.nome || 'Paciente',
+      descricao: pagamento.descricao || 'Serviço/Consulta',
+      formaPagamento,
+      valorOriginal: pagamento.valor,
+      desconto: pagamento.desconto || 0,
+      acrescimo: pagamento.acrescimo || 0,
+      valorFinal: pagamento.valor,
+    };
+  };
+
+  const handlePrintRecibo = (pagamento: any) => {
+    try {
+      const receiptData = buildReceiptData(pagamento);
+      printReceiptPdf(receiptData);
+    } catch (err: any) {
+      toast.error('Erro ao imprimir recibo: ' + (err?.message || 'Erro desconhecido'));
+    }
+  };
+
+  const handleDownloadRecibo = (pagamento: any) => {
+    try {
+      const receiptData = buildReceiptData(pagamento);
+      downloadReceiptPdf(receiptData);
+    } catch (err: any) {
+      toast.error('Erro ao baixar recibo: ' + (err?.message || 'Erro desconhecido'));
+    }
+  };
 
   const handleBaixar = (cobranca: any) => {
     setSelectedCobranca(cobranca);
@@ -211,11 +252,23 @@ export default function Pagamentos() {
                         {STATUS_LABELS[p.status] || p.status}
                       </Badge>
                     </div>
-                    {(p.status === 'pendente' || p.status === 'parcial') && (
-                      <Button size="sm" variant="outline" onClick={() => handleBaixar(p)} title="Dar baixa">
-                        <Check className="h-3 w-3" />
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {(p.status === 'pendente' || p.status === 'parcial') && (
+                        <Button size="sm" variant="outline" onClick={() => handleBaixar(p)} title="Dar baixa">
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {(p.status === 'aprovado' || p.status === 'pago') && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => handlePrintRecibo(p)} title="Imprimir recibo" className="text-blue-600 hover:text-blue-700">
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDownloadRecibo(p)} title="Baixar recibo" className="text-green-600 hover:text-green-700">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

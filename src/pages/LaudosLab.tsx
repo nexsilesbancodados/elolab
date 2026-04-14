@@ -21,6 +21,7 @@ import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { gerarLaudoPDF, downloadLaudoPDF, LaudoData } from '@/lib/pdfGenerator';
 
 const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -170,44 +171,52 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
     }
   };
 
-  const handlePrintLaudo = () => {
-    if (!coleta) return;
-    const w = window.open('', '_blank');
-    if (!w) return;
-    const results = (coleta.resultados_laboratorio || []).map((r: any) => {
-      const numResult = parseFloat(r.resultado);
-      const isAltered = !isNaN(numResult) && (
-        (r.valor_referencia_min != null && numResult < r.valor_referencia_min) ||
-        (r.valor_referencia_max != null && numResult > r.valor_referencia_max)
-      );
-      return `<tr style="${isAltered ? 'color:red;font-weight:bold;' : ''}">
-        <td style="padding:4px 8px;border-bottom:1px solid #eee">${r.parametro}</td>
-        <td style="padding:4px 8px;border-bottom:1px solid #eee">${r.resultado} ${r.unidade || ''}</td>
-        <td style="padding:4px 8px;border-bottom:1px solid #eee">${r.valor_referencia_texto || `${r.valor_referencia_min ?? ''} - ${r.valor_referencia_max ?? ''}`}</td>
-        <td style="padding:4px 8px;border-bottom:1px solid #eee">${r.metodo || '—'}</td>
-        <td style="padding:4px 8px;border-bottom:1px solid #eee">${r.liberado ? '✓' : '—'}</td>
-      </tr>`;
-    }).join('');
+  const buildLaudoData = (): LaudoData | null => {
+    if (!coleta) return null;
 
-    w.document.write(`<html><head><title>Laudo ${coleta.codigo_amostra}</title>
-      <style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}
-      h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px}
-      th{background:#f5f5f5;text-align:left;padding:6px 8px;border-bottom:2px solid #ddd}
-      @media print{.no-print{display:none}}</style></head><body>
-      <button class="no-print" onclick="window.print()">🖨️ Imprimir</button>
-      <h1>Laudo Laboratorial</h1>
-      <p><strong>Paciente:</strong> ${coleta.pacientes?.nome || '—'} | 
-         <strong>CPF:</strong> ${coleta.pacientes?.cpf || '—'} |
-         <strong>Código:</strong> ${coleta.codigo_amostra}</p>
-      <p><strong>Data:</strong> ${coleta.created_at ? format(new Date(coleta.created_at), "dd/MM/yyyy 'às' HH:mm") : '—'} |
-         <strong>Material:</strong> ${coleta.tipo_amostra || '—'} ${coleta.tubo ? `(${coleta.tubo})` : ''}</p>
-      <table><thead><tr><th>Parâmetro</th><th>Resultado</th><th>Referência</th><th>Método</th><th>Liberado</th></tr></thead>
-      <tbody>${results}</tbody></table>
-      ${observacaoLaudo ? `<p style="margin-top:16px"><strong>Observações:</strong> ${observacaoLaudo}</p>` : ''}
-      <p style="margin-top:32px;border-top:1px solid #ccc;padding-top:8px;font-size:11px">
-        Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
-      </p></body></html>`);
-    w.document.close();
+    return {
+      codigoAmostra: coleta.codigo_amostra,
+      pacienteNome: coleta.pacientes?.nome || '—',
+      pacienteCpf: coleta.pacientes?.cpf,
+      medicoNome: coleta.medicos?.nome,
+      medicoCrm: coleta.medicos?.crm,
+      dataColeta: coleta.created_at ? format(new Date(coleta.created_at), "dd/MM/yyyy 'às' HH:mm") : new Date().toISOString(),
+      tipoAmostra: coleta.tipo_amostra,
+      tubo: coleta.tubo,
+      urgente: coleta.urgente,
+      observacoes: observacaoLaudo || undefined,
+      resultados: (coleta.resultados_laboratorio || []).map((r: any) => ({
+        parametro: r.parametro,
+        resultado: r.resultado,
+        unidade: r.unidade,
+        valorReferenciaMin: r.valor_referencia_min,
+        valorReferenciaMax: r.valor_referencia_max,
+        valorReferenciaTexto: r.valor_referencia_texto,
+        metodo: r.metodo,
+        tipoExame: r.exames?.tipo_exame,
+        liberado: r.liberado,
+      })),
+    };
+  };
+
+  const handlePrintLaudo = async () => {
+    try {
+      const laudoData = buildLaudoData();
+      if (!laudoData) return;
+      await gerarLaudoPDF(laudoData);
+    } catch (err: any) {
+      toast.error('Erro ao imprimir laudo: ' + (err?.message || 'Erro desconhecido'));
+    }
+  };
+
+  const handleDownloadLaudo = async () => {
+    try {
+      const laudoData = buildLaudoData();
+      if (!laudoData) return;
+      await downloadLaudoPDF(laudoData);
+    } catch (err: any) {
+      toast.error('Erro ao baixar laudo: ' + (err?.message || 'Erro desconhecido'));
+    }
   };
 
   const totalResults = coleta?.resultados_laboratorio?.length || 0;
@@ -352,6 +361,9 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
                 <CheckCircle2 className="h-4 w-4" /> Liberar Todos ({pendentes})
               </Button>
             )}
+            <Button variant="outline" className="gap-1" onClick={handleDownloadLaudo}>
+              <Download className="h-4 w-4" /> Baixar PDF
+            </Button>
             <Button variant="outline" className="gap-1" onClick={handlePrintLaudo}>
               <Printer className="h-4 w-4" /> Imprimir Laudo
             </Button>
