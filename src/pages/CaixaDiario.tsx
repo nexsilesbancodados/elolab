@@ -433,8 +433,13 @@ export default function CaixaDiario() {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2">
         {!caixaHoje?.aberto ? (
-          <Dialog open={showAbertura} onOpenChange={setShowAbertura}>
-            <DialogContent>
+          <>
+            <Button onClick={() => setShowAbertura(true)} className="gap-2 bg-green-600 hover:bg-green-700">
+              <Unlock className="h-4 w-4" />
+              Abrir Caixa
+            </Button>
+            <Dialog open={showAbertura} onOpenChange={setShowAbertura}>
+              <DialogContent>
               <DialogHeader>
                 <DialogTitle>Abrir Caixa</DialogTitle>
               </DialogHeader>
@@ -462,7 +467,8 @@ export default function CaixaDiario() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </>
         ) : (
           <>
             <Button
