@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2, LayoutList, LayoutGrid, Users, CalendarCheck, AlertTriangle, CalendarDays, LogIn, CheckCircle2, ArrowRightLeft, Bell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Repeat, Loader2, LayoutList, LayoutGrid, Users, CalendarCheck, AlertTriangle, CalendarDays, LogIn, CheckCircle2, ArrowRightLeft, Bell, Plus } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -607,12 +607,41 @@ export default function Agenda() {
               ))}
             </SelectContent>
           </Select>
+          <Button onClick={() => {
+            setFormData({
+              data: format(new Date(), 'yyyy-MM-dd'),
+              hora_inicio: '08:00',
+              hora_fim: '08:30',
+              tipo: 'consulta',
+              status: 'agendado' as StatusAgendamento,
+              medico_id: isMedicoOnly && medicoId ? medicoId : (selectedMedico !== 'todos' ? selectedMedico : undefined),
+            });
+            setRecurrence({ type: 'none', occurrences: 4 });
+            setIsRemarkMode(false);
+            setIsFormOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-1" /> Novo
+          </Button>
         </div>
       </div>
 
       {agendamentos.length === 0 && pacientes.length === 0 ? (
         <EmptyAgendamentos onAdd={() => {
-          toast.info('Primeiro cadastre pacientes e médicos para criar agendamentos.');
+          if (pacientes.length === 0 || medicos.length === 0) {
+            toast.info('Primeiro cadastre pacientes e médicos para criar agendamentos.');
+            return;
+          }
+          setFormData({
+            data: format(new Date(), 'yyyy-MM-dd'),
+            hora_inicio: '08:00',
+            hora_fim: '08:30',
+            tipo: 'consulta',
+            status: 'agendado' as StatusAgendamento,
+            medico_id: isMedicoOnly && medicoId ? medicoId : undefined,
+          });
+          setRecurrence({ type: 'none', occurrences: 4 });
+          setIsRemarkMode(false);
+          setIsFormOpen(true);
         }} />
       ) : (
         <>
