@@ -613,7 +613,7 @@ export default function Pacientes() {
     try {
       const { data, error } = await supabase
         .from('paciente_portal_tokens')
-        .insert({ paciente_id: pacienteId })
+        .insert({ paciente_id: pacienteId, clinica_id: profile?.clinica_id || null })
         .select('token')
         .single();
       if (error) throw error;

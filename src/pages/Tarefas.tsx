@@ -248,7 +248,7 @@ export default function Tarefas() {
 
   const createTarefa = useMutation({
     mutationFn: async (form: any) => {
-      const { error } = await supabase.from('tarefas').insert({ ...form, criado_por: user?.id });
+      const { error } = await supabase.from('tarefas').insert({ ...form, criado_por: user?.id, clinica_id: profile?.clinica_id || null });
       if (error) throw error;
     },
     onSuccess: () => {
