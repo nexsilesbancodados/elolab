@@ -125,6 +125,9 @@ export default function Agenda() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmFaltaOpen, setConfirmFaltaOpen] = useState(false);
+  const [showNewPatientForm, setShowNewPatientForm] = useState(false);
+  const [newPatientData, setNewPatientData] = useState({ nome: '', telefone: '', cpf: '' });
+  const [isSavingPatient, setIsSavingPatient] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
@@ -137,6 +140,38 @@ export default function Agenda() {
   const { medicoId, isMedicoOnly } = useCurrentMedico();
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
+
+  const handleQuickCreatePatient = async () => {
+    if (!newPatientData.nome.trim()) return;
+    setIsSavingPatient(true);
+    try {
+      const insertData = {
+        nome: newPatientData.nome.trim(),
+        ...(newPatientData.telefone.trim() && { telefone: newPatientData.telefone.trim() }),
+        ...(newPatientData.cpf.trim() && { cpf: newPatientData.cpf.trim() }),
+        ...(clinicaId && { clinica_id: clinicaId }),
+      };
+
+      const { data, error } = await supabase
+        .from('pacientes')
+        .insert(insertData)
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ['pacientes'] });
+      setFormData(prev => ({ ...prev, paciente_id: data.id }));
+      setShowNewPatientForm(false);
+      setNewPatientData({ nome: '', telefone: '', cpf: '' });
+      toast.success(`Paciente "${newPatientData.nome}" cadastrado!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao cadastrar';
+      toast.error(msg);
+    } finally {
+      setIsSavingPatient(false);
+    }
+  };
 
   // Send WhatsApp notification (best-effort, non-blocking)
   const sendWhatsAppNotification = async (agendamentoId: string, action: string) => {
@@ -1201,21 +1236,84 @@ export default function Agenda() {
 
             <div className="space-y-2">
               <Label>Paciente *</Label>
-              <Select
-                value={formData.paciente_id}
-                onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pacientes.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!showNewPatientForm ? (
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select
+                      value={formData.paciente_id}
+                      onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o paciente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pacientes.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome} {p.cpf ? `(${p.cpf})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowNewPatientForm(true)}
+                    title="Cadastrar novo paciente"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-primary">Novo Paciente</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowNewPatientForm(false);
+                          setNewPatientData({ nome: '', telefone: '', cpf: '' });
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Nome completo *"
+                        value={newPatientData.nome}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, nome: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Telefone"
+                        value={newPatientData.telefone}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, telefone: e.target.value })}
+                      />
+                      <Input
+                        placeholder="CPF"
+                        value={newPatientData.cpf}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, cpf: e.target.value })}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      disabled={!newPatientData.nome.trim() || isSavingPatient}
+                      onClick={handleQuickCreatePatient}
+                    >
+                      {isSavingPatient ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                      Cadastrar e Selecionar
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
