@@ -239,6 +239,11 @@ export default function Salas() {
     return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>;
   }
 
+  // Helper to get occupation info for a sala
+  const getOcupacao = (salaId: string) => {
+    return (ocupacoes as any[]).filter((o: any) => o.sala_id === salaId);
+  };
+
   const getMedicoNome = (id: string | null) => {
     if (!id) return null;
     const m = (medicos as any[]).find(m => m.id === id);
