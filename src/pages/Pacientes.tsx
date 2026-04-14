@@ -205,6 +205,7 @@ export default function Pacientes() {
 
   // Reset state when view opens
   const handleViewWithProntuario = useCallback((paciente: any) => {
+    setIsFormOpen(false);
     setSelectedPacienteId(paciente.id);
     setViewTab('dados');
     setProntuarioTab('lista');
