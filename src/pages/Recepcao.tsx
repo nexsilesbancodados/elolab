@@ -646,7 +646,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                 <span className="font-medium text-destructive">Caixa fechado</span>
                 <span className="text-muted-foreground">— Abra o caixa para realizar check-ins e pagamentos.</span>
               </div>
-              <Button size="sm" variant="destructive" className="gap-1.5 shrink-0" onClick={() => navigate('/caixa')}>
+              <Button size="sm" variant="destructive" className="gap-1.5 shrink-0" onClick={() => onOpenCaixa ? onOpenCaixa() : navigate('/caixa')}>
                 <LockOpen className="h-3.5 w-3.5" /> Abrir Caixa
               </Button>
             </CardContent>
