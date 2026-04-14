@@ -35,6 +35,10 @@ import {
   PiggyBank,
   FileBarChart,
   Gauge,
+  Receipt,
+  UserPlus,
+  CalendarCheck,
+  Banknote,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
 
@@ -57,23 +61,44 @@ export interface MenuGroup {
 
 export const menuGroups: MenuGroup[] = [
   {
-    label: 'Principal',
+    label: 'Início',
     icon: Gauge,
     color: '#6366f1',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'Recepção & Caixa', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao', 'financeiro'] },
       { label: 'Agenda', icon: CalendarRange, href: '/agenda' },
-      { label: 'Pacientes', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
-      { label: 'Fila / Triagem', icon: ClipboardCheck, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
-      { label: 'Tarefas', icon: ListChecks, href: '/tarefas', roles: ['admin', 'recepcao', 'enfermagem', 'financeiro'] },
       { label: 'Chat Interno', icon: MessageCircle, href: '/chat' },
+      { label: 'Tarefas', icon: ListChecks, href: '/tarefas', roles: ['admin', 'recepcao', 'enfermagem', 'financeiro'] },
+    ],
+  },
+  {
+    label: 'Atendimento',
+    icon: MonitorSmartphone,
+    color: '#0ea5e9',
+    roles: ['admin', 'recepcao', 'enfermagem'],
+    items: [
+      { label: 'Recepção & Caixa', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao', 'financeiro'] },
+      { label: 'Fila / Triagem', icon: ClipboardCheck, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
+      { label: 'Triagem', icon: HeartPulse, href: '/triagem', roles: ['admin', 'enfermagem'] },
+      { label: 'Salas', icon: DoorOpen, href: '/salas', roles: ['admin', 'recepcao'] },
+      { label: 'Lista de Espera', icon: ClockAlert, href: '/lista-espera', roles: ['admin', 'recepcao'] },
+    ],
+  },
+  {
+    label: 'Pacientes',
+    icon: Users,
+    color: '#10b981',
+    roles: ['admin', 'recepcao', 'enfermagem', 'medico'],
+    items: [
+      { label: 'Cadastro', icon: Users, href: '/pacientes', roles: ['admin', 'recepcao', 'enfermagem'] },
+      { label: 'Retornos', icon: CalendarCheck, href: '/retornos', roles: ['admin', 'medico', 'recepcao'] },
+      { label: 'Convênios', icon: Building2, href: '/convenios', roles: ['admin', 'recepcao'] },
     ],
   },
   {
     label: 'Clínica',
     icon: Stethoscope,
-    color: '#10b981',
+    color: '#8b5cf6',
     roles: ['admin', 'medico', 'enfermagem'],
     items: [
       { label: 'Prontuários', icon: ScrollText, href: '/prontuarios', roles: ['admin', 'medico'] },
@@ -81,14 +106,12 @@ export const menuGroups: MenuGroup[] = [
       { label: 'Atestados', icon: FileBarChart, href: '/atestados', roles: ['admin', 'medico'] },
       { label: 'Encaminhamentos', icon: Stethoscope, href: '/encaminhamentos', roles: ['admin', 'medico'] },
       { label: 'Exames', icon: Microscope, href: '/exames', roles: ['admin', 'medico', 'enfermagem'] },
-      { label: 'Triagem', icon: HeartPulse, href: '/triagem', roles: ['admin', 'enfermagem'] },
-      { label: 'Retornos', icon: ClockAlert, href: '/retornos', roles: ['admin', 'medico', 'recepcao'] },
     ],
   },
   {
     label: 'Laboratório',
     icon: TestTubes,
-    color: '#0ea5e9',
+    color: '#06b6d4',
     roles: ['admin', 'medico', 'enfermagem'],
     items: [
       { label: 'Painel Lab', icon: FlaskConical, href: '/laboratorio' },
@@ -97,27 +120,13 @@ export const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Operacional',
-    icon: PackageSearch,
-    color: '#f59e0b',
-    roles: ['admin', 'recepcao', 'enfermagem'],
-    items: [
-      { label: 'Equipe Médica', icon: Stethoscope, href: '/medicos', roles: ['admin'] },
-      { label: 'Funcionários', icon: UserCog, href: '/funcionarios', roles: ['admin'] },
-      { label: 'Salas', icon: DoorOpen, href: '/salas', roles: ['admin', 'recepcao'] },
-      { label: 'Estoque', icon: PackageSearch, href: '/estoque', roles: ['admin', 'enfermagem'] },
-      { label: 'Convênios', icon: Building2, href: '/convenios', roles: ['admin', 'recepcao'] },
-      { label: 'Templates', icon: FolderKanban, href: '/templates', roles: ['admin', 'medico'] },
-      { label: 'Lista de Espera', icon: ClockAlert, href: '/lista-espera', roles: ['admin', 'recepcao'] },
-    ],
-  },
-  {
     label: 'Financeiro',
     icon: WalletCards,
-    color: '#ef4444',
+    color: '#f59e0b',
     roles: ['admin', 'financeiro'],
     items: [
-      { label: 'Painel Financeiro', icon: CircleDollarSign, href: '/financeiro' },
+      { label: 'Visão Geral', icon: CircleDollarSign, href: '/financeiro' },
+      { label: 'Caixa Diário', icon: Banknote, href: '/caixa-diario' },
       { label: 'Contas a Receber', icon: BadgeDollarSign, href: '/contas-receber' },
       { label: 'Contas a Pagar', icon: CreditCard, href: '/contas-pagar' },
       { label: 'Fluxo de Caixa', icon: PiggyBank, href: '/fluxo-caixa' },
@@ -127,12 +136,24 @@ export const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Administração',
-    icon: Settings2,
-    color: '#8b5cf6',
+    label: 'Equipe',
+    icon: UserCog,
+    color: '#ec4899',
     roles: ['admin'],
     items: [
-      { label: 'Painel Admin', icon: Shield, href: '/painel-admin', roles: ['admin'] },
+      { label: 'Equipe Médica', icon: Stethoscope, href: '/medicos' },
+      { label: 'Funcionários', icon: UserCog, href: '/funcionarios' },
+      { label: 'Estoque', icon: PackageSearch, href: '/estoque', roles: ['admin', 'enfermagem'] },
+      { label: 'Templates', icon: FolderKanban, href: '/templates', roles: ['admin', 'medico'] },
+    ],
+  },
+  {
+    label: 'Administração',
+    icon: Settings2,
+    color: '#ef4444',
+    roles: ['admin'],
+    items: [
+      { label: 'Painel Admin', icon: Shield, href: '/painel-admin' },
       { label: 'Analytics', icon: ActivitySquare, href: '/analytics' },
       { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia' },
       { label: 'Automações', icon: Sparkles, href: '/automacoes' },
