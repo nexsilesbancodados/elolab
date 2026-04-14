@@ -6,7 +6,7 @@ describe('cn (classname utility)', () => {
     expect(cn('foo', 'bar')).toBe('foo bar');
   });
   it('lida com valores condicionais', () => {
-    expect(cn('base', false && 'hidden', 'visible')).toBe('base visible');
+    expect(cn('base', false ? 'hidden' : undefined, 'visible')).toBe('base visible');
   });
   it('lida com undefined e null', () => {
     expect(cn('base', undefined, null, 'end')).toBe('base end');
