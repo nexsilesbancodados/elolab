@@ -270,6 +270,7 @@ export default function Laboratorio() {
     tubo: '', observacoes: '', jejum_necessario: false, jejum_horas: 0, urgente: false,
     coletado_por: user?.id || '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     exame_id: '', volume_ml: '', condicao_amostra: [], sitio_coleta: '', lote_insumo: '',
+    finalidade: 'diagnostico', indicacao_clinica: '', categoria_exame: '',
   });
 
   const toggleCondicao = (cond: string) => {
