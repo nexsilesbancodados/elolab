@@ -455,6 +455,7 @@ export default function Exames() {
         ].filter(Boolean).join('\n') || null,
         status: 'solicitado' as StatusExame,
         data_solicitacao: formData.data_solicitacao,
+        clinica_id: profile?.clinica_id || null,
       }));
 
       const { data: inserted, error } = await supabase.from('exames').insert(inserts).select('id, tipo_exame');
