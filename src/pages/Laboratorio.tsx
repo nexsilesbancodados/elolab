@@ -463,6 +463,8 @@ export default function Laboratorio() {
                             <Badge className={statusColors[coleta.status]}>{statusLabels[coleta.status]}</Badge>
                             {coleta.urgente && <Badge variant="destructive" className="gap-1"><Zap className="h-3 w-3" />Urgente</Badge>}
                             {coleta.jejum_necessario && <Badge variant="outline" className="text-[10px]">Jejum {coleta.jejum_horas}h</Badge>}
+                            {(coleta as any).procedimento_codigo && <Badge variant="outline" className="font-mono text-[10px]">{(coleta as any).procedimento_codigo}</Badge>}
+                            {(coleta as any).numero_guia && <Badge variant="secondary" className="text-[10px]">Guia: {(coleta as any).numero_guia}</Badge>}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             <span>{coleta.tipo_amostra}</span>
