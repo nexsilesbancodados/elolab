@@ -21,7 +21,7 @@ const GROUPS_KEY = 'elolab_sidebar_groups';
 const DEFAULT_OPEN_GROUPS = ['Principal', 'Clínica'];
 
 export function Sidebar() {
-  const { profile, isAdmin } = useSupabaseAuth();
+  const { profile, isAdmin, isSuperAdmin } = useSupabaseAuth();
   const location = useLocation();
   const [search, setSearch] = useState('');
 
@@ -45,7 +45,8 @@ export function Sidebar() {
 
   const filteredMenuGroups = getFilteredMenuGroups(
     profile?.roles || [],
-    isAdmin()
+    isAdmin(),
+    isSuperAdmin
   );
 
   const searchedGroups = search.trim()

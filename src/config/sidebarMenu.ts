@@ -49,6 +49,7 @@ export interface MenuItem {
   badge?: number;
   roles?: AppRole[];
   external?: boolean;
+  superAdminOnly?: boolean;
 }
 
 export interface MenuGroup {
@@ -57,6 +58,7 @@ export interface MenuGroup {
   color: string;
   items: MenuItem[];
   roles?: AppRole[];
+  superAdminOnly?: boolean;
 }
 
 export const menuGroups: MenuGroup[] = [
@@ -153,37 +155,48 @@ export const menuGroups: MenuGroup[] = [
     color: '#ef4444',
     roles: ['admin'],
     items: [
-      { label: 'Painel Admin', icon: Shield, href: '/painel-admin' },
       { label: 'Analytics', icon: ActivitySquare, href: '/analytics' },
-      { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia' },
       { label: 'Automações', icon: Sparkles, href: '/automacoes' },
       { label: 'Templates Email', icon: Mail, href: '/templates-email' },
-      { label: 'Planos', icon: CreditCard, href: '/planos' },
-      { label: 'Documentação', icon: BookMarked, href: '/documentacao' },
       { label: 'Configurações', icon: Settings2, href: '/configuracoes' },
+    ],
+  },
+  {
+    label: 'Plataforma',
+    icon: Shield,
+    color: '#dc2626',
+    roles: ['admin'],
+    superAdminOnly: true,
+    items: [
+      { label: 'Painel Admin', icon: Shield, href: '/painel-admin', superAdminOnly: true },
+      { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia', superAdminOnly: true },
+      { label: 'Planos', icon: CreditCard, href: '/planos', superAdminOnly: true },
+      { label: 'Documentação', icon: BookMarked, href: '/documentacao', superAdminOnly: true },
     ],
   },
 ];
 
 /**
- * Filter menu groups based on user roles
+ * Filter menu groups based on user roles and superadmin status
  */
 export function getFilteredMenuGroups(
   userRoles: AppRole[],
-  isAdmin: boolean
+  isAdmin: boolean,
+  isSuperAdmin = false
 ): MenuGroup[] {
-  if (isAdmin) {
-    return menuGroups;
-  }
-
   return menuGroups
     .filter((group) => {
+      // SuperAdmin-only groups hidden from regular admins
+      if (group.superAdminOnly && !isSuperAdmin) return false;
+      if (isAdmin || isSuperAdmin) return true;
       if (!group.roles || group.roles.length === 0) return true;
       return group.roles.some((role) => userRoles.includes(role));
     })
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
+        if (item.superAdminOnly && !isSuperAdmin) return false;
+        if (isAdmin || isSuperAdmin) return true;
         if (!item.roles || item.roles.length === 0) return true;
         return item.roles.some((role) => userRoles.includes(role));
       }),
