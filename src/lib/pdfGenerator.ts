@@ -813,12 +813,13 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-// ─── LAUDO LABORATORIAL ─────────────────────────────────────
+// ─── LAUDO LABORATORIAL (estilo WEBLIS) ─────────────────────
 export interface LaudoData {
   codigoAmostra: string;
   pacienteNome: string;
   pacienteCpf?: string;
   pacienteDataNascimento?: string;
+  pacienteSexo?: string;
   medicoNome?: string;
   medicoCrm?: string;
   dataColeta: string;
@@ -826,6 +827,11 @@ export interface LaudoData {
   tubo?: string;
   urgente?: boolean;
   observacoes?: string;
+  requisicao?: string;
+  convenioNome?: string;
+  unidade?: string;
+  posto?: string;
+  email?: string;
   resultados: Array<{
     parametro: string;
     resultado: string;
@@ -834,193 +840,273 @@ export interface LaudoData {
     valorReferenciaMax?: number;
     valorReferenciaTexto?: string;
     metodo?: string;
+    material?: string;
     tipoExame?: string;
     liberado: boolean;
+    dataLiberacao?: string;
   }>;
 }
 
-function isResultadoAlterado(resultado: LaudoData['resultados'][0]): boolean {
-  const numResult = parseFloat(resultado.resultado);
-  if (isNaN(numResult)) return false;
-  return (
-    (resultado.valorReferenciaMin != null && numResult < resultado.valorReferenciaMin) ||
-    (resultado.valorReferenciaMax != null && numResult > resultado.valorReferenciaMax)
-  );
+function calcularIdade(dataNascimento: string): string {
+  try {
+    const nasc = new Date(dataNascimento);
+    const hoje = new Date();
+    let anos = hoje.getFullYear() - nasc.getFullYear();
+    let meses = hoje.getMonth() - nasc.getMonth();
+    let dias = hoje.getDate() - nasc.getDate();
+    if (dias < 0) { meses--; }
+    if (meses < 0) { anos--; meses += 12; }
+    return `${anos} anos ${meses} meses`;
+  } catch { return ''; }
+}
+
+function formatSexo(sexo?: string): string {
+  if (!sexo) return '';
+  const s = sexo.toLowerCase();
+  if (s === 'm' || s === 'masculino') return 'Masculino';
+  if (s === 'f' || s === 'feminino') return 'Feminino';
+  return sexo;
 }
 
 export async function gerarLaudoPDF(dados: LaudoData): Promise<jsPDF> {
   const doc = new jsPDF();
   const clinica = await getClinicaInfo();
-
-  await addHeader(doc, 'LAUDO LABORATORIAL', clinica);
-
-  let y = 70;
+  const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const margin = 20;
-  const contentWidth = doc.internal.pageSize.width - 2 * margin;
+  const margin = 15;
+  const rightX = pageWidth - margin;
+  let y = 12;
 
-  // Bloco 1: Paciente
-  doc.setFontSize(11);
-  doc.setTextColor(0, 102, 204);
-  doc.text('DADOS DO PACIENTE', margin, y);
+  // ── CABEÇALHO (logo à esquerda, dados clínica à direita) ──
+  if (clinica.logoUrl) {
+    const logoBase64 = await loadImageAsBase64(clinica.logoUrl);
+    if (logoBase64) {
+      try { doc.addImage(logoBase64, 'PNG', margin, y, 28, 28); } catch {}
+    }
+  }
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(clinica.nome.toUpperCase(), pageWidth / 2, y + 4, { align: 'center' });
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  if (dados.email) doc.text(`E-mail: ${dados.email}`, pageWidth / 2, y + 10, { align: 'center' });
+  doc.text(clinica.endereco, pageWidth / 2, y + 14, { align: 'center' });
+  doc.text(`Telefone: ${clinica.telefone}`, pageWidth / 2, y + 18, { align: 'center' });
+
+  y += 30;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, rightX, y);
   y += 6;
 
-  doc.setFontSize(9);
+  // ── DADOS DO PACIENTE ──
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(`Nome: ${dados.pacienteNome}`, margin, y);
-  if (dados.pacienteCpf) doc.text(`CPF: ${dados.pacienteCpf}`, margin + 100, y);
+  doc.text(`Sr.(a): ${dados.pacienteNome.toUpperCase()}`, margin, y);
   y += 5;
 
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+
+  const infoLines: string[] = [];
   if (dados.pacienteDataNascimento) {
-    doc.text(`Data Nascimento: ${dados.pacienteDataNascimento}`, margin, y);
-    y += 5;
+    const nascFormatado = format(new Date(dados.pacienteDataNascimento), 'dd/MM/yyyy');
+    const idade = calcularIdade(dados.pacienteDataNascimento);
+    const sexo = formatSexo(dados.pacienteSexo);
+    infoLines.push(`Nasc: ${nascFormatado} - Idade: ${idade}${sexo ? ` - Sexo: ${sexo}` : ''}`);
   }
-
-  doc.text(`Código da Amostra: ${dados.codigoAmostra}`, margin, y);
-  y += 5;
-
-  doc.text(`Data da Coleta: ${dados.dataColeta}`, margin, y);
-  if (dados.tipoAmostra) {
-    doc.text(`Material: ${dados.tipoAmostra}${dados.tubo ? ` (${dados.tubo})` : ''}`, margin + 85, y);
-  }
-  y += 8;
-
-  // Bloco 2: Médico solicitante
   if (dados.medicoNome || dados.medicoCrm) {
-    doc.setFontSize(11);
-    doc.setTextColor(0, 102, 204);
-    doc.text('MÉDICO SOLICITANTE', margin, y);
-    y += 6;
+    infoLines.push(`Dr.(a): ${dados.medicoCrm || ''} - ${dados.medicoNome || ''}`);
+  }
+  if (dados.unidade) infoLines.push(`Unidade: ${dados.unidade}`);
+  if (dados.posto) infoLines.push(`Posto: ${dados.posto}`);
+  if (dados.convenioNome) infoLines.push(`Convênio: ${dados.convenioNome}`);
 
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    if (dados.medicoNome) doc.text(`${dados.medicoNome}`, margin, y);
-    if (dados.medicoCrm) doc.text(`CRM: ${dados.medicoCrm}`, margin + 100, y);
-    y += 8;
+  for (const line of infoLines) {
+    doc.text(line, margin, y);
+    y += 4;
   }
 
-  // Bloco 3: Badge Urgente (se aplicável)
+  // Requisição e data recebimento (lado direito)
+  const reqY = y - infoLines.length * 4;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  if (dados.requisicao || dados.codigoAmostra) {
+    doc.text(`Requisição: ${dados.requisicao || dados.codigoAmostra}`, rightX, reqY, { align: 'right' });
+  }
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(`Recebido em: ${dados.dataColeta}`, rightX, reqY + 5, { align: 'right' });
+
+  y += 4;
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, rightX, y);
+  y += 2;
+
+  // ── RESULTADOS (agrupados por tipo de exame) ──
+  const exameGroups = new Map<string, typeof dados.resultados>();
+  for (const r of dados.resultados) {
+    const key = r.tipoExame || r.parametro;
+    if (!exameGroups.has(key)) exameGroups.set(key, []);
+    exameGroups.get(key)!.push(r);
+  }
+
+  for (const [nomeExame, resultados] of exameGroups) {
+    if (y > pageHeight - 50) { doc.addPage(); y = margin; }
+
+    // Barra do nome do exame
+    y += 4;
+    doc.setFillColor(60, 60, 60);
+    doc.rect(margin, y - 3.5, rightX - margin, 5.5, 'F');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text(nomeExame.toUpperCase(), margin + 2, y + 0.5);
+    doc.setTextColor(0, 0, 0);
+    y += 5;
+
+    // Material e Método
+    const firstR = resultados[0];
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    if (firstR.material) doc.text(`Material: ${firstR.material}`, margin, y);
+    if (firstR.metodo) doc.text(`Método: ${firstR.metodo}`, margin + 60, y);
+    y += 4;
+
+    // Cabeçalho da subtabela
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(80, 80, 80);
+    const colResult = margin;
+    const colValor = margin + 55;
+    const colRef = rightX - 35;
+    doc.text('Resultado', colResult, y);
+    doc.text('Resultados Anteriores', colValor + 10, y);
+    doc.text('Valor de Referência', colRef, y);
+    y += 1;
+    doc.setLineWidth(0.2);
+    doc.line(margin, y, rightX, y);
+    y += 4;
+
+    // Linhas de resultado
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    for (const r of resultados) {
+      if (y > pageHeight - 25) { doc.addPage(); y = margin; }
+
+      // Parametro como label se for diferente do grupo
+      if (resultados.length > 1 || r.parametro !== nomeExame) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7);
+        doc.text(r.parametro + ':', margin, y);
+        y += 3.5;
+      }
+
+      const alterado = isResultadoAlterado(r);
+      doc.setFont('helvetica', alterado ? 'bold' : 'normal');
+      doc.setFontSize(8);
+      if (alterado) doc.setTextColor(220, 38, 38);
+      else doc.setTextColor(0, 0, 0);
+
+      const resultText = `${r.resultado} ${r.unidade || ''}`.trim();
+      doc.text(resultText, colResult, y);
+
+      // Colunas de resultados anteriores (placeholder: ---) 
+      doc.setTextColor(150, 150, 150);
+      doc.text('---', colValor + 15, y);
+      doc.text('---', colValor + 30, y);
+
+      // Valor de referência
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      const referencia = r.valorReferenciaTexto ||
+        (r.valorReferenciaMin != null && r.valorReferenciaMax != null
+          ? `${r.valorReferenciaMin} a ${r.valorReferenciaMax} ${r.unidade || ''}`
+          : '—');
+      doc.text(referencia, colRef, y);
+
+      y += 5;
+    }
+
+    y += 2;
+    doc.setLineWidth(0.15);
+    doc.line(margin, y, rightX, y);
+  }
+
+  // ── URGENTE ──
   if (dados.urgente) {
+    y += 6;
     doc.setFillColor(220, 38, 38);
     doc.rect(margin, y - 3, 30, 6, 'F');
     doc.setFontSize(9);
     doc.setTextColor(255, 255, 255);
     doc.text('URGENTE', margin + 15, y + 1, { align: 'center' });
     doc.setTextColor(0, 0, 0);
-    y += 10;
-  } else {
-    y += 2;
+    y += 6;
   }
 
-  // Bloco 4: Tabela de resultados
-  doc.setFontSize(11);
-  doc.setTextColor(0, 102, 204);
-  doc.text('RESULTADOS', margin, y);
+  // ── OBSERVAÇÕES ──
+  if (dados.observacoes) {
+    y += 4;
+    if (y > pageHeight - 40) { doc.addPage(); y = margin; }
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OBSERVAÇÕES:', margin, y);
+    doc.setFont('helvetica', 'normal');
+    y += 4;
+    const obsLines = doc.splitTextToSize(dados.observacoes, rightX - margin);
+    doc.text(obsLines, margin, y);
+    y += obsLines.length * 3.5 + 4;
+  }
+
+  // ── ASSINATURA (lado direito, estilo WEBLIS) ──
+  if (y > pageHeight - 40) { doc.addPage(); y = margin; }
+  y += 10;
+
+  // Data de assinatura
+  const dataLiberacao = dados.resultados.find(r => r.dataLiberacao)?.dataLiberacao;
+  const assinadoEm = dataLiberacao
+    ? format(new Date(dataLiberacao), "dd/MM/yyyy HH:mm:ss")
+    : format(new Date(), "dd/MM/yyyy HH:mm:ss");
+
+  doc.setFontSize(7);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Assinado em: ${assinadoEm}`, rightX, y, { align: 'right' });
   y += 8;
 
-  const tableData = dados.resultados.map((r) => {
-    const alterado = isResultadoAlterado(r);
-    const statusText = r.liberado ? '✓ Liberado' : '⏳ Pendente';
-    const referencia = r.valorReferenciaTexto ||
-      (r.valorReferenciaMin != null && r.valorReferenciaMax != null
-        ? `${r.valorReferenciaMin} - ${r.valorReferenciaMax}`
-        : '—');
-
-    return [
-      r.parametro,
-      `${r.resultado} ${r.unidade || ''}`,
-      referencia,
-      r.metodo || '—',
-      statusText,
-    ];
-  });
-
-  autoTable(doc, {
-    startY: y,
-    head: [['Parâmetro', 'Resultado', 'Referência', 'Método', 'Status']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: {
-      fillColor: [0, 102, 204],
-      textColor: [255, 255, 255],
-      fontSize: 9,
-      fontStyle: 'bold',
-    },
-    bodyStyles: { fontSize: 9 },
-    columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 35 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 25 },
-    },
-    didParseCell: (data) => {
-      const row = dados.resultados[data.row.index];
-      const cell = data.cell as any;
-      if (isResultadoAlterado(row)) {
-        cell.textColor = [220, 38, 38];
-        cell.fontStyle = 'bold';
-      }
-      if (row.liberado) {
-        cell.fillColor = [240, 253, 244];
-      }
-    },
-    margin: { left: margin, right: margin },
-    tableWidth: contentWidth,
-  });
-
-  y = (doc as any).lastAutoTable.finalY + 10;
-
-  // Bloco 5: Observações
-  if (dados.observacoes) {
-    if (y > pageHeight - 40) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text('OBSERVAÇÕES:', margin, y);
-    y += 5;
-
-    doc.setFontSize(9);
-    const obsLines = doc.splitTextToSize(dados.observacoes, contentWidth);
-    doc.text(obsLines, margin, y);
-    y += obsLines.length * 4 + 5;
-  }
-
-  // Bloco 6: Assinatura
-  if (y > pageHeight - 30) {
-    doc.addPage();
-    y = margin;
-  }
-
-  doc.setFontSize(9);
-  doc.setDrawColor(100, 100, 100);
-  doc.line(margin, y + 15, margin + 50, y + 15);
-  doc.text('Assinatura do Responsável', margin + 25, y + 20, { align: 'center' });
+  // Nome e cargo do responsável
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  if (dados.medicoNome) doc.text(dados.medicoNome, rightX, y, { align: 'right' });
+  y += 4;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Analista de Laboratório', rightX, y, { align: 'right' });
   if (dados.medicoCrm) {
-    doc.text(`CRM: ${dados.medicoCrm}`, margin + 25, y + 25, { align: 'center' });
+    y += 3.5;
+    doc.text(`CRBM: ${dados.medicoCrm}`, rightX, y, { align: 'right' });
   }
-  y += 35;
 
-  // Bloco 7: QR Code (validação)
+  // ── QR CODE ──
   try {
     const qrUrl = `https://app.elolab.com.br/validar/${dados.codigoAmostra}`;
-    const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 80, margin: 1 });
-    doc.addImage(qrDataUrl, 'PNG', 140, y - 20, 30, 30);
-  } catch {
-    // QR code geração falhou, continua sem
-  }
+    const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 60, margin: 1 });
+    doc.addImage(qrDataUrl, 'PNG', margin, y - 12, 20, 20);
+  } catch {}
 
-  // Bloco 8: Footer
-  doc.setFontSize(8);
+  // ── RODAPÉ ──
+  doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
   doc.text(
     `Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} - Código: ${dados.codigoAmostra}`,
-    doc.internal.pageSize.width / 2,
-    doc.internal.pageSize.height - 10,
+    pageWidth / 2,
+    pageHeight - 8,
     { align: 'center' }
   );
 
