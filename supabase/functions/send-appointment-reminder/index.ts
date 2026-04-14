@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
             try {
-              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
+              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo, clinicaNome)
 
               if (emailRes.ok) {
                 totalSuccess++
@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
               .replace(/\{\{clinica_nome\}\}/g, clinicaNome2h)
 
             try {
-              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo)
+              const emailRes = await sendBrevoEmail(brevoApiKey, paciente.email, paciente.nome, assunto, conteudo, clinicaNome2h)
 
               if (emailRes.ok) {
                 totalSuccess++
@@ -346,7 +346,7 @@ async function getClinicConfig(supabase: any, clinicId: string, cache: Record<st
   return cache[clinicId]
 }
 
-async function sendBrevoEmail(apiKey: string, to: string, toName: string, subject: string, htmlContent: string): Promise<Response> {
+async function sendBrevoEmail(apiKey: string, to: string, toName: string, subject: string, htmlContent: string, clinicName?: string): Promise<Response> {
   return fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
@@ -355,7 +355,7 @@ async function sendBrevoEmail(apiKey: string, to: string, toName: string, subjec
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      sender: { name: 'EloLab Clínica', email: 'noreply@elolab.com.br' },
+      sender: { name: clinicName || 'EloLab Clínica', email: 'noreply@elolab.com.br' },
       to: [{ email: to, name: toName }],
       subject,
       htmlContent: htmlContent.replace(/\n/g, '<br>'),
