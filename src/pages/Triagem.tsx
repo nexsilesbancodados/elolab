@@ -169,7 +169,7 @@ export default function TriagemPage() {
   const [filterRisco, setFilterRisco] = useState<'todos' | Risco>('todos');
 
   const queryClient = useQueryClient();
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const { data: triagens = [], isLoading } = useSupabaseQuery<any>('triagens', {
@@ -280,6 +280,7 @@ export default function TriagemPage() {
         classificacao_risco: formData.classificacao_risco,
         observacoes: formData.observacoes || null,
         data_hora: new Date().toISOString(),
+        clinica_id: profile?.clinica_id || null,
       }] as any);
       if (error) throw error;
 

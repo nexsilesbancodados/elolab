@@ -105,7 +105,7 @@ export default function ListaEspera() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [removeId, setRemoveId] = useState<string | null>(null);
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
@@ -158,6 +158,7 @@ export default function ListaEspera() {
         observacoes: formData.observacoes || null,
         status: 'aguardando',
         data_cadastro: new Date().toISOString().split('T')[0],
+        clinica_id: profile?.clinica_id || null,
       });
 
       if (error) throw error;
