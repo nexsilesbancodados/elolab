@@ -113,6 +113,21 @@ export default function Salas() {
   const { data: salas = [], isLoading } = useSalas();
   const { data: medicos = [] } = useMedicos();
 
+  // Fetch active queue entries with sala_id to show who occupies each room
+  const { data: ocupacoes = [] } = useQuery({
+    queryKey: ['fila_atendimento_salas'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('fila_atendimento')
+        .select('id, sala_id, status, agendamento_id, agendamentos(id, paciente_id, medico_id, pacientes(id, nome), medicos(id, nome, crm, especialidade))')
+        .in('status', ['em_atendimento', 'aguardando'])
+        .not('sala_id', 'is', null);
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 10000, // auto-refresh every 10s
+  });
+
   const filtered = useMemo(() => {
     let list = salas as any[];
     if (filterTipo !== 'todos') list = list.filter(s => s.tipo === filterTipo);
