@@ -45,7 +45,8 @@ export function Sidebar() {
 
   const filteredMenuGroups = getFilteredMenuGroups(
     profile?.roles || [],
-    isAdmin()
+    isAdmin(),
+    isSuperAdmin
   );
 
   const searchedGroups = search.trim()
