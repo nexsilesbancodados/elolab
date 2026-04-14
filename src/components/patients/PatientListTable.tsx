@@ -61,7 +61,7 @@ export const PatientListTable = memo(function PatientListTable({
                               {['M', 'masculino'].includes(paciente.sexo) ? 'M' : ['F', 'feminino'].includes(paciente.sexo) ? 'F' : 'O'}
                             </Badge>
                           )}
-                          {idade < 18 && <Badge className="bg-amber-500/10 text-amber-700 text-[10px] px-1.5 py-0">Menor</Badge>}
+                          {paciente.data_nascimento && idade < 18 && <Badge className="bg-amber-500/10 text-amber-700 text-[10px] px-1.5 py-0">Menor</Badge>}
                         </div>
                         {paciente.alergias && paciente.alergias.length > 0 && (
                           <AllergyAlert alergias={paciente.alergias} compact className="mt-1" />

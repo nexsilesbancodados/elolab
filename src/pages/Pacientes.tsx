@@ -438,7 +438,7 @@ export default function Pacientes() {
   const stats = useMemo(() => {
     const total = pacientes.length;
     const comConvenio = pacientes.filter(p => p.convenio_id).length;
-    const menores = pacientes.filter(p => calcularIdade(p.data_nascimento) < 18).length;
+    const menores = pacientes.filter(p => p.data_nascimento && calcularIdade(p.data_nascimento) < 18).length;
     const comAlergias = pacientes.filter(p => p.alergias && p.alergias.length > 0).length;
     return { total, comConvenio, menores, comAlergias };
   }, [pacientes]);
