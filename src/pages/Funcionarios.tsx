@@ -132,7 +132,7 @@ export default function Funcionarios() {
         .eq('chave', 'role_customization')
         .eq('clinica_id', profile.clinica_id)
         .maybeSingle();
-      return data?.valor as RoleCustomizations | null;
+      return data?.valor as unknown as RoleCustomizations | null;
     },
     enabled: !!profile?.clinica_id,
   });
