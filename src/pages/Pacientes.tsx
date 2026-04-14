@@ -453,6 +453,7 @@ export default function Pacientes() {
   };
 
   const handleEdit = (paciente: any) => {
+    setIsViewOpen(false);
     setSelectedPacienteId(paciente.id);
     setFormData({
       nome: paciente.nome,
