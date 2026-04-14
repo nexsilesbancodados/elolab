@@ -787,6 +787,7 @@ export type Database = {
       }
       coletas_laboratorio: {
         Row: {
+          categoria_exame: string | null
           clinica_id: string | null
           codigo_amostra: string
           coletado_por: string | null
@@ -794,7 +795,9 @@ export type Database = {
           created_at: string | null
           data_coleta: string | null
           exame_id: string | null
+          finalidade: string | null
           id: string
+          indicacao_clinica: string | null
           jejum_horas: number | null
           jejum_necessario: boolean | null
           lote_insumo: string | null
@@ -810,6 +813,7 @@ export type Database = {
           volume_ml: number | null
         }
         Insert: {
+          categoria_exame?: string | null
           clinica_id?: string | null
           codigo_amostra?: string
           coletado_por?: string | null
@@ -817,7 +821,9 @@ export type Database = {
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
+          finalidade?: string | null
           id?: string
+          indicacao_clinica?: string | null
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
           lote_insumo?: string | null
@@ -833,6 +839,7 @@ export type Database = {
           volume_ml?: number | null
         }
         Update: {
+          categoria_exame?: string | null
           clinica_id?: string | null
           codigo_amostra?: string
           coletado_por?: string | null
@@ -840,7 +847,9 @@ export type Database = {
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
+          finalidade?: string | null
           id?: string
+          indicacao_clinica?: string | null
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
           lote_insumo?: string | null
