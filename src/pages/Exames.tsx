@@ -562,7 +562,8 @@ export default function Exames() {
   const getPacienteNome = (exame: any) => exame.pacientes?.nome || 'Desconhecido';
   const getMedicoInfo = (exame: any) => {
     const m = exame.medicos;
-    return m ? `${m.nome || m.crm} - ${m.especialidade || 'Clínico'}` : 'Desconhecido';
+    if (!m) return 'Sem solicitante';
+    return `${m.nome || m.crm} - ${m.especialidade || 'Clínico'}`;
   };
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>;
