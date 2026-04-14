@@ -1,0 +1,1 @@
+UPDATE public.coletas_laboratorio SET clinica_id = (SELECT p.clinica_id FROM public.profiles p WHERE p.id = auth.uid() LIMIT 1) WHERE clinica_id IS NULL;
