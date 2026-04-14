@@ -314,6 +314,7 @@ export default function Salas() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {salasDoTipo.map((sala: any) => {
                   const medicoNome = getMedicoNome(sala.medico_responsavel);
+                  const ocupacoesSala = getOcupacao(sala.id);
                   return (
                     <Card key={sala.id} className="relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-1.5"
@@ -348,6 +349,37 @@ export default function Salas() {
                             {STATUS_LABELS[sala.status as StatusSala] || sala.status}
                           </Badge>
                         </div>
+
+                        {/* Occupation info */}
+                        {sala.status === 'ocupado' && ocupacoesSala.length > 0 && (
+                          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2.5 space-y-1.5">
+                            {ocupacoesSala.map((oc: any) => {
+                              const ag = oc.agendamentos;
+                              const pacNome = ag?.pacientes?.nome;
+                              const medNome = ag?.medicos?.nome;
+                              const medEsp = ag?.medicos?.especialidade;
+                              return (
+                                <div key={oc.id} className="flex flex-col gap-0.5">
+                                  {pacNome && (
+                                    <span className="text-xs font-medium text-foreground flex items-center gap-1">
+                                      <User className="h-3 w-3 text-destructive" />
+                                      Paciente: {pacNome}
+                                    </span>
+                                  )}
+                                  {medNome && (
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Users className="h-3 w-3 text-primary" />
+                                      Dr(a). {medNome}{medEsp ? ` — ${medEsp}` : ''}
+                                    </span>
+                                  )}
+                                  <Badge variant="secondary" className="text-[9px] w-fit">
+                                    {oc.status === 'em_atendimento' ? 'Em Atendimento' : 'Aguardando'}
+                                  </Badge>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         <div className="text-xs text-muted-foreground space-y-0.5">
                           <p>Cap: {sala.capacidade} {medicoNome && `· Dr(a). ${medicoNome}`}</p>
