@@ -33,6 +33,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useUserPlan, usePlanos } from '@/hooks/useSubscriptionPlan';
 
 const TiposConsulta = lazy(() => import('@/pages/TiposConsulta'));
 const PrecosExames = lazy(() => import('@/pages/PrecosExames'));
@@ -315,6 +316,8 @@ export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
   const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
+  const { planName, planSlug, hasActivePlan, isTrial, trialEnd, trialDaysLeft } = useUserPlan();
+  const { data: planos } = usePlanos();
   const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [configClinica, setConfigClinica] = useState<ConfiguracaoClinica>(DEFAULT_CLINICA);
   const [configNotificacoes, setConfigNotificacoes] = useState<ConfiguracaoNotificacoes>(DEFAULT_NOTIFICACOES);
@@ -445,6 +448,7 @@ export default function Configuracoes() {
 
   const tabItems = [
     { value: 'clinica', icon: Building, label: 'Clínica' },
+    { value: 'plano', icon: CreditCard, label: 'Meu Plano' },
     { value: 'horarios', icon: Clock, label: 'Horários' },
     { value: 'salas', icon: MapPin, label: 'Salas' },
     { value: 'consultas', icon: Stethoscope, label: 'Consultas' },
@@ -575,6 +579,143 @@ export default function Configuracoes() {
 
                 <Separator />
                 <SaveBtn configKey="config_clinica" label="Dados da clínica" configValue={configClinica} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* ─── Meu Plano ─── */}
+        <TabsContent value="plano">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            {/* Plano Atual */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" />Seu Plano Atual</CardTitle>
+                <CardDescription>Visualize e gerencie sua subscrição</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!hasActivePlan ? (
+                  <div className="text-center py-8 space-y-4">
+                    <p className="text-muted-foreground">Você não possui um plano ativo</p>
+                    <Button className="gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Escolher Plano
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Plano Ativo</Label>
+                        <div className="text-2xl font-bold text-primary capitalize">{planName || 'Carregando...'}</div>
+                        <p className="text-xs text-muted-foreground">{isTrial ? 'Período de teste' : 'Plano profissional'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Status</Label>
+                        {isTrial ? (
+                          <>
+                            <Badge className="w-fit bg-blue-500/10 text-blue-700 border-blue-200">⏰ Em Teste</Badge>
+                            <p className="text-xs text-muted-foreground">Restam {trialDaysLeft} dia{trialDaysLeft !== 1 ? 's' : ''}</p>
+                          </>
+                        ) : (
+                          <>
+                            <Badge className="w-fit bg-green-500/10 text-green-700 border-green-200">✓ Ativo</Badge>
+                            <p className="text-xs text-muted-foreground">{trialEnd ? `Até ${trialEnd.toLocaleDateString('pt-BR')}` : 'Contínuo'}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {!isTrial && (
+                      <>
+                        <Separator />
+
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-sm">Próxima Renovação</h4>
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Data da Renovação</p>
+                              <p className="text-lg font-semibold mt-1">{trialEnd ? trialEnd.toLocaleDateString('pt-BR') : 'Mensal'}</p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Valor Mensal</p>
+                              <p className="text-lg font-semibold mt-1">
+                                {planos?.find(p => p.slug === planSlug)?.valor
+                                  ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(planos.find(p => p.slug === planSlug)!.valor)
+                                  : 'Carregando...'}
+                              </p>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-xs text-muted-foreground">Status do Pagamento</p>
+                              <p className="text-xs text-foreground mt-1 flex items-center gap-1">
+                                ✓ Ativo
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <Separator />
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" className="gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        Fazer Upgrade
+                      </Button>
+                      <Button variant="outline" className="gap-2">
+                        <Receipt className="h-4 w-4" />
+                        Ver Faturas
+                      </Button>
+                      <Button variant="destructive" className="gap-2">
+                        ✕ Cancelar Plano
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Histórico de Pagamentos */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" />Histórico de Pagamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Ação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>20/04/2026</TableCell>
+                      <TableCell>EloLab Max - Mensal</TableCell>
+                      <TableCell>R$ 299,90</TableCell>
+                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
+                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>20/03/2026</TableCell>
+                      <TableCell>EloLab Max - Mensal</TableCell>
+                      <TableCell>R$ 299,90</TableCell>
+                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
+                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>20/02/2026</TableCell>
+                      <TableCell>EloLab Max - Mensal</TableCell>
+                      <TableCell>R$ 299,90</TableCell>
+                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
+                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </motion.div>
