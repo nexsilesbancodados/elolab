@@ -10,6 +10,8 @@ export interface ReceiptData {
   docId?: string;
   paciente: string;
   cpf?: string;
+  medico?: string;
+  especialidade?: string;
   descricao: string;
   categoria?: string;
   formaPagamento: string;
@@ -66,6 +68,8 @@ function buildPdf(data: ReceiptData): jsPDF {
   doc.line(margin, y, w - margin, y);
   y += 4;
 
+  if (data.medico) addRow('Médico:', data.medico);
+  if (data.especialidade) addRow('Especialidade:', data.especialidade);
   addRow('Descrição:', data.descricao);
   if (data.categoria) addRow('Categoria:', data.categoria);
   addRow('Forma Pgto:', data.formaPagamento);
@@ -143,6 +147,8 @@ export function getReceiptWhatsAppText(data: ReceiptData): string {
     '',
     `👤 Paciente: ${data.paciente}`,
     data.cpf ? `🪪 CPF: ${data.cpf}` : '',
+    data.medico ? `🩺 Médico: ${data.medico}` : '',
+    data.especialidade ? `📋 Especialidade: ${data.especialidade}` : '',
     `📝 ${data.descricao}`,
     data.categoria ? `📂 ${data.categoria}` : '',
     `💳 ${data.formaPagamento}`,
