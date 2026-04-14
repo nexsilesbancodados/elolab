@@ -177,24 +177,26 @@ export const menuGroups: MenuGroup[] = [
 ];
 
 /**
- * Filter menu groups based on user roles
+ * Filter menu groups based on user roles and superadmin status
  */
 export function getFilteredMenuGroups(
   userRoles: AppRole[],
-  isAdmin: boolean
+  isAdmin: boolean,
+  isSuperAdmin = false
 ): MenuGroup[] {
-  if (isAdmin) {
-    return menuGroups;
-  }
-
   return menuGroups
     .filter((group) => {
+      // SuperAdmin-only groups hidden from regular admins
+      if (group.superAdminOnly && !isSuperAdmin) return false;
+      if (isAdmin || isSuperAdmin) return true;
       if (!group.roles || group.roles.length === 0) return true;
       return group.roles.some((role) => userRoles.includes(role));
     })
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
+        if (item.superAdminOnly && !isSuperAdmin) return false;
+        if (isAdmin || isSuperAdmin) return true;
         if (!item.roles || item.roles.length === 0) return true;
         return item.roles.some((role) => userRoles.includes(role));
       }),
