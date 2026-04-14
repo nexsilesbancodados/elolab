@@ -856,6 +856,7 @@ function isResultadoAlterado(resultado: { resultado: string; valorReferenciaMin?
   );
 }
 
+function calcularIdade(dataNascimento: string): string {
   try {
     const nasc = new Date(dataNascimento);
     const hoje = new Date();
