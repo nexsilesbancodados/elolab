@@ -816,7 +816,7 @@ export default function Prontuarios() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold truncate">{(pac as any).nome_social || pac.nome}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            {calcularIdade(pac.data_nascimento)}a
+                            {pac.data_nascimento ? `${calcularIdade(pac.data_nascimento)}a` : 'N/I'}
                             {pac.sexo && ` • ${pac.sexo === 'masculino' ? '♂' : '♀'}`}
                             {pac.cpf && ` • ${pac.cpf}`}
                           </p>
@@ -1094,7 +1094,7 @@ export default function Prontuarios() {
               <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 font-bold text-[10px]">
                 <User className="h-2.5 w-2.5" />{selectedPaciente.nome}
               </Badge>
-              <span className="text-muted-foreground">{calcularIdade(selectedPaciente.data_nascimento)}a</span>
+              <span className="text-muted-foreground">{selectedPaciente.data_nascimento ? `${calcularIdade(selectedPaciente.data_nascimento)}a` : 'N/I'}</span>
               {selectedPaciente.cpf && <span className="text-muted-foreground">• {selectedPaciente.cpf}</span>}
               <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
               <Badge className="ml-auto bg-green-500/10 text-green-700 border-green-500/20 text-[9px] rounded-full px-2">
