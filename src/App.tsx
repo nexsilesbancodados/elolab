@@ -1,4 +1,5 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
+import { autoSetupDatabase } from "@/lib/autoSetup";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -106,6 +107,17 @@ function getRoutingMode(): 'landing' | 'app' {
 
 function App() {
   const mode = getRoutingMode();
+
+  // Auto-setup database tables
+  useEffect(() => {
+    const setup = async () => {
+      // Run setup after a short delay to ensure auth is ready
+      setTimeout(() => {
+        autoSetupDatabase().catch(err => console.warn('Auto-setup failed:', err));
+      }, 1000);
+    };
+    setup();
+  }, []);
 
   return (
     <ErrorBoundary>
