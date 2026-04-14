@@ -81,7 +81,7 @@ export default function Laboratorio() {
   const [showResultados, setShowResultados] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('worklist');
   const queryClient = useQueryClient();
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
 
   const { data: pacientes } = useQuery({
     queryKey: ['pacientes-lab'],
