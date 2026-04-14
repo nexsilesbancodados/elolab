@@ -216,7 +216,7 @@ function Section({ icon: Icon, title, children, collapsible = false }: {
 // ─── Patient File Card ─────────────────────────────────────
 function FichaPaciente({ paciente, convenioNome }: { paciente: any; convenioNome: string }) {
   const idade = calcularIdade(paciente.data_nascimento);
-  const isMenor = idade < 18;
+  const isMenor = paciente.data_nascimento ? idade < 18 : false;
 
   return (
     <div className="space-y-4">
