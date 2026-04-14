@@ -308,7 +308,7 @@ export default function Exames() {
   const [newTypeInput, setNewTypeInput] = useState('');
   const [newTypeCat, setNewTypeCat] = useState('Personalizado');
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { data: pacientes = [], isLoading: loadingPacientes } = usePacientes();
   const { data: medicos = [], isLoading: loadingMedicos } = useMedicos();
