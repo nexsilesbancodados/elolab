@@ -1004,44 +1004,7 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Aparência ─── */}
-        <TabsContent value="aparencia">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" />Aparência</CardTitle>
-                <CardDescription>Personalize a aparência do sistema</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <Label>Tema</Label>
-                  <div className="p-4 rounded-xl border-2 border-primary bg-primary/5 shadow-sm text-left">
-                    <p className="font-semibold text-sm">Claro</p>
-                    <p className="text-xs text-muted-foreground mt-1">Fundo branco e cores suaves</p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="p-4 rounded-xl border bg-muted/30">
-                  <h4 className="font-medium text-sm mb-2">Prévia das Cores</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    {[
-                      { name: 'Primary', className: 'bg-primary' },
-                      { name: 'Secondary', className: 'bg-secondary border' },
-                      { name: 'Accent', className: 'bg-accent' },
-                      { name: 'Muted', className: 'bg-muted' },
-                      { name: 'Destructive', className: 'bg-destructive' },
-                    ].map(color => (
-                      <div key={color.name} className="text-center">
-                        <div className={`w-10 h-10 rounded-lg ${color.className}`} />
-                        <p className="text-[10px] text-muted-foreground mt-1">{color.name}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </TabsContent>
+
 
         {/* ─── Segurança ─── */}
         <TabsContent value="seguranca">
