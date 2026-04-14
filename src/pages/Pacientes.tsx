@@ -818,7 +818,7 @@ export default function Pacientes() {
                     <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
                   </div>
                   <div className="space-y-2">
-                    <Label>CPF <span className="text-destructive">*</span></Label>
+                    <Label>CPF</Label>
                     <Input value={formData.cpf} onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
                       let masked = digits;
@@ -829,7 +829,7 @@ export default function Pacientes() {
                     }} placeholder="000.000.000-00" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Nascimento <span className="text-destructive">*</span></Label>
+                    <Label>Data de Nascimento</Label>
                     <Input type="date" value={formData.data_nascimento} onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })} />
                   </div>
                   <div className="space-y-2">
@@ -842,7 +842,7 @@ export default function Pacientes() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Telefone <span className="text-destructive">*</span></Label>
+                    <Label>Telefone</Label>
                     <Input value={formData.telefone} onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
                       let masked = digits;
