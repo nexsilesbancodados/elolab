@@ -251,6 +251,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return hasRole('admin');
   };
 
+  const isSuperAdmin = SUPERADMIN_EMAILS.includes(user?.email?.toLowerCase() || '');
+
   return (
     <SupabaseAuthContext.Provider
        value={{
