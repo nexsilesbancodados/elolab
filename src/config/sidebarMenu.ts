@@ -155,14 +155,23 @@ export const menuGroups: MenuGroup[] = [
     color: '#ef4444',
     roles: ['admin'],
     items: [
-      { label: 'Painel Admin', icon: Shield, href: '/painel-admin' },
       { label: 'Analytics', icon: ActivitySquare, href: '/analytics' },
-      { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia' },
       { label: 'Automações', icon: Sparkles, href: '/automacoes' },
       { label: 'Templates Email', icon: Mail, href: '/templates-email' },
-      { label: 'Planos', icon: CreditCard, href: '/planos' },
-      { label: 'Documentação', icon: BookMarked, href: '/documentacao' },
       { label: 'Configurações', icon: Settings2, href: '/configuracoes' },
+    ],
+  },
+  {
+    label: 'Plataforma',
+    icon: Shield,
+    color: '#dc2626',
+    roles: ['admin'],
+    superAdminOnly: true,
+    items: [
+      { label: 'Painel Admin', icon: Shield, href: '/painel-admin', superAdminOnly: true },
+      { label: 'Agente IA', icon: BotMessageSquare, href: '/agente-ia', superAdminOnly: true },
+      { label: 'Planos', icon: CreditCard, href: '/planos', superAdminOnly: true },
+      { label: 'Documentação', icon: BookMarked, href: '/documentacao', superAdminOnly: true },
     ],
   },
 ];
