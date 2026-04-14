@@ -464,9 +464,14 @@ export default function Funcionarios() {
           <h1 className="text-3xl font-bold text-foreground">Funcionários</h1>
           <p className="text-muted-foreground">Gerencie a equipe e suas permissões de acesso</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="gap-2">
-          <Plus className="h-4 w-4" />Novo Funcionário
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleOpenCustomize} className="gap-2">
+            <Settings2 className="h-4 w-4" />Personalizar Permissões
+          </Button>
+          <Button onClick={() => handleOpenDialog()} className="gap-2">
+            <Plus className="h-4 w-4" />Novo Funcionário
+          </Button>
+        </div>
       </div>
 
       <Card>
