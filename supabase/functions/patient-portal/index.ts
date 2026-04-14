@@ -125,37 +125,71 @@ Deno.serve(async (req) => {
       }
 
       case "get_available_slots": {
-        const { medico_id, data_inicio, data_fim } = body;
-        if (!medico_id || !data_inicio || !data_fim) {
+        const { medico_id, data_inicio } = body;
+        if (!medico_id || !data_inicio) {
           return new Response(
-            JSON.stringify({ error: "medico_id, data_inicio, data_fim são obrigatórios" }),
+            JSON.stringify({ error: "medico_id e data_inicio são obrigatórios" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Get all appointments for this doctor in the date range (excluding cancelled)
+        // Get doctor availability for this day of week
+        const appointmentDate = new Date(data_inicio);
+        const dayOfWeek = appointmentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+        const { data: disponibilidade, error: dispError } = await supabase
+          .from("medico_disponibilidade")
+          .select("hora_inicio, hora_fim, duracao_consulta, intervalo_consultas")
+          .eq("medico_id", medico_id)
+          .eq("dia_semana", dayOfWeek)
+          .eq("ativo", true)
+          .single();
+
+        if (dispError || !disponibilidade) {
+          // No availability configured for this day
+          return new Response(
+            JSON.stringify({ error: "O médico não tem agendamentos disponíveis neste dia" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Get all appointments for this doctor on this date (excluding cancelled)
         const { data: agendados } = await supabase
           .from("agendamentos")
           .select("hora_inicio, hora_fim")
           .eq("medico_id", medico_id)
-          .gte("data", data_inicio)
-          .lte("data", data_fim)
+          .eq("data", data_inicio)
           .not("status", "in", '("cancelado")');
 
-        // Generate 30-minute slots from 8am to 6pm
+        // Generate slots based on doctor's availability
         const slots = [];
-        for (let hour = 8; hour < 18; hour++) {
-          for (let min of [0, 30]) {
-            const slotTime = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-            const isBooked = agendados?.some(
-              a => a.hora_inicio && a.hora_inicio.slice(0, 5) === slotTime
-            );
-            if (!isBooked) {
-              slots.push(slotTime);
-            }
+        const [startHour, startMin] = disponibilidade.hora_inicio.split(":").map(Number);
+        const [endHour, endMin] = disponibilidade.hora_fim.split(":").map(Number);
+        const duration = disponibilidade.duracao_consulta; // in minutes
+        const interval = disponibilidade.intervalo_consultas; // in minutes
+        const slotDuration = duration + interval;
+
+        let currentMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+
+        while (currentMinutes + duration <= endMinutes) {
+          const hour = Math.floor(currentMinutes / 60);
+          const min = currentMinutes % 60;
+          const slotTime = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+
+          // Check if slot is booked
+          const isBooked = agendados?.some(
+            a => a.hora_inicio && a.hora_inicio.slice(0, 5) === slotTime
+          );
+
+          if (!isBooked) {
+            slots.push(slotTime);
           }
+
+          currentMinutes += slotDuration;
         }
-        result = slots;
+
+        result = slots.length > 0 ? slots : { error: "Nenhum horário disponível neste dia" };
         break;
       }
 
