@@ -345,6 +345,7 @@ export default function Medicos() {
   const [uploadingCarimbo, setUploadingCarimbo] = useState(false);
 
   const queryClient = useQueryClient();
+  const { profile } = useSupabaseAuth();
   const { data: medicos = [], isLoading } = useMedicos();
 
   const especialidades = useMemo(() => {
