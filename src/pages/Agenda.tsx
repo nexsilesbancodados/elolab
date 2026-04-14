@@ -33,6 +33,7 @@ import { createAutoBilling } from '@/lib/autoBilling';
 import { autoConfirmarAgendamento, autoCancelarAgendamento, autoMarcarFaltasHoje, autoCheckin } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyAgendamentos } from '@/components/EmptyState';
