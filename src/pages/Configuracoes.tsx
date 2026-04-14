@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
-  Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
-  Key, RefreshCw, CloudOff, Cloud, Stethoscope, FlaskConical, Building2,
+  Shield, Globe, Mail, Smartphone, MessageSquare, Database,
+  Key, RefreshCw, CloudOff, Cloud,
   DollarSign, Printer, MapPin, Phone, FileText, Users, Plus, Trash2, Edit,
   CreditCard, Receipt, Loader2, Hash, Clipboard, Image,
 } from 'lucide-react';
@@ -35,9 +35,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUserPlan, usePlanos } from '@/hooks/useSubscriptionPlan';
 
-const TiposConsulta = lazy(() => import('@/pages/TiposConsulta'));
-const PrecosExames = lazy(() => import('@/pages/PrecosExames'));
-const Convenios = lazy(() => import('@/pages/Convenios'));
+
+
 
 /* ─── Types ─── */
 interface ConfiguracaoClinica {
@@ -451,13 +450,9 @@ export default function Configuracoes() {
     { value: 'plano', icon: CreditCard, label: 'Meu Plano' },
     { value: 'horarios', icon: Clock, label: 'Horários' },
     { value: 'salas', icon: MapPin, label: 'Salas' },
-    { value: 'consultas', icon: Stethoscope, label: 'Consultas' },
-    { value: 'exames', icon: FlaskConical, label: 'Exames' },
-    { value: 'convenios', icon: Building2, label: 'Convênios' },
     { value: 'financeiro', icon: DollarSign, label: 'Financeiro' },
     { value: 'notificacoes', icon: Bell, label: 'Notificações' },
     { value: 'impressao', icon: Printer, label: 'Impressão' },
-    { value: 'aparencia', icon: Palette, label: 'Aparência' },
     { value: 'seguranca', icon: Shield, label: 'Segurança' },
     { value: 'backup', icon: Download, label: 'Backup' },
     { value: 'historico', icon: History, label: 'Auditoria' },
@@ -675,49 +670,6 @@ export default function Configuracoes() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Histórico de Pagamentos */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" />Histórico de Pagamentos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ação</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>20/04/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>20/03/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>20/02/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
           </motion.div>
         </TabsContent>
 
@@ -811,26 +763,8 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Tipos de Consulta ─── */}
-        <TabsContent value="consultas">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Suspense fallback={LazyFallback}><TiposConsulta /></Suspense>
-          </motion.div>
-        </TabsContent>
 
-        {/* ─── Preços de Exames ─── */}
-        <TabsContent value="exames">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Suspense fallback={LazyFallback}><PrecosExames /></Suspense>
-          </motion.div>
-        </TabsContent>
 
-        {/* ─── Convênios ─── */}
-        <TabsContent value="convenios">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Suspense fallback={LazyFallback}><Convenios /></Suspense>
-          </motion.div>
-        </TabsContent>
 
         {/* ─── Financeiro ─── */}
         <TabsContent value="financeiro">
@@ -1069,44 +1003,7 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* ─── Aparência ─── */}
-        <TabsContent value="aparencia">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" />Aparência</CardTitle>
-                <CardDescription>Personalize a aparência do sistema</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <Label>Tema</Label>
-                  <div className="p-4 rounded-xl border-2 border-primary bg-primary/5 shadow-sm text-left">
-                    <p className="font-semibold text-sm">Claro</p>
-                    <p className="text-xs text-muted-foreground mt-1">Fundo branco e cores suaves</p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="p-4 rounded-xl border bg-muted/30">
-                  <h4 className="font-medium text-sm mb-2">Prévia das Cores</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    {[
-                      { name: 'Primary', className: 'bg-primary' },
-                      { name: 'Secondary', className: 'bg-secondary border' },
-                      { name: 'Accent', className: 'bg-accent' },
-                      { name: 'Muted', className: 'bg-muted' },
-                      { name: 'Destructive', className: 'bg-destructive' },
-                    ].map(color => (
-                      <div key={color.name} className="text-center">
-                        <div className={`w-10 h-10 rounded-lg ${color.className}`} />
-                        <p className="text-[10px] text-muted-foreground mt-1">{color.name}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </TabsContent>
+
 
         {/* ─── Segurança ─── */}
         <TabsContent value="seguranca">

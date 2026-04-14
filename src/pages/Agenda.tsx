@@ -33,6 +33,7 @@ import { createAutoBilling } from '@/lib/autoBilling';
 import { autoConfirmarAgendamento, autoCancelarAgendamento, autoMarcarFaltasHoje, autoCheckin } from '@/lib/workflowAutomation';
 import { useAgendamentos, usePacientes, useMedicos, useSupabaseQuery } from '@/hooks/useSupabaseData';
 import { useCurrentMedico } from '@/hooks/useCurrentMedico';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { AgendaSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyAgendamentos } from '@/components/EmptyState';
@@ -112,6 +113,7 @@ interface FormData {
 }
 
 export default function Agenda() {
+  const { clinicaId } = useSupabaseAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedMedico, setSelectedMedico] = useState<string>('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -363,6 +365,7 @@ export default function Agenda() {
             tipo: formData.tipo,
             status: formData.status,
             observacoes: formData.observacoes,
+            clinica_id: clinicaId,
           })
           .eq('id', formData.id);
 
@@ -457,6 +460,7 @@ export default function Agenda() {
           tipo: formData.tipo,
           status: formData.status as StatusAgendamento,
           observacoes: formData.observacoes,
+          clinica_id: clinicaId,
         }));
 
         const { data: inserted, error } = await supabase
