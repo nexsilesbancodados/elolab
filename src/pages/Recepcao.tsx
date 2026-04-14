@@ -481,7 +481,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
      setIsProcessing(false);
    }
 
-  function gerarComprovante(lanc: any, pac: any, forma: string, valorFinal: number) {
+  function gerarComprovante(lanc: any, pac: any, forma: string, valorFinal: number, med?: any) {
     const formaLabel = FORMAS_PAGAMENTO.find(f => f.value === forma)?.label || forma;
     const agora = format(new Date(), "dd/MM/yyyy 'às' HH:mm");
     printReceiptPdf({
@@ -490,6 +490,8 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       docId: lanc.id?.slice(0, 8).toUpperCase(),
       paciente: pac?.nome || '—',
       cpf: pac?.cpf || '',
+      medico: med?.nome || undefined,
+      especialidade: med?.especialidade || undefined,
       descricao: lanc.descricao || 'Consulta',
       formaPagamento: formaLabel,
       valorOriginal: lanc.valor || 0,
@@ -555,8 +557,9 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       setShowPagamento(false);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
 
-      // Emit receipt automatically
-      gerarComprovante(selectedLancamento, selectedPacienteBalcao, formaPagamento, valorFinal);
+      // Emit receipt automatically - find medico from enriched data
+      const matchedItem = enriched.find(e => e.lanc?.id === selectedLancamento.id);
+      gerarComprovante(selectedLancamento, selectedPacienteBalcao, formaPagamento, valorFinal, matchedItem?.med);
     } catch (err: any) {
       toast.error('Erro ao confirmar pagamento: ' + (err?.message || 'Erro desconhecido'));
     }
