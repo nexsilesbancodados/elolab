@@ -1357,7 +1357,7 @@ export type Database = {
           data_solicitacao: string | null
           descricao: string | null
           id: string
-          medico_solicitante_id: string
+          medico_solicitante_id: string | null
           observacoes: string | null
           paciente_id: string
           resultado: string | null
@@ -1374,7 +1374,7 @@ export type Database = {
           data_solicitacao?: string | null
           descricao?: string | null
           id?: string
-          medico_solicitante_id: string
+          medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id: string
           resultado?: string | null
@@ -1391,7 +1391,7 @@ export type Database = {
           data_solicitacao?: string | null
           descricao?: string | null
           id?: string
-          medico_solicitante_id?: string
+          medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id?: string
           resultado?: string | null

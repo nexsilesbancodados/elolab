@@ -399,8 +399,8 @@ export default function Exames() {
   };
 
   const handleSave = async (emitir = false) => {
-    if (!formData.paciente_id || !formData.medico_solicitante_id) {
-      toast.error('Selecione paciente e médico.');
+    if (!formData.paciente_id) {
+      toast.error('Selecione o paciente.');
       return;
     }
     if (examesSelecionados.length === 0) {
@@ -443,7 +443,7 @@ export default function Exames() {
       // Insert one row per exam in the batch
       const inserts = examesSelecionados.map(ex => ({
         paciente_id: formData.paciente_id,
-        medico_solicitante_id: formData.medico_solicitante_id,
+        medico_solicitante_id: formData.medico_solicitante_id || null,
         tipo_exame: `${ex.tuss ? ex.tuss + ' - ' : ''}${ex.nome}`,
         descricao: detalhes || null,
         observacoes: [
@@ -562,7 +562,8 @@ export default function Exames() {
   const getPacienteNome = (exame: any) => exame.pacientes?.nome || 'Desconhecido';
   const getMedicoInfo = (exame: any) => {
     const m = exame.medicos;
-    return m ? `${m.nome || m.crm} - ${m.especialidade || 'Clínico'}` : 'Desconhecido';
+    if (!m) return 'Sem solicitante';
+    return `${m.nome || m.crm} - ${m.especialidade || 'Clínico'}`;
   };
 
   if (isLoading) return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>;
@@ -725,9 +726,9 @@ export default function Exames() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Médico Solicitante *</Label>
+                <Label className="text-xs font-medium">Profissional Solicitante</Label>
                 <Select value={formData.medico_solicitante_id} onValueChange={v => setFormData({ ...formData, medico_solicitante_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o médico" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
                   <SelectContent>{medicos.map(m => <SelectItem key={m.id} value={m.id}>{m.nome || m.crm} — {m.especialidade || 'Clínico'}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
