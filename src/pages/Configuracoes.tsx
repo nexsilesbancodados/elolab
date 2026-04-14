@@ -672,47 +672,7 @@ export default function Configuracoes() {
               </CardContent>
             </Card>
 
-            {/* Histórico de Pagamentos */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" />Histórico de Pagamentos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ação</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>20/04/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>20/03/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>20/02/2026</TableCell>
-                      <TableCell>EloLab Max - Mensal</TableCell>
-                      <TableCell>R$ 299,90</TableCell>
-                      <TableCell><Badge className="bg-green-500/10 text-green-700">Pago</Badge></TableCell>
-                      <TableCell><Button size="sm" variant="ghost">📥 Baixar</Button></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
+          </CardContent>
             </Card>
           </motion.div>
         </TabsContent>

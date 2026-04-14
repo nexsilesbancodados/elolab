@@ -365,6 +365,7 @@ export default function Agenda() {
             tipo: formData.tipo,
             status: formData.status,
             observacoes: formData.observacoes,
+            clinica_id: clinicaId,
           })
           .eq('id', formData.id);
 
@@ -459,6 +460,7 @@ export default function Agenda() {
           tipo: formData.tipo,
           status: formData.status as StatusAgendamento,
           observacoes: formData.observacoes,
+          clinica_id: clinicaId,
         }));
 
         const { data: inserted, error } = await supabase
