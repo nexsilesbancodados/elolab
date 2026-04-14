@@ -274,8 +274,9 @@ export function useChatInterno() {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `chat-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('chat-realtime')
+      .channel(channelName)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
