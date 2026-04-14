@@ -1201,21 +1201,84 @@ export default function Agenda() {
 
             <div className="space-y-2">
               <Label>Paciente *</Label>
-              <Select
-                value={formData.paciente_id}
-                onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pacientes.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!showNewPatientForm ? (
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select
+                      value={formData.paciente_id}
+                      onValueChange={(v) => setFormData({ ...formData, paciente_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o paciente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pacientes.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome} {p.cpf ? `(${p.cpf})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowNewPatientForm(true)}
+                    title="Cadastrar novo paciente"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-primary">Novo Paciente</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowNewPatientForm(false);
+                          setNewPatientData({ nome: '', telefone: '', cpf: '' });
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Nome completo *"
+                        value={newPatientData.nome}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, nome: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Telefone"
+                        value={newPatientData.telefone}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, telefone: e.target.value })}
+                      />
+                      <Input
+                        placeholder="CPF"
+                        value={newPatientData.cpf}
+                        onChange={(e) => setNewPatientData({ ...newPatientData, cpf: e.target.value })}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      disabled={!newPatientData.nome.trim() || isSavingPatient}
+                      onClick={handleQuickCreatePatient}
+                    >
+                      {isSavingPatient ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                      Cadastrar e Selecionar
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
