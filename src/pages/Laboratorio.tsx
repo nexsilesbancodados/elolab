@@ -468,10 +468,12 @@ export default function Laboratorio() {
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             <span>{coleta.tipo_amostra}</span>
+                            {(coleta as any).material && <span>• {(coleta as any).material}</span>}
                             {coleta.tubo && <span>• {coleta.tubo}</span>}
                             {coleta.volume_ml && <span>• {coleta.volume_ml}mL</span>}
                             {coleta.sitio_coleta && <span>• {coleta.sitio_coleta}</span>}
-                            <span>• Dr(a). {coleta.medicos?.nome || coleta.medicos?.crm}</span>
+                            {coleta.medicos?.nome && <span>• Dr(a). {coleta.medicos.nome}</span>}
+                            {(coleta as any).cid && <span>• CID: {(coleta as any).cid}</span>}
                             {coleta.created_at && (
                               <span className={cn('flex items-center gap-1', getSLAColor(coleta.created_at))}>
                                 <Timer className="h-3 w-3" />{getSLALabel(coleta.created_at)}
