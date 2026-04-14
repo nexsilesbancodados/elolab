@@ -19,9 +19,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalas, useMedicos } from '@/hooks/useSupabaseData';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Database } from '@/integrations/supabase/types';
+import { User } from 'lucide-react';
 
 type StatusSala = Database['public']['Enums']['status_sala'];
 
@@ -111,6 +112,21 @@ export default function Salas() {
   const queryClient = useQueryClient();
   const { data: salas = [], isLoading } = useSalas();
   const { data: medicos = [] } = useMedicos();
+
+  // Fetch active queue entries with sala_id to show who occupies each room
+  const { data: ocupacoes = [] } = useQuery({
+    queryKey: ['fila_atendimento_salas'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('fila_atendimento')
+        .select('id, sala_id, status, agendamento_id, agendamentos(id, paciente_id, medico_id, pacientes(id, nome), medicos(id, nome, crm, especialidade))')
+        .in('status', ['em_atendimento', 'aguardando'])
+        .not('sala_id', 'is', null);
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 10000, // auto-refresh every 10s
+  });
 
   const filtered = useMemo(() => {
     let list = salas as any[];
@@ -223,6 +239,11 @@ export default function Salas() {
     return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>;
   }
 
+  // Helper to get occupation info for a sala
+  const getOcupacao = (salaId: string) => {
+    return (ocupacoes as any[]).filter((o: any) => o.sala_id === salaId);
+  };
+
   const getMedicoNome = (id: string | null) => {
     if (!id) return null;
     const m = (medicos as any[]).find(m => m.id === id);
@@ -293,6 +314,7 @@ export default function Salas() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {salasDoTipo.map((sala: any) => {
                   const medicoNome = getMedicoNome(sala.medico_responsavel);
+                  const ocupacoesSala = getOcupacao(sala.id);
                   return (
                     <Card key={sala.id} className="relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-1.5"
@@ -327,6 +349,37 @@ export default function Salas() {
                             {STATUS_LABELS[sala.status as StatusSala] || sala.status}
                           </Badge>
                         </div>
+
+                        {/* Occupation info */}
+                        {sala.status === 'ocupado' && ocupacoesSala.length > 0 && (
+                          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2.5 space-y-1.5">
+                            {ocupacoesSala.map((oc: any) => {
+                              const ag = oc.agendamentos;
+                              const pacNome = ag?.pacientes?.nome;
+                              const medNome = ag?.medicos?.nome;
+                              const medEsp = ag?.medicos?.especialidade;
+                              return (
+                                <div key={oc.id} className="flex flex-col gap-0.5">
+                                  {pacNome && (
+                                    <span className="text-xs font-medium text-foreground flex items-center gap-1">
+                                      <User className="h-3 w-3 text-destructive" />
+                                      Paciente: {pacNome}
+                                    </span>
+                                  )}
+                                  {medNome && (
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Users className="h-3 w-3 text-primary" />
+                                      Dr(a). {medNome}{medEsp ? ` — ${medEsp}` : ''}
+                                    </span>
+                                  )}
+                                  <Badge variant="secondary" className="text-[9px] w-fit">
+                                    {oc.status === 'em_atendimento' ? 'Em Atendimento' : 'Aguardando'}
+                                  </Badge>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         <div className="text-xs text-muted-foreground space-y-0.5">
                           <p>Cap: {sala.capacidade} {medicoNome && `· Dr(a). ${medicoNome}`}</p>
