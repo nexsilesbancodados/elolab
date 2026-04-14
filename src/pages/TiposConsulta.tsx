@@ -79,7 +79,7 @@ export default function TiposConsulta() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('tipos');
 
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { data: convenios = [] } = useConvenios();
 
@@ -146,7 +146,7 @@ export default function TiposConsulta() {
         if (error) throw error;
         toast.success('Tipo atualizado!');
       } else {
-        const { error } = await supabase.from('tipos_consulta').insert(payload);
+        const { error } = await supabase.from('tipos_consulta').insert({ ...payload, clinica_id: profile?.clinica_id || null });
         if (error) throw error;
         toast.success('Tipo criado!');
       }
@@ -183,7 +183,7 @@ export default function TiposConsulta() {
         if (error) throw error;
       } else {
         const { error } = await supabase.from('precos_consulta_convenio')
-          .insert({ tipo_consulta_id: precosTipo.id, convenio_id: convenioId, valor });
+          .insert({ tipo_consulta_id: precosTipo.id, convenio_id: convenioId, valor, clinica_id: profile?.clinica_id || null });
         if (error) throw error;
       }
       queryClient.invalidateQueries({ queryKey: ['precos_consulta_convenio'] });
