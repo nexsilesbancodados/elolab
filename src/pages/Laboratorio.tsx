@@ -263,6 +263,7 @@ export default function Laboratorio() {
     coletado_por: '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     exame_id: '', volume_ml: '', condicao_amostra: [] as string[], sitio_coleta: '', lote_insumo: '',
     finalidade: 'diagnostico', indicacao_clinica: '', categoria_exame: '',
+    numero_guia: '', material: '', trouxe_material: false, cid: '', procedimento_codigo: '', convenio_id: '', grupo: '',
   });
 
   const resetColetaForm = () => setNewColetaForm({
@@ -271,6 +272,7 @@ export default function Laboratorio() {
     coletado_por: user?.id || '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     exame_id: '', volume_ml: '', condicao_amostra: [], sitio_coleta: '', lote_insumo: '',
     finalidade: 'diagnostico', indicacao_clinica: '', categoria_exame: '',
+    numero_guia: '', material: '', trouxe_material: false, cid: '', procedimento_codigo: '', convenio_id: '', grupo: '',
   });
 
   const toggleCondicao = (cond: string) => {
