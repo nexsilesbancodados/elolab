@@ -283,6 +283,7 @@ export function useChatInterno() {
         (payload) => {
           const newMsg = payload.new as ChatMensagem;
           const activeConv = conversaAtivaRef.current;
+
           // If this message is for the active conversation, add it
           if (activeConv && newMsg.conversa_id === activeConv.id) {
             setMensagens(prev => {
@@ -297,6 +298,24 @@ export function useChatInterno() {
                 .eq('id', newMsg.id);
             }
           }
+
+          // Show toast notification for incoming messages (not from self, not in active conversation)
+          if (newMsg.destinatario_id === user.id) {
+            const isActiveConv = activeConv && newMsg.conversa_id === activeConv.id;
+            if (!isActiveConv) {
+              const remetente = usuariosRef.current.find(u => u.id === newMsg.remetente_id);
+              const nomeRemetente = remetente?.nome || 'Alguém';
+              const previewTexto = newMsg.texto.length > 60
+                ? newMsg.texto.substring(0, 60) + '...'
+                : newMsg.texto;
+
+              toast.info(`💬 ${nomeRemetente}`, {
+                description: newMsg.urgente ? `🔴 URGENTE: ${previewTexto}` : previewTexto,
+                duration: newMsg.urgente ? 10000 : 5000,
+              });
+            }
+          }
+
           // Refresh conversations list
           fetchConversas();
         }
