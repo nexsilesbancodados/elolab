@@ -847,7 +847,15 @@ export interface LaudoData {
   }>;
 }
 
-function calcularIdade(dataNascimento: string): string {
+function isResultadoAlterado(resultado: { resultado: string; valorReferenciaMin?: number; valorReferenciaMax?: number }): boolean {
+  const numResult = parseFloat(resultado.resultado);
+  if (isNaN(numResult)) return false;
+  return (
+    (resultado.valorReferenciaMin != null && numResult < resultado.valorReferenciaMin) ||
+    (resultado.valorReferenciaMax != null && numResult > resultado.valorReferenciaMax)
+  );
+}
+
   try {
     const nasc = new Date(dataNascimento);
     const hoje = new Date();
