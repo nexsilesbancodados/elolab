@@ -641,6 +641,56 @@ export default function Laboratorio() {
               </Select>
             </div>
 
+            {/* Finalidade + Categoria do Exame */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium flex items-center gap-1"><FileText className="h-3 w-3" />Para quê é o exame? *</Label>
+                <Select value={newColetaForm.finalidade} onValueChange={v => setNewColetaForm(p => ({ ...p, finalidade: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Finalidade" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diagnostico">Diagnóstico</SelectItem>
+                    <SelectItem value="checkup">Check-up / Rotina</SelectItem>
+                    <SelectItem value="pre_operatorio">Pré-operatório</SelectItem>
+                    <SelectItem value="acompanhamento">Acompanhamento de tratamento</SelectItem>
+                    <SelectItem value="controle">Controle periódico</SelectItem>
+                    <SelectItem value="urgencia">Urgência / Emergência</SelectItem>
+                    <SelectItem value="pre_natal">Pré-natal</SelectItem>
+                    <SelectItem value="admissional">Admissional / Periódico</SelectItem>
+                    <SelectItem value="retorno">Retorno / Reavaliação</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Categoria do Exame</Label>
+                <Select value={newColetaForm.categoria_exame || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, categoria_exame: v === '__none__' ? '' : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Não informado</SelectItem>
+                    <SelectItem value="hematologia">Hematologia</SelectItem>
+                    <SelectItem value="bioquimica">Bioquímica</SelectItem>
+                    <SelectItem value="hormonal">Hormonal</SelectItem>
+                    <SelectItem value="imunologia">Imunologia / Sorologia</SelectItem>
+                    <SelectItem value="microbiologia">Microbiologia</SelectItem>
+                    <SelectItem value="urinanalise">Urinálise</SelectItem>
+                    <SelectItem value="coagulacao">Coagulação</SelectItem>
+                    <SelectItem value="parasitologia">Parasitologia</SelectItem>
+                    <SelectItem value="toxicologia">Toxicologia</SelectItem>
+                    <SelectItem value="genetica">Genética / Molecular</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Indicação Clínica */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Indicação Clínica</Label>
+              <Input value={newColetaForm.indicacao_clinica}
+                onChange={e => setNewColetaForm(p => ({ ...p, indicacao_clinica: e.target.value }))}
+                placeholder="Ex: Suspeita de anemia, controle glicêmico, investigação tireoidiana..." />
+            </div>
+
             <Separator />
 
             {/* Data/Hora + Profissional */}
