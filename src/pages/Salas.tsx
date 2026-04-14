@@ -19,9 +19,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalas, useMedicos } from '@/hooks/useSupabaseData';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Database } from '@/integrations/supabase/types';
+import { User } from 'lucide-react';
 
 type StatusSala = Database['public']['Enums']['status_sala'];
 
