@@ -107,6 +107,14 @@ export default function Laboratorio() {
     },
   });
 
+  const { data: convenios } = useQuery({
+    queryKey: ['convenios-lab'],
+    queryFn: async () => {
+      const { data } = await supabase.from('convenios').select('id, nome, codigo').eq('ativo', true).order('nome');
+      return data || [];
+    },
+  });
+
   const { data: examesPendentes } = useQuery({
     queryKey: ['exames-pendentes-lab'],
     queryFn: async () => {
@@ -263,6 +271,7 @@ export default function Laboratorio() {
     coletado_por: '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     exame_id: '', volume_ml: '', condicao_amostra: [] as string[], sitio_coleta: '', lote_insumo: '',
     finalidade: 'diagnostico', indicacao_clinica: '', categoria_exame: '',
+    numero_guia: '', material: '', trouxe_material: false, cid: '', procedimento_codigo: '', convenio_id: '', grupo: '',
   });
 
   const resetColetaForm = () => setNewColetaForm({
@@ -271,6 +280,7 @@ export default function Laboratorio() {
     coletado_por: user?.id || '', data_coleta: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     exame_id: '', volume_ml: '', condicao_amostra: [], sitio_coleta: '', lote_insumo: '',
     finalidade: 'diagnostico', indicacao_clinica: '', categoria_exame: '',
+    numero_guia: '', material: '', trouxe_material: false, cid: '', procedimento_codigo: '', convenio_id: '', grupo: '',
   });
 
   const toggleCondicao = (cond: string) => {
@@ -453,13 +463,17 @@ export default function Laboratorio() {
                             <Badge className={statusColors[coleta.status]}>{statusLabels[coleta.status]}</Badge>
                             {coleta.urgente && <Badge variant="destructive" className="gap-1"><Zap className="h-3 w-3" />Urgente</Badge>}
                             {coleta.jejum_necessario && <Badge variant="outline" className="text-[10px]">Jejum {coleta.jejum_horas}h</Badge>}
+                            {(coleta as any).procedimento_codigo && <Badge variant="outline" className="font-mono text-[10px]">{(coleta as any).procedimento_codigo}</Badge>}
+                            {(coleta as any).numero_guia && <Badge variant="secondary" className="text-[10px]">Guia: {(coleta as any).numero_guia}</Badge>}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                             <span>{coleta.tipo_amostra}</span>
+                            {(coleta as any).material && <span>• {(coleta as any).material}</span>}
                             {coleta.tubo && <span>• {coleta.tubo}</span>}
                             {coleta.volume_ml && <span>• {coleta.volume_ml}mL</span>}
                             {coleta.sitio_coleta && <span>• {coleta.sitio_coleta}</span>}
-                            <span>• Dr(a). {coleta.medicos?.nome || coleta.medicos?.crm}</span>
+                            {coleta.medicos?.nome && <span>• Dr(a). {coleta.medicos.nome}</span>}
+                            {(coleta as any).cid && <span>• CID: {(coleta as any).cid}</span>}
                             {coleta.created_at && (
                               <span className={cn('flex items-center gap-1', getSLAColor(coleta.created_at))}>
                                 <Timer className="h-3 w-3" />{getSLALabel(coleta.created_at)}
@@ -590,6 +604,13 @@ export default function Laboratorio() {
               finalidade: newColetaForm.finalidade || 'diagnostico',
               indicacao_clinica: newColetaForm.indicacao_clinica || null,
               categoria_exame: newColetaForm.categoria_exame || null,
+              numero_guia: newColetaForm.numero_guia || null,
+              material: newColetaForm.material || null,
+              trouxe_material: newColetaForm.trouxe_material,
+              cid: newColetaForm.cid || null,
+              procedimento_codigo: newColetaForm.procedimento_codigo || null,
+              convenio_id: newColetaForm.convenio_id && newColetaForm.convenio_id !== '__none__' ? newColetaForm.convenio_id : null,
+              grupo: newColetaForm.grupo || null,
             } as any);
           }} className="flex-1 overflow-y-auto space-y-5 pr-2">
 
@@ -622,6 +643,74 @@ export default function Laboratorio() {
                   <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                   <SelectContent>{medicos?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.nome || `CRM ${m.crm}`} — {m.especialidade || 'Clínico'}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Dados da Solicitação (estilo WEBLIS) */}
+            <div className="bg-muted/30 border rounded-lg p-4 space-y-4">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-primary" />Dados da Solicitação
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Convênio</Label>
+                  <Select value={newColetaForm.convenio_id || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, convenio_id: v === '__none__' ? '' : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Particular" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Particular</SelectItem>
+                      {convenios?.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome} ({c.codigo})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Nº da Guia</Label>
+                  <Input value={newColetaForm.numero_guia}
+                    onChange={e => setNewColetaForm(p => ({ ...p, numero_guia: e.target.value }))}
+                    placeholder="Ex: 2600015029" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">CID-10</Label>
+                  <Input value={newColetaForm.cid}
+                    onChange={e => setNewColetaForm(p => ({ ...p, cid: e.target.value }))}
+                    placeholder="Ex: E11, D50" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Código do Procedimento</Label>
+                  <Input value={newColetaForm.procedimento_codigo}
+                    onChange={e => setNewColetaForm(p => ({ ...p, procedimento_codigo: e.target.value.toUpperCase() }))}
+                    placeholder="Ex: COL, HDL, HEM" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Grupo</Label>
+                  <Input value={newColetaForm.grupo}
+                    onChange={e => setNewColetaForm(p => ({ ...p, grupo: e.target.value.toUpperCase() }))}
+                    placeholder="Ex: CTF, HEM" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Material</Label>
+                  <Select value={newColetaForm.material || '__none__'} onValueChange={v => setNewColetaForm(p => ({ ...p, material: v === '__none__' ? '' : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Não informado</SelectItem>
+                      <SelectItem value="SORO">Soro</SelectItem>
+                      <SelectItem value="PLASMA">Plasma</SelectItem>
+                      <SelectItem value="SANGUE_TOTAL">Sangue Total</SelectItem>
+                      <SelectItem value="URINA">Urina</SelectItem>
+                      <SelectItem value="FEZES">Fezes</SelectItem>
+                      <SelectItem value="LIQUOR">Líquor</SelectItem>
+                      <SelectItem value="ESCARRO">Escarro</SelectItem>
+                      <SelectItem value="SECRECAO">Secreção</SelectItem>
+                      <SelectItem value="SWAB">Swab</SelectItem>
+                      <SelectItem value="OUTRO">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={newColetaForm.trouxe_material} onCheckedChange={v => setNewColetaForm(p => ({ ...p, trouxe_material: !!v }))} />
+                <Label className="text-sm flex items-center gap-1"><Package className="h-3.5 w-3.5" />Trouxe Material</Label>
               </div>
             </div>
 

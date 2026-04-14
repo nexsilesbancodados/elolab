@@ -788,25 +788,32 @@ export type Database = {
       coletas_laboratorio: {
         Row: {
           categoria_exame: string | null
+          cid: string | null
           clinica_id: string | null
           codigo_amostra: string
           coletado_por: string | null
           condicao_amostra: string[] | null
+          convenio_id: string | null
           created_at: string | null
           data_coleta: string | null
           exame_id: string | null
           finalidade: string | null
+          grupo: string | null
           id: string
           indicacao_clinica: string | null
           jejum_horas: number | null
           jejum_necessario: boolean | null
           lote_insumo: string | null
+          material: string | null
           medico_solicitante_id: string | null
+          numero_guia: string | null
           observacoes: string | null
           paciente_id: string
+          procedimento_codigo: string | null
           sitio_coleta: string | null
           status: string
           tipo_amostra: string
+          trouxe_material: boolean | null
           tubo: string | null
           updated_at: string | null
           urgente: boolean | null
@@ -814,25 +821,32 @@ export type Database = {
         }
         Insert: {
           categoria_exame?: string | null
+          cid?: string | null
           clinica_id?: string | null
           codigo_amostra?: string
           coletado_por?: string | null
           condicao_amostra?: string[] | null
+          convenio_id?: string | null
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
           finalidade?: string | null
+          grupo?: string | null
           id?: string
           indicacao_clinica?: string | null
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
           lote_insumo?: string | null
+          material?: string | null
           medico_solicitante_id?: string | null
+          numero_guia?: string | null
           observacoes?: string | null
           paciente_id: string
+          procedimento_codigo?: string | null
           sitio_coleta?: string | null
           status?: string
           tipo_amostra?: string
+          trouxe_material?: boolean | null
           tubo?: string | null
           updated_at?: string | null
           urgente?: boolean | null
@@ -840,25 +854,32 @@ export type Database = {
         }
         Update: {
           categoria_exame?: string | null
+          cid?: string | null
           clinica_id?: string | null
           codigo_amostra?: string
           coletado_por?: string | null
           condicao_amostra?: string[] | null
+          convenio_id?: string | null
           created_at?: string | null
           data_coleta?: string | null
           exame_id?: string | null
           finalidade?: string | null
+          grupo?: string | null
           id?: string
           indicacao_clinica?: string | null
           jejum_horas?: number | null
           jejum_necessario?: boolean | null
           lote_insumo?: string | null
+          material?: string | null
           medico_solicitante_id?: string | null
+          numero_guia?: string | null
           observacoes?: string | null
           paciente_id?: string
+          procedimento_codigo?: string | null
           sitio_coleta?: string | null
           status?: string
           tipo_amostra?: string
+          trouxe_material?: boolean | null
           tubo?: string | null
           updated_at?: string | null
           urgente?: boolean | null
@@ -877,6 +898,13 @@ export type Database = {
             columns: ["coletado_por"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coletas_laboratorio_convenio_id_fkey"
+            columns: ["convenio_id"]
+            isOneToOne: false
+            referencedRelation: "convenios"
             referencedColumns: ["id"]
           },
           {
