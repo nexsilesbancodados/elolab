@@ -13,6 +13,7 @@ import { MaskedInput } from '@/components/ui/masked-input';
 import {
   Loader2, Eye, EyeOff, Shield, ArrowLeft,
   Gift, CheckCircle2, Lock, Mail, User, Phone, FileText, CreditCard,
+  Stethoscope, HeartPulse, MonitorSmartphone, UserCog,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -347,6 +348,40 @@ export default function Auth() {
               </motion.div>
             </AnimatePresence>
           </div>
+
+          {/* Role info cards - only on login */}
+          {activeTab === 'login' && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
+              className="mb-5"
+            >
+              <p className="text-xs font-medium text-muted-foreground mb-2.5">Tipos de acesso disponíveis:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { icon: UserCog, label: 'Administrador', desc: 'Gestão total da clínica', color: 'text-red-600 bg-red-50 border-red-100' },
+                  { icon: Stethoscope, label: 'Médico', desc: 'Prontuários e prescrições', color: 'text-blue-600 bg-blue-50 border-blue-100' },
+                  { icon: HeartPulse, label: 'Enfermagem', desc: 'Triagem e procedimentos', color: 'text-purple-600 bg-purple-50 border-purple-100' },
+                  { icon: MonitorSmartphone, label: 'Recepção', desc: 'Agenda e atendimento', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+                ].map((role) => (
+                  <div
+                    key={role.label}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border ${role.color} transition-all`}
+                  >
+                    <role.icon className="h-4 w-4 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold leading-tight">{role.label}</p>
+                      <p className="text-[10px] opacity-70 leading-tight truncate">{role.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                Seu acesso é definido pelo administrador da clínica
+              </p>
+            </motion.div>
+          )}
 
           {/* Auth Switch */}
           <div className="mb-6">
