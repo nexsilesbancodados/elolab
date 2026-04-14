@@ -125,6 +125,9 @@ export default function Agenda() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'day' | 'month'>('grid');
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [confirmFaltaOpen, setConfirmFaltaOpen] = useState(false);
+  const [showNewPatientForm, setShowNewPatientForm] = useState(false);
+  const [newPatientData, setNewPatientData] = useState({ nome: '', telefone: '', cpf: '' });
+  const [isSavingPatient, setIsSavingPatient] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
@@ -137,6 +140,36 @@ export default function Agenda() {
   const { medicoId, isMedicoOnly } = useCurrentMedico();
 
   const isLoading = loadingAgendamentos || loadingPacientes || loadingMedicos;
+
+  const handleQuickCreatePatient = async () => {
+    if (!newPatientData.nome.trim()) return;
+    setIsSavingPatient(true);
+    try {
+      const insertData: Record<string, string> = { nome: newPatientData.nome.trim() };
+      if (newPatientData.telefone.trim()) insertData.telefone = newPatientData.telefone.trim();
+      if (newPatientData.cpf.trim()) insertData.cpf = newPatientData.cpf.trim();
+      if (clinicaId) insertData.clinica_id = clinicaId;
+
+      const { data, error } = await supabase
+        .from('pacientes')
+        .insert(insertData)
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ['pacientes'] });
+      setFormData(prev => ({ ...prev, paciente_id: data.id }));
+      setShowNewPatientForm(false);
+      setNewPatientData({ nome: '', telefone: '', cpf: '' });
+      toast.success(`Paciente "${newPatientData.nome}" cadastrado!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao cadastrar';
+      toast.error(msg);
+    } finally {
+      setIsSavingPatient(false);
+    }
+  };
 
   // Send WhatsApp notification (best-effort, non-blocking)
   const sendWhatsAppNotification = async (agendamentoId: string, action: string) => {
