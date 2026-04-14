@@ -135,6 +135,7 @@ Deno.serve(async (req) => {
           emailSuccess = true
           await supabase.from('notification_queue').insert({
             tipo: 'email',
+            clinica_id: lancamento.clinica_id,
             destinatario_id: lancamento.paciente_id,
             destinatario_email: paciente.email,
             destinatario_nome: paciente.nome,

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Mail, MessageSquare, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function NotificationCenter() {
+export function NotificationCenter() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -82,7 +82,7 @@ export default function NotificationCenter() {
                       <div className="mt-1">{getIcon(notif.tipo)}</div>
                       <div className="flex-1">
                         <p className="font-medium">{notif.assunto}</p>
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.destinatario}</p>
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.destinatario_nome || notif.destinatario_email}</p>
                         <p className="text-xs text-gray-500 mt-1">{new Date(notif.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>

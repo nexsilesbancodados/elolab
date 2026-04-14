@@ -106,6 +106,7 @@ Deno.serve(async (req) => {
           emailSuccess = true
           await supabase.from('notification_queue').insert({
             tipo: 'email',
+            clinica_id: agendamento.clinica_id,
             destinatario_id: agendamento.paciente_id,
             destinatario_email: paciente.email,
             destinatario_nome: paciente.nome,
@@ -162,6 +163,7 @@ Deno.serve(async (req) => {
               whatsappSuccess = true
               await supabase.from('notification_queue').insert({
                 tipo: 'whatsapp',
+                clinica_id: agendamento.clinica_id,
                 destinatario_id: agendamento.paciente_id,
                 destinatario_telefone: paciente.telefone,
                 destinatario_nome: paciente.nome,

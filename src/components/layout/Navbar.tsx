@@ -19,7 +19,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRealtimeNotifications, type AppNotification } from '@/hooks/useRealtimeNotifications';
 import { GlobalSearch } from '@/components/GlobalSearch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-// import { NotificationCenter } from '@/components/NotificationCenter';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -113,7 +113,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
 
         {/* Notification Center - Sent emails/WhatsApp */}
-        {/* <NotificationCenter /> */}
+        <NotificationCenter />
 
         {/* System Notifications */}
         <DropdownMenu>
