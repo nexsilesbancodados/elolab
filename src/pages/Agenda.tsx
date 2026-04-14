@@ -145,10 +145,12 @@ export default function Agenda() {
     if (!newPatientData.nome.trim()) return;
     setIsSavingPatient(true);
     try {
-      const insertData: Record<string, string> = { nome: newPatientData.nome.trim() };
-      if (newPatientData.telefone.trim()) insertData.telefone = newPatientData.telefone.trim();
-      if (newPatientData.cpf.trim()) insertData.cpf = newPatientData.cpf.trim();
-      if (clinicaId) insertData.clinica_id = clinicaId;
+      const insertData = {
+        nome: newPatientData.nome.trim(),
+        ...(newPatientData.telefone.trim() && { telefone: newPatientData.telefone.trim() }),
+        ...(newPatientData.cpf.trim() && { cpf: newPatientData.cpf.trim() }),
+        ...(clinicaId && { clinica_id: clinicaId }),
+      };
 
       const { data, error } = await supabase
         .from('pacientes')
