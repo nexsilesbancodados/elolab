@@ -557,8 +557,9 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       setShowPagamento(false);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
 
-      // Emit receipt automatically
-      gerarComprovante(selectedLancamento, selectedPacienteBalcao, formaPagamento, valorFinal);
+      // Emit receipt automatically - find medico from enriched data
+      const matchedItem = enriched.find(e => e.lanc?.id === selectedLancamento.id);
+      gerarComprovante(selectedLancamento, selectedPacienteBalcao, formaPagamento, valorFinal, matchedItem?.med);
     } catch (err: any) {
       toast.error('Erro ao confirmar pagamento: ' + (err?.message || 'Erro desconhecido'));
     }
