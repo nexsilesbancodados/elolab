@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { cn } from '@/lib/utils';
 
 describe('cn (classname utility)', () => {
+  const conditionalClass: string | undefined = undefined;
+
   it('combina classes simples', () => {
     expect(cn('foo', 'bar')).toBe('foo bar');
   });
   it('lida com valores condicionais', () => {
-    expect(cn('base', false ? 'hidden' : undefined, 'visible')).toBe('base visible');
+    expect(cn('base', conditionalClass, 'visible')).toBe('base visible');
   });
   it('lida com undefined e null', () => {
     expect(cn('base', undefined, null, 'end')).toBe('base end');
