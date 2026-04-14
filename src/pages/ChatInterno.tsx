@@ -26,7 +26,7 @@ export default function ChatInterno() {
     queryKey: ['chat_conversas', profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('chat_conversas')
         .select('id, titulo, participantes, ultima_mensagem, updated_at')
         .or(`participantes.cs.["${profile.id}"]`)
@@ -126,7 +126,7 @@ export default function ChatInterno() {
 
         <div className="flex-1 flex flex-col bg-background">
           {selectedConversa ? (
-            <ChatPanel conversaId={selectedConversa.id} />
+            <ChatPanel />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">

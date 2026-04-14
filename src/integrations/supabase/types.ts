@@ -586,6 +586,56 @@ export type Database = {
           },
         ]
       }
+      caixa_diario: {
+        Row: {
+          aberto: boolean
+          clinica_id: string
+          created_at: string | null
+          data: string
+          id: string
+          observacoes: string | null
+          operador_abertura: string | null
+          operador_fechamento: string | null
+          updated_at: string | null
+          valor_abertura: number
+          valor_fechamento: number | null
+        }
+        Insert: {
+          aberto?: boolean
+          clinica_id: string
+          created_at?: string | null
+          data: string
+          id?: string
+          observacoes?: string | null
+          operador_abertura?: string | null
+          operador_fechamento?: string | null
+          updated_at?: string | null
+          valor_abertura?: number
+          valor_fechamento?: number | null
+        }
+        Update: {
+          aberto?: boolean
+          clinica_id?: string
+          created_at?: string | null
+          data?: string
+          id?: string
+          observacoes?: string | null
+          operador_abertura?: string | null
+          operador_fechamento?: string | null
+          updated_at?: string | null
+          valor_abertura?: number
+          valor_fechamento?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixa_diario_clinica_id_fkey"
+            columns: ["clinica_id"]
+            isOneToOne: false
+            referencedRelation: "clinicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           clinica_id: string | null

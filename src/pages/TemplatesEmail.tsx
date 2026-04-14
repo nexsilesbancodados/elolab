@@ -132,7 +132,7 @@ export default function TemplatesEmail() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (id: string, ativo: boolean) => {
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
       const { error } = await supabase
         .from('notification_templates')
         .update({ ativo: !ativo })
@@ -231,7 +231,7 @@ export default function TemplatesEmail() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => toggleMutation.mutate(template.id, template.ativo)}
+                    onClick={() => toggleMutation.mutate({ id: template.id, ativo: template.ativo })}
                     className={template.ativo ? 'text-green-600' : 'text-gray-400'}
                   >
                     {template.ativo ? '●' : '○'}

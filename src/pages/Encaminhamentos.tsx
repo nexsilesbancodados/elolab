@@ -152,7 +152,7 @@ export default function Encaminhamentos() {
     try {
       const updateData: Record<string, any> = { status: newStatus };
       if (newStatus === 'em_andamento') updateData.data_atendimento = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('encaminhamentos').update(updateData).eq('id', id);
+      const { error } = await (supabase as any).from('encaminhamentos').update(updateData).eq('id', id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['encaminhamentos'] });
       if (selectedEnc?.id === id) setSelectedEnc({ ...selectedEnc, status: newStatus } as any);

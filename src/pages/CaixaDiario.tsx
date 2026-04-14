@@ -104,7 +104,7 @@ export default function CaixaDiario() {
     queryKey: ['lancamentos-caixa', caixaHoje?.id, profile?.clinica_id],
     queryFn: async () => {
       if (!caixaHoje?.id) return [];
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('lancamentos')
         .select('*')
         .eq('caixa_diario_id', caixaHoje.id)
@@ -238,7 +238,7 @@ export default function CaixaDiario() {
         throw new Error('Descrição é obrigatória');
       }
 
-      const { error } = await supabase.from('lancamentos').insert({
+      const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: lancamentoForm.tipo,
         valor: Number(lancamentoForm.valor),
         descricao: lancamentoForm.descricao,
@@ -272,7 +272,7 @@ export default function CaixaDiario() {
         throw new Error('Informe o motivo');
       }
 
-      const { error } = await supabase.from('lancamentos').insert({
+      const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'sangria',
         valor: Number(sangriaForm.valor),
         descricao: `Sangria - ${sangriaForm.motivo}`,
@@ -303,7 +303,7 @@ export default function CaixaDiario() {
         throw new Error('Valor deve ser maior que zero');
       }
 
-      const { error } = await supabase.from('lancamentos').insert({
+      const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'suprimento',
         valor: Number(suprimentoForm.valor),
         descricao: suprimentoForm.descricao || 'Suprimento',
@@ -472,7 +472,7 @@ export default function CaixaDiario() {
         ) : (
           <>
             <Button
-              onClick={() => setShowAbertura(false) || setShowLancamento(true)}
+              onClick={() => { setShowAbertura(false); setShowLancamento(true); }}
               variant="outline"
               className="gap-2"
             >
