@@ -88,6 +88,7 @@ export function ReturnScheduler({
   className,
   compact = false,
 }: ReturnSchedulerProps) {
+  const { profile } = useSupabaseAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
   const [customDate, setCustomDate] = useState('');
@@ -133,6 +134,7 @@ export function ReturnScheduler({
         tipo_retorno: tipoRetorno,
         motivo: motivo || null,
         observacoes: observacoes || null,
+        clinica_id: profile?.clinica_id || null,
       });
 
       if (error) throw error;
