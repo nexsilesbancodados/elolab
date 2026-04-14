@@ -467,13 +467,13 @@ export default function ListaEspera() {
               <Label>Médico Preferencial</Label>
               <Select
                 value={formData.medico_id}
-                onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
+                onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__any__' ? '' : v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Qualquer médico" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Qualquer médico</SelectItem>
+                  <SelectItem value="__any__">Qualquer médico</SelectItem>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.nome || m.crm} - {m.especialidade || 'Clínico'}
@@ -504,13 +504,13 @@ export default function ListaEspera() {
                 <Label>Preferência de Horário</Label>
                 <Select
                   value={formData.preferencia_horario}
-                  onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v })}
+                  onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v === '__any__' ? '' : v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Qualquer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Qualquer horário</SelectItem>
+                    <SelectItem value="__any__">Qualquer horário</SelectItem>
                     <SelectItem value="manha">Manhã</SelectItem>
                     <SelectItem value="tarde">Tarde</SelectItem>
                     <SelectItem value="noite">Noite</SelectItem>
