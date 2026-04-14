@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface ChatUsuario {
   id: string;
@@ -35,7 +36,7 @@ export interface ChatMensagem {
 }
 
 export function useChatInterno() {
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [usuarios, setUsuarios] = useState<ChatUsuario[]>([]);
   const [conversas, setConversas] = useState<ChatConversa[]>([]);
   const [mensagens, setMensagens] = useState<ChatMensagem[]>([]);
@@ -49,15 +50,21 @@ export function useChatInterno() {
   useEffect(() => { conversaAtivaRef.current = conversaAtiva; }, [conversaAtiva]);
   useEffect(() => { usuariosRef.current = usuarios; }, [usuarios]);
 
-  // Fetch all users (profiles) except current user
+  // Fetch all users (profiles) in same clinic except current user
   const fetchUsuarios = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    let query = supabase
       .from('profiles')
       .select('id, nome, email, avatar')
       .neq('id', user.id)
       .eq('ativo', true)
       .order('nome');
+
+    if (profile?.clinica_id) {
+      query = query.eq('clinica_id', profile.clinica_id);
+    }
+
+    const { data } = await query;
 
     if (data) {
       const mapped = data.map(p => ({
@@ -70,7 +77,7 @@ export function useChatInterno() {
       setUsuarios(mapped);
       usuariosRef.current = mapped;
     }
-  }, [user]);
+  }, [user, profile?.clinica_id]);
 
   // Fetch conversations for current user
   const fetchConversas = useCallback(async () => {
@@ -282,6 +289,7 @@ export function useChatInterno() {
         (payload) => {
           const newMsg = payload.new as ChatMensagem;
           const activeConv = conversaAtivaRef.current;
+
           // If this message is for the active conversation, add it
           if (activeConv && newMsg.conversa_id === activeConv.id) {
             setMensagens(prev => {
@@ -296,6 +304,24 @@ export function useChatInterno() {
                 .eq('id', newMsg.id);
             }
           }
+
+          // Show toast notification for incoming messages (not from self, not in active conversation)
+          if (newMsg.destinatario_id === user.id) {
+            const isActiveConv = activeConv && newMsg.conversa_id === activeConv.id;
+            if (!isActiveConv) {
+              const remetente = usuariosRef.current.find(u => u.id === newMsg.remetente_id);
+              const nomeRemetente = remetente?.nome || 'Alguém';
+              const previewTexto = newMsg.texto.length > 60
+                ? newMsg.texto.substring(0, 60) + '...'
+                : newMsg.texto;
+
+              toast.info(`💬 ${nomeRemetente}`, {
+                description: newMsg.urgente ? `🔴 URGENTE: ${previewTexto}` : previewTexto,
+                duration: newMsg.urgente ? 10000 : 5000,
+              });
+            }
+          }
+
           // Refresh conversations list
           fetchConversas();
         }
