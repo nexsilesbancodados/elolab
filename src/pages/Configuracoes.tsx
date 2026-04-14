@@ -671,9 +671,6 @@ export default function Configuracoes() {
                 )}
               </CardContent>
             </Card>
-
-          </CardContent>
-            </Card>
           </motion.div>
         </TabsContent>
 
