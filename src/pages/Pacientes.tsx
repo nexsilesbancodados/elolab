@@ -511,56 +511,61 @@ export default function Pacientes() {
   };
 
   const handleSave = async () => {
-    if (!formData.nome || !formData.cpf || !formData.telefone || !formData.data_nascimento) {
-      toast.error('Erro', { description: 'Preencha os campos obrigatórios (Nome, CPF, Nascimento, Telefone).' });
+    if (!formData.nome.trim()) {
+      toast.error('Erro', { description: 'O campo Nome é obrigatório.' });
       return;
     }
 
-    // Validate CPF digits
-    const cpfDigits = formData.cpf.replace(/\D/g, '');
-    if (cpfDigits.length !== 11) {
-      toast.error('CPF inválido', { description: 'O CPF deve conter 11 dígitos.' });
-      return;
-    }
-    // CPF checksum validation
-    if (/^(\d)\1+$/.test(cpfDigits)) {
-      toast.error('CPF inválido', { description: 'CPF com todos os dígitos iguais não é válido.' });
-      return;
-    }
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(cpfDigits[i]) * (10 - i);
-    let rem = (sum * 10) % 11;
-    if (rem === 10 || rem === 11) rem = 0;
-    if (rem !== parseInt(cpfDigits[9])) {
-      toast.error('CPF inválido', { description: 'O CPF informado não é válido. Verifique os dígitos.' });
-      return;
-    }
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cpfDigits[i]) * (11 - i);
-    rem = (sum * 10) % 11;
-    if (rem === 10 || rem === 11) rem = 0;
-    if (rem !== parseInt(cpfDigits[10])) {
-      toast.error('CPF inválido', { description: 'O CPF informado não é válido. Verifique os dígitos.' });
-      return;
+    // Validate CPF only if provided
+    if (formData.cpf) {
+      const cpfDigits = formData.cpf.replace(/\D/g, '');
+      if (cpfDigits.length > 0 && cpfDigits.length !== 11) {
+        toast.error('CPF inválido', { description: 'O CPF deve conter 11 dígitos.' });
+        return;
+      }
+      if (cpfDigits.length === 11) {
+        if (/^(\d)\1+$/.test(cpfDigits)) {
+          toast.error('CPF inválido', { description: 'CPF com todos os dígitos iguais não é válido.' });
+          return;
+        }
+        let sum = 0;
+        for (let i = 0; i < 9; i++) sum += parseInt(cpfDigits[i]) * (10 - i);
+        let rem = (sum * 10) % 11;
+        if (rem === 10 || rem === 11) rem = 0;
+        if (rem !== parseInt(cpfDigits[9])) {
+          toast.error('CPF inválido', { description: 'O CPF informado não é válido.' });
+          return;
+        }
+        sum = 0;
+        for (let i = 0; i < 10; i++) sum += parseInt(cpfDigits[i]) * (11 - i);
+        rem = (sum * 10) % 11;
+        if (rem === 10 || rem === 11) rem = 0;
+        if (rem !== parseInt(cpfDigits[10])) {
+          toast.error('CPF inválido', { description: 'O CPF informado não é válido.' });
+          return;
+        }
+      }
     }
 
-    // Validate email if provided
+    // Validate email only if provided
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error('E-mail inválido', { description: 'Informe um e-mail válido.' });
       return;
     }
 
-    // Validate birthdate is not in the future
-    if (formData.data_nascimento > format(new Date(), 'yyyy-MM-dd')) {
+    // Validate birthdate only if provided
+    if (formData.data_nascimento && formData.data_nascimento > format(new Date(), 'yyyy-MM-dd')) {
       toast.error('Data inválida', { description: 'A data de nascimento não pode ser no futuro.' });
       return;
     }
 
-    // Validate phone has at least 10 digits
-    const phoneDigits = formData.telefone.replace(/\D/g, '');
-    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      toast.error('Telefone inválido', { description: 'O telefone deve ter 10 ou 11 dígitos.' });
-      return;
+    // Validate phone only if provided
+    if (formData.telefone) {
+      const phoneDigits = formData.telefone.replace(/\D/g, '');
+      if (phoneDigits.length > 0 && (phoneDigits.length < 10 || phoneDigits.length > 11)) {
+        toast.error('Telefone inválido', { description: 'O telefone deve ter 10 ou 11 dígitos.' });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -568,9 +573,9 @@ export default function Pacientes() {
       const dataToSave: any = {
         nome: formData.nome,
         nome_social: formData.nome_social || null,
-        cpf: formData.cpf,
-        data_nascimento: formData.data_nascimento,
-        telefone: formData.telefone,
+        cpf: formData.cpf || null,
+        data_nascimento: formData.data_nascimento || null,
+        telefone: formData.telefone || null,
         email: formData.email || null,
         sexo: formData.sexo || null,
         cep: formData.cep || null,
@@ -813,7 +818,7 @@ export default function Pacientes() {
                     <Input value={formData.nome_social} onChange={e => setFormData({ ...formData, nome_social: e.target.value })} placeholder="Nome pelo qual prefere ser chamado(a)" />
                   </div>
                   <div className="space-y-2">
-                    <Label>CPF <span className="text-destructive">*</span></Label>
+                    <Label>CPF</Label>
                     <Input value={formData.cpf} onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
                       let masked = digits;
@@ -824,7 +829,7 @@ export default function Pacientes() {
                     }} placeholder="000.000.000-00" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Nascimento <span className="text-destructive">*</span></Label>
+                    <Label>Data de Nascimento</Label>
                     <Input type="date" value={formData.data_nascimento} onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })} />
                   </div>
                   <div className="space-y-2">
@@ -837,7 +842,7 @@ export default function Pacientes() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Telefone <span className="text-destructive">*</span></Label>
+                    <Label>Telefone</Label>
                     <Input value={formData.telefone} onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
                       let masked = digits;
