@@ -125,9 +125,7 @@ export function SimplifiedPatientForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cpf" className="flex items-center gap-1">
-              CPF <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="cpf">CPF</Label>
             <MaskedInput
               id="cpf"
               mask="cpf"
@@ -146,9 +144,7 @@ export function SimplifiedPatientForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="telefone" className="flex items-center gap-1">
-              Telefone <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="telefone">Telefone</Label>
             <MaskedInput
               id="telefone"
               mask="phone"
@@ -167,9 +163,7 @@ export function SimplifiedPatientForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="data_nascimento" className="flex items-center gap-1">
-              Data de Nascimento <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="data_nascimento">Data de Nascimento</Label>
             <Input
               id="data_nascimento"
               type="date"
