@@ -38,7 +38,7 @@ export function GerenciadorLaboratorios() {
     queryKey: ['laboratorios', profile?.clinica_id],
     queryFn: async () => {
       if (!profile?.clinica_id) return [];
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('laboratorios')
         .select('*')
         .eq('clinica_id', profile.clinica_id)
