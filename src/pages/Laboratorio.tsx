@@ -600,6 +600,13 @@ export default function Laboratorio() {
               finalidade: newColetaForm.finalidade || 'diagnostico',
               indicacao_clinica: newColetaForm.indicacao_clinica || null,
               categoria_exame: newColetaForm.categoria_exame || null,
+              numero_guia: newColetaForm.numero_guia || null,
+              material: newColetaForm.material || null,
+              trouxe_material: newColetaForm.trouxe_material,
+              cid: newColetaForm.cid || null,
+              procedimento_codigo: newColetaForm.procedimento_codigo || null,
+              convenio_id: newColetaForm.convenio_id && newColetaForm.convenio_id !== '__none__' ? newColetaForm.convenio_id : null,
+              grupo: newColetaForm.grupo || null,
             } as any);
           }} className="flex-1 overflow-y-auto space-y-5 pr-2">
 
