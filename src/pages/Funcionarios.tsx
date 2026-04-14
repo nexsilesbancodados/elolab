@@ -781,6 +781,92 @@ export default function Funcionarios() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog Personalizar Permissões */}
+      <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />Personalizar Permissões de Acesso
+            </DialogTitle>
+            <DialogDescription>
+              Edite os nomes, descrições e módulos de cada nível de permissão da sua clínica.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {DEFAULT_ROLE_CONFIG.map((def) => {
+              const custom = editingCustomRoles[def.role];
+              if (!custom) return null;
+              return (
+                <motion.div
+                  key={def.role}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border rounded-lg p-4 space-y-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <Badge className={def.color} variant="secondary">{def.role}</Badge>
+                    <span className="text-sm text-muted-foreground">Permissão do sistema</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Nome de exibição</Label>
+                      <Input
+                        value={custom.label}
+                        onChange={(e) => setEditingCustomRoles(prev => ({
+                          ...prev,
+                          [def.role]: { ...prev[def.role], label: e.target.value }
+                        }))}
+                        placeholder={def.label}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Descrição</Label>
+                      <Input
+                        value={custom.description}
+                        onChange={(e) => setEditingCustomRoles(prev => ({
+                          ...prev,
+                          [def.role]: { ...prev[def.role], description: e.target.value }
+                        }))}
+                        placeholder={def.description}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Módulos com acesso</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {ALL_MODULES.map(mod => (
+                        <Badge
+                          key={mod}
+                          variant={custom.modules.includes(mod) ? 'default' : 'outline'}
+                          className="cursor-pointer transition-all hover:scale-105 select-none"
+                          onClick={() => toggleModule(def.role, mod)}
+                        >
+                          {mod}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={handleResetCustomization} className="gap-2 mr-auto">
+              <RotateCcw className="h-4 w-4" />Restaurar Padrão
+            </Button>
+            <Button variant="outline" onClick={() => setIsCustomizeOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveCustomization} disabled={saveCustomizationMutation.isPending} className="gap-2">
+              {saveCustomizationMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Salvar Personalização
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
