@@ -43,27 +43,12 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; color: s
 
 const TIPO_FUNCIONARIO_CONFIG: { value: string; label: string; registroLabel?: string; registroTipo?: string }[] = [
   { value: 'medico', label: 'Médico(a)', registroLabel: 'CRM', registroTipo: 'CRM' },
-  { value: 'enfermeiro', label: 'Enfermeiro(a)', registroLabel: 'COREN', registroTipo: 'COREN' },
+  { value: 'enfermeiro', label: 'Enfermeira(o)', registroLabel: 'COREN', registroTipo: 'COREN' },
   { value: 'tecnico_enfermagem', label: 'Técnico(a) de Enfermagem', registroLabel: 'COREN', registroTipo: 'COREN' },
-  { value: 'auxiliar_enfermagem', label: 'Auxiliar de Enfermagem', registroLabel: 'COREN', registroTipo: 'COREN' },
-  { value: 'biomedico', label: 'Biomédico(a)', registroLabel: 'CRBM', registroTipo: 'CRBM' },
-  { value: 'farmaceutico', label: 'Farmacêutico(a)', registroLabel: 'CRF', registroTipo: 'CRF' },
   { value: 'tecnico_laboratorio', label: 'Técnico(a) de Laboratório', registroLabel: 'CRT', registroTipo: 'CRT' },
-  { value: 'fisioterapeuta', label: 'Fisioterapeuta', registroLabel: 'CREFITO', registroTipo: 'CREFITO' },
-  { value: 'nutricionista', label: 'Nutricionista', registroLabel: 'CRN', registroTipo: 'CRN' },
-  { value: 'psicologo', label: 'Psicólogo(a)', registroLabel: 'CRP', registroTipo: 'CRP' },
-  { value: 'fonoaudiologo', label: 'Fonoaudiólogo(a)', registroLabel: 'CRFa', registroTipo: 'CRFa' },
-  { value: 'dentista', label: 'Dentista', registroLabel: 'CRO', registroTipo: 'CRO' },
-  { value: 'assistente_social', label: 'Assistente Social', registroLabel: 'CRESS', registroTipo: 'CRESS' },
-  { value: 'recepcionista', label: 'Recepcionista' },
+  { value: 'atendente', label: 'Atendente' },
+  { value: 'gerente', label: 'Gerente / Dono(a)' },
   { value: 'administrativo', label: 'Administrativo' },
-  { value: 'faturista', label: 'Faturista' },
-  { value: 'copeiro', label: 'Copeiro(a)' },
-  { value: 'servicos_gerais', label: 'Serviços Gerais' },
-  { value: 'motorista', label: 'Motorista' },
-  { value: 'seguranca', label: 'Segurança' },
-  { value: 'estagiario', label: 'Estagiário(a)' },
-  { value: 'outro', label: 'Outro' },
 ];
 
 const UF_OPTIONS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
