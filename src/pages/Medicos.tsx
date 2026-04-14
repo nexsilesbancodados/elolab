@@ -34,6 +34,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MedicoAvailabilityManager } from '@/components/medicos/MedicoAvailabilityManager';
 
 const UFS = [
   'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA',
@@ -797,6 +798,14 @@ export default function Medicos() {
               </div>
 
               <Separator />
+
+              {/* Horários de Disponibilidade */}
+              {editingId && (
+                <>
+                  <MedicoAvailabilityManager medico_id={editingId} medico_nome={formData.nome} />
+                  <Separator />
+                </>
+              )}
 
               {/* Carimbo */}
               <div>
