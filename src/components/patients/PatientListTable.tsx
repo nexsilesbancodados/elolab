@@ -90,7 +90,9 @@ export const PatientListTable = memo(function PatientListTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <span className="text-sm tabular-nums">{idade} anos</span>
+                    <span className="text-sm tabular-nums">
+                      {paciente.data_nascimento ? `${idade} anos` : <span className="text-muted-foreground">N/I</span>}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
