@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import {
   Plus, Search, Eye, FileText, Loader2, PlusCircle, X, Printer,
-  AlertTriangle, Upload, ShieldCheck, Clock, Calendar, Tag,
+  AlertTriangle, Upload, ShieldCheck, Clock, Calendar, Tag, Building2, DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Database } from '@/integrations/supabase/types';
 import { autoCreateColeta, autoProgressExame, autoVincularResultadoProntuario } from '@/lib/workflowAutomation';
+import { GerenciadorLaboratorios } from '@/components/GerenciadorLaboratorios';
 
 type StatusExame = Database['public']['Enums']['status_exame'];
 
@@ -263,6 +264,10 @@ interface FormData {
   jejum: string;
   observacoes: string;
   necessita_contraste: boolean;
+  tipo_categorizado?: string;
+  laboratorio_id?: string;
+  preco_custo?: number;
+  preco_venda?: number;
 }
 
 const initialFormData: FormData = {
@@ -574,7 +579,7 @@ export default function Exames() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsManageTypesOpen(true)} className="gap-2">
-            <Tag className="h-4 w-4" />Meus Tipos
+            <Building2 className="h-4 w-4" />Laboratórios
           </Button>
           <Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" />Nova Guia de Exames</Button>
         </div>
@@ -871,6 +876,61 @@ export default function Exames() {
 
             <Separator />
 
+            {/* ─── Pricing Section ─── */}
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                <DollarSign className="h-4 w-4" /> Preços e Laboratório
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Tipo de Exame</Label>
+                  <Select value={formData.tipo_categorizado || 'laboratorial'} onValueChange={v => setFormData({ ...formData, tipo_categorizado: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="laboratorial">Laboratorial</SelectItem>
+                      <SelectItem value="imagem">Imagem</SelectItem>
+                      <SelectItem value="ultrassom">Ultrassom</SelectItem>
+                      <SelectItem value="cardiologia">Cardiologia</SelectItem>
+                      <SelectItem value="endoscopia">Endoscopia</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Preço de Custo (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={formData.preco_custo || ''}
+                    onChange={e => setFormData({ ...formData, preco_custo: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Preço de Venda (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={formData.preco_venda || ''}
+                    onChange={e => setFormData({ ...formData, preco_venda: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+
+              {formData.preco_custo && formData.preco_venda && (
+                <div className="mt-3 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                  <p className="text-sm text-emerald-700">
+                    💰 Margem: <span className="font-bold">R$ {(formData.preco_venda - formData.preco_custo).toFixed(2)}</span> ({(((formData.preco_venda - formData.preco_custo) / formData.preco_custo) * 100).toFixed(0)}%)
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
             {/* Clinical info */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Indicação Clínica *</Label>
@@ -1017,10 +1077,20 @@ export default function Exames() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── Manage Custom Types ─── */}
+      {/* ─── Manage Laboratories ─── */}
       <Dialog open={isManageTypesOpen} onOpenChange={setIsManageTypesOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader><DialogTitle>Gerenciar Laboratórios e Fornecedores</DialogTitle></DialogHeader>
+          <div className="flex-1 overflow-y-auto pr-4">
+            <GerenciadorLaboratorios />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Old Manage Custom Types (backup) ─── */}
+      <Dialog open={false} onOpenChange={() => {}}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Meus Tipos de Exame</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Tipos de Exame (Obsoleto)</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex gap-2">
               <Input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} placeholder="Nome do exame..." className="flex-1"
