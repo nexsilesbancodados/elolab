@@ -427,18 +427,14 @@ export default function Medicos() {
     }
     setIsSubmitting(true);
     try {
-      const payload: Record<string, any> = {
+      const payload = {
         nome: formData.nome || null, email: formData.email || null, crm: formData.crm,
         crm_uf: formData.crm_uf || null, cpf: formData.cpf || null, rqe: formData.rqe || null,
         cns: formData.cns || null, especialidade: formData.especialidade || null,
         telefone: formData.telefone || null, intervalo_consulta: formData.intervalo_consulta,
         ativo: formData.ativo, foto_url: formData.foto_url || null, carimbo_url: formData.carimbo_url || null,
+        ...(!editingId && profile?.clinica_id ? { clinica_id: profile.clinica_id } : {}),
       };
-
-      // Include clinica_id for new records
-      if (!editingId && profile?.clinica_id) {
-        payload.clinica_id = profile.clinica_id;
-      }
 
       if (editingId) {
         const { error } = await supabase.from('medicos').update(payload).eq('id', editingId);
