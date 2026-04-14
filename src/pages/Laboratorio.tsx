@@ -143,7 +143,11 @@ export default function Laboratorio() {
 
   const createColeta = useMutation({
     mutationFn: async (form: any) => {
-      const { error } = await supabase.from('coletas_laboratorio').insert(form);
+      const payload = { ...form };
+      if (!payload.clinica_id && profile?.clinica_id) {
+        payload.clinica_id = profile.clinica_id;
+      }
+      const { error } = await supabase.from('coletas_laboratorio').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
