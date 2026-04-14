@@ -115,8 +115,122 @@ export default function Funcionarios() {
   const [funcionarioToDelete, setFuncionarioToDelete] = useState<string | null>(null);
   const [editingFunc, setEditingFunc] = useState<FuncionarioWithRoles | null>(null);
   const [formData, setFormData] = useState<FormDataType>({ ...initialFormData });
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [customRoles, setCustomRoles] = useState<RoleCustomizations>({});
+  const [editingCustomRoles, setEditingCustomRoles] = useState<RoleCustomizations>({});
 
   const queryClient = useQueryClient();
+
+  // Load custom role config from configuracoes_clinica
+  const { data: savedRoleConfig } = useQuery({
+    queryKey: ['role-customization', profile?.clinica_id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return null;
+      const { data } = await supabase
+        .from('configuracoes_clinica')
+        .select('valor')
+        .eq('chave', 'role_customization')
+        .eq('clinica_id', profile.clinica_id)
+        .maybeSingle();
+      return data?.valor as RoleCustomizations | null;
+    },
+    enabled: !!profile?.clinica_id,
+  });
+
+  useEffect(() => {
+    if (savedRoleConfig) {
+      setCustomRoles(savedRoleConfig);
+    }
+  }, [savedRoleConfig]);
+
+  // Build effective ROLE_CONFIG by merging defaults with customizations
+  const ROLE_CONFIG = DEFAULT_ROLE_CONFIG.map(def => {
+    const custom = customRoles[def.role];
+    return {
+      role: def.role,
+      label: custom?.label || def.label,
+      description: custom?.description || def.description,
+      color: custom?.color || def.color,
+      modules: custom?.modules || def.modules,
+    };
+  });
+
+  const saveCustomizationMutation = useMutation({
+    mutationFn: async (customizations: RoleCustomizations) => {
+      if (!profile?.id || !profile?.clinica_id) throw new Error('Sem perfil');
+      const { data: existing } = await supabase
+        .from('configuracoes_clinica')
+        .select('id')
+        .eq('chave', 'role_customization')
+        .eq('clinica_id', profile.clinica_id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('configuracoes_clinica')
+          .update({ valor: customizations as any })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('configuracoes_clinica')
+          .insert({ chave: 'role_customization', valor: customizations as any, user_id: profile.id, clinica_id: profile.clinica_id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['role-customization'] });
+      toast.success('Permissões personalizadas salvas!');
+      setIsCustomizeOpen(false);
+    },
+    onError: (e: any) => toast.error('Erro ao salvar: ' + e.message),
+  });
+
+  const handleOpenCustomize = () => {
+    const initial: RoleCustomizations = {};
+    DEFAULT_ROLE_CONFIG.forEach(def => {
+      const custom = customRoles[def.role];
+      initial[def.role] = {
+        label: custom?.label || def.label,
+        description: custom?.description || def.description,
+        color: custom?.color || def.color,
+        modules: custom?.modules || [...def.modules],
+      };
+    });
+    setEditingCustomRoles(initial);
+    setIsCustomizeOpen(true);
+  };
+
+  const handleSaveCustomization = () => {
+    setCustomRoles(editingCustomRoles);
+    saveCustomizationMutation.mutate(editingCustomRoles);
+  };
+
+  const handleResetCustomization = () => {
+    const reset: RoleCustomizations = {};
+    DEFAULT_ROLE_CONFIG.forEach(def => {
+      reset[def.role] = {
+        label: def.label,
+        description: def.description,
+        color: def.color,
+        modules: [...def.modules],
+      };
+    });
+    setEditingCustomRoles(reset);
+  };
+
+  const toggleModule = (role: string, mod: string) => {
+    setEditingCustomRoles(prev => {
+      const current = prev[role];
+      if (!current) return prev;
+      const modules = current.modules.includes(mod)
+        ? current.modules.filter(m => m !== mod)
+        : [...current.modules, mod];
+      return { ...prev, [role]: { ...current, modules } };
+    });
+  };
+
+
 
   const { data: funcionarios = [], isLoading } = useQuery({
     queryKey: ['funcionarios-with-roles'],
