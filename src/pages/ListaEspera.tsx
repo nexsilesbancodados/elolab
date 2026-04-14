@@ -473,7 +473,7 @@ export default function ListaEspera() {
                   <SelectValue placeholder="Qualquer médico" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Qualquer médico</SelectItem>
+                  <SelectItem value="__any__">Qualquer médico</SelectItem>
                   {medicos.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.nome || m.crm} - {m.especialidade || 'Clínico'}
