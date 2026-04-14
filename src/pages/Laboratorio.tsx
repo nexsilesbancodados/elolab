@@ -107,6 +107,14 @@ export default function Laboratorio() {
     },
   });
 
+  const { data: convenios } = useQuery({
+    queryKey: ['convenios-lab'],
+    queryFn: async () => {
+      const { data } = await supabase.from('convenios').select('id, nome, codigo').eq('ativo', true).order('nome');
+      return data || [];
+    },
+  });
+
   const { data: examesPendentes } = useQuery({
     queryKey: ['exames-pendentes-lab'],
     queryFn: async () => {
