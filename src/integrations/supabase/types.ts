@@ -1524,46 +1524,73 @@ export type Database = {
       funcionarios: {
         Row: {
           ativo: boolean | null
+          carga_horaria: number | null
           cargo: string | null
           clinica_id: string | null
+          cpf: string | null
           created_at: string | null
           data_admissao: string | null
+          data_nascimento: string | null
           departamento: string | null
           email: string | null
+          especialidade: string | null
           id: string
           nome: string
+          registro_profissional: string | null
           salario: number | null
           telefone: string | null
+          tipo_funcionario: string | null
+          tipo_registro: string | null
+          turno: string | null
+          uf_registro: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           ativo?: boolean | null
+          carga_horaria?: number | null
           cargo?: string | null
           clinica_id?: string | null
+          cpf?: string | null
           created_at?: string | null
           data_admissao?: string | null
+          data_nascimento?: string | null
           departamento?: string | null
           email?: string | null
+          especialidade?: string | null
           id?: string
           nome: string
+          registro_profissional?: string | null
           salario?: number | null
           telefone?: string | null
+          tipo_funcionario?: string | null
+          tipo_registro?: string | null
+          turno?: string | null
+          uf_registro?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           ativo?: boolean | null
+          carga_horaria?: number | null
           cargo?: string | null
           clinica_id?: string | null
+          cpf?: string | null
           created_at?: string | null
           data_admissao?: string | null
+          data_nascimento?: string | null
           departamento?: string | null
           email?: string | null
+          especialidade?: string | null
           id?: string
           nome?: string
+          registro_profissional?: string | null
           salario?: number | null
           telefone?: string | null
+          tipo_funcionario?: string | null
+          tipo_registro?: string | null
+          turno?: string | null
+          uf_registro?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
