@@ -191,7 +191,7 @@ export function useChatInterno() {
         participante_2_id: outroUserId,
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error || !newConv) return null;
 
@@ -230,9 +230,9 @@ export function useChatInterno() {
         urgente,
       })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) return;
+    if (error || !msg) return;
 
     // Update conversation preview
     await supabase

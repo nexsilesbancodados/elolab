@@ -160,10 +160,23 @@ export default function Prescricoes() {
       if (!profile?.clinica_id) return null;
       const { data } = await supabase
         .from('configuracoes_clinica')
-        .select('*')
+        .select('chave, valor')
         .eq('clinica_id', profile.clinica_id)
-        .single();
-      return data;
+        .in('chave', ['config_clinica', 'clinica_info'])
+        .limit(10);
+
+      const configRows = data ?? [];
+      const configClinica = configRows.find((row) => row.chave === 'config_clinica')?.valor as Record<string, string> | undefined;
+      const clinicaInfo = configRows.find((row) => row.chave === 'clinica_info')?.valor as Record<string, string> | undefined;
+
+      return {
+        nome_fantasia: configClinica?.nomeClinica || clinicaInfo?.nome || 'Clínica Médica',
+        endereco: configClinica?.endereco || clinicaInfo?.endereco || '',
+        cidade: configClinica?.cidade || clinicaInfo?.cidade || '',
+        uf: configClinica?.estado || clinicaInfo?.uf || '',
+        telefone: configClinica?.telefone || clinicaInfo?.telefone || '(00) 0000-0000',
+        cnpj: configClinica?.cnpj || clinicaInfo?.cnpj || '00.000.000/0001-00',
+      };
     },
     enabled: !!profile?.clinica_id,
   });
@@ -227,10 +240,10 @@ export default function Prescricoes() {
       crm: medico.crm,
       especialidade: medico.especialidade || '',
       medicamentosTexto: form.medicamentos_texto,
-      clinicaNome: (clinicConfig as any)?.nome_fantasia || 'Clínica Médica',
-      clinicaEndereco: clinicConfig ? `${(clinicConfig as any).endereco || ''} — ${(clinicConfig as any).cidade || ''}/${(clinicConfig as any).uf || ''}` : 'Endereço da clínica',
-      clinicaTelefone: (clinicConfig as any)?.telefone || '(00) 0000-0000',
-      clinicaCnpj: (clinicConfig as any)?.cnpj || '00.000.000/0001-00',
+      clinicaNome: clinicConfig?.nome_fantasia || 'Clínica Médica',
+      clinicaEndereco: clinicConfig ? `${clinicConfig.endereco || ''} — ${clinicConfig.cidade || ''}/${clinicConfig.uf || ''}` : 'Endereço da clínica',
+      clinicaTelefone: clinicConfig?.telefone || '(00) 0000-0000',
+      clinicaCnpj: clinicConfig?.cnpj || '00.000.000/0001-00',
     });
 
     const blob = doc.output('blob');

@@ -261,8 +261,9 @@ export default function Estoque() {
       if (e2) throw e2;
 
       // Re-fetch current quantity to avoid race conditions
-      const { data: current, error: fetchErr } = await supabase.from('estoque').select('quantidade').eq('id', selectedId).single();
+      const { data: current, error: fetchErr } = await supabase.from('estoque').select('quantidade').eq('id', selectedId).maybeSingle();
       if (fetchErr) throw fetchErr;
+      if (!current) throw new Error('Produto não encontrado.');
       const qtdAtual = current.quantidade;
       const novaQtdFinal = movimentacao.tipo === 'entrada' ? qtdAtual + movimentacao.quantidade : qtdAtual - movimentacao.quantidade;
       if (novaQtdFinal < 0) {
