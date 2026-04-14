@@ -44,8 +44,10 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
       .from('coletas_laboratorio')
       .select(`
         id, codigo_amostra, status, created_at, observacoes, tipo_amostra, tubo, urgente,
+        numero_guia, material,
         pacientes(nome, cpf, data_nascimento, sexo),
         medicos(nome, crm),
+        convenios(nome),
         resultados_laboratorio(id, parametro, resultado, unidade,
           valor_referencia_min, valor_referencia_max, valor_referencia_texto,
           liberado, data_liberacao, metodo, exames(tipo_exame))
