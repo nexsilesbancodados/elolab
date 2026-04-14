@@ -227,10 +227,10 @@ export default function Prescricoes() {
       crm: medico.crm,
       especialidade: medico.especialidade || '',
       medicamentosTexto: form.medicamentos_texto,
-      clinicaNome: clinicConfig?.nome_fantasia || 'Clínica Médica',
-      clinicaEndereco: clinicConfig ? `${clinicConfig.endereco || ''} — ${clinicConfig.cidade || ''}/${clinicConfig.uf || ''}` : 'Endereço da clínica',
-      clinicaTelefone: clinicConfig?.telefone || '(00) 0000-0000',
-      clinicaCnpj: clinicConfig?.cnpj || '00.000.000/0001-00',
+      clinicaNome: (clinicConfig as any)?.nome_fantasia || 'Clínica Médica',
+      clinicaEndereco: clinicConfig ? `${(clinicConfig as any).endereco || ''} — ${(clinicConfig as any).cidade || ''}/${(clinicConfig as any).uf || ''}` : 'Endereço da clínica',
+      clinicaTelefone: (clinicConfig as any)?.telefone || '(00) 0000-0000',
+      clinicaCnpj: (clinicConfig as any)?.cnpj || '00.000.000/0001-00',
     });
 
     const blob = doc.output('blob');

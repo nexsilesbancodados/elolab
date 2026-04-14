@@ -196,7 +196,7 @@ export default function Salas() {
     try {
       const updates: Record<string, unknown> = { status: newStatus };
       if (newStatus !== 'ocupado') updates.medico_responsavel = null;
-      const { error } = await supabase.from('salas').update(updates).eq('id', sala.id);
+      const { error } = await (supabase as any).from('salas').update(updates).eq('id', sala.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['salas'] });
       toast.success(`${sala.nome} → ${STATUS_LABELS[newStatus]}`);

@@ -132,7 +132,7 @@ export default function TemplatesEmail() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (id: string, ativo: boolean) => {
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
       const { error } = await supabase
         .from('notification_templates')
         .update({ ativo: !ativo })

@@ -126,7 +126,7 @@ export default function ChatInterno() {
 
         <div className="flex-1 flex flex-col bg-background">
           {selectedConversa ? (
-            <ChatPanel conversaId={selectedConversa.id} />
+            <ChatPanel />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
