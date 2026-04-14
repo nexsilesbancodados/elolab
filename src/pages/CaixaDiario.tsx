@@ -40,7 +40,7 @@ interface Lancamento {
   valor: number;
   forma_pagamento: FormaPagamento;
   categoria: string;
-  caixa_diario_id: string | null;
+  data: string;
   created_at: string;
 }
 
@@ -134,18 +134,19 @@ export default function CaixaDiario() {
   });
 
   const { data: lancamentos = [], isLoading: loadingLanc } = useQuery({
-    queryKey: ['lancamentos-caixa', caixaHoje?.id, profile?.clinica_id],
+    queryKey: ['lancamentos-caixa', caixaHoje?.data, profile?.clinica_id],
     queryFn: async () => {
-      if (!caixaHoje?.id) return [];
-      const { data } = await (supabase as any)
+      if (!caixaHoje?.data || !profile?.clinica_id) return [];
+      const { data } = await supabase
         .from('lancamentos')
         .select('*')
-        .eq('caixa_diario_id', caixaHoje.id)
+        .eq('data', caixaHoje.data)
+        .eq('clinica_id', profile.clinica_id)
         .in('tipo', ['receita', 'despesa', 'sangria', 'suprimento'])
         .order('created_at', { ascending: false });
       return (data || []) as Lancamento[];
     },
-    enabled: !!caixaHoje?.id,
+    enabled: !!caixaHoje?.data && !!profile?.clinica_id,
   });
 
   // Histórico de caixas anteriores
@@ -166,18 +167,19 @@ export default function CaixaDiario() {
 
   // Lançamentos do caixa em detalhe
   const { data: lancamentosDetalhe = [] } = useQuery({
-    queryKey: ['lancamentos-detalhe', showDetalhesCaixa?.id],
+    queryKey: ['lancamentos-detalhe', showDetalhesCaixa?.data],
     queryFn: async () => {
-      if (!showDetalhesCaixa?.id) return [];
-      const { data } = await (supabase as any)
+      if (!showDetalhesCaixa?.data || !profile?.clinica_id) return [];
+      const { data } = await supabase
         .from('lancamentos')
         .select('*')
-        .eq('caixa_diario_id', showDetalhesCaixa.id)
+        .eq('data', showDetalhesCaixa.data)
+        .eq('clinica_id', profile.clinica_id)
         .in('tipo', ['receita', 'despesa', 'sangria', 'suprimento'])
         .order('created_at', { ascending: false });
       return (data || []) as Lancamento[];
     },
-    enabled: !!showDetalhesCaixa?.id,
+    enabled: !!showDetalhesCaixa?.data,
   });
 
   // ─── Calculations ───────────────────────────────
@@ -264,7 +266,7 @@ export default function CaixaDiario() {
         tipo: lancamentoForm.tipo, valor: Number(lancamentoForm.valor),
         descricao: lancamentoForm.descricao, forma_pagamento: lancamentoForm.forma_pagamento,
         categoria: lancamentoForm.tipo === 'receita' ? 'receita_caixa' : 'despesa_caixa',
-        data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -285,7 +287,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'sangria', valor: Number(sangriaForm.valor),
         descricao: `Sangria — ${sangriaForm.motivo}`, forma_pagamento: 'dinheiro',
-        categoria: 'sangria', data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        categoria: 'sangria', data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -305,7 +307,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'suprimento', valor: Number(suprimentoForm.valor),
         descricao: suprimentoForm.descricao || 'Suprimento de Caixa', forma_pagamento: 'dinheiro',
-        categoria: 'suprimento', data: today, caixa_diario_id: caixaHoje.id, clinica_id: profile.clinica_id,
+        categoria: 'suprimento', data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },

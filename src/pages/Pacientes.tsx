@@ -306,6 +306,7 @@ export default function Pacientes() {
           paciente_id: prontuarioForm.paciente_id,
           medico_id: prontuarioForm.medico_id,
           data: prontuarioForm.data,
+          clinica_id: authProfile?.clinica_id || null,
         }).select().single();
         if (error) throw error;
         prontuarioId = data.id;
@@ -326,6 +327,7 @@ export default function Pacientes() {
               observacoes: presc.observacoes || null,
               data_emissao: format(new Date(), 'yyyy-MM-dd'),
               tipo: 'simples',
+              clinica_id: authProfile?.clinica_id || null,
             });
           }
         }

@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSalas, useMedicos } from '@/hooks/useSupabaseData';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -102,6 +103,7 @@ const initialForm: SalaForm = {
 };
 
 export default function Salas() {
+  const { profile } = useSupabaseAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SalaForm>(initialForm);
@@ -195,7 +197,7 @@ export default function Salas() {
         if (error) throw error;
         toast.success('Sala atualizada!');
       } else {
-        const { error } = await supabase.from('salas').insert(payload);
+        const { error } = await supabase.from('salas').insert({ ...payload, clinica_id: profile?.clinica_id || null });
         if (error) throw error;
         toast.success('Sala cadastrada!');
       }
