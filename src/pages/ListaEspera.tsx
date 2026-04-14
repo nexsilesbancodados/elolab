@@ -504,7 +504,7 @@ export default function ListaEspera() {
                 <Label>Preferência de Horário</Label>
                 <Select
                   value={formData.preferencia_horario}
-                  onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v })}
+                  onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v === '__any__' ? '' : v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Qualquer" />
