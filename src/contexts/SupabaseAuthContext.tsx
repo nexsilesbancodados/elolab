@@ -261,6 +261,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         profile,
         clinicaId: profile?.clinica_id || null,
         isLoading,
+        isSuperAdmin,
         signIn,
         signUp,
         signOut,
