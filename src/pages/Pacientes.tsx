@@ -573,9 +573,9 @@ export default function Pacientes() {
       const dataToSave: any = {
         nome: formData.nome,
         nome_social: formData.nome_social || null,
-        cpf: formData.cpf,
-        data_nascimento: formData.data_nascimento,
-        telefone: formData.telefone,
+        cpf: formData.cpf || null,
+        data_nascimento: formData.data_nascimento || null,
+        telefone: formData.telefone || null,
         email: formData.email || null,
         sexo: formData.sexo || null,
         cep: formData.cep || null,
