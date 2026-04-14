@@ -345,6 +345,7 @@ export default function Medicos() {
   const [uploadingCarimbo, setUploadingCarimbo] = useState(false);
 
   const queryClient = useQueryClient();
+  const { profile } = useSupabaseAuth();
   const { data: medicos = [], isLoading } = useMedicos();
 
   const especialidades = useMemo(() => {
@@ -432,6 +433,7 @@ export default function Medicos() {
         cns: formData.cns || null, especialidade: formData.especialidade || null,
         telefone: formData.telefone || null, intervalo_consulta: formData.intervalo_consulta,
         ativo: formData.ativo, foto_url: formData.foto_url || null, carimbo_url: formData.carimbo_url || null,
+        ...(!editingId && profile?.clinica_id ? { clinica_id: profile.clinica_id } : {}),
       };
 
       if (editingId) {
