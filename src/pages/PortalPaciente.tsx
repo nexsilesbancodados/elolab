@@ -337,6 +337,12 @@ export default function PortalPaciente() {
   const [schedulingLoading, setSchedulingLoading] = useState(false);
   const [schedulingError, setSchedulingError] = useState('');
 
+  // Reschedule/cancel state
+  const [rescheduleModal, setRescheduleModal] = useState<any>(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ data: '', hora_inicio: '' });
+  const [cancelMotivo, setCancelMotivo] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
   const fetchData = async (accessToken: string, action: string, bodyData?: any) => {
     const { data, error } = await supabase.functions.invoke('patient-portal', {
       body: { action, token: accessToken, ...bodyData },
@@ -424,6 +430,48 @@ export default function PortalPaciente() {
       setSchedulingError(err.message || 'Erro ao agendar consulta');
     } finally {
       setSchedulingLoading(false);
+    }
+  };
+
+  const handleCancelAppointment = async (agendamento_id: string) => {
+    try {
+      setActionLoading(true);
+      await fetchData(token, 'cancel_agendamento', {
+        agendamento_id,
+        motivo: cancelMotivo || 'Cancelado pelo paciente',
+      });
+      // Reload agendamentos
+      const updatedAgendamentos = await fetchData(token, 'get_agendamentos');
+      setAgendamentos(updatedAgendamentos || []);
+      setCancelMotivo('');
+    } catch (err: any) {
+      console.error('Erro ao cancelar:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRescheduleAppointment = async () => {
+    if (!rescheduleForm.data || !rescheduleForm.hora_inicio || !rescheduleModal) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await fetchData(token, 'reschedule_agendamento', {
+        agendamento_id: rescheduleModal.id,
+        nova_data: rescheduleForm.data,
+        novo_horario: rescheduleForm.hora_inicio,
+      });
+      // Reload agendamentos
+      const updatedAgendamentos = await fetchData(token, 'get_agendamentos');
+      setAgendamentos(updatedAgendamentos || []);
+      setRescheduleModal(null);
+      setRescheduleForm({ data: '', hora_inicio: '' });
+    } catch (err: any) {
+      console.error('Erro ao remarcar:', err);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -697,29 +745,63 @@ export default function PortalPaciente() {
                       >
                         <Card className={`transition-all hover:shadow-md ${passado ? 'opacity-60' : ''}`}>
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-start gap-3">
-                                <div className={`p-2.5 rounded-xl ${isToday(dataAg) ? 'bg-primary/20' : 'bg-muted'}`}>
-                                  <Calendar className={`h-4 w-4 ${isToday(dataAg) ? 'text-primary' : 'text-muted-foreground'}`} />
-                                </div>
-                                <div className="space-y-0.5">
-                                  <p className="font-semibold text-sm">
-                                    {a.tipo || 'Consulta'}
-                                    {isToday(dataAg) && <Badge className="ml-2 bg-primary text-primary-foreground text-[9px]">HOJE</Badge>}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {format(dataAg, "dd 'de' MMM, yyyy", { locale: ptBR })}
-                                    {a.hora_inicio && ` às ${a.hora_inicio.slice(0, 5)}`}
-                                  </p>
-                                  {a.medicos?.nome && (
-                                    <p className="text-xs text-muted-foreground">
-                                      Dr(a). {a.medicos.nome}
-                                      {a.medicos.especialidade && ` — ${a.medicos.especialidade}`}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div className={`p-2.5 rounded-xl ${isToday(dataAg) ? 'bg-primary/20' : 'bg-muted'}`}>
+                                    <Calendar className={`h-4 w-4 ${isToday(dataAg) ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <p className="font-semibold text-sm">
+                                      {a.tipo || 'Consulta'}
+                                      {isToday(dataAg) && <Badge className="ml-2 bg-primary text-primary-foreground text-[9px]">HOJE</Badge>}
                                     </p>
-                                  )}
+                                    <p className="text-sm text-muted-foreground">
+                                      {format(dataAg, "dd 'de' MMM, yyyy", { locale: ptBR })}
+                                      {a.hora_inicio && ` às ${a.hora_inicio.slice(0, 5)}`}
+                                    </p>
+                                    {a.medicos?.nome && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Dr(a). {a.medicos.nome}
+                                        {a.medicos.especialidade && ` — ${a.medicos.especialidade}`}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
+                                <StatusBadge status={a.status} />
                               </div>
-                              <StatusBadge status={a.status} />
+
+                              {/* Action buttons for future appointments */}
+                              {!passado && a.status !== 'cancelado' && (
+                                <div className="flex gap-2 pt-2 border-t">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setRescheduleModal(a);
+                                      setRescheduleForm({ data: a.data, hora_inicio: a.hora_inicio });
+                                    }}
+                                    disabled={actionLoading}
+                                    className="flex-1 text-xs"
+                                  >
+                                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                                    Remarcar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      if (window.confirm('Deseja cancelar esta consulta?')) {
+                                        handleCancelAppointment(a.id);
+                                      }
+                                    }}
+                                    disabled={actionLoading}
+                                    className="flex-1 text-xs text-destructive hover:text-destructive"
+                                  >
+                                    ✕ Cancelar
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -1036,6 +1118,75 @@ export default function PortalPaciente() {
               </TabsContent>
             </Tabs>
           </motion.div>
+
+          {/* ─── Reschedule Modal ─── */}
+          <AnimatePresence>
+            {rescheduleModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                onClick={() => setRescheduleModal(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, y: 20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.95, y: 20 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-card rounded-xl border p-6 max-w-sm w-full space-y-4 shadow-lg"
+                >
+                  <div>
+                    <h3 className="font-semibold text-lg">Remarcar Consulta</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Médico: Dr(a). {rescheduleModal.medicos?.nome}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Nova Data *</label>
+                      <input
+                        type="date"
+                        value={rescheduleForm.data}
+                        onChange={(e) => setRescheduleForm(f => ({ ...f, data: e.target.value }))}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Novo Horário *</label>
+                      <input
+                        type="time"
+                        value={rescheduleForm.hora_inicio}
+                        onChange={(e) => setRescheduleForm(f => ({ ...f, hora_inicio: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => setRescheduleModal(null)}
+                      disabled={actionLoading}
+                      className="flex-1"
+                    >
+                      Voltar
+                    </Button>
+                    <Button
+                      onClick={handleRescheduleAppointment}
+                      disabled={!rescheduleForm.data || !rescheduleForm.hora_inicio || actionLoading}
+                      className="flex-1"
+                    >
+                      {actionLoading ? 'Remarcando...' : 'Confirmar'}
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ─── NPS Survey ─── */}
           <motion.div variants={itemVariants}>

@@ -238,6 +238,123 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "cancel_agendamento": {
+        const { agendamento_id, motivo } = body;
+        if (!agendamento_id) {
+          return new Response(
+            JSON.stringify({ error: "agendamento_id é obrigatório" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check appointment belongs to this patient
+        const { data: agendamento, error: fetchError } = await supabase
+          .from("agendamentos")
+          .select("id, data, paciente_id")
+          .eq("id", agendamento_id)
+          .eq("paciente_id", pacienteId)
+          .single();
+
+        if (fetchError || !agendamento) {
+          return new Response(
+            JSON.stringify({ error: "Agendamento não encontrado" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Cannot cancel past appointments
+        if (new Date(agendamento.data) < new Date()) {
+          return new Response(
+            JSON.stringify({ error: "Não é possível cancelar agendamentos passados" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Update appointment status
+        const { error: updateError } = await supabase
+          .from("agendamentos")
+          .update({
+            status: "cancelado",
+            nota_cancelamento: motivo || "Cancelado pelo paciente",
+            data_cancelamento: new Date().toISOString(),
+          })
+          .eq("id", agendamento_id);
+
+        if (updateError) throw updateError;
+        result = { success: true, message: "Agendamento cancelado com sucesso" };
+        break;
+      }
+
+      case "reschedule_agendamento": {
+        const { agendamento_id, nova_data, novo_horario } = body;
+        if (!agendamento_id || !nova_data || !novo_horario) {
+          return new Response(
+            JSON.stringify({ error: "agendamento_id, nova_data, novo_horario são obrigatórios" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Fetch original appointment
+        const { data: agendamento, error: fetchError } = await supabase
+          .from("agendamentos")
+          .select("id, medico_id, data, paciente_id, tipo")
+          .eq("id", agendamento_id)
+          .eq("paciente_id", pacienteId)
+          .single();
+
+        if (fetchError || !agendamento) {
+          return new Response(
+            JSON.stringify({ error: "Agendamento não encontrado" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validate new date is not in past
+        if (new Date(nova_data) < new Date()) {
+          return new Response(
+            JSON.stringify({ error: "A nova data não pode ser no passado" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check no double-booking at new time
+        const { data: conflictingSlots } = await supabase
+          .from("agendamentos")
+          .select("id")
+          .eq("medico_id", agendamento.medico_id)
+          .eq("data", nova_data)
+          .eq("hora_inicio", novo_horario)
+          .not("status", "in", '("cancelado")')
+          .neq("id", agendamento_id)
+          .limit(1);
+
+        if (conflictingSlots && conflictingSlots.length > 0) {
+          return new Response(
+            JSON.stringify({ error: "Este horário já está ocupado na nova data" }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Calculate end time
+        const [h, m] = novo_horario.split(":").map(Number);
+        const endTime = `${String(h).padStart(2, "0")}:${String((m + 30) % 60).padStart(2, "0")}`;
+
+        // Update appointment
+        const { error: updateError } = await supabase
+          .from("agendamentos")
+          .update({
+            data: nova_data,
+            hora_inicio: novo_horario,
+            hora_fim: endTime,
+            status: "pendente",
+          })
+          .eq("id", agendamento_id);
+
+        if (updateError) throw updateError;
+        result = { success: true, message: "Agendamento remarcado com sucesso" };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Ação desconhecida: ${action}` }), {
           status: 400,
