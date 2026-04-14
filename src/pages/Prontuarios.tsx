@@ -240,7 +240,7 @@ function FichaPaciente({ paciente, convenioNome }: { paciente: any; convenioNome
               )}
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold px-2 py-0">
-                  {idade} anos
+                  {paciente.data_nascimento ? `${idade} anos` : 'Idade N/I'}
                 </Badge>
                 {paciente.sexo && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">
