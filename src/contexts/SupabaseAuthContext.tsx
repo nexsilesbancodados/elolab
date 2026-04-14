@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type AppRole = 'admin' | 'medico' | 'recepcao' | 'enfermagem' | 'financeiro';
 
+// Emails que têm acesso superadmin (manutenção da plataforma)
+const SUPERADMIN_EMAILS = ['contato@elolab.com.br'];
+
 export interface Clinica {
   id: string;
   nome: string;
