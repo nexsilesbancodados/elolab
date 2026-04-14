@@ -37,6 +37,15 @@ Deno.serve(async (req) => {
     for (const user of (newUsers || [])) {
       if (!user.email) continue
 
+      // Get user's clinica_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('clinica_id')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.clinica_id) continue
+
       // Check if welcome email already sent
       const { data: existing } = await supabase
         .from('notification_queue')
@@ -110,6 +119,7 @@ Deno.serve(async (req) => {
         // Log in notification queue
         await supabase.from('notification_queue').insert({
           tipo: 'email',
+          clinica_id: profile.clinica_id,
           assunto: '🎉 Bem-vindo ao EloLab!',
           conteudo: 'E-mail de boas-vindas enviado',
           destinatario_id: user.id,
