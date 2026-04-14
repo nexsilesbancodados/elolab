@@ -1290,7 +1290,16 @@ export default function Agenda() {
                     <SelectItem value="consulta">Consulta</SelectItem>
                     <SelectItem value="retorno">Retorno</SelectItem>
                     <SelectItem value="exame">Exame</SelectItem>
+                    <SelectItem value="coleta">Coleta Laboratorial</SelectItem>
                     <SelectItem value="procedimento">Procedimento</SelectItem>
+                    <SelectItem value="cirurgia">Cirurgia</SelectItem>
+                    <SelectItem value="avaliacao">Avaliação</SelectItem>
+                    <SelectItem value="checkup">Check-up</SelectItem>
+                    <SelectItem value="triagem">Triagem</SelectItem>
+                    <SelectItem value="enfermagem">Atendimento Enfermagem</SelectItem>
+                    <SelectItem value="vacina">Vacinação</SelectItem>
+                    <SelectItem value="curativo">Curativo</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
