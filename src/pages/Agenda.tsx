@@ -1185,37 +1185,62 @@ export default function Agenda() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Especialidade *</Label>
-              <Select
-                value={formData.medico_id}
-                onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a especialidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(() => {
-                    const especialidadesMap = new Map<string, typeof medicos>();
-                    medicos.filter(m => m.ativo !== false).forEach(m => {
-                      const esp = m.especialidade || 'Clínico Geral';
-                      if (!especialidadesMap.has(esp)) especialidadesMap.set(esp, []);
-                      especialidadesMap.get(esp)!.push(m);
-                    });
-                    const items: React.ReactNode[] = [];
-                    especialidadesMap.forEach((docs, esp) => {
-                      docs.forEach(m => {
-                        items.push(
-                          <SelectItem key={m.id} value={m.id}>
-                            {esp} — {m.nome || m.crm}
-                          </SelectItem>
-                        );
-                      });
-                    });
-                    return items;
-                  })()}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Especialidade *</Label>
+                <Select
+                  value={formData.medico_id ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral') : ''}
+                  onValueChange={(esp) => {
+                    // When specialty changes, reset medico if it doesn't match
+                    const currentMed = medicos.find(m => m.id === formData.medico_id);
+                    const currentEsp = currentMed?.especialidade || 'Clínico Geral';
+                    if (currentEsp !== esp) {
+                      // Auto-select the first doctor with this specialty
+                      const firstDoc = medicos.find(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === esp);
+                      setFormData({ ...formData, medico_id: firstDoc?.id || '' });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a especialidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(() => {
+                      const espSet = new Set<string>();
+                      medicos.filter(m => m.ativo !== false).forEach(m => espSet.add(m.especialidade || 'Clínico Geral'));
+                      return Array.from(espSet).sort().map(esp => (
+                        <SelectItem key={esp} value={esp}>{esp}</SelectItem>
+                      ));
+                    })()}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Médico *</Label>
+                <Select
+                  value={formData.medico_id || ''}
+                  onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o médico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(() => {
+                      const selectedEsp = formData.medico_id
+                        ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral')
+                        : '';
+                      const filtered = selectedEsp
+                        ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === selectedEsp)
+                        : medicos.filter(m => m.ativo !== false);
+                      return filtered.map(m => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.nome || m.crm}
+                        </SelectItem>
+                      ));
+                    })()}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
