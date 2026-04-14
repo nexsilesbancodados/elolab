@@ -36,6 +36,7 @@ interface SupabaseAuthContextType {
   profile: UserWithRole | null;
   clinicaId: string | null;
   isLoading: boolean;
+  isSuperAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, nome: string, telefone?: string, cpfCnpj?: string) => Promise<{ data: any; error: Error | null }>;
   signOut: () => Promise<void>;
