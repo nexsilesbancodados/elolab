@@ -587,7 +587,10 @@ export default function Laboratorio() {
               condicao_amostra: newColetaForm.condicao_amostra.length > 0 ? newColetaForm.condicao_amostra : null,
               sitio_coleta: newColetaForm.sitio_coleta && newColetaForm.sitio_coleta !== '__none__' ? newColetaForm.sitio_coleta : null,
               lote_insumo: newColetaForm.lote_insumo || null,
-            });
+              finalidade: newColetaForm.finalidade || 'diagnostico',
+              indicacao_clinica: newColetaForm.indicacao_clinica || null,
+              categoria_exame: newColetaForm.categoria_exame || null,
+            } as any);
           }} className="flex-1 overflow-y-auto space-y-5 pr-2">
 
             {/* Rastreabilidade */}
