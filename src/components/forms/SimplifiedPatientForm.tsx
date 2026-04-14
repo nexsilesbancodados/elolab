@@ -66,15 +66,6 @@ export function SimplifiedPatientForm({
     if (!formData.nome.trim()) {
       newErrors.nome = 'Nome é obrigatório';
     }
-    if (!formData.cpf.trim()) {
-      newErrors.cpf = 'CPF é obrigatório';
-    }
-    if (!formData.telefone.trim()) {
-      newErrors.telefone = 'Telefone é obrigatório';
-    }
-    if (!formData.data_nascimento) {
-      newErrors.data_nascimento = 'Data de nascimento é obrigatória';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
