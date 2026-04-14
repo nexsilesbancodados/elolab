@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   Save, Building, Clock, Bell, Download, History,
-  Shield, Palette, Globe, Mail, Smartphone, MessageSquare, Database,
-  Key, RefreshCw, CloudOff, Cloud, Stethoscope, FlaskConical, Building2,
+  Shield, Globe, Mail, Smartphone, MessageSquare, Database,
+  Key, RefreshCw, CloudOff, Cloud,
   DollarSign, Printer, MapPin, Phone, FileText, Users, Plus, Trash2, Edit,
   CreditCard, Receipt, Loader2, Hash, Clipboard, Image,
 } from 'lucide-react';
@@ -35,9 +35,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useUserPlan, usePlanos } from '@/hooks/useSubscriptionPlan';
 
-const TiposConsulta = lazy(() => import('@/pages/TiposConsulta'));
-const PrecosExames = lazy(() => import('@/pages/PrecosExames'));
-const Convenios = lazy(() => import('@/pages/Convenios'));
+
+
 
 /* ─── Types ─── */
 interface ConfiguracaoClinica {
