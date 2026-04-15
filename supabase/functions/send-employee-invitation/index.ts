@@ -38,15 +38,14 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token_jwt = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token_jwt);
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
-    if (claimsError || !claimsData?.claims) {
-      console.error("Auth error:", claimsError);
+    if (userError || !user) {
+      console.error("Auth error:", userError);
       throw new Error("Unauthorized");
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     const { funcionarioId, email, nome, roles }: InvitationRequest = await req.json();
 
