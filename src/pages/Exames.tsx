@@ -298,6 +298,7 @@ export default function Exames() {
   const [examesSelecionados, setExamesSelecionados] = useState<ExameSelecionado[]>([]);
   const [examSearch, setExamSearch] = useState('');
   const [catFilter, setCatFilter] = useState('');
+  const [customExamCode, setCustomExamCode] = useState('');
   const [showExamPicker, setShowExamPicker] = useState(false);
 
   // Attachments
@@ -343,6 +344,13 @@ export default function Exames() {
     });
   }, [allExames, examSearch, catFilter, examesSelecionados]);
 
+  const canAddCustomExam = useMemo(() => {
+    const normalizedSearch = examSearch.trim().toLowerCase();
+    if (!normalizedSearch) return false;
+
+    return !examesSelecionados.some(exame => exame.nome.trim().toLowerCase() === normalizedSearch);
+  }, [examSearch, examesSelecionados]);
+
   const { data: exames = [], isLoading: loadingExames } = useQuery({
     queryKey: ['exames', isMedicoOnly, medicoId],
     queryFn: async () => {
@@ -378,6 +386,31 @@ export default function Exames() {
   const addExame = (exame: ExameCatalogo) => {
     setExamesSelecionados(prev => [...prev, { nome: exame.nome, tuss: exame.tuss }]);
     setExamSearch('');
+    setCustomExamCode('');
+    setShowExamPicker(false);
+  };
+
+  const generateAutomaticExamCode = () => `INT${Date.now().toString().slice(-7)}`;
+
+  const addCustomExame = () => {
+    const nome = examSearch.trim();
+    const codigo = customExamCode.trim();
+
+    if (!nome) {
+      toast.error('Digite o nome do exame personalizado.');
+      return;
+    }
+
+    if (examesSelecionados.some(exame => exame.nome.trim().toLowerCase() === nome.toLowerCase())) {
+      toast.error('Este exame já foi adicionado à guia.');
+      return;
+    }
+
+    setExamesSelecionados(prev => [...prev, { nome, tuss: codigo }]);
+    setExamSearch('');
+    setCustomExamCode('');
+    setShowExamPicker(false);
+    toast.success('Exame personalizado adicionado à guia.');
   };
 
   const removeExame = (nome: string) => {
@@ -390,6 +423,7 @@ export default function Exames() {
     setAnexos([]);
     setExamSearch('');
     setCatFilter('');
+    setCustomExamCode('');
     setIsDialogOpen(true);
   };
 
@@ -577,7 +611,7 @@ export default function Exames() {
             <FileText className="h-8 w-8 text-primary" />
             Solicitação de Exames
           </h1>
-          <p className="text-muted-foreground">Gerencie guias de exames com código TUSS integrado</p>
+          <p className="text-muted-foreground">Gerencie guias com TUSS, código livre ou código interno automático</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsManageTypesOpen(true)} className="gap-2">
@@ -628,7 +662,7 @@ export default function Exames() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Exame (TUSS)</TableHead>
+                  <TableHead>Exame / Código</TableHead>
                   <TableHead className="hidden md:table-cell">Solicitante</TableHead>
                   <TableHead className="hidden sm:table-cell">Data</TableHead>
                   <TableHead>Status</TableHead>
@@ -798,7 +832,7 @@ export default function Exames() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Exames Solicitados ({examesSelecionados.length})</Label>
-                <Badge variant="outline" className="text-[10px]">TUSS integrado</Badge>
+                  <Badge variant="outline" className="text-[10px]">TUSS ou código livre</Badge>
               </div>
 
               {/* Selected exams as tags */}
@@ -820,7 +854,7 @@ export default function Exames() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por nome ou código TUSS..."
+                    placeholder="Buscar por nome, TUSS ou código livre..."
                     value={examSearch}
                     onChange={e => { setExamSearch(e.target.value); setShowExamPicker(true); }}
                     onFocus={() => setShowExamPicker(true)}
@@ -840,7 +874,7 @@ export default function Exames() {
               {showExamPicker && (
                 <div className="border rounded-lg max-h-48 overflow-y-auto bg-background">
                   {filteredCatalogo.length === 0 ? (
-                    <p className="text-center py-4 text-sm text-muted-foreground">Nenhum exame encontrado</p>
+                    <p className="text-center py-4 text-sm text-muted-foreground">Nenhum exame do catálogo encontrado</p>
                   ) : (
                     filteredCatalogo.slice(0, 30).map(ex => (
                       <button
@@ -859,6 +893,37 @@ export default function Exames() {
                   )}
                   {filteredCatalogo.length > 30 && (
                     <p className="text-center py-2 text-xs text-muted-foreground">Mostrando 30 de {filteredCatalogo.length} — refine sua busca</p>
+                  )}
+
+                  {canAddCustomExam && (
+                    <div className="border-t bg-muted/20 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">Adicionar exame personalizado</p>
+                          <p className="text-xs text-muted-foreground truncate">Nome: {examSearch.trim()}</p>
+                        </div>
+                        <Badge variant="secondary" className="text-[10px] whitespace-nowrap">Código livre</Badge>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Input
+                          value={customExamCode}
+                          onChange={e => setCustomExamCode(e.target.value)}
+                          placeholder="Código próprio, TUSS ou deixe em branco"
+                          className="font-mono sm:flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setCustomExamCode(generateAutomaticExamCode())}
+                        >
+                          Auto
+                        </Button>
+                        <Button type="button" onClick={addCustomExame}>
+                          Adicionar
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -1038,7 +1103,7 @@ export default function Exames() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Exame (TUSS)</p>
+                  <p className="text-sm text-muted-foreground">Exame / Código</p>
                 <p className="font-medium">{selectedExame.tipo_exame}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
