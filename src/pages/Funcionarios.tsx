@@ -725,9 +725,9 @@ export default function Funcionarios() {
                 <Label className="text-sm font-semibold">Permissões de Acesso</Label>
                 <p className="text-xs text-muted-foreground mt-1">
                   Selecione o que este funcionário pode acessar no sistema.
-                  {!editingFunc?.user_id && (
-                    <span className="block text-warning mt-1">
-                      ⚠️ As permissões só serão aplicadas quando o funcionário criar uma conta.
+                  {!editingFunc?.user_id && editingFunc && (
+                    <span className="block text-muted-foreground mt-1">
+                      💡 As permissões serão salvas e aplicadas automaticamente quando o funcionário criar a conta.
                     </span>
                   )}
                 </p>
