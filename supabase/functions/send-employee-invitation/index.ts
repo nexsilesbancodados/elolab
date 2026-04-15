@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Convite enviado com sucesso",
-        token,
+        token: inviteToken,
         inviteCode,
         inviteUrl,
       }),
