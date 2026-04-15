@@ -30,7 +30,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   pago: { label: 'Pago', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
   atrasado: { label: 'Atrasado', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
   cancelado: { label: 'Cancelado', color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border' },
-  estornado: { label: 'Estornado', color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+  estornado: { label: 'Estornado', color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border' },
 };
 
 const STATUS_LABELS: Record<string, string> = {

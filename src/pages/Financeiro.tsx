@@ -243,7 +243,7 @@ export default function Financeiro() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Inadimplência', value: fmt(kpis.vencido), icon: AlertTriangle, color: 'text-destructive' },
-          { label: 'A Pagar', value: fmt(kpis.aPagar), icon: CreditCard, color: 'text-orange-500', sub: kpis.countPendentesPagar > 0 ? `${kpis.countPendentesPagar} pendente(s)` : undefined },
+          { label: 'A Pagar', value: fmt(kpis.aPagar), icon: CreditCard, color: 'text-warning', sub: kpis.countPendentesPagar > 0 ? `${kpis.countPendentesPagar} pendente(s)` : undefined },
           { label: 'Taxa Recebimento', value: `${kpis.taxaRecebimento.toFixed(0)}%`, icon: Target, color: 'text-primary' },
           { label: 'Margem Lucro', value: `${dre.margemLucro.toFixed(1)}%`, icon: Percent, color: dre.margemLucro >= 0 ? 'text-success' : 'text-destructive' },
         ].map((s, i) => (
