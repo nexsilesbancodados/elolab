@@ -79,7 +79,7 @@ const docSections: DocSection[] = [
     id: 'dashboard',
     title: 'Dashboard',
     icon: LayoutDashboard,
-    color: 'text-indigo-500',
+    color: 'text-primary',
     content: [
       {
         title: 'Painel Principal',
@@ -103,7 +103,7 @@ const docSections: DocSection[] = [
     id: 'pacientes',
     title: 'Gestão de Pacientes',
     icon: Users,
-    color: 'text-blue-500',
+    color: 'text-info',
     content: [
       {
         title: 'Cadastro de Pacientes',
@@ -146,7 +146,7 @@ const docSections: DocSection[] = [
     id: 'agenda',
     title: 'Agenda de Consultas',
     icon: Calendar,
-    color: 'text-green-500',
+    color: 'text-success',
     content: [
       {
         title: 'Visão Semanal e Listagem',
@@ -211,7 +211,7 @@ const docSections: DocSection[] = [
     id: 'fila',
     title: 'Fila de Atendimento',
     icon: ClipboardList,
-    color: 'text-orange-500',
+    color: 'text-warning',
     content: [
       {
         title: 'Gestão da Fila',
@@ -234,7 +234,7 @@ const docSections: DocSection[] = [
     id: 'prontuarios',
     title: 'Prontuário Eletrônico',
     icon: FileText,
-    color: 'text-emerald-500',
+    color: 'text-success',
     badge: 'Clínico',
     content: [
       {
@@ -269,7 +269,7 @@ const docSections: DocSection[] = [
     id: 'prescricoes',
     title: 'Prescrições',
     icon: Receipt,
-    color: 'text-cyan-500',
+    color: 'text-info',
     badge: 'Clínico',
     content: [
       {
@@ -294,7 +294,7 @@ const docSections: DocSection[] = [
     id: 'atestados',
     title: 'Atestados Médicos',
     icon: FileCheck,
-    color: 'text-teal-500',
+    color: 'text-success',
     badge: 'Clínico',
     content: [
       {
@@ -315,7 +315,7 @@ const docSections: DocSection[] = [
     id: 'exames',
     title: 'Exames',
     icon: FlaskConical,
-    color: 'text-purple-500',
+    color: 'text-accent-foreground',
     content: [
       {
         title: 'Solicitação de Exames',
@@ -339,7 +339,7 @@ const docSections: DocSection[] = [
     id: 'triagem',
     title: 'Triagem (Protocolo Manchester)',
     icon: Heart,
-    color: 'text-red-500',
+    color: 'text-destructive',
     badge: 'Clínico',
     content: [
       {
@@ -359,7 +359,7 @@ const docSections: DocSection[] = [
     id: 'encaminhamentos',
     title: 'Encaminhamentos',
     icon: ArrowRightLeft,
-    color: 'text-amber-500',
+    color: 'text-warning',
     badge: 'Clínico',
     content: [
       {
@@ -380,7 +380,7 @@ const docSections: DocSection[] = [
     id: 'retornos',
     title: 'Controle de Retornos',
     icon: Clock,
-    color: 'text-sky-500',
+    color: 'text-info',
     content: [
       {
         title: 'Agendamento de Retornos',
@@ -398,7 +398,7 @@ const docSections: DocSection[] = [
     id: 'laboratorio',
     title: 'Laboratório',
     icon: TestTube,
-    color: 'text-sky-600',
+    color: 'text-info',
     content: [
       {
         title: 'Painel do Laboratório',
@@ -431,7 +431,7 @@ const docSections: DocSection[] = [
     id: 'financeiro',
     title: 'Módulo Financeiro',
     icon: DollarSign,
-    color: 'text-red-500',
+    color: 'text-destructive',
     content: [
       {
         title: 'Visão Geral Financeira',
@@ -478,7 +478,7 @@ const docSections: DocSection[] = [
     id: 'operacional',
     title: 'Módulo Operacional',
     icon: Package,
-    color: 'text-amber-500',
+    color: 'text-warning',
     content: [
       {
         title: 'Médicos',
@@ -525,7 +525,7 @@ const docSections: DocSection[] = [
     id: 'administracao',
     title: 'Administração',
     icon: Settings,
-    color: 'text-violet-500',
+    color: 'text-accent-foreground',
     badge: 'Admin',
     content: [
       {
@@ -579,7 +579,7 @@ const docSections: DocSection[] = [
     id: 'ferramentas',
     title: 'Ferramentas e Recursos',
     icon: Settings,
-    color: 'text-gray-500',
+    color: 'text-muted-foreground',
     content: [
       {
         title: 'Busca Global (Ctrl+K)',
@@ -650,7 +650,7 @@ const docSections: DocSection[] = [
     id: 'seguranca',
     title: 'Segurança e Privacidade',
     icon: Shield,
-    color: 'text-green-600',
+    color: 'text-success',
     content: [
       {
         title: 'Autenticação',
@@ -674,7 +674,7 @@ const docSections: DocSection[] = [
     id: 'tecnologia',
     title: 'Stack Técnica',
     icon: Database,
-    color: 'text-slate-500',
+    color: 'text-muted-foreground',
     content: [
       {
         title: 'Frontend',
