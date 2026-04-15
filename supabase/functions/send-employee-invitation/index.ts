@@ -65,6 +65,17 @@ Deno.serve(async (req) => {
 
     const clinicaId = profileData?.clinica_id || null;
 
+    // Get pending_roles from funcionario as fallback if roles not provided
+    let finalRoles = roles || [];
+    if (finalRoles.length === 0) {
+      const { data: funcData } = await serviceClient
+        .from("funcionarios")
+        .select("pending_roles")
+        .eq("id", funcionarioId)
+        .maybeSingle();
+      finalRoles = (funcData?.pending_roles as string[]) || [];
+    }
+
     const inviteToken = crypto.randomUUID();
 
     const { error: insertError } = await serviceClient
@@ -73,7 +84,7 @@ Deno.serve(async (req) => {
         funcionario_id: funcionarioId,
         email,
         token: inviteToken,
-        roles: roles || [],
+        roles: finalRoles,
         status: "pending",
         clinica_id: clinicaId,
       });
