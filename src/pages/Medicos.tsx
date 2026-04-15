@@ -141,11 +141,11 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
 
   const statusColor = (s: string) => {
     const map: Record<string, string> = {
-      agendado: 'bg-blue-500/10 text-blue-600 border-blue-200',
-      confirmado: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+      agendado: 'bg-info/10 text-info border-info/20',
+      confirmado: 'bg-success/10 text-success border-success/20',
       finalizado: 'bg-muted text-muted-foreground',
       cancelado: 'bg-destructive/10 text-destructive border-destructive/20',
-      em_atendimento: 'bg-amber-500/10 text-amber-600 border-amber-200',
+      em_atendimento: 'bg-warning/10 text-warning border-warning/20',
     };
     return map[s] || 'bg-muted text-muted-foreground';
   };
@@ -243,9 +243,9 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
         <div className="grid grid-cols-4 gap-2 px-4 py-3 border-b bg-muted/30">
           {[
             { label: 'Hoje', value: agendamentosHoje.length, icon: Activity, color: 'text-primary' },
-            { label: 'Futuros', value: agendamentosFuturos.length, icon: Calendar, color: 'text-blue-500' },
-            { label: 'Pacientes', value: totalPacientes, icon: Users, color: 'text-emerald-500' },
-            { label: 'Prontuários', value: prontuarios.length, icon: ClipboardList, color: 'text-amber-500' },
+            { label: 'Futuros', value: agendamentosFuturos.length, icon: Calendar, color: 'text-info' },
+            { label: 'Pacientes', value: totalPacientes, icon: Users, color: 'text-success' },
+            { label: 'Prontuários', value: prontuarios.length, icon: ClipboardList, color: 'text-warning' },
           ].map(s => (
             <div key={s.label} className="text-center">
               <s.icon className={`h-4 w-4 mx-auto mb-0.5 ${s.color}`} />

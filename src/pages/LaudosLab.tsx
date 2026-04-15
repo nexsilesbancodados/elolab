@@ -294,7 +294,7 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
                 return (
                   <div key={res.id} className={cn(
                     'rounded-lg border p-3 space-y-1',
-                    res.liberado ? 'border-green-500/30 bg-green-500/5' : '',
+                    res.liberado ? 'border-success/30 bg-success/5' : '',
                     isAltered && !res.liberado ? 'border-destructive/30 bg-destructive/5' : '',
                   )}>
                     <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ function LaudoDetalheModal({ coletaId, onClose, onUpdate }: {
                       <div className="flex items-center gap-2">
                         {isAltered && <Badge variant="destructive" className="text-[10px] gap-1"><AlertTriangle className="h-2.5 w-2.5" />Alterado</Badge>}
                         {res.liberado ? (
-                          <Badge className="bg-green-500/10 text-green-600 border-green-500/20 gap-1">
+                          <Badge className="bg-success/10 text-success border-success/20 gap-1">
                             <CheckCircle2 className="h-3 w-3" /> Liberado
                           </Badge>
                         ) : (
