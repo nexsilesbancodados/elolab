@@ -1536,6 +1536,7 @@ export type Database = {
           especialidade: string | null
           id: string
           nome: string
+          pending_roles: Database["public"]["Enums"]["app_role"][]
           registro_profissional: string | null
           salario: number | null
           telefone: string | null
@@ -1560,6 +1561,7 @@ export type Database = {
           especialidade?: string | null
           id?: string
           nome: string
+          pending_roles?: Database["public"]["Enums"]["app_role"][]
           registro_profissional?: string | null
           salario?: number | null
           telefone?: string | null
@@ -1584,6 +1586,7 @@ export type Database = {
           especialidade?: string | null
           id?: string
           nome?: string
+          pending_roles?: Database["public"]["Enums"]["app_role"][]
           registro_profissional?: string | null
           salario?: number | null
           telefone?: string | null
