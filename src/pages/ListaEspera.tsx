@@ -466,7 +466,7 @@ export default function ListaEspera() {
             <div className="space-y-2">
               <Label>Médico Preferencial</Label>
               <Select
-                value={formData.medico_id}
+                value={formData.medico_id || '__any__'}
                 onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__any__' ? '' : v })}
               >
                 <SelectTrigger>
@@ -503,7 +503,7 @@ export default function ListaEspera() {
               <div className="space-y-2">
                 <Label>Preferência de Horário</Label>
                 <Select
-                  value={formData.preferencia_horario}
+                  value={formData.preferencia_horario || '__any__'}
                   onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v === '__any__' ? '' : v })}
                 >
                   <SelectTrigger>
