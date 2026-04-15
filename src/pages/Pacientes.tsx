@@ -878,7 +878,7 @@ export default function Pacientes() {
                 <div className="border rounded-lg p-4 bg-muted/30">
                   <div className="flex items-center justify-between mb-1">
                     <h4 className="font-medium flex items-center gap-2 text-sm">
-                      <Baby className="h-4 w-4 text-amber-500" />
+                      <Baby className="h-4 w-4 text-warning" />
                       Paciente menor de idade ou dependente?
                     </h4>
                     <Button
@@ -898,8 +898,8 @@ export default function Pacientes() {
                 </div>
 
                 {formData.is_menor && (
-                  <div className="border rounded-lg p-4 bg-amber-500/5 border-amber-500/20">
-                    <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-700">
+                  <div className="border rounded-lg p-4 bg-warning/5 border-warning/20">
+                    <h4 className="font-medium mb-3 flex items-center gap-2 text-warning">
                       <Baby className="h-4 w-4" />
                       Dados do Responsável Legal
                     </h4>
@@ -1147,7 +1147,7 @@ export default function Pacientes() {
                       <>
                         <Separator />
                         <div>
-                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
+                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-warning" /> Responsável Legal</h4>
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <InfoField icon={User2} label="Nome" value={selectedPaciente.nome_responsavel} />
                             <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf_responsavel} />

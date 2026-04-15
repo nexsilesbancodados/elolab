@@ -213,7 +213,7 @@ export default function Encaminhamentos() {
         </Card>
         <Card className={cn("kpi-card cursor-pointer", statusFilter === 'pendente' && "ring-2 ring-amber-500")} onClick={() => setStatusFilter('pendente')}>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold tabular-nums text-amber-600">{stats.pendentes}</div>
+            <div className="text-2xl font-bold tabular-nums text-warning">{stats.pendentes}</div>
             <p className="text-xs text-muted-foreground">Pendentes</p>
           </CardContent>
         </Card>
@@ -225,7 +225,7 @@ export default function Encaminhamentos() {
         </Card>
         <Card className={cn("kpi-card cursor-pointer", statusFilter === 'concluido' && "ring-2 ring-green-500")} onClick={() => setStatusFilter('concluido')}>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold tabular-nums text-green-600">{stats.concluidos}</div>
+            <div className="text-2xl font-bold tabular-nums text-success">{stats.concluidos}</div>
             <p className="text-xs text-muted-foreground">Concluídos</p>
           </CardContent>
         </Card>
@@ -389,7 +389,7 @@ export default function Encaminhamentos() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           {enc.contra_referencia ? (
-                            <Badge className="bg-green-500/10 text-green-700">Sim</Badge>
+                            <Badge className="bg-success/10 text-success">Sim</Badge>
                           ) : (
                             <Badge variant="outline" className="text-muted-foreground">Não</Badge>
                           )}
@@ -487,12 +487,12 @@ export default function Encaminhamentos() {
               {selectedEnc.contra_referencia ? (
                 <div>
                   <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-green-500" /> Contra-referência
+                    <CheckCircle2 className="h-3 w-3 text-success" /> Contra-referência
                     {selectedEnc.data_contra_referencia && (
                       <span className="ml-auto text-[10px]">{format(new Date(selectedEnc.data_contra_referencia), 'dd/MM/yyyy')}</span>
                     )}
                   </p>
-                  <p className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
+                  <p className="bg-success/5 border border-success/20 rounded-lg p-3">{selectedEnc.contra_referencia}</p>
                 </div>
               ) : selectedEnc.status !== 'cancelado' && selectedEnc.status !== 'concluido' ? (
                 <div className="space-y-2">
