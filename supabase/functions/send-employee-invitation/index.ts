@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const brevoApiKey = Deno.env.get("BREVO_API_KEY");
 
@@ -28,21 +29,24 @@ Deno.serve(async (req) => {
     }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       throw new Error("Authorization header required");
     }
 
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+    // Validate user with anon key + auth header
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    const token_jwt = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token_jwt);
 
-    if (authError || !user) {
+    if (claimsError || !claimsData?.claims) {
+      console.error("Auth error:", claimsError);
       throw new Error("Unauthorized");
     }
+
+    const userId = claimsData.claims.sub as string;
 
     const { funcionarioId, email, nome, roles }: InvitationRequest = await req.json();
 
@@ -50,20 +54,33 @@ Deno.serve(async (req) => {
       throw new Error("Missing required fields: funcionarioId, email, nome");
     }
 
-    const token = crypto.randomUUID();
+    // Use service client to bypass RLS for insert
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get user's clinica_id
+    const { data: profileData } = await serviceClient
+      .from("profiles")
+      .select("clinica_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const clinicaId = profileData?.clinica_id || null;
+
+    const inviteToken = crypto.randomUUID();
 
     const { error: insertError } = await serviceClient
       .from("employee_invitations")
       .insert({
         funcionario_id: funcionarioId,
         email,
-        token,
+        token: inviteToken,
         roles: roles || [],
         status: "pending",
+        clinica_id: clinicaId,
       });
 
     if (insertError) {
+      console.error("Insert error:", insertError);
       throw new Error("Failed to create invitation: " + insertError.message);
     }
 
