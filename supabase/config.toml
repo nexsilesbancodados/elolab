@@ -2,7 +2,7 @@ project_id = "gebygucrpipaufrlyqqj"
 
 # Functions requiring authenticated user (JWT verified)
 [functions.send-employee-invitation]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-appointment-reminder]
 verify_jwt = true
