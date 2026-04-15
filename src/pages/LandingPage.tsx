@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Calendar, Users, FileText, Shield, BarChart3, Stethoscope,
@@ -7,7 +7,7 @@ import {
   Clock, Activity, Pill, ClipboardList, Building2, MonitorPlay,
   BellRing, FileBarChart, Warehouse, CreditCard, UserCheck,
   Microscope, HeartPulse, QrCode, Globe, SmartphoneNfc,
-  Crown, Loader2
+  Crown, Loader2, ChevronDown, TrendingUp, Award, Headphones
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +60,39 @@ const C = {
   textL: 'hsl(20,10%,50%)',
 };
 
-/* ─── Grouped modules (4 groups × 6 cards) ─── */
+/* ─── Animated Counter Hook ─── */
+function useCountUp(end: number, duration = 2000, startOnView = true) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!startOnView) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const startTime = Date.now();
+          const tick = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.floor(eased * end));
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [end, duration, startOnView]);
+
+  return { count, ref };
+}
+
+/* ─── Grouped modules ─── */
 const moduleGroups = [
   {
     title: 'Gestão Clínica',
@@ -221,6 +253,80 @@ const testimonials = [
   { name: 'Dr. Gustavo Pereira', clinic: 'GastroMed - Gastroenterologia', text: 'Relatórios analíticos me ajudam a tomar decisões estratégicas para a clínica.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' },
 ];
 
+const faqItems = [
+  {
+    q: 'O EloLab funciona no meu celular?',
+    a: 'Sim! O EloLab é um PWA (Progressive Web App) que funciona em qualquer dispositivo — smartphone, tablet ou computador — sem necessidade de baixar nada. Basta acessar pelo navegador.',
+  },
+  {
+    q: 'Preciso de cartão de crédito para testar?',
+    a: 'Não! O teste gratuito de 3 dias não exige cartão de crédito. Você cria sua conta, configura a clínica e já começa a usar. Após o período de teste, escolha o plano ideal.',
+  },
+  {
+    q: 'Meus dados estão seguros?',
+    a: 'Absolutamente. Utilizamos criptografia ponta a ponta, Row Level Security (RLS) no banco de dados, backup automático diário, consentimentos LGPD digitais e trilha de auditoria completa conforme exigido pelo CFM.',
+  },
+  {
+    q: 'Posso migrar os dados do meu sistema atual?',
+    a: 'Sim! No plano Ultra, oferecemos migração de dados gratuita. Nossa equipe cuida de todo o processo de importação de pacientes, agendamentos e prontuários do seu sistema anterior.',
+  },
+  {
+    q: 'O sistema funciona para laboratórios?',
+    a: 'Sim! O EloLab possui módulo completo de laboratório com worklist de coletas, laudos digitais, mapa de coleta, rastreabilidade de amostras por código de barras e integração com o módulo financeiro.',
+  },
+  {
+    q: 'Quantos usuários posso ter?',
+    a: 'Ambos os planos permitem cadastrar toda sua equipe: médicos, recepcionistas, enfermeiros e administradores, cada um com permissões específicas por papel (RBAC). Sem limite de usuários.',
+  },
+  {
+    q: 'Como funciona o suporte?',
+    a: 'Oferecemos suporte via WhatsApp e chat no sistema. No plano Ultra, o suporte é prioritário com tempo de resposta reduzido. Também disponibilizamos treinamentos com nossa equipe de especialistas.',
+  },
+];
+
+/* ─── FAQ Item Component ─── */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-[hsl(20,20%,90%)] last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-5 text-left group"
+      >
+        <span className="text-base font-bold pr-4" style={{ color: C.dark }}>{q}</span>
+        <ChevronDown
+          className={`w-5 h-5 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          style={{ color: C.coral }}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          open ? 'max-h-60 pb-5 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <p className="text-sm leading-relaxed" style={{ color: C.text }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Stats Counter Component ─── */
+function StatCounter({ end, suffix, label, icon: Icon }: { end: number; suffix: string; label: string; icon: React.ElementType }) {
+  const { count, ref } = useCountUp(end);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+        style={{ background: 'hsl(12,76%,61%,0.12)' }}>
+        <Icon className="w-6 h-6" style={{ color: C.coral }} />
+      </div>
+      <p className="text-3xl md:text-4xl font-extrabold" style={{ color: C.dark }}>
+        {count}{suffix}
+      </p>
+      <p className="text-sm mt-1" style={{ color: C.textL }}>{label}</p>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -295,6 +401,14 @@ export default function LandingPage() {
     }
   };
 
+  const navLinks = [
+    { id: 'inicio', l: 'INÍCIO' },
+    { id: 'recursos', l: 'RECURSOS' },
+    { id: 'planos', l: 'PREÇOS' },
+    { id: 'faq', l: 'FAQ' },
+    { id: 'contato', l: 'CONTATO' },
+  ];
+
   return (
     <>
       {/* Fixed gradient bg */}
@@ -306,25 +420,21 @@ export default function LandingPage() {
 
         {/* ══ NAVBAR ══ */}
         <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white shadow-md' : 'bg-white'
+          scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white'
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[72px]">
             <img src={elolabLogo} alt="EloLab" className="h-12 md:h-14 w-auto" />
             <div className="hidden lg:flex items-center gap-7">
-              {[
-                { id: 'inicio', l: 'INÍCIO' },
-                { id: 'recursos', l: 'RECURSOS' },
-                { id: 'planos', l: 'PREÇOS' },
-                { id: 'modulos', l: 'FAQ' },
-                { id: 'depoimentos', l: 'CONTATO' },
-              ].map(n => (
+              {navLinks.map(n => (
                 <button
                   key={n.id}
                   onClick={() => scrollTo(n.id)}
-                  className="text-[13px] font-bold tracking-wide hover:text-[hsl(12,76%,61%)] transition-colors relative pb-1"
+                  className="text-[13px] font-bold tracking-wide hover:text-[hsl(12,76%,61%)] transition-colors relative pb-1 group"
                   style={{ color: C.dark }}
                 >
                   {n.l}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 rounded-full transition-all duration-300 group-hover:w-full"
+                    style={{ background: C.coral }} />
                 </button>
               ))}
             </div>
@@ -333,14 +443,14 @@ export default function LandingPage() {
                 href="https://wa.me/5511937687369"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-transform hover:scale-105"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-lg"
                 style={{ background: '#25D366' }}
               >
                 <Phone className="w-4 h-4" /> CHAMAR
               </a>
               <Button
                 onClick={goToAuth}
-                className="px-6 py-2.5 rounded-lg text-sm font-bold text-white border-0 transition-transform hover:scale-105"
+                className="px-6 py-2.5 rounded-lg text-sm font-bold text-white border-0 transition-all hover:scale-105 hover:shadow-lg"
                 style={{ background: C.dark }}
               >
                 ENTRAR
@@ -352,8 +462,8 @@ export default function LandingPage() {
           </div>
           {mobileMenu && (
             <div className="lg:hidden bg-white border-t border-gray-100 px-6 pb-6 space-y-1 animate-fade-in shadow-lg">
-              {['INÍCIO', 'RECURSOS', 'PREÇOS', 'FAQ', 'CONTATO'].map(l => (
-                <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="block w-full text-left py-3 text-sm font-bold tracking-wide" style={{ color: C.dark }}>{l}</button>
+              {navLinks.map(n => (
+                <button key={n.id} onClick={() => scrollTo(n.id)} className="block w-full text-left py-3 text-sm font-bold tracking-wide" style={{ color: C.dark }}>{n.l}</button>
               ))}
               <div className="pt-3 flex flex-col gap-2">
                 <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer"
@@ -373,29 +483,49 @@ export default function LandingPage() {
             background: 'linear-gradient(135deg, hsl(210,70%,35%) 0%, hsl(215,75%,30%) 50%, hsl(220,65%,25%) 100%)',
             clipPath: 'ellipse(85% 100% at 30% 0%)',
           }} />
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 z-[1] opacity-[0.03]" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }} />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 lg:py-36">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
               {/* Left: Text */}
               <div className="animate-fade-in">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+                  <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                  <span className="text-xs font-semibold text-white/90">Novo: Agente IA WhatsApp 24h</span>
+                </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-light leading-[1.15] tracking-tight text-white">
                   O melhor<br />
                   <span className="font-extrabold">sistema de gestão</span><br />
                   para sua clínica.
                 </h1>
-                <div className="mt-10">
+                <p className="mt-5 text-base md:text-lg text-white/70 max-w-lg leading-relaxed">
+                  Agenda, prontuário, financeiro, laboratório e WhatsApp IA — tudo integrado em uma única plataforma.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => scrollTo('planos')}
-                    className="rounded-lg px-8 py-3.5 text-sm font-bold border-2 border-white bg-white hover:bg-white/90 transition-colors"
+                    className="rounded-lg px-8 py-3.5 text-sm font-bold border-2 border-white bg-white hover:bg-white/90 transition-all hover:scale-105 hover:shadow-xl"
                     style={{ color: 'hsl(215,75%,30%)' }}
                   >
-                    Quero começar agora
+                    Começar teste grátis <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <Button
+                    onClick={() => scrollTo('modulos')}
+                    variant="ghost"
+                    className="rounded-lg px-8 py-3.5 text-sm font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-all"
+                  >
+                    Ver módulos
                   </Button>
                 </div>
-                <div className="mt-6 flex items-center gap-5 text-xs font-medium text-white/70">
+                <div className="mt-8 flex items-center gap-6 text-xs font-medium text-white/60">
                   <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> LGPD</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 3 dias grátis</span>
                   <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> 100% seguro</span>
+                  <span className="flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5" /> Sem cartão</span>
                 </div>
               </div>
 
@@ -404,14 +534,12 @@ export default function LandingPage() {
                 {/* Desktop mockup */}
                 <div className="relative" style={{ animation: 'heroFloat 4s ease-in-out infinite' }}>
                   <div className="w-[320px] md:w-[380px] rounded-xl overflow-hidden shadow-2xl border border-white/10">
-                    {/* Title bar */}
                     <div className="h-8 bg-gray-200 flex items-center px-3 gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                       <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                       <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
                       <span className="ml-3 text-[10px] text-gray-500 font-medium">EloLab — Dashboard</span>
                     </div>
-                    {/* Screen */}
                     <div className="bg-white p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: C.grad }}>
@@ -419,7 +547,7 @@ export default function LandingPage() {
                         </div>
                         <div>
                           <p className="text-[10px] font-bold" style={{ color: C.dark }}>Painel</p>
-                          <p className="text-[8px]" style={{ color: C.textL }}>Hoje, 23 Mar 2026</p>
+                          <p className="text-[8px]" style={{ color: C.textL }}>Hoje, 15 Abr 2026</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2 mb-3">
@@ -444,7 +572,6 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  {/* Desktop stand */}
                   <div className="mx-auto w-20 h-5 bg-gray-300 rounded-b-lg" />
                   <div className="mx-auto w-32 h-2 bg-gray-200 rounded-b-lg" />
                 </div>
@@ -452,11 +579,9 @@ export default function LandingPage() {
                 {/* Phone mockup */}
                 <div className="relative -mb-4" style={{ animation: 'heroFloat 4s ease-in-out infinite 1s' }}>
                   <div className="w-[140px] md:w-[160px] rounded-[24px] overflow-hidden shadow-2xl border-4 border-gray-800 bg-gray-800">
-                    {/* Notch */}
                     <div className="h-5 bg-gray-800 flex justify-center">
                       <div className="w-16 h-3 bg-gray-900 rounded-b-xl" />
                     </div>
-                    {/* Screen */}
                     <div className="bg-white p-3">
                       <div className="flex items-center gap-1.5 mb-2">
                         <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: C.grad }}>
@@ -479,7 +604,6 @@ export default function LandingPage() {
                         </div>
                       ))}
                     </div>
-                    {/* Home bar */}
                     <div className="h-4 bg-gray-800 flex justify-center items-center">
                       <div className="w-10 h-1 bg-gray-600 rounded-full" />
                     </div>
@@ -488,7 +612,18 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+        </section>
 
+        {/* ══ STATS STRIP ══ */}
+        <section className="py-16 md:py-20 relative">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+              <StatCounter end={500} suffix="+" label="Profissionais de saúde" icon={Users} />
+              <StatCounter end={24} suffix="" label="Módulos integrados" icon={Zap} />
+              <StatCounter end={99} suffix=".9%" label="Uptime garantido" icon={TrendingUp} />
+              <StatCounter end={40} suffix="%" label="Menos faltas" icon={Award} />
+            </div>
+          </div>
         </section>
 
         {/* ══ FEATURE SECTIONS ══ */}
@@ -498,7 +633,12 @@ export default function LandingPage() {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                   <div className={`flex justify-center ${f.rev ? 'lg:order-2' : 'lg:order-1'}`}>
-                    <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg" loading="lazy" />
+                    <div className="relative group">
+                      <img src={f.img} alt={f.alt} className="w-full max-w-[440px] rounded-3xl shadow-lg transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+                      {/* Decorative glow behind image */}
+                      <div className="absolute -inset-4 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                        style={{ background: 'radial-gradient(circle, hsl(12,76%,61%,0.08), transparent 70%)' }} />
+                    </div>
                   </div>
                   <div className={f.rev ? 'lg:order-1' : 'lg:order-2'}>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight" style={{ color: C.dark }}>
@@ -519,9 +659,9 @@ export default function LandingPage() {
                         ))}
                       </ul>
                     )}
-                    <Button onClick={goToAuth} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0"
+                    <Button onClick={goToAuth} className="mt-8 rounded-full px-8 py-3 text-sm font-bold text-white border-0 transition-all hover:scale-105 hover:shadow-lg"
                       style={{ background: C.grad }}>
-                      {f.cta}
+                      {f.cta} <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
                 </div>
@@ -530,7 +670,7 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* ══ GROUPED MODULES (4 groups × 6 cards with banner strips) ══ */}
+        {/* ══ GROUPED MODULES ══ */}
         <section id="modulos">
           <div className="text-center py-16 md:py-20">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
@@ -545,7 +685,6 @@ export default function LandingPage() {
 
           {moduleGroups.map((group, gi) => (
             <React.Fragment key={gi}>
-              {/* Banner strip */}
               <div className="relative h-[180px] md:h-[220px] overflow-hidden">
                 <img src={group.strip} alt={group.stripText} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, hsl(20,25%,18%,0.75), hsl(12,76%,61%,0.45))' }} />
@@ -557,11 +696,10 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* 6 cards grid */}
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {group.modules.map((m, mi) => (
-                    <div key={mi} className="relative group rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-200 overflow-hidden">
+                    <div key={mi} className="relative group rounded-2xl bg-white/70 border border-[hsl(20,30%,90%)] hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1">
                       <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} />
                       <div className="h-36 overflow-hidden">
                         <img src={m.img} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -584,7 +722,7 @@ export default function LandingPage() {
           ))}
         </section>
 
-        {/* ══ PRICING CARDS ══ */}
+        {/* ══ PRICING ══ */}
         <section id="planos" className="py-20 md:py-28">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
@@ -600,13 +738,14 @@ export default function LandingPage() {
               {plans.map((plan) => (
                 <div
                   key={plan.slug}
-                  className={`relative rounded-3xl p-8 border-2 transition-all duration-200 ${
+                  className={`relative rounded-3xl p-8 border-2 transition-all duration-300 hover:-translate-y-1 ${
                     plan.popular
                       ? 'border-[hsl(12,76%,61%)] shadow-xl scale-[1.02]'
                       : 'border-[hsl(20,30%,90%)] bg-white/70 hover:shadow-lg'
                   }`}
                   style={plan.popular ? {
                     background: 'linear-gradient(160deg, hsl(40,60%,97%), hsl(38,80%,95%), hsl(30,70%,96%))',
+                    animation: 'pulseGlow 3s ease-in-out infinite',
                   } : undefined}
                 >
                   <GlowingEffect spread={40} glow disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
@@ -637,7 +776,7 @@ export default function LandingPage() {
                   <div className="mt-8 space-y-3">
                     <Button
                       onClick={() => openCheckout(plan, 'trial')}
-                      className="w-full rounded-full py-3 font-bold text-white border-0"
+                      className="w-full rounded-full py-3 font-bold text-white border-0 transition-all hover:scale-[1.02] hover:shadow-lg"
                       style={{ background: C.grad, boxShadow: plan.popular ? '0 8px 24px -4px hsl(12,76%,61%,0.4)' : undefined }}
                     >
                       <Clock className="w-4 h-4 mr-2" /> Teste Grátis 3 Dias
@@ -645,7 +784,7 @@ export default function LandingPage() {
                     <Button
                       variant="outline"
                       onClick={() => openCheckout(plan, 'buy')}
-                      className="w-full rounded-full py-3 font-bold border-2"
+                      className="w-full rounded-full py-3 font-bold border-2 transition-all hover:scale-[1.02]"
                       style={{ borderColor: C.coral, color: C.coral }}
                     >
                       <CreditCard className="w-4 h-4 mr-2" /> Assinar Agora
@@ -660,7 +799,7 @@ export default function LandingPage() {
         {/* ══ CHECKOUT MODAL ══ */}
         {checkoutOpen && selectedPlan && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => !loading && setCheckoutOpen(false)}>
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <div
               className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl animate-fade-in"
               onClick={(e) => e.stopPropagation()}
@@ -734,7 +873,7 @@ export default function LandingPage() {
               <Button
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full mt-6 rounded-full py-3 font-bold text-white border-0"
+                className="w-full mt-6 rounded-full py-3 font-bold text-white border-0 transition-all hover:scale-[1.02]"
                 style={{ background: C.grad }}
               >
                 {loading ? (
@@ -767,11 +906,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Row 1 - scrolls left */}
+          {/* Row 1 */}
           <div className="relative mb-5">
             <div className="flex gap-5 animate-[scrollLeft_60s_linear_infinite] w-max">
               {[...testimonials, ...testimonials].map((t, i) => (
-                <div key={`r1-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                <div key={`r1-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-center gap-3 mb-4">
                     <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
                     <div>
@@ -788,11 +927,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Row 2 - scrolls right */}
+          {/* Row 2 */}
           <div className="relative">
             <div className="flex gap-5 animate-[scrollRight_55s_linear_infinite] w-max">
               {[...testimonials.slice(10), ...testimonials.slice(0, 10), ...testimonials.slice(10), ...testimonials.slice(0, 10)].map((t, i) => (
-                <div key={`r2-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-shadow duration-300">
+                <div key={`r2-${i}`} className="flex-shrink-0 w-[340px] bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[hsl(20,30%,90%)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-center gap-3 mb-4">
                     <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(12,76%,61%,0.3)]" loading="lazy" />
                     <div>
@@ -806,39 +945,103 @@ export default function LandingPage() {
                   <p className="text-sm leading-relaxed" style={{ color: C.text }}>"{t.text}"</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══ FAQ ══ */}
+        <section id="faq" className="py-20 md:py-28">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
+                Perguntas{' '}
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: C.grad }}>Frequentes</span>
+              </h2>
+              <p className="mt-3 text-lg" style={{ color: C.textL }}>
+                Tire suas dúvidas sobre o EloLab
+              </p>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-[hsl(20,30%,90%)] p-6 md:p-8 shadow-sm">
+              {faqItems.map((item, i) => (
+                <FaqItem key={i} q={item.q} a={item.a} />
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <p className="text-sm" style={{ color: C.textL }}>
+                Ainda tem dúvidas?{' '}
+                <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer"
+                  className="font-bold hover:underline" style={{ color: C.coral }}>
+                  Fale conosco no WhatsApp
+                </a>
+              </p>
             </div>
           </div>
         </section>
 
         {/* ══ FINAL CTA ══ */}
         <section className="py-20 md:py-28">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: C.dark }}>
-              Pronto para transformar sua clínica?
-            </h2>
-            <p className="mt-4 text-lg" style={{ color: C.textL }}>
-              Comece agora com 3 dias grátis. Sem cartão de crédito. Sem compromisso.
-            </p>
-            <Button size="xl" onClick={goToAuth} className="mt-10 rounded-full px-10 text-base font-bold text-white border-0"
-              style={{ background: C.grad, boxShadow: '0 10px 30px -5px hsl(12,76%,61%,0.35)' }}>
-              Quero começar agora <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="relative rounded-3xl overflow-hidden p-12 md:p-16 text-center"
+              style={{ background: 'linear-gradient(135deg, hsl(210,70%,35%), hsl(215,75%,30%), hsl(220,65%,25%))' }}>
+              {/* Pattern overlay */}
+              <div className="absolute inset-0 opacity-[0.04]" style={{
+                backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+                backgroundSize: '24px 24px',
+              }} />
+              <div className="relative z-10">
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+                  Pronto para transformar sua clínica?
+                </h2>
+                <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto">
+                  Comece agora com 3 dias grátis. Sem cartão de crédito. Sem compromisso.
+                </p>
+                <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button size="lg" onClick={goToAuth}
+                    className="rounded-full px-10 text-base font-bold border-2 border-white bg-white hover:bg-white/90 transition-all hover:scale-105 hover:shadow-xl"
+                    style={{ color: 'hsl(215,75%,30%)' }}>
+                    Começar teste grátis <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer">
+                    <Button size="lg" variant="ghost"
+                      className="rounded-full px-10 text-base font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-all w-full">
+                      <Headphones className="w-4 h-4 mr-2" /> Falar com consultor
+                    </Button>
+                  </a>
+                </div>
+                <div className="mt-8 flex items-center justify-center gap-6 text-xs font-medium text-white/50">
+                  <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Dados protegidos</span>
+                  <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> LGPD compliant</span>
+                  <span className="flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5" /> Sem cartão</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ══ FOOTER ══ */}
-        <footer style={{ background: C.dark }} className="py-12">
+        <footer style={{ background: C.dark }} className="py-12" id="contato">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <div>
                 <img src={elolabLogo} alt="EloLab" className="h-12 w-auto brightness-0 invert mb-4" />
                 <p className="text-sm text-white/50 leading-relaxed">Sistema completo de gestão para clínicas médicas e laboratórios.</p>
+                <div className="mt-4 flex gap-3">
+                  <a href="https://wa.me/5511937687369" target="_blank" rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors">
+                    <Phone className="w-4 h-4 text-white/70" />
+                  </a>
+                  <a href="mailto:suporte@elolab.com.br"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors">
+                    <Mail className="w-4 h-4 text-white/70" />
+                  </a>
+                </div>
               </div>
               <div>
                 <h4 className="font-bold text-sm text-white mb-4">Produto</h4>
                 <ul className="space-y-2 text-sm text-white/50">
                   <li><button onClick={() => scrollTo('recursos')} className="hover:text-white transition-colors">Recursos</button></li>
                   <li><button onClick={() => scrollTo('modulos')} className="hover:text-white transition-colors">Módulos</button></li>
+                  <li><button onClick={() => scrollTo('planos')} className="hover:text-white transition-colors">Preços</button></li>
                   <li><button onClick={() => scrollTo('depoimentos')} className="hover:text-white transition-colors">Depoimentos</button></li>
                 </ul>
               </div>
