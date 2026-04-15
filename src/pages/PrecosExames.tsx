@@ -412,11 +412,22 @@ function PrecosInternos() {
               <Label className="text-xs font-semibold">Nome do Exame *</Label>
               <ExameCombobox value={form.nome} onChange={(nome, tuss) => setForm(p => ({ ...p, nome, codigo_tuss: tuss || p.codigo_tuss }))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Código TUSS</Label>
-                <Input value={form.codigo_tuss} onChange={(e) => setForm(p => ({ ...p, codigo_tuss: e.target.value }))}
-                  placeholder="40301630" className="font-mono" />
+                <div className="flex gap-1.5">
+                  <Input value={form.codigo_tuss} onChange={(e) => setForm(p => ({ ...p, codigo_tuss: e.target.value }))}
+                    placeholder="Ex: 40301630 ou livre" className="font-mono flex-1" />
+                  <Button type="button" variant="outline" size="sm" className="h-9 px-2 text-xs whitespace-nowrap"
+                    onClick={() => {
+                      const auto = 'INT' + Date.now().toString().slice(-7);
+                      setForm(p => ({ ...p, codigo_tuss: auto }));
+                    }}
+                    title="Gerar código interno automático"
+                  >
+                    Auto
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Descrição</Label>
