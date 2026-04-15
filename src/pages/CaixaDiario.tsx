@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +18,15 @@ import {
   TrendingUp, TrendingDown, Banknote, CreditCard, QrCode, Wallet, ArrowDownToLine,
   ArrowUpFromLine, FileText, History, DollarSign, Receipt, ChevronRight, CalendarDays,
   BarChart3, Eye, Stethoscope, ShoppingBag, ShoppingCart, CheckCircle2,
+  ArrowUpRight, ArrowDownRight, ClipboardList, Tag,
 } from 'lucide-react';
+
+const LazyContasReceber = lazy(() => import('./ContasReceber'));
+const LazyContasPagar = lazy(() => import('./ContasPagar'));
+const LazyFluxoCaixa = lazy(() => import('./FluxoCaixa'));
+const LazyPrecosExames = lazy(() => import('./PrecosExames'));
+const LazyTiposConsulta = lazy(() => import('./TiposConsulta'));
+const LazyRelatorios = lazy(() => import('./Relatorios'));
 import { printReceiptPdf, downloadReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -515,14 +523,24 @@ export default function CaixaDiario() {
 
       {/* ─── Tabs ─── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-sm grid-cols-2">
-          <TabsTrigger value="hoje" className="gap-1.5">
-            <Receipt className="h-4 w-4" /> Caixa Hoje
-          </TabsTrigger>
-          <TabsTrigger value="historico" className="gap-1.5">
-            <History className="h-4 w-4" /> Histórico
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="inline-flex w-auto min-w-full md:min-w-0 gap-0.5">
+            {[
+              { v: 'hoje', l: 'Caixa Hoje', i: Receipt },
+              { v: 'historico', l: 'Histórico', i: History },
+              { v: 'receber', l: 'Contas a Receber', i: ArrowUpRight },
+              { v: 'pagar', l: 'Contas a Pagar', i: ArrowDownRight },
+              { v: 'fluxo', l: 'Fluxo de Caixa', i: TrendingUp },
+              { v: 'precos', l: 'Tabela de Preços', i: Tag },
+              { v: 'tipos', l: 'Tipos de Consulta', i: Stethoscope },
+              { v: 'relatorios', l: 'Relatórios', i: ClipboardList },
+            ].map(tab => (
+              <TabsTrigger key={tab.v} value={tab.v} className="gap-1.5 text-xs whitespace-nowrap px-3">
+                <tab.i className="h-3.5 w-3.5" /> {tab.l}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {/* ═══ TAB HOJE ═══ */}
         <TabsContent value="hoje" className="space-y-5 mt-4">
@@ -805,6 +823,43 @@ export default function CaixaDiario() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ═══ FERRAMENTAS FINANCEIRAS ═══ */}
+        <TabsContent value="receber" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyContasReceber />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="pagar" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyContasPagar />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="fluxo" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyFluxoCaixa />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="precos" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyPrecosExames />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="tipos" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyTiposConsulta />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="relatorios" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyRelatorios />
+          </Suspense>
         </TabsContent>
       </Tabs>
 
