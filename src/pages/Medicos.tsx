@@ -548,7 +548,7 @@ export default function Medicos() {
         if (formData.email && newMedico) {
           try {
             const { data: funcData, error: funcError } = await supabase.from('funcionarios')
-              .insert({ nome: formData.nome, email: formData.email, cargo: 'Médico', departamento: formData.especialidade || 'Clínico', ativo: true, clinica_id: profile?.clinica_id || null })
+              .insert({ nome: formData.nome, email: formData.email, cargo: 'Médico', departamento: formData.especialidade || 'Clínico', ativo: true, clinica_id: profile?.clinica_id || null, pending_roles: ['medico'] } as any)
               .select().single();
             if (!funcError && funcData) {
               const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-employee-invitation', {
