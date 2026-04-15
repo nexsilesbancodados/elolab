@@ -1,6 +1,6 @@
 /**
  * Auto-billing utility: creates a lancamento (billing entry) when
- * an appointment is finalized, with price lookup from tipos_consulta
+ * an appointment is checked in or finalized, with price lookup from tipos_consulta
  * and convenio-specific pricing.
  */
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,7 @@ interface AutoBillingParams {
   convenioId?: string | null;
   tipoConsulta?: string | null;
   data?: string; // YYYY-MM-DD, defaults to today
+  clinicaId?: string | null;
 }
 
 export async function createAutoBilling(params: AutoBillingParams): Promise<boolean> {
@@ -23,10 +24,25 @@ export async function createAutoBilling(params: AutoBillingParams): Promise<bool
     convenioId,
     tipoConsulta,
     data = format(new Date(), 'yyyy-MM-dd'),
+    clinicaId,
   } = params;
 
-  // Check if lancamento already exists for this agendamento
-  const { data: existing } = await supabase
+  // Resolve clinica_id: use param, or fetch from user profile
+  let resolvedClinicaId = clinicaId || null;
+  if (!resolvedClinicaId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('clinica_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      resolvedClinicaId = prof?.clinica_id || null;
+    }
+  }
+
+  // Check if lancamento already exists for this agendamento (bypass RLS issue by also checking without clinica filter)
+  const { data: existing } = await (supabase as any)
     .from('lancamentos')
     .select('id')
     .eq('agendamento_id', agendamentoId)
@@ -75,10 +91,15 @@ export async function createAutoBilling(params: AutoBillingParams): Promise<bool
     if (conv?.valor_consulta) valor = conv.valor_consulta;
   }
 
-  const { error } = await supabase.from('lancamentos').insert({
+  // Build full description with patient name and type
+  const fullDescricao = tipoConsulta
+    ? `${descricao} - ${pacienteNome} - ${tipoConsulta}`
+    : `${descricao} — ${pacienteNome}`;
+
+  const { error } = await (supabase as any).from('lancamentos').insert({
     tipo: 'receita',
     categoria: 'consulta',
-    descricao: `${descricao} — ${pacienteNome}`,
+    descricao: fullDescricao,
     valor,
     data,
     data_vencimento: data,
@@ -86,7 +107,13 @@ export async function createAutoBilling(params: AutoBillingParams): Promise<bool
     paciente_id: pacienteId,
     agendamento_id: agendamentoId,
     forma_pagamento: null,
+    clinica_id: resolvedClinicaId,
   });
 
-  return !error;
+  if (error) {
+    console.error('Auto-billing insert error:', error);
+    return false;
+  }
+
+  return true;
 }
