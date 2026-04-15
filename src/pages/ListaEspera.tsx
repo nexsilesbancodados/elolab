@@ -359,7 +359,7 @@ export default function ListaEspera() {
                         <TableCell className="hidden sm:table-cell">
                           <span className={cn(
                             diasEspera > 30 ? 'text-destructive font-medium' :
-                            diasEspera > 14 ? 'text-yellow-600' : ''
+                            diasEspera > 14 ? 'text-warning' : ''
                           )}>
                             {diasEspera} dias
                           </span>
