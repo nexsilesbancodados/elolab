@@ -970,8 +970,7 @@ export default function Agenda() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-semibold text-sm">{getPacienteNome(agendamento.paciente_id)}</p>
-                                  <p className="text-xs opacity-75">{getMedicoNome(agendamento.medico_id)}</p>
-                                  {agendamento.tipo && <p className="text-xs opacity-60 mt-0.5">{agendamento.tipo}</p>}
+                                  <p className="text-xs opacity-75">{agendamento.medico_id ? getMedicoNome(agendamento.medico_id) : (agendamento.tipo || 'Agendamento')}</p>
                                 </div>
                                 <Badge className={cn('text-[10px]', STATUS_COLORS[agendamento.status || 'agendado'])}>
                                   {STATUS_LABELS[agendamento.status as StatusAgendamento || 'agendado']}
