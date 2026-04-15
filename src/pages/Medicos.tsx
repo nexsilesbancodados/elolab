@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -79,6 +79,82 @@ const initialFormData: FormData = {
   especialidade: '', telefone: '', intervalo_consulta: 30, ativo: true,
   foto_url: '', carimbo_url: '',
 };
+
+// ─── Especialidade Combobox ───
+function EspecialidadeCombobox({ value, onChange, especialidadesExtras }: { value: string; onChange: (v: string) => void; especialidadesExtras: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const allEspecialidades = useMemo(() => {
+    const merged = new Set([...ESPECIALIDADES_SUGESTOES, ...especialidadesExtras]);
+    return Array.from(merged).sort();
+  }, [especialidadesExtras]);
+
+  const filtered = useMemo(() => {
+    if (!search) return allEspecialidades;
+    const term = search.toLowerCase();
+    return allEspecialidades.filter(e => e.toLowerCase().includes(term));
+  }, [search, allEspecialidades]);
+
+  const handleSelect = (esp: string) => {
+    onChange(esp);
+    setSearch('');
+    setOpen(false);
+  };
+
+  return (
+    <div className="mt-4 space-y-1.5">
+      <Label className="text-xs">Especialidade</Label>
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={open ? search : value}
+          onChange={e => {
+            setSearch(e.target.value);
+            onChange(e.target.value);
+            if (!open) setOpen(true);
+          }}
+          onFocus={() => { setOpen(true); setSearch(value); }}
+          onBlur={() => setTimeout(() => setOpen(false), 200)}
+          placeholder="Digite ou selecione uma especialidade"
+          autoComplete="off"
+        />
+        {value && !open && (
+          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            onClick={() => { onChange(''); setSearch(''); inputRef.current?.focus(); }}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        <AnimatePresence>
+          {open && filtered.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+              className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border bg-popover shadow-lg"
+            >
+              {filtered.map(esp => (
+                <button key={esp} type="button"
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${esp === value ? 'bg-primary/10 text-primary font-medium' : 'text-popover-foreground'}`}
+                  onMouseDown={e => { e.preventDefault(); handleSelect(esp); }}
+                >
+                  {esp}
+                </button>
+              ))}
+              {search && !filtered.some(e => e.toLowerCase() === search.toLowerCase()) && (
+                <button type="button"
+                  className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-accent transition-colors border-t"
+                  onMouseDown={e => { e.preventDefault(); handleSelect(search); }}
+                >
+                  + Criar "{search}"
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 // ─── Doctor Profile Panel ───
 function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose: () => void; onEdit: () => void }) {
@@ -826,33 +902,11 @@ export default function Medicos() {
                 </div>
 
                 {/* Especialidade with suggestions */}
-                <div className="mt-4 space-y-1.5">
-                  <Label className="text-xs">Especialidade</Label>
-                  <div className="relative">
-                    <Input value={formData.especialidade} 
-                      onChange={e => setFormData(p => ({ ...p, especialidade: e.target.value }))} 
-                      placeholder="Digite ou selecione uma especialidade"
-                      list="especialidades-list" />
-                    <datalist id="especialidades-list">
-                      {[...ESPECIALIDADES_SUGESTOES, ...especialidades.filter(e => !ESPECIALIDADES_SUGESTOES.includes(e))].sort().map(e => (
-                        <option key={e} value={e} />
-                      ))}
-                    </datalist>
-                  </div>
-                  {formData.especialidade && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {ESPECIALIDADES_SUGESTOES.filter(e => 
-                        e.toLowerCase().includes(formData.especialidade.toLowerCase()) && 
-                        e.toLowerCase() !== formData.especialidade.toLowerCase()
-                      ).slice(0, 4).map(sug => (
-                        <Badge key={sug} variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
-                          onClick={() => setFormData(p => ({ ...p, especialidade: sug }))}>
-                          {sug}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <EspecialidadeCombobox 
+                  value={formData.especialidade}
+                  onChange={(v) => setFormData(p => ({ ...p, especialidade: v }))}
+                  especialidadesExtras={especialidades}
+                />
               </div>
 
               <Separator />
