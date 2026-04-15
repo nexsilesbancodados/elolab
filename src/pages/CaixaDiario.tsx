@@ -125,7 +125,7 @@ export default function CaixaDiario() {
 
   // POS state
   const [carrinho, setCarrinho] = useState<ProdutoCarrinho[]>([]);
-  const [catalogoTab, setCatalogoTab] = useState<'consultas' | 'produtos' | 'manual'>('consultas');
+  const [catalogoTab, setCatalogoTab] = useState<'consultas' | 'exames' | 'produtos' | 'manual'>('consultas');
   const [catalogoSearch, setCatalogoSearch] = useState('');
   const [lancFormaPagamento, setLancFormaPagamento] = useState<FormaPagamento>('dinheiro');
   const [lancDesconto, setLancDesconto] = useState('');
