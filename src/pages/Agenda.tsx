@@ -400,7 +400,7 @@ export default function Agenda() {
           .from('agendamentos')
           .update({
             paciente_id: formData.paciente_id,
-            medico_id: formData.medico_id,
+            medico_id: formData.medico_id || null,
             data: formData.data!,
             hora_inicio: normalizeTime(formData.hora_inicio)!,
             hora_fim: normalizeTime(formData.hora_fim),
@@ -408,7 +408,7 @@ export default function Agenda() {
             status: formData.status,
             observacoes: formData.observacoes,
             clinica_id: clinicaId,
-          })
+          } as any)
           .eq('id', formData.id);
 
         if (error) throw error;
