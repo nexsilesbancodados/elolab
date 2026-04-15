@@ -1379,13 +1379,14 @@ export default function Agenda() {
                     <div className="space-y-2">
                       <Label>Especialidade <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                       <Select
-                        value={formData._selectedEsp || '__todas__'}
+                        value={espFilter || '__todas__'}
                         onValueChange={(esp) => {
                           if (esp === '__todas__') {
-                            setFormData({ ...formData, _selectedEsp: '' } as any);
+                            setEspFilter('');
                           } else {
+                            setEspFilter(esp);
                             const firstDoc = medicos.find(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === esp);
-                            setFormData({ ...formData, _selectedEsp: esp, medico_id: firstDoc?.id || '' } as any);
+                            setFormData({ ...formData, medico_id: firstDoc?.id || '' });
                           }
                         }}
                       >
@@ -1415,7 +1416,6 @@ export default function Agenda() {
                         </SelectTrigger>
                         <SelectContent>
                           {(() => {
-                            const espFilter = (formData as any)._selectedEsp;
                             const filtered = espFilter
                               ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === espFilter)
                               : medicos.filter(m => m.ativo !== false);
