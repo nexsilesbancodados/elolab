@@ -447,7 +447,7 @@ export default function Funcionarios() {
   };
 
   const getInitials = (nome: string) => nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  const getRoleColor = (role: AppRole) => ROLE_CONFIG.find(r => r.role === role)?.color || 'bg-gray-100 text-gray-800';
+  const getRoleColor = (role: AppRole) => ROLE_CONFIG.find(r => r.role === role)?.color || 'bg-muted text-muted-foreground';
   const getRoleLabel = (role: AppRole) => ROLE_CONFIG.find(r => r.role === role)?.label || role;
 
   const selectedTipoConfig = TIPO_FUNCIONARIO_CONFIG.find(t => t.value === formData.tipo_funcionario);
