@@ -152,22 +152,67 @@ function PrecosInternos() {
       )}
 
       <Dialog open={showForm} onOpenChange={(v) => { setShowForm(v); if (!v) setEditIdx(null); }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editIdx !== null ? 'Editar Exame' : 'Novo Exame Particular'}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Nome do Exame *</Label><Input value={form.nome} onChange={(e) => setForm(p => ({ ...p, nome: e.target.value }))} placeholder="Hemograma Completo" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Código TUSS</Label><Input value={form.codigo_tuss} onChange={(e) => setForm(p => ({ ...p, codigo_tuss: e.target.value }))} placeholder="40301630" /></div>
-              <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm(p => ({ ...p, descricao: e.target.value }))} /></div>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+              {editIdx !== null ? 'Editar Exame' : 'Novo Exame Particular'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Nome do Exame *</Label>
+              <Input value={form.nome} onChange={(e) => setForm(p => ({ ...p, nome: e.target.value }))}
+                placeholder="Ex: Hemograma Completo, Ultrassom..." autoFocus className="h-11" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Valor Particular (R$) *</Label><Input type="number" step="0.01" value={form.valor} onChange={(e) => setForm(p => ({ ...p, valor: e.target.value }))} /></div>
-              <div><Label>Custo (R$)</Label><Input type="number" step="0.01" value={form.custo} onChange={(e) => setForm(p => ({ ...p, custo: e.target.value }))} /></div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Código TUSS</Label>
+                <Input value={form.codigo_tuss} onChange={(e) => setForm(p => ({ ...p, codigo_tuss: e.target.value }))}
+                  placeholder="40301630" className="font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Descrição</Label>
+                <Input value={form.descricao} onChange={(e) => setForm(p => ({ ...p, descricao: e.target.value }))}
+                  placeholder="Breve descrição" />
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Valor Particular (R$) *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+                  <Input type="number" step="0.01" min="0" value={form.valor}
+                    onChange={(e) => setForm(p => ({ ...p, valor: e.target.value }))}
+                    placeholder="0,00" className="pl-10 h-11 text-lg font-bold tabular-nums" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Custo (R$)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+                  <Input type="number" step="0.01" min="0" value={form.custo}
+                    onChange={(e) => setForm(p => ({ ...p, custo: e.target.value }))}
+                    placeholder="0,00" className="pl-10 h-11 tabular-nums" />
+                </div>
+              </div>
+            </div>
+            {form.valor && form.custo && Number(form.custo) > 0 && (
+              <div className="p-3 rounded-lg bg-muted/50 border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Margem de lucro</span>
+                <Badge variant={((Number(form.valor) - Number(form.custo)) / Number(form.valor) * 100) >= 50 ? 'default' : 'secondary'}>
+                  {(((Number(form.valor) - Number(form.custo)) / Number(form.valor)) * 100).toFixed(1)}%
+                </Badge>
+              </div>
+            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.nome || !form.valor}>{editIdx !== null ? 'Salvar' : 'Cadastrar'}</Button>
+            <Button onClick={handleSave} disabled={!form.nome || !form.valor} className="gap-2">
+              {editIdx !== null ? 'Salvar Alterações' : 'Cadastrar Exame'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
