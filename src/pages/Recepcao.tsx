@@ -255,7 +255,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lancamentos' }, () => {
         queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracoes_clinica' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'caixa_diario' }, () => {
         queryClient.invalidateQueries({ queryKey: ['caixa-estado-recepcao'] });
       })
       .subscribe();
