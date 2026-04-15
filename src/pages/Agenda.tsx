@@ -599,7 +599,8 @@ export default function Agenda() {
   };
 
   const getPacienteNome = (id: string) => pacientes.find((p) => p.id === id)?.nome || 'Desconhecido';
-  const getMedicoNome = (id: string) => {
+  const getMedicoNome = (id: string | null) => {
+    if (!id) return '';
     const medico = medicos.find((m) => m.id === id);
     return medico ? `Dr(a). ${medico.nome || medico.crm}` : 'Desconhecido';
   };
