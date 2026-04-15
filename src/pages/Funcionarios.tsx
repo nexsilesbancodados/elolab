@@ -241,19 +241,10 @@ export default function Funcionarios() {
         .order('nome');
       if (funcsError) throw funcsError;
 
-      const funcionariosWithRoles: FuncionarioWithRoles[] = await Promise.all(
-        (funcs || []).map(async (func) => {
-          let roles: AppRole[] = [];
-          if (func.user_id) {
-            const { data: rolesData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', func.user_id);
-            roles = (rolesData?.map(r => r.role) || []) as AppRole[];
-          }
-          return { ...func, roles };
-        })
-      );
+      const funcionariosWithRoles: FuncionarioWithRoles[] = (funcs || []).map((func: any) => {
+        const roles = (func.pending_roles || []) as AppRole[];
+        return { ...func, roles };
+      });
       return funcionariosWithRoles;
     },
   });
@@ -279,11 +270,13 @@ export default function Funcionarios() {
           cpf: data.cpf || null,
           carga_horaria: data.carga_horaria ? parseInt(data.carga_horaria) : null,
           turno: data.turno || 'integral',
+          pending_roles: data.selectedRoles,
         } as any)
         .select()
         .single();
       if (funcError) throw funcError;
 
+      // If employee already has an account, sync user_roles too
       if (data.email) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -291,7 +284,8 @@ export default function Funcionarios() {
           .eq('email', data.email)
           .maybeSingle();
         if (profiles?.id) {
-          await supabase.from('funcionarios').update({ user_id: profiles.id }).eq('id', newFunc.id);
+          await supabase.from('funcionarios').update({ user_id: profiles.id } as any).eq('id', newFunc.id);
+          await supabase.from('user_roles').delete().eq('user_id', profiles.id);
           if (data.selectedRoles.length > 0) {
             await supabase.from('user_roles').insert(data.selectedRoles.map(role => ({ user_id: profiles.id, role })));
           }
@@ -327,10 +321,12 @@ export default function Funcionarios() {
           cpf: data.cpf || null,
           carga_horaria: data.carga_horaria ? parseInt(data.carga_horaria) : null,
           turno: data.turno || 'integral',
+          pending_roles: data.selectedRoles,
         } as any)
         .eq('id', id);
       if (funcError) throw funcError;
 
+      // Sync user_roles if employee has an account
       if (userId) {
         await supabase.from('user_roles').delete().eq('user_id', userId);
         if (data.selectedRoles.length > 0) {
