@@ -14,10 +14,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
-  Lock, Unlock, Plus, Loader2, Trash2, Search, Clock, Printer, Download,
+  Lock, Unlock, Plus, Minus, Loader2, Trash2, Search, Clock, Printer, Download,
   TrendingUp, TrendingDown, Banknote, CreditCard, QrCode, Wallet, ArrowDownToLine,
   ArrowUpFromLine, FileText, History, DollarSign, Receipt, ChevronRight, CalendarDays,
-  BarChart3, Eye,
+  BarChart3, Eye, Stethoscope, ShoppingBag, ShoppingCart, CheckCircle2,
 } from 'lucide-react';
 import { printReceiptPdf, downloadReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import {
