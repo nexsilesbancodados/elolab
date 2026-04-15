@@ -45,6 +45,8 @@ const Pagamentos = lazy(() => import("@/pages/Pagamentos"));
 const Planos = lazy(() => import("@/pages/Planos"));
 const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
 const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
+const PrecosServicos = lazy(() => import("@/pages/PrecosServicos"));
+const EquipePage = lazy(() => import("@/pages/Equipe"));
 const Tarefas = lazy(() => import("@/pages/Tarefas"));
 const Retornos = lazy(() => import("@/pages/Retornos"));
 const MapaColeta = lazy(() => import("@/pages/MapaColeta"));
