@@ -185,54 +185,44 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
     },
   });
 
-  // Check if caixa is open (for current user OR any user in the clinic)
+  // Check if caixa is open — single source of truth: caixa_diario table
   const { data: caixaAberto = false, refetch: refetchCaixa } = useQuery({
-    queryKey: ['caixa-estado-recepcao', profile?.id, profile?.clinica_id],
+    queryKey: ['caixa-estado-recepcao', profile?.clinica_id],
     initialData: () => Boolean(readCaixaEstadoLocal(profile?.id, profile?.clinica_id)),
     queryFn: async () => {
-      if (!profile?.id) return false;
+      if (!profile?.clinica_id) return false;
       const todayStr = format(new Date(), 'yyyy-MM-dd');
-      const localKey = `caixa_estado_${profile.id}`;
-      const clinicaKey = profile.clinica_id ? `caixa_estado_clinica_${profile.clinica_id}` : null;
-      
-      // 1. Check localStorage first (instant, most reliable)
+
+      // 1. Check localStorage first (instant)
       const localEstado = readCaixaEstadoLocal(profile.id, profile.clinica_id, todayStr);
       if (isCaixaAbertoHoje(localEstado, todayStr)) return true;
-      
-      // 2. Check current user's caixa in Supabase
-      const { data: own } = await supabase
-        .from('configuracoes_clinica')
-        .select('valor')
-        .eq('chave', 'caixa_estado')
-        .eq('user_id', profile.id)
+
+      // 2. Check caixa_diario table (source of truth)
+      const { data: caixa } = await supabase
+        .from('caixa_diario')
+        .select('id, aberto, data')
+        .eq('data', todayStr)
+        .eq('clinica_id', profile.clinica_id)
         .maybeSingle();
-      if (isCaixaAbertoHoje(own?.valor as CaixaEstadoPersistido | undefined, todayStr)) {
-        localStorage.setItem(localKey, JSON.stringify(own?.valor));
-        if (clinicaKey) localStorage.setItem(clinicaKey, JSON.stringify(own?.valor));
+
+      if (caixa?.aberto) {
+        // Sync to localStorage for fast reads
+        const estado: CaixaEstadoPersistido = { aberto: true, data: todayStr, operador: profile?.nome };
+        const clinicaKey = `caixa_estado_clinica_${profile.clinica_id}`;
+        const userKey = `caixa_estado_${profile.id}`;
+        localStorage.setItem(clinicaKey, JSON.stringify(estado));
+        localStorage.setItem(userKey, JSON.stringify(estado));
         return true;
       }
 
-      if (!profile.clinica_id) return false;
-      
-      // 3. Fallback: check if any colleague has caixa open today
-      const { data: all } = await supabase
-        .from('configuracoes_clinica')
-        .select('valor, user_id')
-        .eq('chave', 'caixa_estado')
-        .eq('clinica_id', profile.clinica_id);
-
-      const openRow = all?.find((row: any) => isCaixaAbertoHoje(row?.valor as CaixaEstadoPersistido | undefined, todayStr));
-      if (openRow?.valor) {
-        if (clinicaKey) localStorage.setItem(clinicaKey, JSON.stringify(openRow.valor));
-        if (openRow.user_id === profile.id) {
-          localStorage.setItem(localKey, JSON.stringify(openRow.valor));
-        }
-        return true;
-      }
-      
+      // Caixa is closed — clear localStorage
+      const clinicaKey = `caixa_estado_clinica_${profile.clinica_id}`;
+      const userKey = `caixa_estado_${profile.id}`;
+      localStorage.removeItem(clinicaKey);
+      localStorage.removeItem(userKey);
       return false;
     },
-    enabled: !!profile?.id,
+    enabled: !!profile?.clinica_id,
     refetchInterval: 10000,
   });
 
