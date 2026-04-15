@@ -1,0 +1,1 @@
+UPDATE public.lancamentos SET clinica_id = p.clinica_id FROM public.pacientes p WHERE lancamentos.paciente_id = p.id AND lancamentos.clinica_id IS NULL AND p.clinica_id IS NOT NULL;
