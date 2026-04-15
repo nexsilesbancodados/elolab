@@ -363,20 +363,20 @@ export default function CaixaDiario() {
   const adicionarLancamentoMutation = useMutation({
     mutationFn: async () => {
       if (!profile?.clinica_id || !caixaHoje?.id) throw new Error('Caixa não está aberto');
-      if (!lancamentoForm.valor || Number(lancamentoForm.valor) <= 0) throw new Error('Valor inválido');
-      if (!lancamentoForm.descricao.trim()) throw new Error('Descrição obrigatória');
+      if (carrinho.length === 0) throw new Error('Adicione pelo menos um item');
+      const descricao = carrinho.map(i => `${i.nome}${i.quantidade > 1 ? ` x${i.quantidade}` : ''}`).join(', ');
       const { error } = await (supabase as any).from('lancamentos').insert({
-        tipo: lancamentoForm.tipo, valor: Number(lancamentoForm.valor),
-        descricao: lancamentoForm.descricao, forma_pagamento: lancamentoForm.forma_pagamento,
-        categoria: lancamentoForm.tipo === 'receita' ? 'receita_caixa' : 'despesa_caixa',
+        tipo: 'receita', valor: carrinhoTotal,
+        descricao, forma_pagamento: lancFormaPagamento,
+        categoria: 'receita_caixa',
         data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Lançamento registrado!');
+      toast.success('Venda registrada!');
       setShowLancamento(false);
-      setLancamentoForm({ tipo: 'receita', valor: '', descricao: '', forma_pagamento: 'dinheiro' });
+      resetPOS();
       queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro'),
