@@ -47,6 +47,10 @@ const Laboratorio = lazy(() => import("@/pages/Laboratorio"));
 const PrecosExames = lazy(() => import("@/pages/PrecosExames"));
 const PrecosServicos = lazy(() => import("@/pages/PrecosServicos"));
 const EquipePage = lazy(() => import("@/pages/Equipe"));
+const DocumentosClinicos = lazy(() => import("@/pages/DocumentosClinicos"));
+const ContasPage = lazy(() => import("@/pages/Contas"));
+const GestaoFluxo = lazy(() => import("@/pages/GestaoFluxo"));
+const TemplatesUnificado = lazy(() => import("@/pages/TemplatesUnificado"));
 const Tarefas = lazy(() => import("@/pages/Tarefas"));
 const Retornos = lazy(() => import("@/pages/Retornos"));
 const MapaColeta = lazy(() => import("@/pages/MapaColeta"));
@@ -171,11 +175,12 @@ function App() {
                           <Route path="/chat" element={<ChatInterno />} />
                           <Route path="/agenda" element={<Agenda />} />
                           <Route path="/prontuarios" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Prontuarios /></SupabaseProtectedRoute>} />
-                          <Route path="/prescricoes" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Prescricoes /></SupabaseProtectedRoute>} />
-                          <Route path="/atestados" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Atestados /></SupabaseProtectedRoute>} />
+                          <Route path="/documentos-clinicos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><DocumentosClinicos /></SupabaseProtectedRoute>} />
+                          <Route path="/prescricoes" element={<Navigate to="/documentos-clinicos" replace />} />
+                          <Route path="/atestados" element={<Navigate to="/documentos-clinicos" replace />} />
                           <Route path="/exames" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'enfermagem']}><Exames /></SupabaseProtectedRoute>} />
                           <Route path="/triagem" element={<Navigate to="/fila" replace />} />
-                          <Route path="/encaminhamentos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Encaminhamentos /></SupabaseProtectedRoute>} />
+                          <Route path="/encaminhamentos" element={<Navigate to="/documentos-clinicos" replace />} />
                           <Route path="/retornos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'recepcao']}><Retornos /></SupabaseProtectedRoute>} />
                           <Route path="/laboratorio" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico', 'enfermagem']}><Laboratorio /></SupabaseProtectedRoute>} />
                           <Route path="/mapa-coleta" element={<SupabaseProtectedRoute allowedRoles={['admin', 'enfermagem']}><MapaColeta /></SupabaseProtectedRoute>} />
@@ -185,18 +190,21 @@ function App() {
                           <Route path="/equipe" element={<SupabaseProtectedRoute allowedRoles={['admin']}><EquipePage /></SupabaseProtectedRoute>} />
                           <Route path="/medicos" element={<Navigate to="/equipe" replace />} />
                           <Route path="/funcionarios" element={<Navigate to="/equipe" replace />} />
-                          <Route path="/salas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Salas /></SupabaseProtectedRoute>} />
+                          <Route path="/gestao-fluxo" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><GestaoFluxo /></SupabaseProtectedRoute>} />
+                          <Route path="/salas" element={<Navigate to="/gestao-fluxo" replace />} />
                           <Route path="/estoque" element={<SupabaseProtectedRoute allowedRoles={['admin', 'enfermagem']}><Estoque /></SupabaseProtectedRoute>} />
                           <Route path="/convenios" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><Convenios /></SupabaseProtectedRoute>} />
-                          <Route path="/templates" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><Templates /></SupabaseProtectedRoute>} />
-                          <Route path="/lista-espera" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao']}><ListaEspera /></SupabaseProtectedRoute>} />
+                          <Route path="/todos-templates" element={<SupabaseProtectedRoute allowedRoles={['admin', 'medico']}><TemplatesUnificado /></SupabaseProtectedRoute>} />
+                          <Route path="/templates" element={<Navigate to="/todos-templates" replace />} />
+                          <Route path="/lista-espera" element={<Navigate to="/gestao-fluxo" replace />} />
                           <Route path="/tarefas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'enfermagem', 'financeiro', 'medico']}><Tarefas /></SupabaseProtectedRoute>} />
                           <Route path="/recepcao" element={<SupabaseProtectedRoute allowedRoles={['admin', 'recepcao', 'financeiro']}><RecepcaoCaixa /></SupabaseProtectedRoute>} />
                           <Route path="/caixa" element={<Navigate to="/recepcao" replace />} />
                           <Route path="/caixa-diario" element={<Navigate to="/recepcao" replace />} />
                           <Route path="/financeiro" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Financeiro /></SupabaseProtectedRoute>} />
-                          <Route path="/contas-receber" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasReceber /></SupabaseProtectedRoute>} />
-                          <Route path="/contas-pagar" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasPagar /></SupabaseProtectedRoute>} />
+                          <Route path="/contas" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><ContasPage /></SupabaseProtectedRoute>} />
+                          <Route path="/contas-receber" element={<Navigate to="/contas" replace />} />
+                          <Route path="/contas-pagar" element={<Navigate to="/contas" replace />} />
                           <Route path="/fluxo-caixa" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><FluxoCaixa /></SupabaseProtectedRoute>} />
                           <Route path="/pagamentos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><Pagamentos /></SupabaseProtectedRoute>} />
                           <Route path="/precos-servicos" element={<SupabaseProtectedRoute allowedRoles={['admin', 'financeiro']}><PrecosServicos /></SupabaseProtectedRoute>} />
@@ -206,7 +214,7 @@ function App() {
                           <Route path="/usuarios" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Usuarios /></SupabaseProtectedRoute>} />
                           <Route path="/configuracoes" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Configuracoes /></SupabaseProtectedRoute>} />
                           <Route path="/automacoes" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Automacoes /></SupabaseProtectedRoute>} />
-                          <Route path="/templates-email" element={<SupabaseProtectedRoute allowedRoles={['admin']}><TemplatesEmail /></SupabaseProtectedRoute>} />
+                          <Route path="/templates-email" element={<Navigate to="/todos-templates" replace />} />
                           <Route path="/agente-ia" element={<SupabaseProtectedRoute allowedRoles={['admin']}><AgenteIA /></SupabaseProtectedRoute>} />
                           <Route path="/analytics" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Analytics /></SupabaseProtectedRoute>} />
                           <Route path="/planos" element={<SupabaseProtectedRoute allowedRoles={['admin']}><Planos /></SupabaseProtectedRoute>} />

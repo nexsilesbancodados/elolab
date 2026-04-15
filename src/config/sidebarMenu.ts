@@ -10,15 +10,11 @@ import {
   Stethoscope,
   CreditCard,
   WalletCards,
-  BarChart4,
   Building2,
   UserCog,
   FlaskConical,
-  HeartPulse,
   DoorOpen,
-  ClockAlert,
   MessageCircle,
-  Mail,
   FolderKanban,
   Sparkles,
   BotMessageSquare,
@@ -35,10 +31,7 @@ import {
   PiggyBank,
   FileBarChart,
   Gauge,
-  Receipt,
-  UserPlus,
   CalendarCheck,
-  Banknote,
   UsersRound,
 } from 'lucide-react';
 import { AppRole } from '@/contexts/SupabaseAuthContext';
@@ -82,8 +75,7 @@ export const menuGroups: MenuGroup[] = [
     items: [
       { label: 'Recepção & Caixa', icon: MonitorSmartphone, href: '/recepcao', roles: ['admin', 'recepcao', 'financeiro'] },
       { label: 'Fila / Triagem', icon: ClipboardCheck, href: '/fila', roles: ['admin', 'recepcao', 'enfermagem'] },
-      { label: 'Salas', icon: DoorOpen, href: '/salas', roles: ['admin', 'recepcao'] },
-      { label: 'Lista de Espera', icon: ClockAlert, href: '/lista-espera', roles: ['admin', 'recepcao'] },
+      { label: 'Salas & Espera', icon: DoorOpen, href: '/gestao-fluxo', roles: ['admin', 'recepcao'] },
     ],
   },
   {
@@ -104,9 +96,7 @@ export const menuGroups: MenuGroup[] = [
     roles: ['admin', 'medico', 'enfermagem'],
     items: [
       { label: 'Prontuários', icon: ScrollText, href: '/prontuarios', roles: ['admin', 'medico'] },
-      { label: 'Prescrições', icon: BookMarked, href: '/prescricoes', roles: ['admin', 'medico'] },
-      { label: 'Atestados', icon: FileBarChart, href: '/atestados', roles: ['admin', 'medico'] },
-      { label: 'Encaminhamentos', icon: Stethoscope, href: '/encaminhamentos', roles: ['admin', 'medico'] },
+      { label: 'Documentos Clínicos', icon: BookMarked, href: '/documentos-clinicos', roles: ['admin', 'medico'] },
       { label: 'Exames', icon: Microscope, href: '/exames', roles: ['admin', 'medico', 'enfermagem'] },
     ],
   },
@@ -128,8 +118,7 @@ export const menuGroups: MenuGroup[] = [
     roles: ['admin', 'financeiro'],
     items: [
       { label: 'Visão Geral', icon: CircleDollarSign, href: '/financeiro' },
-      { label: 'Contas a Receber', icon: BadgeDollarSign, href: '/contas-receber' },
-      { label: 'Contas a Pagar', icon: CreditCard, href: '/contas-pagar' },
+      { label: 'Contas', icon: BadgeDollarSign, href: '/contas' },
       { label: 'Fluxo de Caixa', icon: PiggyBank, href: '/fluxo-caixa' },
       { label: 'Preços & Serviços', icon: CircleDollarSign, href: '/precos-servicos' },
       { label: 'Relatórios', icon: FileBarChart, href: '/relatorios' },
@@ -143,7 +132,7 @@ export const menuGroups: MenuGroup[] = [
     items: [
       { label: 'Equipe', icon: UsersRound, href: '/equipe' },
       { label: 'Estoque', icon: PackageSearch, href: '/estoque', roles: ['admin', 'enfermagem'] },
-      { label: 'Templates', icon: FolderKanban, href: '/templates', roles: ['admin', 'medico'] },
+      { label: 'Templates', icon: FolderKanban, href: '/todos-templates', roles: ['admin', 'medico'] },
     ],
   },
   {
@@ -154,7 +143,6 @@ export const menuGroups: MenuGroup[] = [
     items: [
       { label: 'Analytics', icon: ActivitySquare, href: '/analytics' },
       { label: 'Automações', icon: Sparkles, href: '/automacoes' },
-      { label: 'Templates Email', icon: Mail, href: '/templates-email' },
       { label: 'Configurações', icon: Settings2, href: '/configuracoes' },
     ],
   },
