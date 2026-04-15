@@ -88,6 +88,14 @@ const cardVariant = {
   }),
 };
 
+interface ProdutoCarrinho {
+  id: string;
+  nome: string;
+  valor: number;
+  quantidade: number;
+  origem: 'consulta' | 'exame' | 'produto' | 'manual';
+}
+
 export default function CaixaDiario() {
   const { profile } = useSupabaseAuth();
   const queryClient = useQueryClient();
@@ -106,6 +114,15 @@ export default function CaixaDiario() {
   const [valorAbertura, setValorAbertura] = useState('');
   const [valorFechamento, setValorFechamento] = useState('');
   const [obsFechamento, setObsFechamento] = useState('');
+
+  // POS state
+  const [carrinho, setCarrinho] = useState<ProdutoCarrinho[]>([]);
+  const [catalogoTab, setCatalogoTab] = useState<'consultas' | 'produtos' | 'manual'>('consultas');
+  const [catalogoSearch, setCatalogoSearch] = useState('');
+  const [lancFormaPagamento, setLancFormaPagamento] = useState<FormaPagamento>('dinheiro');
+  const [lancDesconto, setLancDesconto] = useState('');
+  const [manualNome, setManualNome] = useState('');
+  const [manualValor, setManualValor] = useState('');
 
   const [lancamentoForm, setLancamentoForm] = useState({
     tipo: 'receita' as LancamentoTipo,
