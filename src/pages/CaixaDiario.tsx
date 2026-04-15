@@ -18,7 +18,15 @@ import {
   TrendingUp, TrendingDown, Banknote, CreditCard, QrCode, Wallet, ArrowDownToLine,
   ArrowUpFromLine, FileText, History, DollarSign, Receipt, ChevronRight, CalendarDays,
   BarChart3, Eye, Stethoscope, ShoppingBag, ShoppingCart, CheckCircle2,
+  ArrowUpRight, ArrowDownRight, ClipboardList, Tag,
 } from 'lucide-react';
+
+const LazyContasReceber = lazy(() => import('./ContasReceber'));
+const LazyContasPagar = lazy(() => import('./ContasPagar'));
+const LazyFluxoCaixa = lazy(() => import('./FluxoCaixa'));
+const LazyPrecosExames = lazy(() => import('./PrecosExames'));
+const LazyTiposConsulta = lazy(() => import('./TiposConsulta'));
+const LazyRelatorios = lazy(() => import('./Relatorios'));
 import { printReceiptPdf, downloadReceiptPdf, type ReceiptData } from '@/lib/pdfReceipt';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
