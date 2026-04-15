@@ -836,59 +836,197 @@ export default function CaixaDiario() {
         </DialogContent>
       </Dialog>
 
-      {/* Novo Lançamento */}
-      <Dialog open={showLancamento} onOpenChange={setShowLancamento}>
-        <DialogContent>
+      {/* ═══ PDV — Ponto de Venda ═══ */}
+      <Dialog open={showLancamento} onOpenChange={(open) => { setShowLancamento(open); if (!open) resetPOS(); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-primary" /> Novo Lançamento
+              <Receipt className="h-5 w-5 text-primary" /> Ponto de Venda
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tipo</Label>
-              <Select value={lancamentoForm.tipo} onValueChange={v => setLancamentoForm(p => ({ ...p, tipo: v as LancamentoTipo }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="receita">💰 Receita</SelectItem>
-                  <SelectItem value="despesa">💸 Despesa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Descrição *</Label>
-              <Input placeholder="Ex: Consulta Dr. Silva" value={lancamentoForm.descricao}
-                onChange={e => setLancamentoForm(p => ({ ...p, descricao: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Valor (R$) *</Label>
-                <Input type="number" placeholder="0,00" value={lancamentoForm.valor}
-                  onChange={e => setLancamentoForm(p => ({ ...p, valor: e.target.value }))} step="0.01" min="0" />
+
+          <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
+            {/* ── Catálogo (esquerda) ── */}
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="relative mb-3">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-8 h-9 text-sm" placeholder="Buscar consulta, exame, produto..."
+                  value={catalogoSearch} onChange={e => setCatalogoSearch(e.target.value)} autoFocus />
               </div>
-              <div className="space-y-1.5">
+
+              <Tabs value={catalogoTab} onValueChange={v => setCatalogoTab(v as any)} className="flex-1 flex flex-col min-h-0">
+                <TabsList className="grid grid-cols-3 w-full">
+                  <TabsTrigger value="consultas" className="text-xs gap-1"><Stethoscope className="h-3.5 w-3.5" /> Consultas</TabsTrigger>
+                  <TabsTrigger value="produtos" className="text-xs gap-1"><ShoppingBag className="h-3.5 w-3.5" /> Produtos</TabsTrigger>
+                  <TabsTrigger value="manual" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" /> Manual</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="consultas" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
+                  {consultasFiltradas.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <Stethoscope className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Nenhum tipo de consulta cadastrado</p>
+                      <p className="text-xs">Cadastre em Configurações → Tipos de Consulta</p>
+                    </div>
+                  ) : consultasFiltradas.map((tc: any) => (
+                    <motion.button key={tc.id}
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => addToCart({ id: tc.id, nome: tc.nome, valor: tc.valor_particular || 0, origem: 'consulta' })}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-primary/10">
+                          <Stethoscope className="h-4 w-4 text-primary" />
+                        </div>
+                        <span className="font-medium text-sm">{tc.nome}</span>
+                      </div>
+                      <span className="font-bold text-sm text-primary tabular-nums">{fmt(tc.valor_particular || 0)}</span>
+                    </motion.button>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="produtos" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
+                  {produtosFiltrados.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Nenhum produto no estoque</p>
+                      <p className="text-xs">Cadastre em Estoque</p>
+                    </div>
+                  ) : produtosFiltrados.map((p: any) => (
+                    <motion.button key={p.id}
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => addToCart({ id: p.id, nome: p.nome, valor: p.valor_venda || 0, origem: 'produto' })}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-info/10">
+                          <ShoppingBag className="h-4 w-4 text-info" />
+                        </div>
+                        <div>
+                          <span className="font-medium text-sm">{p.nome}</span>
+                          <p className="text-[10px] text-muted-foreground">{p.categoria} · Estoque: {p.quantidade}</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-sm text-primary tabular-nums">{fmt(p.valor_venda || 0)}</span>
+                    </motion.button>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="manual" className="mt-2 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Nome do item *</Label>
+                    <Input placeholder="Ex: Exame de sangue, Taxa extra..." value={manualNome}
+                      onChange={e => setManualNome(e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Valor (R$) *</Label>
+                    <Input type="number" placeholder="0,00" value={manualValor}
+                      onChange={e => setManualValor(e.target.value)} step="0.01" min="0" />
+                  </div>
+                  <Button variant="outline" className="w-full gap-2" disabled={!manualNome.trim() || !manualValor}
+                    onClick={() => {
+                      addToCart({ id: `manual-${Date.now()}`, nome: manualNome, valor: parseFloat(manualValor) || 0, origem: 'manual' });
+                      setManualNome('');
+                      setManualValor('');
+                    }}>
+                    <Plus className="h-4 w-4" /> Adicionar ao Carrinho
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* ── Carrinho (direita) ── */}
+            <div className="w-full md:w-80 flex flex-col border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                <ShoppingCart className="h-4 w-4 text-primary" />
+                Carrinho ({carrinho.length})
+              </h3>
+
+              {carrinho.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-center text-muted-foreground py-8">
+                  <div>
+                    <ShoppingCart className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                    <p className="text-xs">Selecione itens do catálogo</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto space-y-1.5 max-h-[30vh]">
+                  <AnimatePresence>
+                    {carrinho.map(item => (
+                      <motion.div key={item.id}
+                        initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                        className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.nome}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{item.origem}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Button variant="ghost" size="icon" className="h-6 w-6"
+                            onClick={() => updateCartQty(item.id, item.quantidade - 1)}>
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="text-xs font-bold w-4 text-center">{item.quantidade}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6"
+                            onClick={() => updateCartQty(item.id, item.quantidade + 1)}>
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                          <span className="font-bold tabular-nums w-20 text-right">{fmt(item.valor * item.quantidade)}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive"
+                            onClick={() => removeFromCart(item.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              <Separator className="my-3" />
+
+              {/* Desconto */}
+              <div className="space-y-1.5 mb-3">
+                <Label className="text-xs">Desconto (R$)</Label>
+                <Input type="number" placeholder="0,00" value={lancDesconto}
+                  onChange={e => setLancDesconto(e.target.value)} step="0.01" min="0" className="h-8 text-sm" />
+              </div>
+
+              {/* Forma de Pagamento */}
+              <div className="space-y-1.5 mb-3">
                 <Label className="text-xs">Forma de Pagamento</Label>
-                <Select value={lancamentoForm.forma_pagamento} onValueChange={v => setLancamentoForm(p => ({ ...p, forma_pagamento: v as FormaPagamento }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dinheiro">💵 Dinheiro</SelectItem>
-                    <SelectItem value="pix">📱 PIX</SelectItem>
-                    <SelectItem value="credito">💳 Crédito</SelectItem>
-                    <SelectItem value="debito">💳 Débito</SelectItem>
-                    <SelectItem value="cheque">📄 Cheque</SelectItem>
-                    <SelectItem value="transferencia">🏦 Transferência</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {([
+                    { v: 'dinheiro', l: 'Dinheiro', i: Banknote },
+                    { v: 'pix', l: 'PIX', i: QrCode },
+                    { v: 'credito', l: 'Crédito', i: CreditCard },
+                    { v: 'debito', l: 'Débito', i: Wallet },
+                    { v: 'cheque', l: 'Cheque', i: FileText },
+                    { v: 'transferencia', l: 'Transf.', i: ArrowUpFromLine },
+                  ] as const).map(fp => (
+                    <Button key={fp.v} variant={lancFormaPagamento === fp.v ? 'default' : 'outline'}
+                      size="sm" className="text-[10px] gap-1 h-8 px-2"
+                      onClick={() => setLancFormaPagamento(fp.v as FormaPagamento)}>
+                      <fp.i className="h-3 w-3" /> {fp.l}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              {/* Total */}
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 mb-3">
+                <p className="text-xs text-muted-foreground">Total a cobrar</p>
+                <p className="text-2xl font-bold text-primary tabular-nums">{fmt(carrinhoTotal)}</p>
+              </div>
+
+              <Button onClick={() => adicionarLancamentoMutation.mutate()}
+                disabled={carrinho.length === 0 || adicionarLancamentoMutation.isPending}
+                className="w-full gap-2" size="lg">
+                {adicionarLancamentoMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Finalizar Venda
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLancamento(false)}>Cancelar</Button>
-            <Button onClick={() => adicionarLancamentoMutation.mutate()} disabled={adicionarLancamentoMutation.isPending} className="gap-2">
-              {adicionarLancamentoMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Registrar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
