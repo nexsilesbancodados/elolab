@@ -17,7 +17,7 @@ import {
   Lock, Unlock, Plus, Minus, Loader2, Trash2, Search, Clock, Printer, Download,
   TrendingUp, TrendingDown, Banknote, CreditCard, QrCode, Wallet, ArrowDownToLine,
   ArrowUpFromLine, FileText, History, DollarSign, Receipt, ChevronRight, CalendarDays,
-  BarChart3, Eye, Stethoscope, ShoppingBag, ShoppingCart, CheckCircle2,
+  BarChart3, Eye, Stethoscope, ShoppingBag, ShoppingCart, CheckCircle2, FlaskConical,
   ArrowUpRight, ArrowDownRight, ClipboardList, Tag,
 } from 'lucide-react';
 
@@ -125,7 +125,7 @@ export default function CaixaDiario() {
 
   // POS state
   const [carrinho, setCarrinho] = useState<ProdutoCarrinho[]>([]);
-  const [catalogoTab, setCatalogoTab] = useState<'consultas' | 'produtos' | 'manual'>('consultas');
+  const [catalogoTab, setCatalogoTab] = useState<'consultas' | 'exames' | 'produtos' | 'manual'>('consultas');
   const [catalogoSearch, setCatalogoSearch] = useState('');
   const [lancFormaPagamento, setLancFormaPagamento] = useState<FormaPagamento>('dinheiro');
   const [lancDesconto, setLancDesconto] = useState('');
@@ -206,6 +206,49 @@ export default function CaixaDiario() {
     enabled: !!profile?.clinica_id,
   });
 
+  // Catálogo de exames (preços internos da configuração + precos_exames_convenio)
+  const { data: examesCatalogo = [] } = useQuery({
+    queryKey: ['exames-caixa', profile?.clinica_id, profile?.id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return [];
+      const items: { id: string; nome: string; valor: number }[] = [];
+
+      // 1. Preços internos salvos em configuracoes_clinica
+      if (profile?.id) {
+        const { data: cfg } = await supabase
+          .from('configuracoes_clinica')
+          .select('valor')
+          .eq('chave', 'precos_exames_internos')
+          .eq('user_id', profile.id)
+          .maybeSingle();
+        if (cfg?.valor && Array.isArray(cfg.valor)) {
+          (cfg.valor as any[]).forEach((e: any) => {
+            if (e.nome && e.valor > 0) {
+              items.push({ id: `interno-${e.nome}`, nome: e.nome, valor: e.valor });
+            }
+          });
+        }
+      }
+
+      // 2. Preços de convênio (valor_total ou valor_tabela)
+      const { data: convenioExames } = await supabase
+        .from('precos_exames_convenio')
+        .select('id, tipo_exame, valor_total, valor_tabela')
+        .eq('clinica_id', profile.clinica_id)
+        .eq('ativo', true);
+      if (convenioExames) {
+        convenioExames.forEach((e: any) => {
+          if (!items.find(i => i.nome === e.tipo_exame)) {
+            items.push({ id: e.id, nome: e.tipo_exame, valor: e.valor_total || e.valor_tabela || 0 });
+          }
+        });
+      }
+
+      return items.sort((a, b) => a.nome.localeCompare(b.nome));
+    },
+    enabled: !!profile?.clinica_id,
+  });
+
   // Histórico de caixas anteriores
   const { data: historicosCaixa = [] } = useQuery({
     queryKey: ['historico-caixas', profile?.clinica_id],
@@ -273,6 +316,13 @@ export default function CaixaDiario() {
       !q || p.nome?.toLowerCase().includes(q) || p.categoria?.toLowerCase().includes(q)
     );
   }, [produtosEstoque, catalogoSearch]);
+
+  const examesFiltrados = useMemo(() => {
+    const q = catalogoSearch.toLowerCase();
+    return examesCatalogo.filter((e: any) =>
+      !q || e.nome?.toLowerCase().includes(q)
+    );
+  }, [examesCatalogo, catalogoSearch]);
 
   // Cart helpers
   const addToCart = (item: Omit<ProdutoCarrinho, 'quantidade'>) => {
@@ -921,8 +971,9 @@ export default function CaixaDiario() {
               </div>
 
               <Tabs value={catalogoTab} onValueChange={v => setCatalogoTab(v as any)} className="flex-1 flex flex-col min-h-0">
-                <TabsList className="grid grid-cols-3 w-full">
+                <TabsList className="grid grid-cols-4 w-full">
                   <TabsTrigger value="consultas" className="text-xs gap-1"><Stethoscope className="h-3.5 w-3.5" /> Consultas</TabsTrigger>
+                  <TabsTrigger value="exames" className="text-xs gap-1"><FlaskConical className="h-3.5 w-3.5" /> Exames</TabsTrigger>
                   <TabsTrigger value="produtos" className="text-xs gap-1"><ShoppingBag className="h-3.5 w-3.5" /> Produtos</TabsTrigger>
                   <TabsTrigger value="manual" className="text-xs gap-1"><FileText className="h-3.5 w-3.5" /> Manual</TabsTrigger>
                 </TabsList>
@@ -947,6 +998,30 @@ export default function CaixaDiario() {
                         <span className="font-medium text-sm">{tc.nome}</span>
                       </div>
                       <span className="font-bold text-sm text-primary tabular-nums">{fmt(tc.valor_particular || 0)}</span>
+                    </motion.button>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="exames" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
+                  {examesFiltrados.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <FlaskConical className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Nenhum exame com preço cadastrado</p>
+                      <p className="text-xs">Cadastre preços em Preços de Exames</p>
+                    </div>
+                  ) : examesFiltrados.map((ex: any) => (
+                    <motion.button key={ex.id}
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => addToCart({ id: ex.id, nome: ex.nome, valor: ex.valor || 0, origem: 'exame' })}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-warning/10">
+                          <FlaskConical className="h-4 w-4 text-warning" />
+                        </div>
+                        <span className="font-medium text-sm">{ex.nome}</span>
+                      </div>
+                      <span className="font-bold text-sm text-primary tabular-nums">{fmt(ex.valor || 0)}</span>
                     </motion.button>
                   ))}
                 </TabsContent>
