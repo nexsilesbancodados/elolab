@@ -248,7 +248,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <Clock className="h-5 w-5 text-warning" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'aguardando').length}</p>
                 <p className="text-sm text-muted-foreground">Aguardando</p>
@@ -259,7 +259,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-blue-500" />
+              <Phone className="h-5 w-5 text-info" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'notificado').length}</p>
                 <p className="text-sm text-muted-foreground">Notificados</p>
@@ -270,7 +270,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-success" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'agendado').length}</p>
                 <p className="text-sm text-muted-foreground">Agendados</p>
