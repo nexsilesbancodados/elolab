@@ -83,9 +83,8 @@ Deno.serve(async (req) => {
       throw new Error("Failed to create invitation: " + insertError.message);
     }
 
-    const origin = req.headers.get("origin") || "https://lovable.app";
     const inviteCode = inviteToken;
-    const inviteUrl = `${origin}/aceitar-convite?token=${encodeURIComponent(inviteToken)}`;
+    const inviteUrl = `https://app.elolab.com.br/aceitar-convite?token=${encodeURIComponent(inviteToken)}`;
 
     const roleLabels: Record<string, string> = {
       admin: "Administrador",
