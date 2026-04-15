@@ -41,10 +41,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const STATUS_COLORS: Record<string, string> = {
-  aguardando: 'bg-yellow-100 text-yellow-800',
-  notificado: 'bg-blue-100 text-blue-800',
-  confirmado: 'bg-green-100 text-green-800',
-  agendado: 'bg-purple-100 text-purple-800',
+  aguardando: 'bg-warning/10 text-warning',
+  notificado: 'bg-info/10 text-info',
+  confirmado: 'bg-success/10 text-success',
+  agendado: 'bg-primary/10 text-primary',
   desistiu: 'bg-muted text-muted-foreground',
 };
 
@@ -58,8 +58,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const PRIORIDADE_COLORS: Record<string, string> = {
   normal: 'bg-muted text-muted-foreground',
-  preferencial: 'bg-blue-100 text-blue-800',
-  urgente: 'bg-red-100 text-red-800',
+  preferencial: 'bg-info/10 text-info',
+  urgente: 'bg-destructive/10 text-destructive',
 };
 
 const ESPECIALIDADES = [
@@ -248,7 +248,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <Clock className="h-5 w-5 text-warning" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'aguardando').length}</p>
                 <p className="text-sm text-muted-foreground">Aguardando</p>
@@ -259,7 +259,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-blue-500" />
+              <Phone className="h-5 w-5 text-info" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'notificado').length}</p>
                 <p className="text-sm text-muted-foreground">Notificados</p>
@@ -270,7 +270,7 @@ export default function ListaEspera() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-success" />
               <div>
                 <p className="text-2xl font-bold">{lista.filter(i => i.status === 'agendado').length}</p>
                 <p className="text-sm text-muted-foreground">Agendados</p>
@@ -359,7 +359,7 @@ export default function ListaEspera() {
                         <TableCell className="hidden sm:table-cell">
                           <span className={cn(
                             diasEspera > 30 ? 'text-destructive font-medium' :
-                            diasEspera > 14 ? 'text-yellow-600' : ''
+                            diasEspera > 14 ? 'text-warning' : ''
                           )}>
                             {diasEspera} dias
                           </span>
@@ -466,7 +466,7 @@ export default function ListaEspera() {
             <div className="space-y-2">
               <Label>Médico Preferencial</Label>
               <Select
-                value={formData.medico_id}
+                value={formData.medico_id || '__any__'}
                 onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__any__' ? '' : v })}
               >
                 <SelectTrigger>
@@ -503,7 +503,7 @@ export default function ListaEspera() {
               <div className="space-y-2">
                 <Label>Preferência de Horário</Label>
                 <Select
-                  value={formData.preferencia_horario}
+                  value={formData.preferencia_horario || '__any__'}
                   onValueChange={(v) => setFormData({ ...formData, preferencia_horario: v === '__any__' ? '' : v })}
                 >
                   <SelectTrigger>

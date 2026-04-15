@@ -49,13 +49,13 @@ const HORARIOS = [
 ];
 
 const STATUS_COLORS: Record<StatusAgendamento, string> = {
-  agendado: 'bg-blue-100 text-blue-800 border-blue-200',
-  confirmado: 'bg-green-100 text-green-800 border-green-200',
-  aguardando: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  em_atendimento: 'bg-purple-100 text-purple-800 border-purple-200',
-  finalizado: 'bg-gray-100 text-gray-600 border-gray-200',
-  cancelado: 'bg-red-100 text-red-800 border-red-200',
-  faltou: 'bg-orange-100 text-orange-800 border-orange-200',
+  agendado: 'bg-info/10 text-info border-info/20',
+  confirmado: 'bg-success/10 text-success border-success/20',
+  aguardando: 'bg-warning/10 text-warning border-warning/20',
+  em_atendimento: 'bg-primary/10 text-primary border-primary/20',
+  finalizado: 'bg-muted text-muted-foreground border-border',
+  cancelado: 'bg-destructive/10 text-destructive border-destructive/20',
+  faltou: 'bg-warning/15 text-warning border-warning/30',
 };
 
 // Color palette for doctors
