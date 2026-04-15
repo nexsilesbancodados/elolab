@@ -166,6 +166,38 @@ export default function CaixaDiario() {
     enabled: !!caixaHoje?.data && !!profile?.clinica_id,
   });
 
+  // Catálogo de tipos de consulta
+  const { data: tiposConsulta = [] } = useQuery({
+    queryKey: ['tipos-consulta-caixa', profile?.clinica_id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return [];
+      const { data } = await supabase
+        .from('tipos_consulta')
+        .select('id, nome, valor_particular')
+        .eq('clinica_id', profile.clinica_id)
+        .eq('ativo', true)
+        .order('nome');
+      return data || [];
+    },
+    enabled: !!profile?.clinica_id,
+  });
+
+  // Catálogo de produtos (estoque com valor_venda)
+  const { data: produtosEstoque = [] } = useQuery({
+    queryKey: ['produtos-caixa', profile?.clinica_id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return [];
+      const { data } = await supabase
+        .from('estoque')
+        .select('id, nome, categoria, valor_venda, quantidade')
+        .eq('clinica_id', profile.clinica_id)
+        .gt('quantidade', 0)
+        .order('nome');
+      return data || [];
+    },
+    enabled: !!profile?.clinica_id,
+  });
+
   // Histórico de caixas anteriores
   const { data: historicosCaixa = [] } = useQuery({
     queryKey: ['historico-caixas', profile?.clinica_id],
