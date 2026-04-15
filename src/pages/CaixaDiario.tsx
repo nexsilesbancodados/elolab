@@ -206,6 +206,49 @@ export default function CaixaDiario() {
     enabled: !!profile?.clinica_id,
   });
 
+  // Catálogo de exames (preços internos da configuração + precos_exames_convenio)
+  const { data: examesCatalogo = [] } = useQuery({
+    queryKey: ['exames-caixa', profile?.clinica_id, profile?.id],
+    queryFn: async () => {
+      if (!profile?.clinica_id) return [];
+      const items: { id: string; nome: string; valor: number }[] = [];
+
+      // 1. Preços internos salvos em configuracoes_clinica
+      if (profile?.id) {
+        const { data: cfg } = await supabase
+          .from('configuracoes_clinica')
+          .select('valor')
+          .eq('chave', 'precos_exames_internos')
+          .eq('user_id', profile.id)
+          .maybeSingle();
+        if (cfg?.valor && Array.isArray(cfg.valor)) {
+          (cfg.valor as any[]).forEach((e: any) => {
+            if (e.nome && e.valor > 0) {
+              items.push({ id: `interno-${e.nome}`, nome: e.nome, valor: e.valor });
+            }
+          });
+        }
+      }
+
+      // 2. Preços de convênio (valor_total ou valor_tabela)
+      const { data: convenioExames } = await supabase
+        .from('precos_exames_convenio')
+        .select('id, tipo_exame, valor_total, valor_tabela')
+        .eq('clinica_id', profile.clinica_id)
+        .eq('ativo', true);
+      if (convenioExames) {
+        convenioExames.forEach((e: any) => {
+          if (!items.find(i => i.nome === e.tipo_exame)) {
+            items.push({ id: e.id, nome: e.tipo_exame, valor: e.valor_total || e.valor_tabela || 0 });
+          }
+        });
+      }
+
+      return items.sort((a, b) => a.nome.localeCompare(b.nome));
+    },
+    enabled: !!profile?.clinica_id,
+  });
+
   // Histórico de caixas anteriores
   const { data: historicosCaixa = [] } = useQuery({
     queryKey: ['historico-caixas', profile?.clinica_id],
