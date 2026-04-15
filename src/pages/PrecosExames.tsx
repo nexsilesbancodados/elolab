@@ -410,8 +410,7 @@ function PrecosInternos() {
           <div className="space-y-5">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Nome do Exame *</Label>
-              <Input value={form.nome} onChange={(e) => setForm(p => ({ ...p, nome: e.target.value }))}
-                placeholder="Ex: Hemograma Completo, Ultrassom..." autoFocus className="h-11" />
+              <ExameCombobox value={form.nome} onChange={(nome, tuss) => setForm(p => ({ ...p, nome, codigo_tuss: tuss || p.codigo_tuss }))} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
