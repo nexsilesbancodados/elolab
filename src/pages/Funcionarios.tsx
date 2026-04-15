@@ -567,7 +567,7 @@ export default function Funcionarios() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="flex items-center justify-center w-8 h-8">
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <CheckCircle className="h-4 w-4 text-success" />
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>Conta vinculada</TooltipContent>
@@ -730,7 +730,7 @@ export default function Funcionarios() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Selecione o que este funcionário pode acessar no sistema.
                   {!editingFunc?.user_id && (
-                    <span className="block text-amber-600 mt-1">
+                    <span className="block text-warning mt-1">
                       ⚠️ As permissões só serão aplicadas quando o funcionário criar uma conta.
                     </span>
                   )}
