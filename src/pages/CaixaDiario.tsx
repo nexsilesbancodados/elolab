@@ -364,12 +364,17 @@ export default function CaixaDiario() {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Clear localStorage so Recepcao knows caixa is closed
+      if (profile?.id) localStorage.removeItem(`caixa_estado_${profile.id}`);
+      if (profile?.clinica_id) localStorage.removeItem(`caixa_estado_clinica_${profile.clinica_id}`);
+
       toast.success('Caixa fechado com sucesso!');
       setShowFechamento(false);
       setValorFechamento('');
       setObsFechamento('');
       queryClient.invalidateQueries({ queryKey: ['caixa-hoje'] });
       queryClient.invalidateQueries({ queryKey: ['historico-caixas'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-estado-recepcao'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro ao fechar caixa'),
   });
