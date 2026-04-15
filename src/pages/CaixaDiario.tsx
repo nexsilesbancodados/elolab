@@ -251,6 +251,60 @@ export default function CaixaDiario() {
     return formas;
   }, [lancamentos]);
 
+  // Catálogo filtrado
+  const consultasFiltradas = useMemo(() => {
+    const q = catalogoSearch.toLowerCase();
+    return tiposConsulta.filter((tc: any) =>
+      !q || tc.nome?.toLowerCase().includes(q)
+    );
+  }, [tiposConsulta, catalogoSearch]);
+
+  const produtosFiltrados = useMemo(() => {
+    const q = catalogoSearch.toLowerCase();
+    return produtosEstoque.filter((p: any) =>
+      !q || p.nome?.toLowerCase().includes(q) || p.categoria?.toLowerCase().includes(q)
+    );
+  }, [produtosEstoque, catalogoSearch]);
+
+  // Cart helpers
+  const addToCart = (item: Omit<ProdutoCarrinho, 'quantidade'>) => {
+    setCarrinho(prev => {
+      const existing = prev.find(p => p.id === item.id && p.origem === item.origem);
+      if (existing) {
+        return prev.map(p => p.id === item.id && p.origem === item.origem
+          ? { ...p, quantidade: p.quantidade + 1 }
+          : p
+        );
+      }
+      return [...prev, { ...item, quantidade: 1 }];
+    });
+  };
+
+  const removeFromCart = (id: string) => {
+    setCarrinho(prev => prev.filter(p => p.id !== id));
+  };
+
+  const updateCartQty = (id: string, qty: number) => {
+    if (qty <= 0) return removeFromCart(id);
+    setCarrinho(prev => prev.map(p => p.id === id ? { ...p, quantidade: qty } : p));
+  };
+
+  const carrinhoTotal = useMemo(() => {
+    const subtotal = carrinho.reduce((s, i) => s + i.valor * i.quantidade, 0);
+    const desconto = parseFloat(lancDesconto) || 0;
+    return Math.max(0, subtotal - desconto);
+  }, [carrinho, lancDesconto]);
+
+  const resetPOS = () => {
+    setCarrinho([]);
+    setCatalogoSearch('');
+    setLancFormaPagamento('dinheiro');
+    setLancDesconto('');
+    setManualNome('');
+    setManualValor('');
+    setCatalogoTab('consultas');
+  };
+
   const lancamentosFiltrados = useMemo(() => {
     if (!searchTerm.trim()) return lancamentos;
     const q = searchTerm.toLowerCase();
