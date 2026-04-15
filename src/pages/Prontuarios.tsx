@@ -108,10 +108,10 @@ function calcularIMC(peso: string, altura: string) {
 function classificarIMC(imc: string) {
   const v = parseFloat(imc);
   if (!v) return null;
-  if (v < 18.5) return { label: 'Abaixo', color: 'text-blue-500' };
-  if (v < 25) return { label: 'Normal', color: 'text-green-500' };
-  if (v < 30) return { label: 'Sobrepeso', color: 'text-yellow-500' };
-  return { label: 'Obesidade', color: 'text-red-500' };
+  if (v < 18.5) return { label: 'Abaixo', color: 'text-info' };
+  if (v < 25) return { label: 'Normal', color: 'text-success' };
+  if (v < 30) return { label: 'Sobrepeso', color: 'text-warning' };
+  return { label: 'Obesidade', color: 'text-destructive' };
 }
 
 // ─── Vital Signs Grid ──────────────────────────────────────
@@ -127,15 +127,15 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
   const imcClass = classificarIMC(sinais.imc);
 
   const fields: { key: string; label: string; icon: any; field?: keyof SinaisVitais; placeholder?: string; dual?: boolean; accent: string }[] = [
-    { key: 'pa', label: 'PA (mmHg)', icon: Heart, accent: 'text-red-500', dual: true },
-    { key: 'fc', label: 'FC (bpm)', icon: Heart, accent: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
-    { key: 'fr', label: 'FR (irpm)', icon: Activity, accent: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
-    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, accent: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
-    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, accent: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
-    { key: 'peso', label: 'Peso (kg)', icon: Scale, accent: 'text-emerald-500', field: 'peso', placeholder: '70' },
-    { key: 'altura', label: 'Alt (cm)', icon: Ruler, accent: 'text-violet-500', field: 'altura', placeholder: '170' },
-    { key: 'glasgow', label: 'Glasgow', icon: Brain, accent: 'text-purple-500', field: 'glasgow', placeholder: '15' },
-    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, accent: 'text-yellow-500', field: 'dor', placeholder: '0' },
+    { key: 'pa', label: 'PA (mmHg)', icon: Heart, accent: 'text-destructive', dual: true },
+    { key: 'fc', label: 'FC (bpm)', icon: Heart, accent: 'text-destructive', field: 'frequencia_cardiaca', placeholder: '72' },
+    { key: 'fr', label: 'FR (irpm)', icon: Activity, accent: 'text-info', field: 'frequencia_respiratoria', placeholder: '16' },
+    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, accent: 'text-warning', field: 'temperatura', placeholder: '36.5' },
+    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, accent: 'text-info', field: 'saturacao', placeholder: '98' },
+    { key: 'peso', label: 'Peso (kg)', icon: Scale, accent: 'text-success', field: 'peso', placeholder: '70' },
+    { key: 'altura', label: 'Alt (cm)', icon: Ruler, accent: 'text-primary', field: 'altura', placeholder: '170' },
+    { key: 'glasgow', label: 'Glasgow', icon: Brain, accent: 'text-primary', field: 'glasgow', placeholder: '15' },
+    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, accent: 'text-warning', field: 'dor', placeholder: '0' },
   ];
 
   return (
@@ -1110,7 +1110,7 @@ export default function Prontuarios() {
               animate={{ opacity: 1, y: 0 }}
               className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-warning/8 border border-warning/25 rounded-xl"
             >
-              <Lock className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+              <Lock className="h-3.5 w-3.5 text-warning flex-shrink-0" />
               <span className="text-xs text-amber-700 font-medium flex-1">
                 Somente leitura — CFM nº 1.821/07
               </span>
