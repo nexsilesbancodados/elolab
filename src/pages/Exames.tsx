@@ -779,7 +779,7 @@ export default function Exames() {
 
             {/* Urgency justification */}
             {(formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && (
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-2">
+              <div className="bg-warning/5 border border-warning/20 rounded-lg p-4 space-y-2">
                 <Label className="text-xs font-medium flex items-center gap-1 text-warning">
                   <AlertTriangle className="h-3.5 w-3.5" />Justificativa de Urgência (obrigatória para autorização) *
                 </Label>
