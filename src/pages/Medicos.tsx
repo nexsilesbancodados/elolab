@@ -826,33 +826,11 @@ export default function Medicos() {
                 </div>
 
                 {/* Especialidade with suggestions */}
-                <div className="mt-4 space-y-1.5">
-                  <Label className="text-xs">Especialidade</Label>
-                  <div className="relative">
-                    <Input value={formData.especialidade} 
-                      onChange={e => setFormData(p => ({ ...p, especialidade: e.target.value }))} 
-                      placeholder="Digite ou selecione uma especialidade"
-                      list="especialidades-list" />
-                    <datalist id="especialidades-list">
-                      {[...ESPECIALIDADES_SUGESTOES, ...especialidades.filter(e => !ESPECIALIDADES_SUGESTOES.includes(e))].sort().map(e => (
-                        <option key={e} value={e} />
-                      ))}
-                    </datalist>
-                  </div>
-                  {formData.especialidade && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {ESPECIALIDADES_SUGESTOES.filter(e => 
-                        e.toLowerCase().includes(formData.especialidade.toLowerCase()) && 
-                        e.toLowerCase() !== formData.especialidade.toLowerCase()
-                      ).slice(0, 4).map(sug => (
-                        <Badge key={sug} variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
-                          onClick={() => setFormData(p => ({ ...p, especialidade: sug }))}>
-                          {sug}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <EspecialidadeCombobox 
+                  value={formData.especialidade}
+                  onChange={(v) => setFormData(p => ({ ...p, especialidade: v }))}
+                  especialidadesExtras={especialidades}
+                />
               </div>
 
               <Separator />
