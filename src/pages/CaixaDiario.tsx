@@ -438,6 +438,8 @@ export default function CaixaDiario() {
         tipo: 'receita', valor: carrinhoTotal,
         descricao, forma_pagamento: lancFormaPagamento,
         categoria: 'receita_caixa',
+        status: 'pago',
+        data_vencimento: today,
         data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
@@ -447,6 +449,8 @@ export default function CaixaDiario() {
       setShowLancamento(false);
       resetPOS();
       queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro'),
   });
@@ -459,7 +463,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'sangria', valor: Number(sangriaForm.valor),
         descricao: `Sangria — ${sangriaForm.motivo}`, forma_pagamento: 'dinheiro',
-        categoria: 'sangria', data: today, clinica_id: profile.clinica_id,
+        categoria: 'sangria', status: 'pago', data_vencimento: today, data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -468,6 +472,8 @@ export default function CaixaDiario() {
       setShowSangria(false);
       setSangriaForm({ valor: '', motivo: '' });
       queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro'),
   });
@@ -479,7 +485,7 @@ export default function CaixaDiario() {
       const { error } = await (supabase as any).from('lancamentos').insert({
         tipo: 'suprimento', valor: Number(suprimentoForm.valor),
         descricao: suprimentoForm.descricao || 'Suprimento de Caixa', forma_pagamento: 'dinheiro',
-        categoria: 'suprimento', data: today, clinica_id: profile.clinica_id,
+        categoria: 'suprimento', status: 'pago', data_vencimento: today, data: today, clinica_id: profile.clinica_id,
       });
       if (error) throw error;
     },
@@ -488,6 +494,8 @@ export default function CaixaDiario() {
       setShowSuprimento(false);
       setSuprimentoForm({ valor: '', descricao: '' });
       queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro'),
   });
@@ -501,6 +509,8 @@ export default function CaixaDiario() {
       toast.success('Lançamento removido!');
       setConfirmDelete(null);
       queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Erro'),
   });

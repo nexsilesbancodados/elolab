@@ -544,7 +544,11 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
       await queryClient.invalidateQueries({ queryKey: ['lancamentos_hoje'] });
       queryClient.invalidateQueries({ queryKey: ['caixa-diario'] });
       queryClient.invalidateQueries({ queryKey: ['lancamentos'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos', 'receita'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos-caixa'] });
       setShowPagamento(false);
+      setSelectedLancamento(null);
+      setSelectedPacienteBalcao(null);
       toast.success(`Pagamento de R$ ${valorFinal.toFixed(2)} confirmado!`);
 
       // Emit receipt automatically - find medico from enriched data
