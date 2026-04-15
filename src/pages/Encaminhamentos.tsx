@@ -57,16 +57,16 @@ interface EncaminhamentoData {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pendente: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-700 border-amber-500/20' },
-  em_andamento: { label: 'Em Andamento', className: 'bg-blue-500/10 text-blue-700 border-blue-500/20' },
-  concluido: { label: 'Concluído', className: 'bg-green-500/10 text-green-700 border-green-500/20' },
+  pendente: { label: 'Pendente', className: 'bg-warning/10 text-warning border-warning/20' },
+  em_andamento: { label: 'Em Andamento', className: 'bg-info/10 text-info border-info/20' },
+  concluido: { label: 'Concluído', className: 'bg-success/10 text-success border-success/20' },
   cancelado: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
 };
 
 const URGENCIA_CONFIG: Record<string, { label: string; className: string }> = {
   eletivo: { label: 'Eletivo', className: 'bg-muted text-muted-foreground' },
-  normal: { label: 'Normal', className: 'bg-green-500/10 text-green-700' },
-  urgente: { label: 'Urgente', className: 'bg-amber-500/10 text-amber-700' },
+  normal: { label: 'Normal', className: 'bg-success/10 text-success' },
+  urgente: { label: 'Urgente', className: 'bg-warning/10 text-warning' },
   emergencia: { label: 'Emergência', className: 'bg-destructive/10 text-destructive' },
 };
 

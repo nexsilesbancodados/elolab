@@ -32,10 +32,10 @@ import { GerenciadorLaboratorios } from '@/components/GerenciadorLaboratorios';
 type StatusExame = Database['public']['Enums']['status_exame'];
 
 const STATUS_COLORS: Record<StatusExame, string> = {
-  solicitado: 'bg-yellow-100 text-yellow-800',
-  agendado: 'bg-blue-100 text-blue-800',
-  realizado: 'bg-purple-100 text-purple-800',
-  laudo_disponivel: 'bg-green-100 text-green-800',
+  solicitado: 'bg-warning/10 text-warning',
+  agendado: 'bg-info/10 text-info',
+  realizado: 'bg-primary/10 text-primary',
+  laudo_disponivel: 'bg-success/10 text-success',
   cancelado: 'bg-muted text-muted-foreground',
 };
 
