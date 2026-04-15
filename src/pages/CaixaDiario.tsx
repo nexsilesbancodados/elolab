@@ -535,7 +535,7 @@ export default function CaixaDiario() {
             ) : (
               <>
                 <Button onClick={() => setShowLancamento(true)} className="gap-2">
-                  <Plus className="h-4 w-4" /> Lançamento
+                  <ShoppingCart className="h-4 w-4" /> Nova Venda
                 </Button>
                 <Button onClick={() => setShowSangria(true)} variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10">
                   <ArrowDownToLine className="h-4 w-4" /> Sangria
