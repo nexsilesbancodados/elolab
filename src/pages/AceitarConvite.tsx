@@ -99,7 +99,7 @@ export default function AceitarConvite() {
     setSubmitting(true);
 
     try {
-      // 1. Create user account
+      // 1. Create user account with invite_token so handle_new_user skips clinic creation
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: invitation.email,
         password,
@@ -107,6 +107,7 @@ export default function AceitarConvite() {
           emailRedirectTo: 'https://app.elolab.com.br/dashboard',
           data: {
             nome: invitation.funcionario?.nome || invitation.email,
+            invite_token: token,
           },
         },
       });
