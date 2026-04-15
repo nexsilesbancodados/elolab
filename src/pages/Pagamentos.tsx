@@ -29,9 +29,9 @@ const statusColors: Record<string, string> = {
   pago: 'bg-success/10 text-success',
   rejeitado: 'bg-destructive/10 text-destructive',
   cancelado: 'bg-muted text-muted-foreground',
-  reembolsado: 'bg-blue-500/10 text-blue-500',
-  em_processo: 'bg-orange-500/10 text-orange-500',
-  parcial: 'bg-orange-500/10 text-orange-500',
+  reembolsado: 'bg-info/10 text-info',
+  em_processo: 'bg-warning/10 text-warning',
+  parcial: 'bg-warning/10 text-warning',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -244,7 +244,7 @@ export default function Pagamentos() {
                       <p className="font-semibold tabular-nums">{formatCurrency(p.valor)}</p>
                       {(p.desconto > 0 || p.acrescimo > 0) && (
                         <p className="text-xs text-muted-foreground tabular-nums">
-                          {p.desconto > 0 && <span className="text-green-600">-{formatCurrency(p.desconto)}</span>}
+                          {p.desconto > 0 && <span className="text-success">-{formatCurrency(p.desconto)}</span>}
                           {p.acrescimo > 0 && <span className="text-destructive"> +{formatCurrency(p.acrescimo)}</span>}
                         </p>
                       )}
@@ -260,10 +260,10 @@ export default function Pagamentos() {
                       )}
                       {(p.status === 'aprovado' || p.status === 'pago') && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => handlePrintRecibo(p)} title="Imprimir recibo" className="text-blue-600 hover:text-blue-700">
+                          <Button size="sm" variant="outline" onClick={() => handlePrintRecibo(p)} title="Imprimir recibo" className="text-info hover:text-info/80">
                             <Printer className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDownloadRecibo(p)} title="Baixar recibo" className="text-green-600 hover:text-green-700">
+                          <Button size="sm" variant="outline" onClick={() => handleDownloadRecibo(p)} title="Baixar recibo" className="text-success hover:text-success/80">
                             <Download className="h-4 w-4" />
                           </Button>
                         </>

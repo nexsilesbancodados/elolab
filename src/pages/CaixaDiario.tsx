@@ -339,10 +339,10 @@ export default function CaixaDiario() {
   const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 
   const getTipoConfig = (tipo: LancamentoTipo) => ({
-    receita: { label: 'Receita', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800' },
-    despesa: { label: 'Despesa', icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800' },
-    sangria: { label: 'Sangria', icon: ArrowDownToLine, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800' },
-    suprimento: { label: 'Suprimento', icon: ArrowUpFromLine, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800' },
+    receita: { label: 'Receita', icon: TrendingUp, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+    despesa: { label: 'Despesa', icon: TrendingDown, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+    sangria: { label: 'Sangria', icon: ArrowDownToLine, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+    suprimento: { label: 'Suprimento', icon: ArrowUpFromLine, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
   }[tipo]);
 
   const buildReceiptData = (l: Lancamento): ReceiptData => ({
@@ -381,9 +381,9 @@ export default function CaixaDiario() {
         <div className="flex items-center gap-3">
           <div className={cn(
             'p-2.5 rounded-xl',
-            isOpen ? 'bg-emerald-100 dark:bg-emerald-950' : 'bg-muted'
+            isOpen ? 'bg-success/10' : 'bg-muted'
           )}>
-            <DollarSign className={cn('h-6 w-6', isOpen ? 'text-emerald-600' : 'text-muted-foreground')} />
+            <DollarSign className={cn('h-6 w-6', isOpen ? 'text-success' : 'text-muted-foreground')} />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Caixa Diário</h1>
@@ -398,10 +398,10 @@ export default function CaixaDiario() {
           <Badge className={cn(
             'gap-1.5 px-3 py-1 text-xs font-medium',
             isOpen
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200'
+              ? 'bg-success/10 text-success border-success/20'
               : 'bg-muted text-muted-foreground border-border'
           )}>
-            <span className={cn('h-2 w-2 rounded-full', isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground')} />
+            <span className={cn('h-2 w-2 rounded-full', isOpen ? 'bg-success animate-pulse' : 'bg-muted-foreground')} />
             {isOpen ? 'Caixa Aberto' : 'Caixa Fechado'}
           </Badge>
           {isOpen && caixaHoje?.operador_abertura && (
@@ -426,7 +426,7 @@ export default function CaixaDiario() {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             {!isOpen ? (
-              <Button onClick={() => setShowAbertura(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button onClick={() => setShowAbertura(true)} className="gap-2 bg-success hover:bg-success/90 text-success-foreground">
                 <Unlock className="h-4 w-4" /> Abrir Caixa
               </Button>
             ) : (
@@ -434,10 +434,10 @@ export default function CaixaDiario() {
                 <Button onClick={() => setShowLancamento(true)} className="gap-2">
                   <Plus className="h-4 w-4" /> Lançamento
                 </Button>
-                <Button onClick={() => setShowSangria(true)} variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400">
+                <Button onClick={() => setShowSangria(true)} variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10">
                   <ArrowDownToLine className="h-4 w-4" /> Sangria
                 </Button>
-                <Button onClick={() => setShowSuprimento(true)} variant="outline" className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                <Button onClick={() => setShowSuprimento(true)} variant="outline" className="gap-2 border-info/30 text-info hover:bg-info/10">
                   <ArrowUpFromLine className="h-4 w-4" /> Suprimento
                 </Button>
                 <Button onClick={() => setShowFechamento(true)} variant="destructive" className="gap-2 ml-auto">
@@ -452,10 +452,10 @@ export default function CaixaDiario() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
                 { label: 'Abertura', value: caixaHoje?.valor_abertura || 0, icon: Unlock, color: 'text-muted-foreground', bgIcon: 'bg-muted' },
-                { label: 'Receitas', value: totais.receita, icon: TrendingUp, color: 'text-emerald-600', bgIcon: 'bg-emerald-100 dark:bg-emerald-950' },
-                { label: 'Despesas', value: totais.despesa, icon: TrendingDown, color: 'text-red-500', bgIcon: 'bg-red-100 dark:bg-red-950' },
-                { label: 'Sangrias', value: totais.sangria, icon: ArrowDownToLine, color: 'text-amber-600', bgIcon: 'bg-amber-100 dark:bg-amber-950' },
-                { label: 'Saldo Final', value: totais.final, icon: DollarSign, color: totais.final >= 0 ? 'text-emerald-600' : 'text-red-500', bgIcon: 'bg-primary/10' },
+                { label: 'Receitas', value: totais.receita, icon: TrendingUp, color: 'text-success', bgIcon: 'bg-success/10' },
+                { label: 'Despesas', value: totais.despesa, icon: TrendingDown, color: 'text-destructive', bgIcon: 'bg-destructive/10' },
+                { label: 'Sangrias', value: totais.sangria, icon: ArrowDownToLine, color: 'text-warning', bgIcon: 'bg-warning/10' },
+                { label: 'Saldo Final', value: totais.final, icon: DollarSign, color: totais.final >= 0 ? 'text-success' : 'text-destructive', bgIcon: 'bg-primary/10' },
               ].map((kpi, i) => (
                 <motion.div key={kpi.label} custom={i} variants={cardVariant} initial="hidden" animate="visible">
                   <Card className={cn(i === 4 && 'border-primary/30 shadow-sm')}>
@@ -621,7 +621,7 @@ export default function CaixaDiario() {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">Caixa não aberto hoje</h3>
                 <p className="text-sm text-muted-foreground mb-4">Abra o caixa para iniciar as movimentações do dia</p>
-                <Button onClick={() => setShowAbertura(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button onClick={() => setShowAbertura(true)} className="gap-2 bg-success hover:bg-success/90 text-success-foreground">
                   <Unlock className="h-4 w-4" /> Abrir Caixa Agora
                 </Button>
               </CardContent>
@@ -671,8 +671,8 @@ export default function CaixaDiario() {
                       onClick={() => setShowDetalhesCaixa(cx)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={cn('p-2 rounded-lg', cx.aberto ? 'bg-emerald-100 dark:bg-emerald-950' : 'bg-muted')}>
-                          {cx.aberto ? <Unlock className="h-4 w-4 text-emerald-600" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
+                        <div className={cn('p-2 rounded-lg', cx.aberto ? 'bg-success/10' : 'bg-muted')}>
+                          {cx.aberto ? <Unlock className="h-4 w-4 text-success" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
                         </div>
                         <div>
                           <p className="font-medium text-sm">{fmtDate(cx.data)}</p>
