@@ -662,22 +662,40 @@ export default function Pacientes() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <motion.div
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <div>
           <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
           <p className="text-muted-foreground">Gestão completa do cadastro de pacientes</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setIsEtiquetaOpen(true)} className="gap-2">
-            <Tag className="h-4 w-4" />
-            Etiquetas
-          </Button>
-          <Button onClick={handleNew} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Paciente
-          </Button>
+        <div className="flex flex-wrap gap-3">
+          <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setIsEtiquetaOpen(true)}
+              className="gap-2 rounded-xl border-2 border-border/60 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200 text-sm font-semibold px-5"
+            >
+              <Tag className="h-4 w-4" />
+              Etiquetas
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <Button
+              size="lg"
+              onClick={handleNew}
+              className="gap-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold px-6"
+            >
+              <Plus className="h-5 w-5" />
+              Novo Paciente
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stats */}
       <PatientStats total={stats.total} comConvenio={stats.comConvenio} menores={stats.menores} comAlergias={stats.comAlergias} />

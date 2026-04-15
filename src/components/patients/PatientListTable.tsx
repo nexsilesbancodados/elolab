@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Eye, Edit, Trash2, Link, Phone, Mail, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,19 +96,27 @@ export const PatientListTable = memo(function PatientListTable({
                     </span>
                   </TableCell>
                   <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => onView(paciente)} title="Ver detalhes">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onGeneratePortalLink(paciente.id, paciente.nome)} title="Link do portal">
-                        <Link className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(paciente)} title="Editar">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDelete(paciente)} title="Excluir">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                    <div className="flex justify-end gap-1.5">
+                      <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
+                        <Button variant="ghost" size="icon" onClick={() => onView(paciente)} title="Ver detalhes" className="rounded-xl hover:bg-primary/10 hover:text-primary">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
+                        <Button variant="ghost" size="icon" onClick={() => onGeneratePortalLink(paciente.id, paciente.nome)} title="Link do portal" className="rounded-xl hover:bg-accent/60">
+                          <Link className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(paciente)} title="Editar" className="rounded-xl hover:bg-accent/60">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.15, rotate: 5 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
+                        <Button variant="ghost" size="icon" onClick={() => onDelete(paciente)} title="Excluir" className="rounded-xl hover:bg-destructive/10">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </motion.div>
                     </div>
                   </TableCell>
                 </TableRow>
