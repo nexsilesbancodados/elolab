@@ -1026,6 +1026,7 @@ export default function CaixaDiario() {
                   ))}
                 </TabsContent>
 
+                <TabsContent value="produtos" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
                   {produtosFiltrados.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-sm">
                       <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-30" />
