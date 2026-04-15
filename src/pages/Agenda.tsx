@@ -1376,22 +1376,23 @@ export default function Agenda() {
                 return (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Especialidade *</Label>
+                      <Label>Especialidade <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                       <Select
-                        value={formData.medico_id ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral') : ''}
+                        value={formData._selectedEsp || '__todas__'}
                         onValueChange={(esp) => {
-                          const currentMed = medicos.find(m => m.id === formData.medico_id);
-                          const currentEsp = currentMed?.especialidade || 'Clínico Geral';
-                          if (currentEsp !== esp) {
+                          if (esp === '__todas__') {
+                            setFormData({ ...formData, _selectedEsp: '' } as any);
+                          } else {
                             const firstDoc = medicos.find(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === esp);
-                            setFormData({ ...formData, medico_id: firstDoc?.id || '' });
+                            setFormData({ ...formData, _selectedEsp: esp, medico_id: firstDoc?.id || '' } as any);
                           }
                         }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione a especialidade" />
+                          <SelectValue placeholder="Todas as especialidades" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="__todas__">Todas as especialidades</SelectItem>
                           {(() => {
                             const espSet = new Set<string>();
                             medicos.filter(m => m.ativo !== false).forEach(m => espSet.add(m.especialidade || 'Clínico Geral'));
@@ -1413,15 +1414,13 @@ export default function Agenda() {
                         </SelectTrigger>
                         <SelectContent>
                           {(() => {
-                            const selectedEsp = formData.medico_id
-                              ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral')
-                              : '';
-                            const filtered = selectedEsp
-                              ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === selectedEsp)
+                            const espFilter = (formData as any)._selectedEsp;
+                            const filtered = espFilter
+                              ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === espFilter)
                               : medicos.filter(m => m.ativo !== false);
                             return filtered.map(m => (
                               <SelectItem key={m.id} value={m.id}>
-                                {m.nome || m.crm}
+                                {m.nome || m.crm} {!espFilter && m.especialidade ? `(${m.especialidade})` : ''}
                               </SelectItem>
                             ));
                           })()}
