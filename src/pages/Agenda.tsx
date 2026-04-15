@@ -329,8 +329,15 @@ export default function Agenda() {
   };
 
   const handleSave = async () => {
-    if (!formData.paciente_id || !formData.medico_id) {
-      toast.error('Selecione o paciente e o médico.');
+    const tipo = formData.tipo || 'consulta';
+    const requiresMedico = ['consulta', 'retorno', 'checkup', 'avaliacao', 'procedimento', 'cirurgia', 'triagem'].includes(tipo);
+
+    if (!formData.paciente_id) {
+      toast.error('Selecione o paciente.');
+      return;
+    }
+    if (requiresMedico && !formData.medico_id) {
+      toast.error('Selecione o médico para este tipo de agendamento.');
       return;
     }
     if (!formData.data || !formData.hora_inicio) {
