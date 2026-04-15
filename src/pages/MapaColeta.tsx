@@ -218,7 +218,7 @@ export default function MapaColeta() {
   const detailItem = itens.find(i => i.id === detailId);
 
   const StatusBadge = ({ status }: { status: string }) => {
-    if (status === 'coletado') return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Coletado</Badge>;
+    if (status === 'coletado') return <Badge className="bg-success/10 text-success border-success/20">Coletado</Badge>;
     if (status === 'recoleta') return <Badge variant="destructive" className="gap-1"><RotateCcw className="h-3 w-3" />Recoleta</Badge>;
     return <Badge variant="secondary">Pendente</Badge>;
   };

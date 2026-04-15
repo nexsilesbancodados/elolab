@@ -28,13 +28,13 @@ import {
 } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800',
-  coletado: 'bg-blue-100 text-blue-800',
-  em_analise: 'bg-purple-100 text-purple-800',
-  validado: 'bg-green-100 text-green-800',
-  liberado: 'bg-emerald-100 text-emerald-800',
-  cancelado: 'bg-red-100 text-red-800',
-  recoleta: 'bg-orange-100 text-orange-800',
+  pendente: 'bg-warning/10 text-warning',
+  coletado: 'bg-info/10 text-info',
+  em_analise: 'bg-accent text-accent-foreground',
+  validado: 'bg-success/10 text-success',
+  liberado: 'bg-success/10 text-success',
+  cancelado: 'bg-destructive/10 text-destructive',
+  recoleta: 'bg-warning/10 text-warning',
 };
 
 const statusLabels: Record<string, string> = {
@@ -335,12 +335,12 @@ export default function Laboratorio() {
       {/* ─── Pipeline Visual + KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
-          { label: 'Pendente', value: stats.pendentes, icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', filter: 'pendente' },
-          { label: 'Coletado', value: stats.coletados, icon: TestTube, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30', filter: 'coletado' },
-          { label: 'Em Análise', value: stats.emAnalise, icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/30', filter: 'em_analise' },
-          { label: 'Validado', value: stats.validados, icon: Shield, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30', filter: 'validado' },
-          { label: 'Liberado', value: stats.liberados, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', filter: 'liberado' },
-          { label: 'Urgentes', value: stats.urgentes, icon: Zap, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30', filter: 'urgente' },
+          { label: 'Pendente', value: stats.pendentes, icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/30', filter: 'pendente' },
+          { label: 'Coletado', value: stats.coletados, icon: TestTube, color: 'text-info', bg: 'bg-info/10', border: 'border-info/30', filter: 'coletado' },
+          { label: 'Em Análise', value: stats.emAnalise, icon: Activity, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/30', filter: 'em_analise' },
+          { label: 'Validado', value: stats.validados, icon: Shield, color: 'text-success', bg: 'bg-success/10', border: 'border-success/30', filter: 'validado' },
+          { label: 'Liberado', value: stats.liberados, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', border: 'border-success/30', filter: 'liberado' },
+          { label: 'Urgentes', value: stats.urgentes, icon: Zap, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/30', filter: 'urgente' },
         ].map((s, idx) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
             <Card className={cn('relative border cursor-pointer hover:shadow-md transition-all',
