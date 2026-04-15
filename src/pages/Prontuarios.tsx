@@ -165,7 +165,7 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
           );
         })}
         <div className="rounded-xl border border-border/60 bg-card p-2.5 space-y-1">
-          <Label className="text-[10px] font-semibold text-teal-500">IMC</Label>
+          <Label className="text-[10px] font-semibold text-info">IMC</Label>
           <div className="h-7 flex items-center px-2 text-xs font-bold">
             {sinais.imc || '—'}
             {imcClass && <span className={`ml-1 text-[9px] ${imcClass.color}`}>({imcClass.label})</span>}
@@ -381,7 +381,7 @@ function RelatedRecords({ pacienteId }: { pacienteId: string }) {
   const sc = (s: string) => {
     if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-success/10 text-green-700';
     if (s === 'pendente' || s === 'solicitado') return 'bg-warning/10 text-amber-700';
-    if (s === 'em_andamento') return 'bg-blue-500/10 text-blue-700';
+    if (s === 'em_andamento') return 'bg-info/10 text-blue-700';
     return 'bg-muted text-muted-foreground';
   };
 
@@ -1369,9 +1369,9 @@ export default function Prontuarios() {
                           {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
                           {ev.sinais_vitais && Object.keys(ev.sinais_vitais).some(k => ev.sinais_vitais[k]) && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
-                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                              {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-destructive/10 text-red-600 border-destructive/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
+                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-destructive/10 text-rose-600 border-destructive/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                              {ev.sinais_vitais.temperatura && <Badge className="bg-warning/10 text-orange-600 border-warning/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
                             </div>
                           )}
                         </motion.div>

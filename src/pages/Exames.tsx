@@ -665,7 +665,7 @@ export default function Exames() {
                             <div key={i} className="flex items-center gap-0.5">
                               <div className={cn(
                                 'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
-                                i < step && 'bg-emerald-100 text-emerald-700',
+                                i < step && 'bg-success/10 text-success',
                                 i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                 i > step && 'bg-muted text-muted-foreground/40',
                                 step === -1 && 'bg-muted text-muted-foreground line-through',
@@ -673,7 +673,7 @@ export default function Exames() {
                                 {i < step ? '✓' : label}
                               </div>
                               {i < PIPELINE_STEPS.length - 1 && (
-                                <div className={cn('w-2 h-px', i < step ? 'bg-emerald-400' : 'bg-border')} />
+                                <div className={cn('w-2 h-px', i < step ? 'bg-success' : 'bg-border')} />
                               )}
                             </div>
                           ))}
@@ -923,7 +923,7 @@ export default function Exames() {
               </div>
 
               {formData.preco_custo && formData.preco_venda && (
-                <div className="mt-3 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                <div className="mt-3 p-3 bg-success/5 border border-success/20 rounded-lg">
                   <p className="text-sm text-emerald-700">
                     💰 Margem: <span className="font-bold">R$ {(formData.preco_venda - formData.preco_custo).toFixed(2)}</span> ({(((formData.preco_venda - formData.preco_custo) / formData.preco_custo) * 100).toFixed(0)}%)
                   </p>

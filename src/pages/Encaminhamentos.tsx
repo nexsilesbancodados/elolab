@@ -219,7 +219,7 @@ export default function Encaminhamentos() {
         </Card>
         <Card className={cn("kpi-card cursor-pointer", statusFilter === 'em_andamento' && "ring-2 ring-blue-500")} onClick={() => setStatusFilter('em_andamento')}>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold tabular-nums text-blue-600">{stats.emAndamento}</div>
+            <div className="text-2xl font-bold tabular-nums text-info">{stats.emAndamento}</div>
             <p className="text-xs text-muted-foreground">Em Andamento</p>
           </CardContent>
         </Card>

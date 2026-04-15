@@ -1268,11 +1268,11 @@ export default function Pacientes() {
                       <div className="space-y-2">
                         {agendamentosList.map((a, idx) => {
                           const statusColors: Record<string, string> = {
-                            agendado: 'bg-blue-100 text-blue-700',
-                            confirmado: 'bg-emerald-100 text-emerald-700',
+                            agendado: 'bg-info/10 text-info',
+                            confirmado: 'bg-success/10 text-success',
                             cancelado: 'bg-destructive/10 text-destructive',
                             realizado: 'bg-muted text-muted-foreground',
-                            em_atendimento: 'bg-amber-100 text-amber-700',
+                            em_atendimento: 'bg-warning/10 text-warning',
                           };
                           return (
                             <motion.div key={a.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
@@ -1378,10 +1378,10 @@ export default function Pacientes() {
                       <div className="space-y-2">
                         {examesList.map((ex, idx) => {
                           const exStatusColors: Record<string, string> = {
-                            solicitado: 'bg-blue-100 text-blue-700',
-                            agendado: 'bg-amber-100 text-amber-700',
-                            em_andamento: 'bg-purple-100 text-purple-700',
-                            concluido: 'bg-emerald-100 text-emerald-700',
+                            solicitado: 'bg-info/10 text-info',
+                            agendado: 'bg-warning/10 text-warning',
+                            em_andamento: 'bg-primary/10 text-primary',
+                            concluido: 'bg-success/10 text-success',
                             cancelado: 'bg-destructive/10 text-destructive',
                           };
                           return (
@@ -1398,7 +1398,7 @@ export default function Pacientes() {
                                 </div>
                                 <p className="text-xs font-semibold">{ex.tipo_exame}</p>
                                 {ex.medicos && <p className="text-[11px] text-muted-foreground">Solicitante: Dr(a). {ex.medicos.nome || ex.medicos.crm}</p>}
-                                {ex.resultado && <p className="text-[11px] text-emerald-600">Resultado: {ex.resultado.substring(0, 80)}...</p>}
+                                {ex.resultado && <p className="text-[11px] text-success">Resultado: {ex.resultado.substring(0, 80)}...</p>}
                                 {ex.observacoes && <p className="text-[11px] text-muted-foreground line-clamp-1">{ex.observacoes}</p>}
                               </div>
                             </motion.div>
