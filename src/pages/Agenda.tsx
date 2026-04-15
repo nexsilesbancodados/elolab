@@ -329,8 +329,15 @@ export default function Agenda() {
   };
 
   const handleSave = async () => {
-    if (!formData.paciente_id || !formData.medico_id) {
-      toast.error('Selecione o paciente e o médico.');
+    const tipo = formData.tipo || 'consulta';
+    const requiresMedico = ['consulta', 'retorno', 'checkup', 'avaliacao', 'procedimento', 'cirurgia', 'triagem'].includes(tipo);
+
+    if (!formData.paciente_id) {
+      toast.error('Selecione o paciente.');
+      return;
+    }
+    if (requiresMedico && !formData.medico_id) {
+      toast.error('Selecione o médico para este tipo de agendamento.');
       return;
     }
     if (!formData.data || !formData.hora_inicio) {
@@ -364,18 +371,20 @@ export default function Agenda() {
       }
     }
 
-    // Check for scheduling conflicts (BOTH for new AND existing appointments)
-    const conflito = agendamentos.find(ag =>
-      ag.medico_id === formData.medico_id &&
-      ag.data === formData.data &&
-      ag.status !== 'cancelado' &&
-      ag.id !== formData.id && // exclude current appointment if editing
-      ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) && // overlap check
-      ag.hora_fim > formData.hora_inicio
-    );
-    if (conflito) {
-      toast.error('Já existe um agendamento conflitante neste horário para este médico.');
-      return;
+    // Check for scheduling conflicts (only when medico is set)
+    if (formData.medico_id) {
+      const conflito = agendamentos.find(ag =>
+        ag.medico_id === formData.medico_id &&
+        ag.data === formData.data &&
+        ag.status !== 'cancelado' &&
+        ag.id !== formData.id &&
+        ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
+        ag.hora_fim > formData.hora_inicio
+      );
+      if (conflito) {
+        toast.error('Já existe um agendamento conflitante neste horário para este médico.');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -393,7 +402,7 @@ export default function Agenda() {
           .from('agendamentos')
           .update({
             paciente_id: formData.paciente_id,
-            medico_id: formData.medico_id,
+            medico_id: formData.medico_id || null,
             data: formData.data!,
             hora_inicio: normalizeTime(formData.hora_inicio)!,
             hora_fim: normalizeTime(formData.hora_fim),
@@ -401,7 +410,7 @@ export default function Agenda() {
             status: formData.status,
             observacoes: formData.observacoes,
             clinica_id: clinicaId,
-          })
+          } as any)
           .eq('id', formData.id);
 
         if (error) throw error;
@@ -465,16 +474,18 @@ export default function Agenda() {
             continue;
           }
 
-          // Check for conflicts
-          const conflito = agendamentos.find(ag =>
-            ag.medico_id === formData.medico_id &&
-            ag.data === date &&
-            ag.status !== 'cancelado' &&
-            ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
-            ag.hora_fim > formData.hora_inicio
-          );
-          if (conflito) {
-            validationErrors.push(`${format(parseISO(date), 'dd/MM')} - Conflito de horário`);
+          // Check for conflicts (only if medico is set)
+          if (formData.medico_id) {
+            const conflito = agendamentos.find(ag =>
+              ag.medico_id === formData.medico_id &&
+              ag.data === date &&
+              ag.status !== 'cancelado' &&
+              ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
+              ag.hora_fim > formData.hora_inicio
+            );
+            if (conflito) {
+              validationErrors.push(`${format(parseISO(date), 'dd/MM')} - Conflito de horário`);
+            }
           }
         }
 
@@ -488,7 +499,7 @@ export default function Agenda() {
 
         const newAgendamentos = dates.map(date => ({
           paciente_id: formData.paciente_id!,
-          medico_id: formData.medico_id!,
+          medico_id: formData.medico_id || null,
           data: date,
           hora_inicio: normalizeTime(formData.hora_inicio)!,
           hora_fim: normalizeTime(formData.hora_fim),
@@ -496,7 +507,7 @@ export default function Agenda() {
           status: formData.status as StatusAgendamento,
           observacoes: formData.observacoes,
           clinica_id: clinicaId,
-        }));
+        } as any));
 
         const { data: inserted, error } = await supabase
           .from('agendamentos')
@@ -588,7 +599,8 @@ export default function Agenda() {
   };
 
   const getPacienteNome = (id: string) => pacientes.find((p) => p.id === id)?.nome || 'Desconhecido';
-  const getMedicoNome = (id: string) => {
+  const getMedicoNome = (id: string | null) => {
+    if (!id) return '';
     const medico = medicos.find((m) => m.id === id);
     return medico ? `Dr(a). ${medico.nome || medico.crm}` : 'Desconhecido';
   };
@@ -958,8 +970,7 @@ export default function Agenda() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-semibold text-sm">{getPacienteNome(agendamento.paciente_id)}</p>
-                                  <p className="text-xs opacity-75">{getMedicoNome(agendamento.medico_id)}</p>
-                                  {agendamento.tipo && <p className="text-xs opacity-60 mt-0.5">{agendamento.tipo}</p>}
+                                  <p className="text-xs opacity-75">{agendamento.medico_id ? getMedicoNome(agendamento.medico_id) : (agendamento.tipo || 'Agendamento')}</p>
                                 </div>
                                 <Badge className={cn('text-[10px]', STATUS_COLORS[agendamento.status || 'agendado'])}>
                                   {STATUS_LABELS[agendamento.status as StatusAgendamento || 'agendado']}
@@ -1200,6 +1211,43 @@ export default function Agenda() {
           )}
 
           <div className="space-y-4 py-4">
+            {/* ─── Tipo do Agendamento (primeiro, pois controla o fluxo) ─── */}
+            <div className="space-y-2">
+              <Label className="font-semibold">Tipo de Agendamento *</Label>
+              <Select
+                value={formData.tipo}
+                onValueChange={(v) => {
+                  const needsMedico = ['consulta', 'retorno', 'checkup', 'avaliacao', 'procedimento', 'cirurgia', 'triagem'].includes(v);
+                  setFormData({
+                    ...formData,
+                    tipo: v,
+                    // Clear medico if switching to a type that doesn't require one
+                    ...((!needsMedico && formData.medico_id) ? {} : {}),
+                  });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="consulta">🩺 Consulta Médica</SelectItem>
+                  <SelectItem value="retorno">🔄 Retorno</SelectItem>
+                  <SelectItem value="avaliacao">📋 Avaliação</SelectItem>
+                  <SelectItem value="checkup">✅ Check-up</SelectItem>
+                  <SelectItem value="procedimento">💉 Procedimento</SelectItem>
+                  <SelectItem value="cirurgia">🔪 Cirurgia</SelectItem>
+                  <SelectItem value="triagem">🏥 Triagem</SelectItem>
+                  <SelectItem value="coleta">🧪 Coleta Laboratorial</SelectItem>
+                  <SelectItem value="exame">🔬 Exame</SelectItem>
+                  <SelectItem value="enfermagem">👩‍⚕️ Atendimento Enfermagem</SelectItem>
+                  <SelectItem value="vacina">💊 Vacinação</SelectItem>
+                  <SelectItem value="curativo">🩹 Curativo</SelectItem>
+                  <SelectItem value="outro">📌 Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* ─── Data e Horário ─── */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Data</Label>
@@ -1234,6 +1282,7 @@ export default function Agenda() {
               </div>
             </div>
 
+            {/* ─── Paciente ─── */}
             <div className="space-y-2">
               <Label>Paciente *</Label>
               {!showNewPatientForm ? (
@@ -1316,109 +1365,180 @@ export default function Agenda() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Especialidade *</Label>
-                <Select
-                  value={formData.medico_id ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral') : ''}
-                  onValueChange={(esp) => {
-                    // When specialty changes, reset medico if it doesn't match
-                    const currentMed = medicos.find(m => m.id === formData.medico_id);
-                    const currentEsp = currentMed?.especialidade || 'Clínico Geral';
-                    if (currentEsp !== esp) {
-                      // Auto-select the first doctor with this specialty
-                      const firstDoc = medicos.find(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === esp);
-                      setFormData({ ...formData, medico_id: firstDoc?.id || '' });
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a especialidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(() => {
-                      const espSet = new Set<string>();
-                      medicos.filter(m => m.ativo !== false).forEach(m => espSet.add(m.especialidade || 'Clínico Geral'));
-                      return Array.from(espSet).sort().map(esp => (
-                        <SelectItem key={esp} value={esp}>{esp}</SelectItem>
-                      ));
-                    })()}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Médico *</Label>
-                <Select
-                  value={formData.medico_id || ''}
-                  onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o médico" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(() => {
-                      const selectedEsp = formData.medico_id
-                        ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral')
-                        : '';
-                      const filtered = selectedEsp
-                        ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === selectedEsp)
-                        : medicos.filter(m => m.ativo !== false);
-                      return filtered.map(m => (
+            {/* ─── Médico / Especialidade — Fluxo adaptativo por tipo ─── */}
+            {(() => {
+              const tipo = formData.tipo || 'consulta';
+              const requiresMedico = ['consulta', 'retorno', 'checkup', 'avaliacao', 'procedimento', 'cirurgia', 'triagem'].includes(tipo);
+              const isLabType = ['coleta', 'exame'].includes(tipo);
+              const isNursingType = ['enfermagem', 'vacina', 'curativo'].includes(tipo);
+
+              if (requiresMedico) {
+                return (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Especialidade *</Label>
+                      <Select
+                        value={formData.medico_id ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral') : ''}
+                        onValueChange={(esp) => {
+                          const currentMed = medicos.find(m => m.id === formData.medico_id);
+                          const currentEsp = currentMed?.especialidade || 'Clínico Geral';
+                          if (currentEsp !== esp) {
+                            const firstDoc = medicos.find(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === esp);
+                            setFormData({ ...formData, medico_id: firstDoc?.id || '' });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a especialidade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(() => {
+                            const espSet = new Set<string>();
+                            medicos.filter(m => m.ativo !== false).forEach(m => espSet.add(m.especialidade || 'Clínico Geral'));
+                            return Array.from(espSet).sort().map(esp => (
+                              <SelectItem key={esp} value={esp}>{esp}</SelectItem>
+                            ));
+                          })()}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Médico *</Label>
+                      <Select
+                        value={formData.medico_id || ''}
+                        onValueChange={(v) => setFormData({ ...formData, medico_id: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o médico" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(() => {
+                            const selectedEsp = formData.medico_id
+                              ? (medicos.find(m => m.id === formData.medico_id)?.especialidade || 'Clínico Geral')
+                              : '';
+                            const filtered = selectedEsp
+                              ? medicos.filter(m => m.ativo !== false && (m.especialidade || 'Clínico Geral') === selectedEsp)
+                              : medicos.filter(m => m.ativo !== false);
+                            return filtered.map(m => (
+                              <SelectItem key={m.id} value={m.id}>
+                                {m.nome || m.crm}
+                              </SelectItem>
+                            ));
+                          })()}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (isLabType) {
+                return (
+                  <div className="space-y-3 p-3 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">🧪</span>
+                      <Label className="font-medium text-emerald-700">
+                        {tipo === 'coleta' ? 'Coleta Laboratorial' : 'Exame'}
+                      </Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Médico Solicitante (opcional)</Label>
+                      <Select
+                        value={formData.medico_id || '__none__'}
+                        onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__none__' ? '' : v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione (opcional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">— Sem médico solicitante —</SelectItem>
+                          {medicos.filter(m => m.ativo !== false).map(m => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.nome || m.crm} {m.especialidade ? `(${m.especialidade})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Para coletas e exames, o médico é opcional (solicitante). A gestão completa da coleta pode ser feita em Laboratório &gt; Mapa de Coleta.
+                    </p>
+                  </div>
+                );
+              }
+
+              if (isNursingType) {
+                return (
+                  <div className="space-y-3 p-3 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">👩‍⚕️</span>
+                      <Label className="font-medium text-blue-700">Atendimento de Enfermagem</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Médico Responsável (opcional)</Label>
+                      <Select
+                        value={formData.medico_id || '__none__'}
+                        onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__none__' ? '' : v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione (opcional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">— Sem médico responsável —</SelectItem>
+                          {medicos.filter(m => m.ativo !== false).map(m => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.nome || m.crm}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                );
+              }
+
+              // "outro" type - optional medico
+              return (
+                <div className="space-y-2">
+                  <Label>Médico (opcional)</Label>
+                  <Select
+                    value={formData.medico_id || '__none__'}
+                    onValueChange={(v) => setFormData({ ...formData, medico_id: v === '__none__' ? '' : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Nenhum —</SelectItem>
+                      {medicos.filter(m => m.ativo !== false).map(m => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.nome || m.crm}
                         </SelectItem>
-                      ));
-                    })()}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })()}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select
-                  value={formData.tipo}
-                  onValueChange={(v) => setFormData({ ...formData, tipo: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="consulta">Consulta</SelectItem>
-                    <SelectItem value="retorno">Retorno</SelectItem>
-                    <SelectItem value="exame">Exame</SelectItem>
-                    <SelectItem value="coleta">Coleta Laboratorial</SelectItem>
-                    <SelectItem value="procedimento">Procedimento</SelectItem>
-                    <SelectItem value="cirurgia">Cirurgia</SelectItem>
-                    <SelectItem value="avaliacao">Avaliação</SelectItem>
-                    <SelectItem value="checkup">Check-up</SelectItem>
-                    <SelectItem value="triagem">Triagem</SelectItem>
-                    <SelectItem value="enfermagem">Atendimento Enfermagem</SelectItem>
-                    <SelectItem value="vacina">Vacinação</SelectItem>
-                    <SelectItem value="curativo">Curativo</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(v) => setFormData({ ...formData, status: v as StatusAgendamento })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* ─── Status ─── */}
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => setFormData({ ...formData, status: v as StatusAgendamento })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Recurrence - only show for new appointments */}
@@ -1426,7 +1546,7 @@ export default function Agenda() {
               <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Repeat className="h-4 w-4 text-muted-foreground" />
-                  <Label className="font-medium">Consulta Recorrente</Label>
+                  <Label className="font-medium">Agendamento Recorrente</Label>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -1468,7 +1588,12 @@ export default function Agenda() {
               <Textarea
                 value={formData.observacoes || ''}
                 onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                placeholder="Observações sobre a consulta..."
+                placeholder={
+                  formData.tipo === 'coleta' ? 'Ex: Hemograma completo, jejum de 12h...' :
+                  formData.tipo === 'exame' ? 'Ex: Raio-X tórax, ultrassom...' :
+                  formData.tipo === 'vacina' ? 'Ex: Vacina antigripal, lote...' :
+                  'Observações sobre o atendimento...'
+                }
                 rows={3}
               />
             </div>
