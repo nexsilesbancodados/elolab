@@ -128,6 +128,7 @@ export default function Agenda() {
   const [showNewPatientForm, setShowNewPatientForm] = useState(false);
   const [newPatientData, setNewPatientData] = useState({ nome: '', telefone: '', cpf: '' });
   const [isSavingPatient, setIsSavingPatient] = useState(false);
+  const [espFilter, setEspFilter] = useState<string>('');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos();
