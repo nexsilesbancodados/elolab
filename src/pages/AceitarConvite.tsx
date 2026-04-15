@@ -41,48 +41,34 @@ export default function AceitarConvite() {
 
     const validateToken = async () => {
       try {
-        const { data: inviteData, error: inviteError } = await supabase
-          .from('employee_invitations')
-          .select(`
-            id,
-            email,
-            roles,
-            funcionario_id,
-            status,
-            expires_at
-          `)
-          .eq('token', token)
-          .maybeSingle();
+        const { data: result, error: rpcError } = await supabase.rpc(
+          'validate_invitation_token' as any,
+          { _token: token }
+        );
 
-        if (inviteError) throw inviteError;
+        if (rpcError) throw rpcError;
 
-        if (!inviteData) {
-          setError('Convite não encontrado ou já foi utilizado');
+        const parsed = result as any;
+
+        if (!parsed || !parsed.success) {
+          const errorMap: Record<string, string> = {
+            not_found: 'Convite não encontrado ou já foi utilizado',
+            already_used: 'Este convite já foi utilizado',
+            expired: 'Este convite expirou',
+          };
+          setError(errorMap[parsed?.error] || 'Convite inválido');
           setLoading(false);
           return;
         }
-
-        if (inviteData.status !== 'pending') {
-          setError('Este convite já foi utilizado');
-          setLoading(false);
-          return;
-        }
-
-        if (new Date(inviteData.expires_at) < new Date()) {
-          setError('Este convite expirou');
-          setLoading(false);
-          return;
-        }
-
-        const { data: funcData } = await supabase
-          .from('funcionarios')
-          .select('nome, cargo')
-          .eq('id', inviteData.funcionario_id)
-          .maybeSingle();
 
         setInvitation({
-          ...inviteData,
-          funcionario: funcData || undefined,
+          id: parsed.id,
+          email: parsed.email,
+          roles: parsed.roles,
+          funcionario_id: parsed.funcionario_id,
+          funcionario: parsed.funcionario_nome
+            ? { nome: parsed.funcionario_nome, cargo: parsed.funcionario_cargo || null }
+            : undefined,
         });
         setLoading(false);
       } catch (err: unknown) {
