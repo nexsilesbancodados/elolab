@@ -50,8 +50,8 @@ const CATEGORIAS_DESPESA: Record<string, string> = {
 
 const PIE_COLORS = [
   'hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))',
-  'hsl(var(--destructive))', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899',
-  '#84cc16', '#6366f1', '#14b8a6', '#eab308',
+  'hsl(var(--destructive))', 'hsl(var(--info))', 'hsl(var(--accent-foreground))',
+  'hsl(var(--muted-foreground))', 'hsl(var(--primary))',
 ];
 
 export default function Financeiro() {

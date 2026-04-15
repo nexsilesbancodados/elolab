@@ -51,7 +51,7 @@ import {
   Legend,
 } from 'recharts';
 
-const CHART_COLORS = ['#0066CC', '#00A86B', '#FFB020', '#FF4D4F', '#722ED1'];
+const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--info))'];
 
 export default function Relatorios() {
   const [periodo, setPeriodo] = useState('mes_atual');
@@ -369,8 +369,8 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100">
-                <Calendar className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-full bg-info/10">
+                <Calendar className="h-6 w-6 text-info" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Atendimentos</p>
@@ -386,12 +386,12 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-full bg-success/10">
+                <TrendingUp className="h-6 w-6 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Receitas</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-success">
                   {formatCurrency(estatisticas.receitas)}
                 </p>
               </div>
@@ -402,12 +402,12 @@ export default function Relatorios() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-red-100">
-                <TrendingDown className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-full bg-destructive/10">
+                <TrendingDown className="h-6 w-6 text-destructive" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Despesas</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-destructive">
                   {formatCurrency(estatisticas.despesas)}
                 </p>
               </div>
@@ -425,7 +425,7 @@ export default function Relatorios() {
                 <p className="text-sm text-muted-foreground">Lucro</p>
                 <p className={cn(
                   'text-2xl font-bold',
-                  estatisticas.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+                  estatisticas.lucro >= 0 ? 'text-success' : 'text-destructive'
                 )}>
                   {formatCurrency(estatisticas.lucro)}
                 </p>
@@ -490,12 +490,12 @@ export default function Relatorios() {
                     <AreaChart data={dadosDiarios}>
                       <defs>
                         <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00A86B" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#00A86B" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="colorDespesa" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FF4D4F" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#FF4D4F" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -506,14 +506,14 @@ export default function Relatorios() {
                       <Area
                         type="monotone"
                         dataKey="receita"
-                        stroke="#00A86B"
+                        stroke="hsl(var(--success))"
                         fill="url(#colorReceita)"
                         name="Receita"
                       />
                       <Area
                         type="monotone"
                         dataKey="despesa"
-                        stroke="#FF4D4F"
+                        stroke="hsl(var(--destructive))"
                         fill="url(#colorDespesa)"
                         name="Despesa"
                       />
@@ -681,8 +681,8 @@ export default function Relatorios() {
                           <YAxis fontSize={11} tickFormatter={(v) => `R$${Math.abs(v)}`} />
                           <Tooltip formatter={(value: number) => formatCurrency(Math.abs(value))} />
                           <Legend />
-                          <Bar dataKey="receita" fill="#00A86B" name="Receita" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="despesa" fill="#FF4D4F" name="Despesa" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="receita" fill="hsl(var(--success))" name="Receita" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="despesa" fill="hsl(var(--destructive))" name="Despesa" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -715,7 +715,7 @@ export default function Relatorios() {
                       <XAxis dataKey="data" fontSize={12} />
                       <YAxis fontSize={12} />
                       <Tooltip />
-                      <Bar dataKey="atendimentos" fill="#0066CC" radius={[4, 4, 0, 0]} name="Atendimentos" />
+                      <Bar dataKey="atendimentos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Atendimentos" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -787,9 +787,9 @@ export default function Relatorios() {
                           <TableCell className="text-right">{medico.finalizados}</TableCell>
                           <TableCell className="text-right">
                             <Badge className={cn(
-                              medico.taxa >= 80 && 'bg-green-100 text-green-800',
-                              medico.taxa >= 50 && medico.taxa < 80 && 'bg-yellow-100 text-yellow-800',
-                              medico.taxa < 50 && 'bg-red-100 text-red-800'
+                              medico.taxa >= 80 && 'bg-success/10 text-success',
+                              medico.taxa >= 50 && medico.taxa < 80 && 'bg-warning/10 text-warning',
+                              medico.taxa < 50 && 'bg-destructive/10 text-destructive'
                             )}>
                               {medico.taxa}%
                             </Badge>
