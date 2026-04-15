@@ -474,16 +474,18 @@ export default function Agenda() {
             continue;
           }
 
-          // Check for conflicts
-          const conflito = agendamentos.find(ag =>
-            ag.medico_id === formData.medico_id &&
-            ag.data === date &&
-            ag.status !== 'cancelado' &&
-            ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
-            ag.hora_fim > formData.hora_inicio
-          );
-          if (conflito) {
-            validationErrors.push(`${format(parseISO(date), 'dd/MM')} - Conflito de horário`);
+          // Check for conflicts (only if medico is set)
+          if (formData.medico_id) {
+            const conflito = agendamentos.find(ag =>
+              ag.medico_id === formData.medico_id &&
+              ag.data === date &&
+              ag.status !== 'cancelado' &&
+              ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
+              ag.hora_fim > formData.hora_inicio
+            );
+            if (conflito) {
+              validationErrors.push(`${format(parseISO(date), 'dd/MM')} - Conflito de horário`);
+            }
           }
         }
 
