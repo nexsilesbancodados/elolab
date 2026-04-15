@@ -317,6 +317,13 @@ export default function CaixaDiario() {
     );
   }, [produtosEstoque, catalogoSearch]);
 
+  const examesFiltrados = useMemo(() => {
+    const q = catalogoSearch.toLowerCase();
+    return examesCatalogo.filter((e: any) =>
+      !q || e.nome?.toLowerCase().includes(q)
+    );
+  }, [examesCatalogo, catalogoSearch]);
+
   // Cart helpers
   const addToCart = (item: Omit<ProdutoCarrinho, 'quantidade'>) => {
     setCarrinho(prev => {
