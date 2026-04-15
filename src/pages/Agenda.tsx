@@ -495,7 +495,7 @@ export default function Agenda() {
 
         const newAgendamentos = dates.map(date => ({
           paciente_id: formData.paciente_id!,
-          medico_id: formData.medico_id!,
+          medico_id: formData.medico_id || null,
           data: date,
           hora_inicio: normalizeTime(formData.hora_inicio)!,
           hora_fim: normalizeTime(formData.hora_fim),
@@ -503,7 +503,7 @@ export default function Agenda() {
           status: formData.status as StatusAgendamento,
           observacoes: formData.observacoes,
           clinica_id: clinicaId,
-        }));
+        } as any));
 
         const { data: inserted, error } = await supabase
           .from('agendamentos')
