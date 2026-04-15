@@ -80,6 +80,82 @@ const initialFormData: FormData = {
   foto_url: '', carimbo_url: '',
 };
 
+// ─── Especialidade Combobox ───
+function EspecialidadeCombobox({ value, onChange, especialidadesExtras }: { value: string; onChange: (v: string) => void; especialidadesExtras: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const allEspecialidades = useMemo(() => {
+    const merged = new Set([...ESPECIALIDADES_SUGESTOES, ...especialidadesExtras]);
+    return Array.from(merged).sort();
+  }, [especialidadesExtras]);
+
+  const filtered = useMemo(() => {
+    if (!search) return allEspecialidades;
+    const term = search.toLowerCase();
+    return allEspecialidades.filter(e => e.toLowerCase().includes(term));
+  }, [search, allEspecialidades]);
+
+  const handleSelect = (esp: string) => {
+    onChange(esp);
+    setSearch('');
+    setOpen(false);
+  };
+
+  return (
+    <div className="mt-4 space-y-1.5">
+      <Label className="text-xs">Especialidade</Label>
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={open ? search : value}
+          onChange={e => {
+            setSearch(e.target.value);
+            onChange(e.target.value);
+            if (!open) setOpen(true);
+          }}
+          onFocus={() => { setOpen(true); setSearch(value); }}
+          onBlur={() => setTimeout(() => setOpen(false), 200)}
+          placeholder="Digite ou selecione uma especialidade"
+          autoComplete="off"
+        />
+        {value && !open && (
+          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            onClick={() => { onChange(''); setSearch(''); inputRef.current?.focus(); }}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        <AnimatePresence>
+          {open && filtered.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+              className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border bg-popover shadow-lg"
+            >
+              {filtered.map(esp => (
+                <button key={esp} type="button"
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${esp === value ? 'bg-primary/10 text-primary font-medium' : 'text-popover-foreground'}`}
+                  onMouseDown={e => { e.preventDefault(); handleSelect(esp); }}
+                >
+                  {esp}
+                </button>
+              ))}
+              {search && !filtered.some(e => e.toLowerCase() === search.toLowerCase()) && (
+                <button type="button"
+                  className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-accent transition-colors border-t"
+                  onMouseDown={e => { e.preventDefault(); handleSelect(search); }}
+                >
+                  + Criar "{search}"
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 // ─── Doctor Profile Panel ───
 function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose: () => void; onEdit: () => void }) {
   const navigate = useNavigate();
