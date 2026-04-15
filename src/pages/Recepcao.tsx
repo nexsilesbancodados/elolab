@@ -39,10 +39,10 @@ import {
 
 // ─── Constants ──────────────────────────────────────────
 const FORMAS_PAGAMENTO = [
-  { value: 'dinheiro', label: 'Dinheiro', icon: Banknote, color: 'text-emerald-600' },
-  { value: 'pix', label: 'PIX', icon: QrCode, color: 'text-sky-500' },
+  { value: 'dinheiro', label: 'Dinheiro', icon: Banknote, color: 'text-success' },
+  { value: 'pix', label: 'PIX', icon: QrCode, color: 'text-info' },
   { value: 'credito', label: 'Crédito', icon: CreditCard, color: 'text-primary' },
-  { value: 'debito', label: 'Débito', icon: CreditCard, color: 'text-amber-500' },
+  { value: 'debito', label: 'Débito', icon: CreditCard, color: 'text-warning' },
   { value: 'transferencia', label: 'Transferência', icon: Landmark, color: 'text-muted-foreground' },
 ];
 

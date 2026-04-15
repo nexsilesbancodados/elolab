@@ -44,10 +44,10 @@ interface RoleCustomization {
 type RoleCustomizations = Record<string, RoleCustomization>;
 
 const DEFAULT_ROLE_CONFIG: { role: AppRole; label: string; description: string; color: string; modules: string[] }[] = [
-  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-purple-100 text-purple-800', modules: ['Todas as funcionalidades'] },
-  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-blue-100 text-blue-800', modules: ['Prontuários', 'Prescrições', 'Atestados', 'Exames', 'Encaminhamentos'] },
-  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-cyan-100 text-cyan-800', modules: ['Pacientes', 'Agenda', 'Fila', 'Lista de Espera'] },
-  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-green-100 text-green-800', modules: ['Triagem', 'Sinais Vitais', 'Estoque', 'Coletas'] },
+  { role: 'admin', label: 'Administrador', description: 'Acesso total ao sistema', color: 'bg-primary/10 text-primary', modules: ['Todas as funcionalidades'] },
+  { role: 'medico', label: 'Médico', description: 'Prontuários, prescrições e atestados', color: 'bg-info/10 text-info', modules: ['Prontuários', 'Prescrições', 'Atestados', 'Exames', 'Encaminhamentos'] },
+  { role: 'recepcao', label: 'Recepção', description: 'Pacientes, agenda e fila', color: 'bg-accent text-accent-foreground', modules: ['Pacientes', 'Agenda', 'Fila', 'Lista de Espera'] },
+  { role: 'enfermagem', label: 'Enfermagem', description: 'Triagem, sinais vitais e estoque', color: 'bg-success/10 text-success', modules: ['Triagem', 'Sinais Vitais', 'Estoque', 'Coletas'] },
   { role: 'financeiro', label: 'Financeiro', description: 'Contas, lançamentos e relatórios', color: 'bg-yellow-100 text-yellow-800', modules: ['Contas a Pagar', 'Contas a Receber', 'Caixa', 'Relatórios Financeiros'] },
 ];
 
