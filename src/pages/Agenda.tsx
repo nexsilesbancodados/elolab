@@ -371,18 +371,20 @@ export default function Agenda() {
       }
     }
 
-    // Check for scheduling conflicts (BOTH for new AND existing appointments)
-    const conflito = agendamentos.find(ag =>
-      ag.medico_id === formData.medico_id &&
-      ag.data === formData.data &&
-      ag.status !== 'cancelado' &&
-      ag.id !== formData.id && // exclude current appointment if editing
-      ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) && // overlap check
-      ag.hora_fim > formData.hora_inicio
-    );
-    if (conflito) {
-      toast.error('Já existe um agendamento conflitante neste horário para este médico.');
-      return;
+    // Check for scheduling conflicts (only when medico is set)
+    if (formData.medico_id) {
+      const conflito = agendamentos.find(ag =>
+        ag.medico_id === formData.medico_id &&
+        ag.data === formData.data &&
+        ag.status !== 'cancelado' &&
+        ag.id !== formData.id &&
+        ag.hora_inicio < (formData.hora_fim || formData.hora_inicio) &&
+        ag.hora_fim > formData.hora_inicio
+      );
+      if (conflito) {
+        toast.error('Já existe um agendamento conflitante neste horário para este médico.');
+        return;
+      }
     }
 
     setIsSaving(true);
