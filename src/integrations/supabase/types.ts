@@ -22,7 +22,7 @@ export type Database = {
           hora_fim: string | null
           hora_inicio: string
           id: string
-          medico_id: string
+          medico_id: string | null
           observacoes: string | null
           paciente_id: string
           sala_id: string | null
@@ -37,7 +37,7 @@ export type Database = {
           hora_fim?: string | null
           hora_inicio: string
           id?: string
-          medico_id: string
+          medico_id?: string | null
           observacoes?: string | null
           paciente_id: string
           sala_id?: string | null
@@ -52,7 +52,7 @@ export type Database = {
           hora_fim?: string | null
           hora_inicio?: string
           id?: string
-          medico_id?: string
+          medico_id?: string | null
           observacoes?: string | null
           paciente_id?: string
           sala_id?: string | null
