@@ -41,10 +41,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const STATUS_COLORS: Record<string, string> = {
-  aguardando: 'bg-yellow-100 text-yellow-800',
-  notificado: 'bg-blue-100 text-blue-800',
-  confirmado: 'bg-green-100 text-green-800',
-  agendado: 'bg-purple-100 text-purple-800',
+  aguardando: 'bg-warning/10 text-warning',
+  notificado: 'bg-info/10 text-info',
+  confirmado: 'bg-success/10 text-success',
+  agendado: 'bg-primary/10 text-primary',
   desistiu: 'bg-muted text-muted-foreground',
 };
 
@@ -58,8 +58,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const PRIORIDADE_COLORS: Record<string, string> = {
   normal: 'bg-muted text-muted-foreground',
-  preferencial: 'bg-blue-100 text-blue-800',
-  urgente: 'bg-red-100 text-red-800',
+  preferencial: 'bg-info/10 text-info',
+  urgente: 'bg-destructive/10 text-destructive',
 };
 
 const ESPECIALIDADES = [
