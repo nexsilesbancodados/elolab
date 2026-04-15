@@ -220,39 +220,47 @@ function ExameCombobox({ value, onChange }: { value: string; onChange: (nome: st
     return CATALOGO_EXAMES.filter(e => e.nome.toLowerCase().includes(q) || e.tuss.includes(q));
   }, [searchTerm]);
 
+  const isCustomName = searchTerm.trim() && !filtered.some(e => e.nome.toLowerCase() === searchTerm.trim().toLowerCase());
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open}
           className={cn("w-full justify-between h-11 font-normal text-left", !value && "text-muted-foreground")}>
-          <span className="truncate">{value || 'Selecione ou pesquise um exame...'}</span>
+          <span className="truncate">{value || 'Selecione ou digite um nome de exame...'}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Buscar exame ou código TUSS..." value={searchTerm} onValueChange={setSearchTerm} />
+          <CommandInput placeholder="Buscar ou digitar nome do exame..." value={searchTerm} onValueChange={setSearchTerm} />
           <CommandList className="max-h-[280px]">
-            <CommandEmpty>
-              <div className="py-2 text-center text-sm text-muted-foreground">
-                <p>Nenhum exame encontrado.</p>
-                {searchTerm && (
-                  <Button variant="link" size="sm" className="mt-1" onClick={() => { onChange(searchTerm, ''); setOpen(false); setSearchTerm(''); }}>
-                    Usar "{searchTerm}" como nome personalizado
-                  </Button>
-                )}
-              </div>
-            </CommandEmpty>
-            <CommandGroup>
-              {filtered.map((e) => (
-                <CommandItem key={e.tuss + e.nome} value={e.nome}
-                  onSelect={() => { onChange(e.nome, e.tuss); setOpen(false); setSearchTerm(''); }}>
-                  <Check className={cn("mr-2 h-4 w-4 shrink-0", value === e.nome ? "opacity-100" : "opacity-0")} />
-                  <span className="flex-1 text-sm">{e.nome}</span>
-                  <span className="text-xs text-muted-foreground font-mono ml-2">{e.tuss}</span>
+            {isCustomName && (
+              <CommandGroup heading="Criar novo">
+                <CommandItem
+                  value={`__custom__${searchTerm}`}
+                  onSelect={() => { onChange(searchTerm.trim(), ''); setOpen(false); setSearchTerm(''); }}
+                  className="text-primary font-medium"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Cadastrar "{searchTerm.trim()}"
                 </CommandItem>
-              ))}
-            </CommandGroup>
+              </CommandGroup>
+            )}
+            {filtered.length === 0 && !isCustomName ? (
+              <CommandEmpty>Nenhum exame encontrado.</CommandEmpty>
+            ) : filtered.length > 0 ? (
+              <CommandGroup heading="Catálogo TUSS">
+                {filtered.map((e) => (
+                  <CommandItem key={e.tuss + e.nome} value={e.nome}
+                    onSelect={() => { onChange(e.nome, e.tuss); setOpen(false); setSearchTerm(''); }}>
+                    <Check className={cn("mr-2 h-4 w-4 shrink-0", value === e.nome ? "opacity-100" : "opacity-0")} />
+                    <span className="flex-1 text-sm">{e.nome}</span>
+                    <span className="text-xs text-muted-foreground font-mono ml-2">{e.tuss}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ) : null}
           </CommandList>
         </Command>
       </PopoverContent>
