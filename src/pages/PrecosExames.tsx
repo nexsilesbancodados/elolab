@@ -18,6 +18,248 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { DollarSign, Plus, Search, Edit, Trash2, Building2, Stethoscope, Loader2 } from 'lucide-react';
 
+const CATALOGO_EXAMES: { nome: string; tuss: string }[] = [
+  { nome: 'Hemograma Completo', tuss: '40304361' },
+  { nome: 'Coagulograma', tuss: '40304540' },
+  { nome: 'Tempo de Protrombina (TP)', tuss: '40304590' },
+  { nome: 'TTPA', tuss: '40304604' },
+  { nome: 'VHS', tuss: '40304680' },
+  { nome: 'Reticulócitos', tuss: '40304507' },
+  { nome: 'Plaquetas', tuss: '40304470' },
+  { nome: 'Grupo Sanguíneo (ABO/Rh)', tuss: '40304213' },
+  { nome: 'Coombs Direto', tuss: '40304167' },
+  { nome: 'Coombs Indireto', tuss: '40304175' },
+  { nome: 'Eletroforese de Hemoglobina', tuss: '40304256' },
+  { nome: 'Ferro Sérico', tuss: '40301630' },
+  { nome: 'Ferritina', tuss: '40316360' },
+  { nome: 'Transferrina', tuss: '40316700' },
+  { nome: 'TIBC', tuss: '40301648' },
+  { nome: 'Glicose em Jejum', tuss: '40302040' },
+  { nome: 'Hemoglobina Glicada (HbA1c)', tuss: '40302059' },
+  { nome: 'Curva Glicêmica (TOTG)', tuss: '40302024' },
+  { nome: 'Insulina Basal', tuss: '40316459' },
+  { nome: 'Peptídeo C', tuss: '40316580' },
+  { nome: 'Colesterol Total', tuss: '40301508' },
+  { nome: 'HDL Colesterol', tuss: '40301516' },
+  { nome: 'LDL Colesterol', tuss: '40301524' },
+  { nome: 'VLDL Colesterol', tuss: '40301532' },
+  { nome: 'Triglicerídeos', tuss: '40301869' },
+  { nome: 'Perfil Lipídico Completo', tuss: '40301508' },
+  { nome: 'Ureia', tuss: '40301885' },
+  { nome: 'Creatinina', tuss: '40301575' },
+  { nome: 'Ácido Úrico', tuss: '40301397' },
+  { nome: 'TGO (AST)', tuss: '40301851' },
+  { nome: 'TGP (ALT)', tuss: '40301842' },
+  { nome: 'Gama GT', tuss: '40302016' },
+  { nome: 'Fosfatase Alcalina', tuss: '40301940' },
+  { nome: 'Bilirrubinas Total e Frações', tuss: '40301443' },
+  { nome: 'Proteínas Totais e Frações', tuss: '40301796' },
+  { nome: 'Albumina', tuss: '40301401' },
+  { nome: 'Amilase', tuss: '40301419' },
+  { nome: 'Lipase', tuss: '40301672' },
+  { nome: 'DHL', tuss: '40301591' },
+  { nome: 'CPK', tuss: '40301559' },
+  { nome: 'CPK-MB', tuss: '40301567' },
+  { nome: 'Troponina I', tuss: '40301877' },
+  { nome: 'BNP', tuss: '40316297' },
+  { nome: 'PCR (Proteína C-Reativa)', tuss: '40308014' },
+  { nome: 'PCR Ultrassensível', tuss: '40308022' },
+  { nome: 'Homocisteína', tuss: '40316424' },
+  { nome: 'Sódio', tuss: '40301834' },
+  { nome: 'Potássio', tuss: '40301770' },
+  { nome: 'Cálcio Total', tuss: '40301460' },
+  { nome: 'Cálcio Iônico', tuss: '40301478' },
+  { nome: 'Magnésio', tuss: '40301680' },
+  { nome: 'Fósforo', tuss: '40301958' },
+  { nome: 'Cloro', tuss: '40301494' },
+  { nome: 'Zinco', tuss: '40301893' },
+  { nome: 'TSH', tuss: '40316912' },
+  { nome: 'T3 Livre', tuss: '40316882' },
+  { nome: 'T4 Livre', tuss: '40316890' },
+  { nome: 'T3 Total', tuss: '40316874' },
+  { nome: 'T4 Total', tuss: '40316904' },
+  { nome: 'Anti-TPO', tuss: '40308146' },
+  { nome: 'Anti-Tireoglobulina', tuss: '40308138' },
+  { nome: 'Tireoglobulina', tuss: '40316858' },
+  { nome: 'Cortisol Basal', tuss: '40316327' },
+  { nome: 'ACTH', tuss: '40316270' },
+  { nome: 'Prolactina', tuss: '40316610' },
+  { nome: 'GH', tuss: '40316394' },
+  { nome: 'IGF-1', tuss: '40316440' },
+  { nome: 'LH', tuss: '40316483' },
+  { nome: 'FSH', tuss: '40316378' },
+  { nome: 'Estradiol', tuss: '40316351' },
+  { nome: 'Progesterona', tuss: '40316602' },
+  { nome: 'Testosterona Total', tuss: '40316840' },
+  { nome: 'Testosterona Livre', tuss: '40316831' },
+  { nome: 'DHEA-S', tuss: '40316335' },
+  { nome: 'Androstenediona', tuss: '40316289' },
+  { nome: '17-OH Progesterona', tuss: '40316262' },
+  { nome: 'SHBG', tuss: '40316777' },
+  { nome: 'Beta-HCG Quantitativo', tuss: '40316050' },
+  { nome: 'PTH (Paratormônio)', tuss: '40316629' },
+  { nome: 'Calcitonina', tuss: '40316300' },
+  { nome: 'Aldosterona', tuss: '40316270' },
+  { nome: 'Renina', tuss: '40316653' },
+  { nome: 'PSA Total', tuss: '40316637' },
+  { nome: 'PSA Livre', tuss: '40316645' },
+  { nome: 'CEA', tuss: '40316319' },
+  { nome: 'CA 125', tuss: '40316068' },
+  { nome: 'CA 19-9', tuss: '40316076' },
+  { nome: 'CA 15-3', tuss: '40316084' },
+  { nome: 'AFP', tuss: '40316050' },
+  { nome: 'CA 72-4', tuss: '40316092' },
+  { nome: 'Urina Tipo I (EAS)', tuss: '40311066' },
+  { nome: 'Urocultura', tuss: '40310213' },
+  { nome: 'Creatinina Urinária 24h', tuss: '40301575' },
+  { nome: 'Microalbuminúria', tuss: '40311023' },
+  { nome: 'Clearance de Creatinina', tuss: '40301583' },
+  { nome: 'Parasitológico de Fezes (EPF)', tuss: '40311082' },
+  { nome: 'Coprocultura', tuss: '40310116' },
+  { nome: 'Sangue Oculto nas Fezes', tuss: '40311074' },
+  { nome: 'Anti-HIV 1 e 2', tuss: '40307166' },
+  { nome: 'VDRL', tuss: '40308308' },
+  { nome: 'FTA-ABS IgG/IgM', tuss: '40308251' },
+  { nome: 'Hepatite A (Anti-HAV IgM)', tuss: '40307310' },
+  { nome: 'Hepatite B (HBsAg)', tuss: '40307336' },
+  { nome: 'Hepatite B (Anti-HBs)', tuss: '40307344' },
+  { nome: 'Hepatite B (Anti-HBc Total)', tuss: '40307352' },
+  { nome: 'Hepatite C (Anti-HCV)', tuss: '40307387' },
+  { nome: 'Toxoplasmose IgG', tuss: '40308286' },
+  { nome: 'Toxoplasmose IgM', tuss: '40308294' },
+  { nome: 'Rubéola IgG', tuss: '40307689' },
+  { nome: 'Rubéola IgM', tuss: '40307697' },
+  { nome: 'Citomegalovírus IgG', tuss: '40307220' },
+  { nome: 'Citomegalovírus IgM', tuss: '40307239' },
+  { nome: 'Dengue IgG/IgM', tuss: '40307247' },
+  { nome: 'COVID-19 IgG/IgM', tuss: '40314618' },
+  { nome: 'FAN', tuss: '40308065' },
+  { nome: 'Fator Reumatoide', tuss: '40308073' },
+  { nome: 'Anti-CCP', tuss: '40308103' },
+  { nome: 'IgE Total', tuss: '40308189' },
+  { nome: 'ASLO', tuss: '40308057' },
+  { nome: 'Vitamina D (25-OH)', tuss: '40316920' },
+  { nome: 'Vitamina B12', tuss: '40316769' },
+  { nome: 'Ácido Fólico', tuss: '40316750' },
+  { nome: 'Radiografia de Tórax PA/Perfil', tuss: '40801020' },
+  { nome: 'Radiografia de Coluna Cervical', tuss: '40801039' },
+  { nome: 'Radiografia de Coluna Lombar', tuss: '40801047' },
+  { nome: 'Radiografia de Mão e Punho', tuss: '40801055' },
+  { nome: 'Radiografia de Joelho', tuss: '40801063' },
+  { nome: 'Radiografia de Seios da Face', tuss: '40801080' },
+  { nome: 'Ultrassom de Abdome Total', tuss: '40901017' },
+  { nome: 'Ultrassom de Abdome Superior', tuss: '40901025' },
+  { nome: 'Ultrassom Pélvico', tuss: '40901033' },
+  { nome: 'Ultrassom Transvaginal', tuss: '40901041' },
+  { nome: 'Ultrassom Obstétrico', tuss: '40901050' },
+  { nome: 'Ultrassom Morfológico', tuss: '40901068' },
+  { nome: 'Ultrassom de Tireoide', tuss: '40901076' },
+  { nome: 'Ultrassom de Mama Bilateral', tuss: '40901084' },
+  { nome: 'Ultrassom de Próstata', tuss: '40901092' },
+  { nome: 'Ultrassom Renal', tuss: '40901106' },
+  { nome: 'Ultrassom Doppler Carótidas', tuss: '40901122' },
+  { nome: 'Ultrassom Doppler Venoso MMII', tuss: '40901131' },
+  { nome: 'Ultrassom Doppler Arterial MMII', tuss: '40901149' },
+  { nome: 'Ultrassom de Partes Moles', tuss: '40901157' },
+  { nome: 'TC de Crânio', tuss: '41001028' },
+  { nome: 'TC de Tórax', tuss: '41001036' },
+  { nome: 'TC de Abdome Total', tuss: '41001044' },
+  { nome: 'TC de Coluna Lombar', tuss: '41001052' },
+  { nome: 'TC de Seios da Face', tuss: '41001079' },
+  { nome: 'Angiotomografia Coronariana', tuss: '41001087' },
+  { nome: 'RM de Crânio', tuss: '41101014' },
+  { nome: 'RM de Coluna Cervical', tuss: '41101022' },
+  { nome: 'RM de Coluna Lombar', tuss: '41101030' },
+  { nome: 'RM de Joelho', tuss: '41101049' },
+  { nome: 'RM de Ombro', tuss: '41101057' },
+  { nome: 'RM de Abdome', tuss: '41101065' },
+  { nome: 'RM de Pelve', tuss: '41101073' },
+  { nome: 'RM Cardíaca', tuss: '41101081' },
+  { nome: 'Mamografia Bilateral', tuss: '40901211' },
+  { nome: 'Densitometria Óssea', tuss: '40801098' },
+  { nome: 'Eletrocardiograma (ECG)', tuss: '40101010' },
+  { nome: 'Ecocardiograma Transtorácico', tuss: '40101029' },
+  { nome: 'Ecocardiograma com Doppler', tuss: '40101037' },
+  { nome: 'Teste Ergométrico', tuss: '40101045' },
+  { nome: 'Holter 24h', tuss: '40101053' },
+  { nome: 'MAPA 24h', tuss: '40101061' },
+  { nome: 'Eletroencefalograma (EEG)', tuss: '40201015' },
+  { nome: 'Eletroneuromiografia (ENMG)', tuss: '40201023' },
+  { nome: 'Espirometria', tuss: '40301010' },
+  { nome: 'Polissonografia', tuss: '40301036' },
+  { nome: 'Tonometria', tuss: '40501012' },
+  { nome: 'Campimetria Visual', tuss: '40501020' },
+  { nome: 'Retinografia', tuss: '40501039' },
+  { nome: 'OCT', tuss: '40501047' },
+  { nome: 'Mapeamento de Retina', tuss: '40501055' },
+  { nome: 'Audiometria Tonal e Vocal', tuss: '40601013' },
+  { nome: 'Impedanciometria', tuss: '40601021' },
+  { nome: 'Videolaringoscopia', tuss: '40601030' },
+  { nome: 'Papanicolaou', tuss: '40601056' },
+  { nome: 'Colposcopia', tuss: '40601064' },
+  { nome: 'Endoscopia Digestiva Alta', tuss: '40201040' },
+  { nome: 'Colonoscopia', tuss: '40201058' },
+  { nome: 'Biópsia de Pele', tuss: '40401014' },
+  { nome: 'Anatomopatológico', tuss: '40401022' },
+  { nome: 'Gasometria Arterial', tuss: '40302075' },
+  { nome: 'Hemoculturas', tuss: '40310167' },
+  { nome: 'Antibiograma', tuss: '40310191' },
+  { nome: 'D-Dímero', tuss: '40304183' },
+  { nome: 'Fibrinogênio', tuss: '40304281' },
+  { nome: 'Procalcitonina', tuss: '40316815' },
+  { nome: 'Cariótipo', tuss: '40314014' },
+];
+
+function ExameCombobox({ value, onChange }: { value: string; onChange: (nome: string, tuss: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filtered = useMemo(() => {
+    if (!searchTerm) return CATALOGO_EXAMES;
+    const q = searchTerm.toLowerCase();
+    return CATALOGO_EXAMES.filter(e => e.nome.toLowerCase().includes(q) || e.tuss.includes(q));
+  }, [searchTerm]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open}
+          className={cn("w-full justify-between h-11 font-normal text-left", !value && "text-muted-foreground")}>
+          <span className="truncate">{value || 'Selecione ou pesquise um exame...'}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput placeholder="Buscar exame ou código TUSS..." value={searchTerm} onValueChange={setSearchTerm} />
+          <CommandList className="max-h-[280px]">
+            <CommandEmpty>
+              <div className="py-2 text-center text-sm text-muted-foreground">
+                <p>Nenhum exame encontrado.</p>
+                {searchTerm && (
+                  <Button variant="link" size="sm" className="mt-1" onClick={() => { onChange(searchTerm, ''); setOpen(false); setSearchTerm(''); }}>
+                    Usar "{searchTerm}" como nome personalizado
+                  </Button>
+                )}
+              </div>
+            </CommandEmpty>
+            <CommandGroup>
+              {filtered.map((e) => (
+                <CommandItem key={e.tuss + e.nome} value={e.nome}
+                  onSelect={() => { onChange(e.nome, e.tuss); setOpen(false); setSearchTerm(''); }}>
+                  <Check className={cn("mr-2 h-4 w-4 shrink-0", value === e.nome ? "opacity-100" : "opacity-0")} />
+                  <span className="flex-1 text-sm">{e.nome}</span>
+                  <span className="text-xs text-muted-foreground font-mono ml-2">{e.tuss}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 // ─── Internal/Particular Prices Tab ───
