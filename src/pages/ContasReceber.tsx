@@ -44,18 +44,18 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 const CATEGORIAS_RECEITA = [
   { value: 'consulta', label: 'Consulta Médica', icon: Stethoscope, color: 'text-primary' },
-  { value: 'retorno', label: 'Retorno', icon: Repeat, color: 'text-sky-500' },
-  { value: 'procedimento', label: 'Procedimento', icon: Scissors, color: 'text-violet-500' },
-  { value: 'exame', label: 'Exame / Diagnóstico', icon: FlaskConical, color: 'text-amber-500' },
-  { value: 'cirurgia', label: 'Cirurgia / Intervenção', icon: Heart, color: 'text-rose-500' },
-  { value: 'internacao', label: 'Internação', icon: Building2, color: 'text-orange-500' },
+  { value: 'retorno', label: 'Retorno', icon: Repeat, color: 'text-info' },
+  { value: 'procedimento', label: 'Procedimento', icon: Scissors, color: 'text-primary' },
+  { value: 'exame', label: 'Exame / Diagnóstico', icon: FlaskConical, color: 'text-warning' },
+  { value: 'cirurgia', label: 'Cirurgia / Intervenção', icon: Heart, color: 'text-destructive' },
+  { value: 'internacao', label: 'Internação', icon: Building2, color: 'text-warning' },
   { value: 'taxa_administrativa', label: 'Taxa Administrativa', icon: FileText, color: 'text-muted-foreground' },
-  { value: 'taxa_material', label: 'Taxa de Material', icon: Pill, color: 'text-teal-500' },
-  { value: 'convenio_repasse', label: 'Repasse de Convênio', icon: Building2, color: 'text-indigo-500' },
-  { value: 'honorario_medico', label: 'Honorário Médico', icon: User, color: 'text-emerald-500' },
-  { value: 'fisioterapia', label: 'Fisioterapia', icon: Bone, color: 'text-cyan-500' },
-  { value: 'psicologia', label: 'Psicologia', icon: Brain, color: 'text-pink-500' },
-  { value: 'pediatria', label: 'Pediatria', icon: Baby, color: 'text-lime-600' },
+  { value: 'taxa_material', label: 'Taxa de Material', icon: Pill, color: 'text-info' },
+  { value: 'convenio_repasse', label: 'Repasse de Convênio', icon: Building2, color: 'text-primary' },
+  { value: 'honorario_medico', label: 'Honorário Médico', icon: User, color: 'text-success' },
+  { value: 'fisioterapia', label: 'Fisioterapia', icon: Bone, color: 'text-info' },
+  { value: 'psicologia', label: 'Psicologia', icon: Brain, color: 'text-accent-foreground' },
+  { value: 'pediatria', label: 'Pediatria', icon: Baby, color: 'text-success' },
   { value: 'outros', label: 'Outros', icon: DollarSign, color: 'text-muted-foreground' },
 ];
 
@@ -107,8 +107,8 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 
 const PIE_COLORS = [
   'hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))',
-  'hsl(var(--destructive))', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899',
-  '#84cc16', '#6366f1', '#14b8a6', '#eab308',
+  'hsl(var(--destructive))', 'hsl(var(--info))', 'hsl(var(--accent-foreground))',
+  'hsl(var(--muted-foreground))', 'hsl(var(--primary))',
 ];
 
 export default function ContasReceber() {
