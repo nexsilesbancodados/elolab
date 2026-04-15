@@ -824,6 +824,43 @@ export default function CaixaDiario() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ═══ FERRAMENTAS FINANCEIRAS ═══ */}
+        <TabsContent value="receber" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyContasReceber />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="pagar" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyContasPagar />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="fluxo" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyFluxoCaixa />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="precos" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyPrecosExames />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="tipos" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyTiposConsulta />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="relatorios" className="mt-4">
+          <Suspense fallback={<div className="space-y-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-64" /></div>}>
+            <LazyRelatorios />
+          </Suspense>
+        </TabsContent>
       </Tabs>
 
       {/* ═══ DIALOGS ═══ */}
