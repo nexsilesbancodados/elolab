@@ -319,17 +319,18 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
        const result = await autoCheckin(agId);
        if (!result.success) throw new Error(result.message);
 
-       // Generate billing entry at check-in so price is ready at the counter
-       const item = enriched.find(e => e.ag.id === agId);
-       if (item) {
-         await createAutoBilling({
-           agendamentoId: agId,
-           pacienteId: item.ag.paciente_id,
-           pacienteNome: item.pac?.nome || 'Paciente',
-           convenioId: item.pac?.convenio_id,
-           tipoConsulta: item.ag.tipo,
-         });
-       }
+        // Generate billing entry at check-in so price is ready at the counter
+        const item = enriched.find(e => e.ag.id === agId);
+        if (item) {
+          await createAutoBilling({
+            agendamentoId: agId,
+            pacienteId: item.ag.paciente_id,
+            pacienteNome: item.pac?.nome || 'Paciente',
+            convenioId: item.pac?.convenio_id,
+            tipoConsulta: item.ag.tipo,
+            clinicaId: profile?.clinica_id,
+          });
+        }
 
        queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
        queryClient.invalidateQueries({ queryKey: ['fila_atendimento'] });
@@ -395,7 +396,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
         if (filaErr) console.error('Erro ao atualizar fila:', filaErr);
       }
 
-      // Auto-billing (non-blocking)
+      // Auto-billing (non-blocking) — only if not already billed at check-in
       try {
         await createAutoBilling({
           agendamentoId: agId,
@@ -404,6 +405,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
           convenioId: item.pac?.convenio_id,
           tipoConsulta: item.ag.tipo,
           data: format(new Date(), 'yyyy-MM-dd'),
+          clinicaId: profile?.clinica_id,
         });
       } catch (billingErr) {
         console.warn('Auto-billing falhou:', billingErr);
