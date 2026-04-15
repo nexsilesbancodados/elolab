@@ -4030,6 +4030,7 @@ export type Database = {
         Args: { _target_user_id: string }
         Returns: boolean
       }
+      validate_invitation_token: { Args: { _token: string }; Returns: Json }
       validate_invite_code: { Args: { _codigo: string }; Returns: Json }
     }
     Enums: {
