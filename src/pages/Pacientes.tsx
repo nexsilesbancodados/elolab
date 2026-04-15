@@ -878,7 +878,7 @@ export default function Pacientes() {
                 <div className="border rounded-lg p-4 bg-muted/30">
                   <div className="flex items-center justify-between mb-1">
                     <h4 className="font-medium flex items-center gap-2 text-sm">
-                      <Baby className="h-4 w-4 text-amber-500" />
+                      <Baby className="h-4 w-4 text-warning" />
                       Paciente menor de idade ou dependente?
                     </h4>
                     <Button
@@ -891,15 +891,15 @@ export default function Pacientes() {
                     </Button>
                   </div>
                   {isMinor(formData.data_nascimento) && !formData.is_menor && (
-                    <p className="text-xs text-amber-600 mt-1">
+                    <p className="text-xs text-warning mt-1">
                       ⚠️ A data de nascimento indica menor de idade. Considere ativar esta opção.
                     </p>
                   )}
                 </div>
 
                 {formData.is_menor && (
-                  <div className="border rounded-lg p-4 bg-amber-500/5 border-amber-500/20">
-                    <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-700">
+                  <div className="border rounded-lg p-4 bg-warning/5 border-warning/20">
+                    <h4 className="font-medium mb-3 flex items-center gap-2 text-warning">
                       <Baby className="h-4 w-4" />
                       Dados do Responsável Legal
                     </h4>
@@ -1147,7 +1147,7 @@ export default function Pacientes() {
                       <>
                         <Separator />
                         <div>
-                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-amber-500" /> Responsável Legal</h4>
+                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Baby className="h-4 w-4 text-warning" /> Responsável Legal</h4>
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <InfoField icon={User2} label="Nome" value={selectedPaciente.nome_responsavel} />
                             <InfoField icon={FileText} label="CPF" value={selectedPaciente.cpf_responsavel} />
@@ -1268,11 +1268,11 @@ export default function Pacientes() {
                       <div className="space-y-2">
                         {agendamentosList.map((a, idx) => {
                           const statusColors: Record<string, string> = {
-                            agendado: 'bg-blue-100 text-blue-700',
-                            confirmado: 'bg-emerald-100 text-emerald-700',
+                            agendado: 'bg-info/10 text-info',
+                            confirmado: 'bg-success/10 text-success',
                             cancelado: 'bg-destructive/10 text-destructive',
                             realizado: 'bg-muted text-muted-foreground',
-                            em_atendimento: 'bg-amber-100 text-amber-700',
+                            em_atendimento: 'bg-warning/10 text-warning',
                           };
                           return (
                             <motion.div key={a.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
@@ -1378,10 +1378,10 @@ export default function Pacientes() {
                       <div className="space-y-2">
                         {examesList.map((ex, idx) => {
                           const exStatusColors: Record<string, string> = {
-                            solicitado: 'bg-blue-100 text-blue-700',
-                            agendado: 'bg-amber-100 text-amber-700',
-                            em_andamento: 'bg-purple-100 text-purple-700',
-                            concluido: 'bg-emerald-100 text-emerald-700',
+                            solicitado: 'bg-info/10 text-info',
+                            agendado: 'bg-warning/10 text-warning',
+                            em_andamento: 'bg-primary/10 text-primary',
+                            concluido: 'bg-success/10 text-success',
                             cancelado: 'bg-destructive/10 text-destructive',
                           };
                           return (
@@ -1398,7 +1398,7 @@ export default function Pacientes() {
                                 </div>
                                 <p className="text-xs font-semibold">{ex.tipo_exame}</p>
                                 {ex.medicos && <p className="text-[11px] text-muted-foreground">Solicitante: Dr(a). {ex.medicos.nome || ex.medicos.crm}</p>}
-                                {ex.resultado && <p className="text-[11px] text-emerald-600">Resultado: {ex.resultado.substring(0, 80)}...</p>}
+                                {ex.resultado && <p className="text-[11px] text-success">Resultado: {ex.resultado.substring(0, 80)}...</p>}
                                 {ex.observacoes && <p className="text-[11px] text-muted-foreground line-clamp-1">{ex.observacoes}</p>}
                               </div>
                             </motion.div>
@@ -1519,16 +1519,16 @@ export default function Pacientes() {
                             <Label className="text-xs font-bold flex items-center gap-1.5"><Activity className="h-3 w-3 text-primary" />Sinais Vitais</Label>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                               {[
-                                { label: 'PA Sist.', field: 'pressao_sistolica', placeholder: '120', icon: Heart, accent: 'text-red-500' },
-                                { label: 'PA Diast.', field: 'pressao_diastolica', placeholder: '80', icon: Heart, accent: 'text-red-500' },
-                                { label: 'FC (bpm)', field: 'frequencia_cardiaca', placeholder: '72', icon: Heart, accent: 'text-rose-500' },
-                                { label: 'FR (irpm)', field: 'frequencia_respiratoria', placeholder: '16', icon: Activity, accent: 'text-blue-500' },
-                                { label: 'Temp (°C)', field: 'temperatura', placeholder: '36.5', icon: Thermometer, accent: 'text-orange-500' },
-                                { label: 'SpO₂ (%)', field: 'saturacao', placeholder: '98', icon: Droplets, accent: 'text-cyan-500' },
-                                { label: 'Peso (kg)', field: 'peso', placeholder: '70', icon: Scale, accent: 'text-emerald-500' },
-                                { label: 'Alt (cm)', field: 'altura', placeholder: '170', icon: Ruler, accent: 'text-violet-500' },
-                                { label: 'Glasgow', field: 'glasgow', placeholder: '15', icon: Brain, accent: 'text-purple-500' },
-                                { label: 'Dor (0-10)', field: 'dor', placeholder: '0', icon: AlertTriangle, accent: 'text-yellow-500' },
+                                { label: 'PA Sist.', field: 'pressao_sistolica', placeholder: '120', icon: Heart, accent: 'text-destructive' },
+                                { label: 'PA Diast.', field: 'pressao_diastolica', placeholder: '80', icon: Heart, accent: 'text-destructive' },
+                                { label: 'FC (bpm)', field: 'frequencia_cardiaca', placeholder: '72', icon: Heart, accent: 'text-destructive' },
+                                { label: 'FR (irpm)', field: 'frequencia_respiratoria', placeholder: '16', icon: Activity, accent: 'text-info' },
+                                { label: 'Temp (°C)', field: 'temperatura', placeholder: '36.5', icon: Thermometer, accent: 'text-warning' },
+                                { label: 'SpO₂ (%)', field: 'saturacao', placeholder: '98', icon: Droplets, accent: 'text-info' },
+                                { label: 'Peso (kg)', field: 'peso', placeholder: '70', icon: Scale, accent: 'text-success' },
+                                { label: 'Alt (cm)', field: 'altura', placeholder: '170', icon: Ruler, accent: 'text-primary' },
+                                { label: 'Glasgow', field: 'glasgow', placeholder: '15', icon: Brain, accent: 'text-primary' },
+                                { label: 'Dor (0-10)', field: 'dor', placeholder: '0', icon: AlertTriangle, accent: 'text-warning' },
                               ].map(f => {
                                 const Icon = f.icon;
                                 return (

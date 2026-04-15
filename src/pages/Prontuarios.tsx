@@ -108,10 +108,10 @@ function calcularIMC(peso: string, altura: string) {
 function classificarIMC(imc: string) {
   const v = parseFloat(imc);
   if (!v) return null;
-  if (v < 18.5) return { label: 'Abaixo', color: 'text-blue-500' };
-  if (v < 25) return { label: 'Normal', color: 'text-green-500' };
-  if (v < 30) return { label: 'Sobrepeso', color: 'text-yellow-500' };
-  return { label: 'Obesidade', color: 'text-red-500' };
+  if (v < 18.5) return { label: 'Abaixo', color: 'text-info' };
+  if (v < 25) return { label: 'Normal', color: 'text-success' };
+  if (v < 30) return { label: 'Sobrepeso', color: 'text-warning' };
+  return { label: 'Obesidade', color: 'text-destructive' };
 }
 
 // ─── Vital Signs Grid ──────────────────────────────────────
@@ -127,15 +127,15 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
   const imcClass = classificarIMC(sinais.imc);
 
   const fields: { key: string; label: string; icon: any; field?: keyof SinaisVitais; placeholder?: string; dual?: boolean; accent: string }[] = [
-    { key: 'pa', label: 'PA (mmHg)', icon: Heart, accent: 'text-red-500', dual: true },
-    { key: 'fc', label: 'FC (bpm)', icon: Heart, accent: 'text-rose-500', field: 'frequencia_cardiaca', placeholder: '72' },
-    { key: 'fr', label: 'FR (irpm)', icon: Activity, accent: 'text-blue-500', field: 'frequencia_respiratoria', placeholder: '16' },
-    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, accent: 'text-orange-500', field: 'temperatura', placeholder: '36.5' },
-    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, accent: 'text-cyan-500', field: 'saturacao', placeholder: '98' },
-    { key: 'peso', label: 'Peso (kg)', icon: Scale, accent: 'text-emerald-500', field: 'peso', placeholder: '70' },
-    { key: 'altura', label: 'Alt (cm)', icon: Ruler, accent: 'text-violet-500', field: 'altura', placeholder: '170' },
-    { key: 'glasgow', label: 'Glasgow', icon: Brain, accent: 'text-purple-500', field: 'glasgow', placeholder: '15' },
-    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, accent: 'text-yellow-500', field: 'dor', placeholder: '0' },
+    { key: 'pa', label: 'PA (mmHg)', icon: Heart, accent: 'text-destructive', dual: true },
+    { key: 'fc', label: 'FC (bpm)', icon: Heart, accent: 'text-destructive', field: 'frequencia_cardiaca', placeholder: '72' },
+    { key: 'fr', label: 'FR (irpm)', icon: Activity, accent: 'text-info', field: 'frequencia_respiratoria', placeholder: '16' },
+    { key: 'temp', label: 'Temp (°C)', icon: Thermometer, accent: 'text-warning', field: 'temperatura', placeholder: '36.5' },
+    { key: 'spo2', label: 'SpO₂ (%)', icon: Droplets, accent: 'text-info', field: 'saturacao', placeholder: '98' },
+    { key: 'peso', label: 'Peso (kg)', icon: Scale, accent: 'text-success', field: 'peso', placeholder: '70' },
+    { key: 'altura', label: 'Alt (cm)', icon: Ruler, accent: 'text-primary', field: 'altura', placeholder: '170' },
+    { key: 'glasgow', label: 'Glasgow', icon: Brain, accent: 'text-primary', field: 'glasgow', placeholder: '15' },
+    { key: 'dor', label: 'Dor (0-10)', icon: AlertTriangle, accent: 'text-warning', field: 'dor', placeholder: '0' },
   ];
 
   return (
@@ -165,7 +165,7 @@ function VitalSignsInput({ sinais, onChange, disabled = false }: { sinais: Sinai
           );
         })}
         <div className="rounded-xl border border-border/60 bg-card p-2.5 space-y-1">
-          <Label className="text-[10px] font-semibold text-teal-500">IMC</Label>
+          <Label className="text-[10px] font-semibold text-info">IMC</Label>
           <div className="h-7 flex items-center px-2 text-xs font-bold">
             {sinais.imc || '—'}
             {imcClass && <span className={`ml-1 text-[9px] ${imcClass.color}`}>({imcClass.label})</span>}
@@ -293,9 +293,9 @@ function FichaPaciente({ paciente, convenioNome }: { paciente: any; convenioNome
 
         {/* Responsável */}
         {isMenor && paciente.nome_responsavel && (
-          <div className="mx-4 mb-3 flex items-center gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
-            <Baby className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
-            <span className="text-amber-700">
+          <div className="mx-4 mb-3 flex items-center gap-2 p-2 rounded-lg bg-warning/5 border border-warning/20 text-xs">
+            <Baby className="h-3.5 w-3.5 text-warning flex-shrink-0" />
+            <span className="text-warning">
               <strong>Responsável:</strong> {paciente.nome_responsavel}
               {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
             </span>
@@ -379,9 +379,9 @@ function RelatedRecords({ pacienteId }: { pacienteId: string }) {
   if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-10" />)}</div>;
 
   const sc = (s: string) => {
-    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-green-500/10 text-green-700';
-    if (s === 'pendente' || s === 'solicitado') return 'bg-amber-500/10 text-amber-700';
-    if (s === 'em_andamento') return 'bg-blue-500/10 text-blue-700';
+    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-success/10 text-success';
+    if (s === 'pendente' || s === 'solicitado') return 'bg-warning/10 text-warning';
+    if (s === 'em_andamento') return 'bg-info/10 text-info';
     return 'bg-muted text-muted-foreground';
   };
 
@@ -777,7 +777,7 @@ export default function Prontuarios() {
             <p className="text-xs text-muted-foreground">Registro médico completo — LGPD • CFM</p>
           </div>
         </div>
-        <Badge className="bg-green-500/10 text-green-700 border-green-500/20 gap-1 text-[10px] rounded-full px-2.5 py-1">
+        <Badge className="bg-success/10 text-success border-success/20 gap-1 text-[10px] rounded-full px-2.5 py-1">
           <ShieldCheck className="h-3 w-3" />Conforme LGPD
         </Badge>
       </div>
@@ -1075,7 +1075,7 @@ export default function Prontuarios() {
                       <Button variant="outline" size="sm" onClick={() => {
                         sharePDFWhatsApp(buildPDF(), fn, selectedPaciente?.telefone);
                         toast.info('WhatsApp', { description: 'PDF baixado! Cole na conversa.' });
-                      }} className="gap-1 text-xs h-7 text-green-700 border-green-300 hover:bg-green-50">
+                      }} className="gap-1 text-xs h-7 text-success border-success/30 hover:bg-success/5">
                         <MessageCircle className="h-3 w-3" />WhatsApp
                       </Button>
                     </>
@@ -1097,7 +1097,7 @@ export default function Prontuarios() {
               <span className="text-muted-foreground">{selectedPaciente.data_nascimento ? `${calcularIdade(selectedPaciente.data_nascimento)}a` : 'N/I'}</span>
               {selectedPaciente.cpf && <span className="text-muted-foreground">• {selectedPaciente.cpf}</span>}
               <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
-              <Badge className="ml-auto bg-green-500/10 text-green-700 border-green-500/20 text-[9px] rounded-full px-2">
+              <Badge className="ml-auto bg-success/10 text-success border-success/20 text-[9px] rounded-full px-2">
                 <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />LGPD
               </Badge>
             </div>
@@ -1108,13 +1108,13 @@ export default function Prontuarios() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-amber-500/8 border border-amber-500/25 rounded-xl"
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-warning/8 border border-warning/25 rounded-xl"
             >
-              <Lock className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
-              <span className="text-xs text-amber-700 font-medium flex-1">
+              <Lock className="h-3.5 w-3.5 text-warning flex-shrink-0" />
+              <span className="text-xs text-warning font-medium flex-1">
                 Somente leitura — CFM nº 1.821/07
               </span>
-              <Button variant="outline" size="sm" onClick={handleRequestEdit} className="h-6 text-[10px] gap-1 border-amber-500/40 text-amber-700 hover:bg-amber-500/10">
+              <Button variant="outline" size="sm" onClick={handleRequestEdit} className="h-6 text-[10px] gap-1 border-warning/40 text-warning hover:bg-warning/10">
                 <PenLine className="h-3 w-3" />Solicitar Edição
               </Button>
             </motion.div>
@@ -1369,9 +1369,9 @@ export default function Prontuarios() {
                           {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
                           {ev.sinais_vitais && Object.keys(ev.sinais_vitais).some(k => ev.sinais_vitais[k]) && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
-                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                              {ev.sinais_vitais.temperatura && <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
+                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                              {ev.sinais_vitais.temperatura && <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
                             </div>
                           )}
                         </motion.div>

@@ -276,9 +276,9 @@ export default function Atestados() {
   const getTipoBadge = (tipo: string | null) => {
     switch (tipo) {
       case 'comparecimento': return 'bg-primary/10 text-primary';
-      case 'afastamento': return 'bg-amber-500/10 text-amber-700';
-      case 'aptidao': return 'bg-green-500/10 text-green-700';
-      case 'acompanhante': return 'bg-purple-500/10 text-purple-700';
+      case 'afastamento': return 'bg-warning/10 text-warning';
+      case 'aptidao': return 'bg-success/10 text-success';
+      case 'acompanhante': return 'bg-accent text-accent-foreground';
       default: return '';
     }
   };
@@ -298,7 +298,7 @@ export default function Atestados() {
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1.5 text-xs">
-            <BadgeCheck className="h-3.5 w-3.5 text-green-500" />
+            <BadgeCheck className="h-3.5 w-3.5 text-success" />
             Assinatura Digital
           </Badge>
           <Button onClick={handleNew} className="gap-2"><Plus className="h-4 w-4" />Novo Atestado</Button>
@@ -399,7 +399,7 @@ export default function Atestados() {
               <FileText className="h-5 w-5 text-primary" />
               Emitir Atestado
               <Badge variant="outline" className="gap-1 ml-auto text-[10px]">
-                <BadgeCheck className="h-3 w-3 text-green-500" />ICP-Brasil
+                <BadgeCheck className="h-3 w-3 text-success" />ICP-Brasil
               </Badge>
             </DialogTitle>
           </DialogHeader>
@@ -476,9 +476,9 @@ export default function Atestados() {
 
             {/* ─── Afastamento: Dias + Período ─── */}
             {formData.tipo === 'afastamento' && (
-              <div className="space-y-3 bg-amber-500/5 border border-amber-500/20 rounded-lg p-4">
+              <div className="space-y-3 bg-warning/5 border border-warning/20 rounded-lg p-4">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-amber-600" />
+                  <Calendar className="h-4 w-4 text-warning" />
                   Período de Afastamento *
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
@@ -517,9 +517,9 @@ export default function Atestados() {
 
             {/* ─── Aptidão: Finalidade ─── */}
             {formData.tipo === 'aptidao' && (
-              <div className="space-y-3 bg-green-500/5 border border-green-500/20 rounded-lg p-4">
+              <div className="space-y-3 bg-success/5 border border-success/20 rounded-lg p-4">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-green-600" />
+                  <ShieldCheck className="h-4 w-4 text-success" />
                   Finalidade do Atestado
                 </h4>
                 <div className="space-y-1.5">
@@ -561,7 +561,7 @@ export default function Atestados() {
               </div>
               {formData.incluirCid && (
                 <div className="space-y-1.5 pl-7">
-                  <div className="flex items-center gap-2 text-xs text-amber-600">
+                  <div className="flex items-center gap-2 text-xs text-warning">
                     <AlertTriangle className="h-3 w-3" />
                     <span>O CID só pode constar no atestado com autorização expressa do paciente (ética médica).</span>
                   </div>
@@ -599,10 +599,10 @@ export default function Atestados() {
             </div>
 
             {/* Digital signature indicator */}
-            <div className="flex items-center gap-3 bg-green-500/5 border border-green-500/20 rounded-lg p-3">
-              <BadgeCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-success/5 border border-success/20 rounded-lg p-3">
+              <BadgeCheck className="h-5 w-5 text-success flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-green-700">Assinatura Digital ICP-Brasil</p>
+                <p className="font-medium text-success">Assinatura Digital ICP-Brasil</p>
                 <p className="text-xs text-muted-foreground">Documento com validade jurídica — assinatura eletrônica via Memed.</p>
               </div>
             </div>
@@ -717,7 +717,7 @@ export default function Atestados() {
                   <p className="text-sm whitespace-pre-wrap">{selectedAtestado.observacoes}</p>
                 </div>
               )}
-              <div className="flex items-center gap-2 text-xs text-green-700 bg-green-500/5 rounded p-2">
+              <div className="flex items-center gap-2 text-xs text-success bg-success/5 rounded p-2">
                 <BadgeCheck className="h-3.5 w-3.5" />
                 <span>Documento assinado digitalmente — ICP-Brasil via Memed</span>
               </div>

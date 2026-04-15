@@ -32,10 +32,10 @@ import { GerenciadorLaboratorios } from '@/components/GerenciadorLaboratorios';
 type StatusExame = Database['public']['Enums']['status_exame'];
 
 const STATUS_COLORS: Record<StatusExame, string> = {
-  solicitado: 'bg-yellow-100 text-yellow-800',
-  agendado: 'bg-blue-100 text-blue-800',
-  realizado: 'bg-purple-100 text-purple-800',
-  laudo_disponivel: 'bg-green-100 text-green-800',
+  solicitado: 'bg-warning/10 text-warning',
+  agendado: 'bg-info/10 text-info',
+  realizado: 'bg-primary/10 text-primary',
+  laudo_disponivel: 'bg-success/10 text-success',
   cancelado: 'bg-muted text-muted-foreground',
 };
 
@@ -665,7 +665,7 @@ export default function Exames() {
                             <div key={i} className="flex items-center gap-0.5">
                               <div className={cn(
                                 'h-5 px-1.5 rounded text-[9px] font-medium flex items-center',
-                                i < step && 'bg-emerald-100 text-emerald-700',
+                                i < step && 'bg-success/10 text-success',
                                 i === step && step >= 0 && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                 i > step && 'bg-muted text-muted-foreground/40',
                                 step === -1 && 'bg-muted text-muted-foreground line-through',
@@ -673,7 +673,7 @@ export default function Exames() {
                                 {i < step ? '✓' : label}
                               </div>
                               {i < PIPELINE_STEPS.length - 1 && (
-                                <div className={cn('w-2 h-px', i < step ? 'bg-emerald-400' : 'bg-border')} />
+                                <div className={cn('w-2 h-px', i < step ? 'bg-success' : 'bg-border')} />
                               )}
                             </div>
                           ))}
@@ -711,7 +711,7 @@ export default function Exames() {
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
               Nova Guia de Exames
-              <Badge variant="outline" className="ml-auto text-[10px] gap-1"><ShieldCheck className="h-3 w-3 text-green-500" />ICP-Brasil</Badge>
+              <Badge variant="outline" className="ml-auto text-[10px] gap-1"><ShieldCheck className="h-3 w-3 text-success" />ICP-Brasil</Badge>
             </DialogTitle>
           </DialogHeader>
 
@@ -779,8 +779,8 @@ export default function Exames() {
 
             {/* Urgency justification */}
             {(formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && (
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-2">
-                <Label className="text-xs font-medium flex items-center gap-1 text-amber-700">
+              <div className="bg-warning/5 border border-warning/20 rounded-lg p-4 space-y-2">
+                <Label className="text-xs font-medium flex items-center gap-1 text-warning">
                   <AlertTriangle className="h-3.5 w-3.5" />Justificativa de Urgência (obrigatória para autorização) *
                 </Label>
                 <Textarea
@@ -808,7 +808,7 @@ export default function Exames() {
                     <Badge key={ex.nome} variant="secondary" className="gap-1.5 py-1.5 px-3 text-xs">
                       {ex.tuss && <span className="text-[10px] text-muted-foreground font-mono">{ex.tuss}</span>}
                       {ex.nome}
-                      {ex.necessita_contraste && <span className="text-amber-600">⚠ contraste</span>}
+                      {ex.necessita_contraste && <span className="text-warning">⚠ contraste</span>}
                       <button onClick={() => removeExame(ex.nome)} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
                     </Badge>
                   ))}
@@ -923,8 +923,8 @@ export default function Exames() {
               </div>
 
               {formData.preco_custo && formData.preco_venda && (
-                <div className="mt-3 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
-                  <p className="text-sm text-emerald-700">
+                <div className="mt-3 p-3 bg-success/5 border border-success/20 rounded-lg">
+                  <p className="text-sm text-success">
                     💰 Margem: <span className="font-bold">R$ {(formData.preco_venda - formData.preco_custo).toFixed(2)}</span> ({(((formData.preco_venda - formData.preco_custo) / formData.preco_custo) * 100).toFixed(0)}%)
                   </p>
                 </div>
