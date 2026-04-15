@@ -28,10 +28,10 @@ import { User } from 'lucide-react';
 type StatusSala = Database['public']['Enums']['status_sala'];
 
 const STATUS_COLORS: Record<StatusSala, string> = {
-  disponivel: 'bg-green-500',
-  ocupado: 'bg-red-500',
-  manutencao: 'bg-yellow-500',
-  limpeza: 'bg-blue-500',
+  disponivel: 'bg-success',
+  ocupado: 'bg-destructive',
+  manutencao: 'bg-warning',
+  limpeza: 'bg-info',
 };
 
 const STATUS_LABELS: Record<StatusSala, string> = {
