@@ -1002,7 +1002,30 @@ export default function CaixaDiario() {
                   ))}
                 </TabsContent>
 
-                <TabsContent value="produtos" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
+                <TabsContent value="exames" className="flex-1 overflow-y-auto mt-2 space-y-1.5 max-h-[40vh]">
+                  {examesFiltrados.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      <FlaskConical className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Nenhum exame com preço cadastrado</p>
+                      <p className="text-xs">Cadastre preços em Preços de Exames</p>
+                    </div>
+                  ) : examesFiltrados.map((ex: any) => (
+                    <motion.button key={ex.id}
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => addToCart({ id: ex.id, nome: ex.nome, valor: ex.valor || 0, origem: 'exame' })}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-warning/10">
+                          <FlaskConical className="h-4 w-4 text-warning" />
+                        </div>
+                        <span className="font-medium text-sm">{ex.nome}</span>
+                      </div>
+                      <span className="font-bold text-sm text-primary tabular-nums">{fmt(ex.valor || 0)}</span>
+                    </motion.button>
+                  ))}
+                </TabsContent>
+
                   {produtosFiltrados.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-sm">
                       <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-30" />
