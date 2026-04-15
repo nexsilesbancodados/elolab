@@ -711,7 +711,7 @@ export default function Exames() {
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
               Nova Guia de Exames
-              <Badge variant="outline" className="ml-auto text-[10px] gap-1"><ShieldCheck className="h-3 w-3 text-green-500" />ICP-Brasil</Badge>
+              <Badge variant="outline" className="ml-auto text-[10px] gap-1"><ShieldCheck className="h-3 w-3 text-success" />ICP-Brasil</Badge>
             </DialogTitle>
           </DialogHeader>
 
@@ -780,7 +780,7 @@ export default function Exames() {
             {/* Urgency justification */}
             {(formData.urgencia === 'urgente' || formData.urgencia === 'emergencia') && (
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 space-y-2">
-                <Label className="text-xs font-medium flex items-center gap-1 text-amber-700">
+                <Label className="text-xs font-medium flex items-center gap-1 text-warning">
                   <AlertTriangle className="h-3.5 w-3.5" />Justificativa de Urgência (obrigatória para autorização) *
                 </Label>
                 <Textarea
@@ -808,7 +808,7 @@ export default function Exames() {
                     <Badge key={ex.nome} variant="secondary" className="gap-1.5 py-1.5 px-3 text-xs">
                       {ex.tuss && <span className="text-[10px] text-muted-foreground font-mono">{ex.tuss}</span>}
                       {ex.nome}
-                      {ex.necessita_contraste && <span className="text-amber-600">⚠ contraste</span>}
+                      {ex.necessita_contraste && <span className="text-warning">⚠ contraste</span>}
                       <button onClick={() => removeExame(ex.nome)} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
                     </Badge>
                   ))}
@@ -924,7 +924,7 @@ export default function Exames() {
 
               {formData.preco_custo && formData.preco_venda && (
                 <div className="mt-3 p-3 bg-success/5 border border-success/20 rounded-lg">
-                  <p className="text-sm text-emerald-700">
+                  <p className="text-sm text-success">
                     💰 Margem: <span className="font-bold">R$ {(formData.preco_venda - formData.preco_custo).toFixed(2)}</span> ({(((formData.preco_venda - formData.preco_custo) / formData.preco_custo) * 100).toFixed(0)}%)
                   </p>
                 </div>

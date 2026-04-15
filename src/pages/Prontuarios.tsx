@@ -294,7 +294,7 @@ function FichaPaciente({ paciente, convenioNome }: { paciente: any; convenioNome
         {/* Responsável */}
         {isMenor && paciente.nome_responsavel && (
           <div className="mx-4 mb-3 flex items-center gap-2 p-2 rounded-lg bg-warning/5 border border-warning/20 text-xs">
-            <Baby className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+            <Baby className="h-3.5 w-3.5 text-warning flex-shrink-0" />
             <span className="text-warning">
               <strong>Responsável:</strong> {paciente.nome_responsavel}
               {paciente.parentesco_responsavel && ` (${paciente.parentesco_responsavel})`}
@@ -379,9 +379,9 @@ function RelatedRecords({ pacienteId }: { pacienteId: string }) {
   if (loading) return <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-10" />)}</div>;
 
   const sc = (s: string) => {
-    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-success/10 text-green-700';
-    if (s === 'pendente' || s === 'solicitado') return 'bg-warning/10 text-amber-700';
-    if (s === 'em_andamento') return 'bg-info/10 text-blue-700';
+    if (s === 'laudo_disponivel' || s === 'concluido') return 'bg-success/10 text-success';
+    if (s === 'pendente' || s === 'solicitado') return 'bg-warning/10 text-warning';
+    if (s === 'em_andamento') return 'bg-info/10 text-info';
     return 'bg-muted text-muted-foreground';
   };
 
@@ -777,7 +777,7 @@ export default function Prontuarios() {
             <p className="text-xs text-muted-foreground">Registro médico completo — LGPD • CFM</p>
           </div>
         </div>
-        <Badge className="bg-success/10 text-green-700 border-success/20 gap-1 text-[10px] rounded-full px-2.5 py-1">
+        <Badge className="bg-success/10 text-success border-success/20 gap-1 text-[10px] rounded-full px-2.5 py-1">
           <ShieldCheck className="h-3 w-3" />Conforme LGPD
         </Badge>
       </div>
@@ -1075,7 +1075,7 @@ export default function Prontuarios() {
                       <Button variant="outline" size="sm" onClick={() => {
                         sharePDFWhatsApp(buildPDF(), fn, selectedPaciente?.telefone);
                         toast.info('WhatsApp', { description: 'PDF baixado! Cole na conversa.' });
-                      }} className="gap-1 text-xs h-7 text-green-700 border-success/30 hover:bg-success/5">
+                      }} className="gap-1 text-xs h-7 text-success border-success/30 hover:bg-success/5">
                         <MessageCircle className="h-3 w-3" />WhatsApp
                       </Button>
                     </>
@@ -1097,7 +1097,7 @@ export default function Prontuarios() {
               <span className="text-muted-foreground">{selectedPaciente.data_nascimento ? `${calcularIdade(selectedPaciente.data_nascimento)}a` : 'N/I'}</span>
               {selectedPaciente.cpf && <span className="text-muted-foreground">• {selectedPaciente.cpf}</span>}
               <span className="text-muted-foreground">• {getConvenioNome(selectedPaciente.convenio_id)}</span>
-              <Badge className="ml-auto bg-success/10 text-green-700 border-success/20 text-[9px] rounded-full px-2">
+              <Badge className="ml-auto bg-success/10 text-success border-success/20 text-[9px] rounded-full px-2">
                 <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />LGPD
               </Badge>
             </div>
@@ -1111,10 +1111,10 @@ export default function Prontuarios() {
               className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-warning/8 border border-warning/25 rounded-xl"
             >
               <Lock className="h-3.5 w-3.5 text-warning flex-shrink-0" />
-              <span className="text-xs text-amber-700 font-medium flex-1">
+              <span className="text-xs text-warning font-medium flex-1">
                 Somente leitura — CFM nº 1.821/07
               </span>
-              <Button variant="outline" size="sm" onClick={handleRequestEdit} className="h-6 text-[10px] gap-1 border-warning/40 text-amber-700 hover:bg-warning/10">
+              <Button variant="outline" size="sm" onClick={handleRequestEdit} className="h-6 text-[10px] gap-1 border-warning/40 text-warning hover:bg-warning/10">
                 <PenLine className="h-3 w-3" />Solicitar Edição
               </Button>
             </motion.div>
@@ -1369,9 +1369,9 @@ export default function Prontuarios() {
                           {ev.conduta && <p className="text-xs"><strong>Conduta:</strong> <span className="text-muted-foreground line-clamp-2">{ev.conduta}</span></p>}
                           {ev.sinais_vitais && Object.keys(ev.sinais_vitais).some(k => ev.sinais_vitais[k]) && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-destructive/10 text-red-600 border-destructive/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
-                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-destructive/10 text-rose-600 border-destructive/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
-                              {ev.sinais_vitais.temperatura && <Badge className="bg-warning/10 text-orange-600 border-warning/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
+                              {ev.sinais_vitais.pressao_sistolica && <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[9px] px-1.5 py-0">PA: {ev.sinais_vitais.pressao_sistolica}/{ev.sinais_vitais.pressao_diastolica}</Badge>}
+                              {ev.sinais_vitais.frequencia_cardiaca && <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[9px] px-1.5 py-0">FC: {ev.sinais_vitais.frequencia_cardiaca}</Badge>}
+                              {ev.sinais_vitais.temperatura && <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0">T: {ev.sinais_vitais.temperatura}°C</Badge>}
                             </div>
                           )}
                         </motion.div>

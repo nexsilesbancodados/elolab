@@ -600,7 +600,7 @@ export default function Atestados() {
 
             {/* Digital signature indicator */}
             <div className="flex items-center gap-3 bg-success/5 border border-success/20 rounded-lg p-3">
-              <BadgeCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <BadgeCheck className="h-5 w-5 text-success flex-shrink-0" />
               <div className="text-sm">
                 <p className="font-medium text-success">Assinatura Digital ICP-Brasil</p>
                 <p className="text-xs text-muted-foreground">Documento com validade jurídica — assinatura eletrônica via Memed.</p>
@@ -717,7 +717,7 @@ export default function Atestados() {
                   <p className="text-sm whitespace-pre-wrap">{selectedAtestado.observacoes}</p>
                 </div>
               )}
-              <div className="flex items-center gap-2 text-xs text-green-700 bg-success/5 rounded p-2">
+              <div className="flex items-center gap-2 text-xs text-success bg-success/5 rounded p-2">
                 <BadgeCheck className="h-3.5 w-3.5" />
                 <span>Documento assinado digitalmente — ICP-Brasil via Memed</span>
               </div>
