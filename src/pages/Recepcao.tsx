@@ -90,8 +90,8 @@ function calcEspera(ts: string | null): string {
 function corEspera(ts: string | null): string {
   if (!ts) return 'text-muted-foreground';
   const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
-  if (mins < 15) return 'text-emerald-600';
-  if (mins < 30) return 'text-amber-500';
+  if (mins < 15) return 'text-success';
+  if (mins < 30) return 'text-warning';
   return 'text-destructive';
 }
 
@@ -665,10 +665,10 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
         className="grid grid-cols-2 md:grid-cols-4 gap-3"
       >
          {[
-           { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-           { label: 'Balcão (Pgto)', value: stats.balcao, icon: DollarSign, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-           { label: 'Em Atendimento', value: stats.atendimento, icon: Stethoscope, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-           { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+           { label: 'Aguardando Check-in', value: stats.aguardando, icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
+           { label: 'Balcão (Pgto)', value: stats.balcao, icon: DollarSign, color: 'text-accent-foreground', bg: 'bg-accent/50' },
+           { label: 'Em Atendimento', value: stats.atendimento, icon: Stethoscope, color: 'text-info', bg: 'bg-info/10' },
+           { label: 'Concluídos', value: stats.concluido, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
         ].map((s, i) => (
           <motion.div key={i} variants={fadeUp}>
             <Card className="border bg-card">
@@ -743,9 +743,9 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                   >
                     <Card className={cn(
                      'border transition-all duration-200 overflow-hidden',
-                       step === 1 && 'border-orange-400/30 shadow-md shadow-orange-400/5',
+                       step === 1 && 'border-accent/30 shadow-md shadow-accent/5',
                        step === 2 && 'border-primary/30 shadow-md shadow-primary/5',
-                       step === 3 && 'border-sky-400/30 shadow-md shadow-sky-400/5',
+                       step === 3 && 'border-info/30 shadow-md shadow-info/5',
                        step === 4 && 'opacity-60',
                      )}>
                        <CardContent className="p-0">
@@ -753,11 +753,11 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                            {/* Step indicator */}
                            <div className={cn(
                              'w-1.5 shrink-0',
-                             step === 0 && 'bg-amber-400',
-                             step === 1 && 'bg-orange-400',
+                             step === 0 && 'bg-warning',
+                             step === 1 && 'bg-accent-foreground',
                              step === 2 && 'bg-primary',
-                             step === 3 && 'bg-sky-400',
-                             step === 4 && 'bg-emerald-500',
+                             step === 3 && 'bg-info',
+                             step === 4 && 'bg-success',
                            )} />
 
                           <div className="flex-1 p-4">
@@ -800,7 +800,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                   <div key={i} className="flex items-center gap-1">
                                     <div className={cn(
                                       'h-6 px-2.5 rounded-full flex items-center text-[10px] font-medium transition-colors',
-                                      i < step && 'bg-emerald-100 text-emerald-700',
+                                      i < step && 'bg-success/10 text-success',
                                       i === step && 'bg-primary/10 text-primary ring-1 ring-primary/20',
                                       i > step && 'bg-muted text-muted-foreground/50',
                                     )}>
@@ -864,7 +864,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                         size="sm"
                                         onClick={() => openPagamento(lanc, pac)}
                                         disabled={isProcessing}
-                                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
                                       >
                                         <DollarSign className="h-3.5 w-3.5" />
                                         Receber R$ {lanc.valor?.toFixed(2)}
@@ -877,7 +877,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                 {step === 2 && (
                                   <div className="flex gap-1.5">
                                     {lanc?.status === 'pago' && (
-                                      <Badge className="bg-emerald-100 text-emerald-700 border-0 mr-1">
+                                      <Badge className="bg-success/10 text-success border-0 mr-1">
                                         <CheckCircle2 className="h-3 w-3 mr-1" /> Pago
                                       </Badge>
                                     )}
@@ -920,11 +920,11 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                 {step === 3 && (
                                   <div className="flex flex-col gap-2 w-full sm:w-auto">
                                     <div className="flex items-center gap-2">
-                                      <Badge className="bg-sky-100 text-sky-700 border-0 w-fit">
+                                      <Badge className="bg-info/10 text-info border-0 w-fit">
                                         <Check className="h-3 w-3 mr-1" /> Consulta finalizada
                                       </Badge>
                                       {lanc?.status === 'pago' && (
-                                        <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                         <Badge className="bg-success/10 text-success border-0">
                                           <CheckCircle2 className="h-3 w-3 mr-1" /> Pago
                                         </Badge>
                                       )}
@@ -947,7 +947,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                         <ClipboardList className="h-3 w-3" /> Prontuário
                                       </Button>
                                       {fila && (
-                                        <Button size="sm" className="gap-1 text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white ml-auto"
+                                        <Button size="sm" className="gap-1 text-xs h-7 bg-success hover:bg-success/90 text-success-foreground ml-auto"
                                           onClick={() => handleConcluir(ag.id, fila.id)}
                                           disabled={isProcessing}>
                                           <CheckCircle2 className="h-3 w-3" /> Concluir
@@ -960,7 +960,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
                                 {/* Step 4: Concluído */}
                                 {step === 4 && (
                                   <div className="flex flex-col gap-2 items-end">
-                                    <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                    <Badge className="bg-success/10 text-success border-0">
                                       <CheckCircle2 className="h-3 w-3 mr-1" />
                                       Concluído {lanc?.forma_pagamento ? `— ${lanc.forma_pagamento}` : ''}
                                     </Badge>
@@ -995,7 +995,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
         <DialogContent className="sm:max-w-md">
            <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Receipt className="h-5 w-5 text-emerald-600" />
+              <Receipt className="h-5 w-5 text-success" />
               Confirmar Pagamento
             </DialogTitle>
             <DialogDescription>Registre o pagamento do paciente.</DialogDescription>
@@ -1079,7 +1079,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
             <Button
               onClick={handleConfirmarPagamento}
               disabled={!formaPagamento || isProcessing}
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+              className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Confirmar Pagamento
@@ -1104,7 +1104,7 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
             <AlertDialogAction
               onClick={executarConcluir}
               disabled={isProcessing}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Confirmar
