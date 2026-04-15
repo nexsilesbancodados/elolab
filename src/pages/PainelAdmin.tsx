@@ -45,16 +45,16 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: 'bg-destructive/10 text-destructive',
-  medico: 'bg-blue-500/10 text-blue-700',
-  recepcao: 'bg-green-500/10 text-green-700',
-  enfermagem: 'bg-purple-500/10 text-purple-700',
-  financeiro: 'bg-amber-500/10 text-amber-700',
+  medico: 'bg-info/10 text-info',
+  recepcao: 'bg-success/10 text-success',
+  enfermagem: 'bg-accent/20 text-accent-foreground',
+  financeiro: 'bg-warning/10 text-warning',
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-  ativa: { label: 'Ativa', color: 'bg-green-500/10 text-green-700', icon: CheckCircle2 },
-  trial: { label: 'Trial', color: 'bg-blue-500/10 text-blue-700', icon: Clock },
-  expirada: { label: 'Expirada', color: 'bg-amber-500/10 text-amber-700', icon: Ban },
+  ativa: { label: 'Ativa', color: 'bg-success/10 text-success', icon: CheckCircle2 },
+  trial: { label: 'Trial', color: 'bg-info/10 text-info', icon: Clock },
+  expirada: { label: 'Expirada', color: 'bg-warning/10 text-warning', icon: Ban },
   cancelada: { label: 'Cancelada', color: 'bg-destructive/10 text-destructive', icon: Ban },
 };
 
@@ -154,10 +154,10 @@ export default function PainelAdmin() {
   const churnRate = totalSubs > 0 ? ((expiredSubs + cancelledSubs) / totalSubs * 100).toFixed(1) : '0';
   const conversionRate = totalSubs > 0 ? ((activeSubs / totalSubs) * 100).toFixed(1) : '0';
   const pieData = [
-    { name: 'Ativas', value: subscriptions.filter((s: any) => s.status === 'ativa').length, color: '#22c55e' },
-    { name: 'Trial', value: trialSubs, color: '#3b82f6' },
-    { name: 'Expiradas', value: expiredSubs, color: '#f59e0b' },
-    { name: 'Canceladas', value: cancelledSubs, color: '#ef4444' },
+    { name: 'Ativas', value: subscriptions.filter((s: any) => s.status === 'ativa').length, color: 'hsl(var(--success))' },
+    { name: 'Trial', value: trialSubs, color: 'hsl(var(--info))' },
+    { name: 'Expiradas', value: expiredSubs, color: 'hsl(var(--warning))' },
+    { name: 'Canceladas', value: cancelledSubs, color: 'hsl(var(--destructive))' },
   ].filter(d => d.value > 0);
   const monthlyData = useMemo(() => {
     const months: Record<string, { month: string; mrr: number }> = {};
@@ -309,7 +309,7 @@ export default function PainelAdmin() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10"><CreditCard className="h-5 w-5 text-green-600" /></div>
+              <div className="p-2 rounded-lg bg-success/10"><CreditCard className="h-5 w-5 text-success" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Assinaturas Ativas</p>
                 <p className="text-2xl font-bold">{activeSubs}</p>
@@ -321,7 +321,7 @@ export default function PainelAdmin() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10"><Crown className="h-5 w-5 text-amber-600" /></div>
+              <div className="p-2 rounded-lg bg-warning/10"><Crown className="h-5 w-5 text-warning" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Receita Recorrente</p>
                 <p className="text-2xl font-bold">R$ {revenue.toFixed(2)}</p>
@@ -333,7 +333,7 @@ export default function PainelAdmin() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10"><BarChart3 className="h-5 w-5 text-purple-600" /></div>
+              <div className="p-2 rounded-lg bg-accent/20"><BarChart3 className="h-5 w-5 text-accent-foreground" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Planos Disponíveis</p>
                 <p className="text-2xl font-bold">{planos.length}</p>
@@ -393,7 +393,7 @@ export default function PainelAdmin() {
                           <TableRow key={u.id} className={cn(!u.ativo && 'opacity-50')}>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                {u.email === SUPER_ADMIN_EMAIL && <Crown className="h-4 w-4 text-amber-500" />}
+                                {u.email === SUPER_ADMIN_EMAIL && <Crown className="h-4 w-4 text-warning" />}
                                 <span className="font-medium">{u.nome}</span>
                               </div>
                             </TableCell>
@@ -501,7 +501,7 @@ export default function PainelAdmin() {
                             <TableCell>
                               {sub.em_trial ? (
                                 <div>
-                                  <Badge className="bg-blue-500/10 text-blue-700 text-xs">Em Trial</Badge>
+                                  <Badge className="bg-info/10 text-info text-xs">Em Trial</Badge>
                                   <p className="text-xs text-muted-foreground mt-1">Até {formatDate(sub.trial_fim)}</p>
                                 </div>
                               ) : '—'}
@@ -537,10 +537,10 @@ export default function PainelAdmin() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/10"><TrendingUp className="h-5 w-5 text-green-600" /></div>
+                  <div className="p-2 rounded-lg bg-success/10"><TrendingUp className="h-5 w-5 text-success" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">MRR</p>
-                    <p className="text-2xl font-bold text-green-600">R$ {revenue.toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-success">R$ {revenue.toFixed(0)}</p>
                     <p className="text-xs text-muted-foreground">Receita Mensal Recorrente</p>
                   </div>
                 </div>
@@ -549,11 +549,11 @@ export default function PainelAdmin() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10"><Users className="h-5 w-5 text-blue-600" /></div>
+                  <div className="p-2 rounded-lg bg-info/10"><Users className="h-5 w-5 text-info" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Assinantes Ativos</p>
                     <p className="text-2xl font-bold">{activeSubs}</p>
-                    <p className="text-xs text-green-600">{conversionRate}% conversão</p>
+                    <p className="text-xs text-success">{conversionRate}% conversão</p>
                   </div>
                 </div>
               </CardContent>
@@ -561,10 +561,10 @@ export default function PainelAdmin() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-500/10"><TrendingDown className="h-5 w-5 text-amber-600" /></div>
+                  <div className="p-2 rounded-lg bg-warning/10"><TrendingDown className="h-5 w-5 text-warning" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Churn Rate</p>
-                    <p className="text-2xl font-bold text-amber-600">{churnRate}%</p>
+                    <p className="text-2xl font-bold text-warning">{churnRate}%</p>
                     <p className="text-xs text-muted-foreground">{expiredSubs + cancelledSubs} perdidos</p>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ export default function PainelAdmin() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10"><Clock className="h-5 w-5 text-purple-600" /></div>
+                  <div className="p-2 rounded-lg bg-accent/20"><Clock className="h-5 w-5 text-accent-foreground" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Em Trial</p>
                     <p className="text-2xl font-bold">{trialSubs}</p>
@@ -593,7 +593,7 @@ export default function PainelAdmin() {
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" tickFormatter={(v) => `R$${v}`} />
                     <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'MRR']} />
-                    <Area type="monotone" dataKey="mrr" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} />
+                    <Area type="monotone" dataKey="mrr" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.15} strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>

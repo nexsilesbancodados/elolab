@@ -29,8 +29,8 @@ export function StatsCards({ sessions, stats }: StatsCardsProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-full">
-              <MessageSquare className="h-6 w-6 text-blue-500" />
+            <div className="p-3 bg-info/10 rounded-full">
+              <MessageSquare className="h-6 w-6 text-info" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Mensagens Hoje</p>
@@ -42,8 +42,8 @@ export function StatsCards({ sessions, stats }: StatsCardsProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-500/10 rounded-full">
-              <Users className="h-6 w-6 text-green-500" />
+            <div className="p-3 bg-success/10 rounded-full">
+              <Users className="h-6 w-6 text-success" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Conversas Hoje</p>
@@ -55,8 +55,8 @@ export function StatsCards({ sessions, stats }: StatsCardsProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-500/10 rounded-full">
-              <Activity className="h-6 w-6 text-purple-500" />
+            <div className="p-3 bg-accent/20 rounded-full">
+              <Activity className="h-6 w-6 text-accent-foreground" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Ações do Agente</p>
