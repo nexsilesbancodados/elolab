@@ -232,7 +232,7 @@ export default function TemplatesEmail() {
                     size="sm"
                     variant="ghost"
                     onClick={() => toggleMutation.mutate({ id: template.id, ativo: template.ativo })}
-                    className={template.ativo ? 'text-green-600' : 'text-gray-400'}
+                    className={template.ativo ? 'text-success' : 'text-muted-foreground'}
                   >
                     {template.ativo ? '●' : '○'}
                   </Button>
@@ -240,13 +240,13 @@ export default function TemplatesEmail() {
                 <Badge className="w-fit mt-2">{categoryObj?.label || template.categoria}</Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">{template.assunto}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{template.assunto}</p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => openEdit(template)}>
                     <Edit2 className="h-3 w-3" />
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setDeleteId(template.id)}>
-                    <Trash2 className="h-3 w-3 text-red-500" />
+                    <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
                 </div>
               </CardContent>
@@ -274,8 +274,8 @@ export default function TemplatesEmail() {
                 <select
                   value={form.categoria}
                   onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                >
+                   className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+                 >
                   <option value="">Selecione</option>
                   {CATEGORIAS.map((c) => (
                     <option key={c.value} value={c.value}>
@@ -294,7 +294,7 @@ export default function TemplatesEmail() {
                         setForm({ ...form, ativo: checked })
                       }
                     />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-muted-foreground">
                       {form.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                   </div>
@@ -310,7 +310,7 @@ export default function TemplatesEmail() {
                 placeholder="Ex: {{paciente_nome}}, sua consulta foi confirmada"
               />
               {previewTab === 'editar' && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Preview: {getRenderedPreview() || '(vazio)'}
                 </p>
               )}
@@ -345,7 +345,7 @@ export default function TemplatesEmail() {
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {Object.entries(VARIAVEIS_GRUPOS).map(([grupo, vars]) => (
                         <div key={grupo}>
-                          <p className="text-xs font-semibold text-gray-700 mb-1">
+                          <p className="text-xs font-semibold text-foreground mb-1">
                             {grupo}
                           </p>
                           <div className="space-y-1">
@@ -370,13 +370,13 @@ export default function TemplatesEmail() {
               </TabsContent>
 
               <TabsContent value="preview" className="space-y-4">
-                <div className="border rounded-lg p-4 bg-white">
+                <div className="border rounded-lg p-4 bg-card">
                   <div className="mb-4 pb-4 border-b">
-                    <p className="text-xs text-gray-600 mb-1">Assunto:</p>
-                    <p className="font-semibold">{getRenderedPreview() || '(vazio)'}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Assunto:</p>
+                    <p className="font-semibold text-foreground">{getRenderedPreview() || '(vazio)'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-2">Conteúdo:</p>
+                    <p className="text-xs text-muted-foreground mb-2">Conteúdo:</p>
                     <div
                       dangerouslySetInnerHTML={{ __html: getContentPreview() }}
                       className="prose prose-sm max-w-none"
@@ -408,7 +408,7 @@ export default function TemplatesEmail() {
               <CardTitle className="text-base">Deletar template?</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">Esta ação não pode ser desfeita.</p>
+              <p className="text-sm text-muted-foreground mb-4">Esta ação não pode ser desfeita.</p>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setDeleteId(null)}>
                   Cancelar
@@ -416,7 +416,7 @@ export default function TemplatesEmail() {
                 <Button
                   onClick={() => deleteMutation.mutate(deleteId)}
                   disabled={deleteMutation.isPending}
-                  className="bg-red-600"
+                  variant="destructive"
                 >
                   Deletar
                 </Button>

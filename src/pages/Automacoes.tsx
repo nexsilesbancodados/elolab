@@ -64,7 +64,7 @@ const AUTOMATIONS = [
     name: 'Lembrete de Consulta (24h)',
     description: 'Envia lembretes 24 horas antes da consulta',
     icon: Clock,
-    color: 'text-blue-500',
+    color: 'text-info',
     endpoint: 'send-appointment-reminder',
   },
   {
@@ -72,7 +72,7 @@ const AUTOMATIONS = [
     name: 'Lembrete de Consulta (2h)',
     description: 'Envia lembretes 2 horas antes da consulta',
     icon: Clock,
-    color: 'text-blue-500',
+    color: 'text-info',
     endpoint: 'send-appointment-reminder',
   },
   {
@@ -80,7 +80,7 @@ const AUTOMATIONS = [
     name: 'Alerta de Estoque Crítico',
     description: 'Notifica quando itens estão abaixo do mínimo',
     icon: AlertTriangle,
-    color: 'text-yellow-500',
+    color: 'text-warning',
     endpoint: 'stock-alert',
   },
   {
@@ -88,15 +88,15 @@ const AUTOMATIONS = [
     name: 'Faturamento Automático',
     description: 'Cria lançamentos ao finalizar consultas',
     icon: CheckCircle2,
-    color: 'text-green-500',
-    endpoint: null, // Trigger-based
+    color: 'text-success',
+    endpoint: null,
   },
   {
     key: 'aniversariantes',
     name: 'Mensagens de Aniversário',
     description: 'Envia felicitações para pacientes',
     icon: Bot,
-    color: 'text-pink-500',
+    color: 'text-accent-foreground',
     endpoint: 'birthday-greetings',
   },
   {
@@ -104,24 +104,24 @@ const AUTOMATIONS = [
     name: 'Confirmação de Agendamento',
     description: 'Envia confirmação por email e WhatsApp quando consulta é confirmada',
     icon: CheckCircle2,
-    color: 'text-green-500',
-    endpoint: null, // Event-driven
+    color: 'text-success',
+    endpoint: null,
   },
   {
     key: 'notificacao_resultado_exame',
     name: 'Notificação de Resultado de Exame',
     description: 'Envia resultado de exame para paciente quando liberado',
     icon: Stethoscope,
-    color: 'text-purple-500',
-    endpoint: null, // Event-driven
+    color: 'text-primary',
+    endpoint: null,
   },
   {
     key: 'recibo_pagamento',
     name: 'Recibo de Pagamento',
     description: 'Envia recibo de pagamento por email para paciente',
     icon: DollarSign,
-    color: 'text-emerald-500',
-    endpoint: null, // Event-driven
+    color: 'text-success',
+    endpoint: null,
   },
 ];
 
@@ -186,11 +186,11 @@ export default function Automacoes() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'sucesso':
-        return <Badge className="bg-green-100 text-green-800">Sucesso</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20">Sucesso</Badge>;
       case 'erro':
-        return <Badge className="bg-red-100 text-red-800">Erro</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Erro</Badge>;
       case 'parcial':
-        return <Badge className="bg-yellow-100 text-yellow-800">Parcial</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20">Parcial</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -198,13 +198,13 @@ export default function Automacoes() {
 
   const getTypeBadge = (tipo: string) => {
     const colors: Record<string, string> = {
-      lembrete: 'bg-blue-100 text-blue-800',
-      estoque: 'bg-yellow-100 text-yellow-800',
-      faturamento: 'bg-green-100 text-green-800',
-      exame: 'bg-purple-100 text-purple-800',
-      aniversario: 'bg-pink-100 text-pink-800',
+      lembrete: 'bg-info/10 text-info border-info/20',
+      estoque: 'bg-warning/10 text-warning border-warning/20',
+      faturamento: 'bg-success/10 text-success border-success/20',
+      exame: 'bg-primary/10 text-primary border-primary/20',
+      aniversario: 'bg-accent text-accent-foreground',
     };
-    return <Badge className={colors[tipo] || 'bg-gray-100 text-gray-800'}>{tipo}</Badge>;
+    return <Badge className={colors[tipo] || 'bg-muted text-muted-foreground'}>{tipo}</Badge>;
   };
 
   if (loadingLogs || loadingSettings) {
