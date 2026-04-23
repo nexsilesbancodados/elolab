@@ -151,7 +151,6 @@ export default function Prescricoes() {
 
   const { data: prescricoes = [], isLoading: loadingPresc, refetch } = useSupabaseQuery<Record<string, any>>('prescricoes', {
     orderBy: { column: 'created_at', ascending: false },
-    ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
   });
 
   const { data: clinicConfig } = useQuery({
