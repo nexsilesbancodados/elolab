@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { WhatsAppAgent, NewAgentForm } from './types';
 
 export function useWhatsAppMutations() {
