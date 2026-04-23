@@ -1,18 +1,22 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { WhatsAppAgent, NewAgentForm } from './types';
 
 export function useWhatsAppMutations() {
   const queryClient = useQueryClient();
 
-  const createAgent = useMutation({
-    mutationFn: async (agent: NewAgentForm) => {
-      const { data, error } = await supabase
-        .from('whatsapp_agents')
-        .insert([agent])
-        .select()
-        .single();
+   const { profile } = useSupabaseAuth();
+
+   const createAgent = useMutation({
+     mutationFn: async (agent: NewAgentForm) => {
+       const insertData = { ...agent, clinica_id: profile?.clinica_id };
+       const { data, error } = await supabase
+         .from('whatsapp_agents')
+         .insert([insertData])
+         .select()
+         .single();
       if (error) throw error;
       return data;
     },
