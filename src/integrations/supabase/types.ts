@@ -1387,6 +1387,7 @@ export type Database = {
       exames: {
         Row: {
           arquivo_resultado: string | null
+          categoria: string | null
           clinica_id: string | null
           created_at: string | null
           data_agendamento: string | null
@@ -1394,16 +1395,21 @@ export type Database = {
           data_solicitacao: string | null
           descricao: string | null
           id: string
+          laboratorio_id: string | null
           medico_solicitante_id: string | null
           observacoes: string | null
           paciente_id: string
+          preco_custo: number | null
+          preco_venda: number | null
           resultado: string | null
           status: Database["public"]["Enums"]["status_exame"] | null
+          tipo_categorizado: string | null
           tipo_exame: string
           updated_at: string | null
         }
         Insert: {
           arquivo_resultado?: string | null
+          categoria?: string | null
           clinica_id?: string | null
           created_at?: string | null
           data_agendamento?: string | null
@@ -1411,16 +1417,21 @@ export type Database = {
           data_solicitacao?: string | null
           descricao?: string | null
           id?: string
+          laboratorio_id?: string | null
           medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id: string
+          preco_custo?: number | null
+          preco_venda?: number | null
           resultado?: string | null
           status?: Database["public"]["Enums"]["status_exame"] | null
+          tipo_categorizado?: string | null
           tipo_exame: string
           updated_at?: string | null
         }
         Update: {
           arquivo_resultado?: string | null
+          categoria?: string | null
           clinica_id?: string | null
           created_at?: string | null
           data_agendamento?: string | null
@@ -1428,11 +1439,15 @@ export type Database = {
           data_solicitacao?: string | null
           descricao?: string | null
           id?: string
+          laboratorio_id?: string | null
           medico_solicitante_id?: string | null
           observacoes?: string | null
           paciente_id?: string
+          preco_custo?: number | null
+          preco_venda?: number | null
           resultado?: string | null
           status?: Database["public"]["Enums"]["status_exame"] | null
+          tipo_categorizado?: string | null
           tipo_exame?: string
           updated_at?: string | null
         }
@@ -1445,6 +1460,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "exames_laboratorio_id_fkey"
+            columns: ["laboratorio_id"]
+            isOneToOne: false
+            referencedRelation: "laboratorios"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "exames_medico_solicitante_id_fkey"
             columns: ["medico_solicitante_id"]
             isOneToOne: false
@@ -1453,6 +1475,61 @@ export type Database = {
           },
           {
             foreignKeyName: "exames_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedbacks_nps: {
+        Row: {
+          agendamento_id: string | null
+          categoria: string | null
+          comentario: string | null
+          created_at: string | null
+          id: string
+          medico_id: string | null
+          nota: number
+          paciente_id: string | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          categoria?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          medico_id?: string | null
+          nota: number
+          paciente_id?: string | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          categoria?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          medico_id?: string | null
+          nota?: number
+          paciente_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_nps_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_nps_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedbacks_nps_paciente_id_fkey"
             columns: ["paciente_id"]
             isOneToOne: false
             referencedRelation: "pacientes"
@@ -1607,6 +1684,53 @@ export type Database = {
           },
         ]
       }
+      laboratorios: {
+        Row: {
+          ativo: boolean | null
+          clinica_id: string
+          cnpj: string | null
+          created_at: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          clinica_id: string
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          clinica_id?: string
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laboratorios_clinica_id_fkey"
+            columns: ["clinica_id"]
+            isOneToOne: false
+            referencedRelation: "clinicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lancamentos: {
         Row: {
           agendamento_id: string | null
@@ -1636,7 +1760,7 @@ export type Database = {
         Insert: {
           agendamento_id?: string | null
           anexo_url?: string | null
-          categoria: string
+          categoria?: string
           centro_custo?: string | null
           clinica_id?: string | null
           competencia?: string | null
@@ -1773,6 +1897,53 @@ export type Database = {
             columns: ["paciente_id"]
             isOneToOne: false
             referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medico_disponibilidade: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          dia_semana: number
+          duracao_consulta: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          intervalo_consultas: number
+          medico_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dia_semana: number
+          duracao_consulta?: number
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          intervalo_consultas?: number
+          medico_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dia_semana?: number
+          duracao_consulta?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_consultas?: number
+          medico_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medico_disponibilidade_medico_id_fkey"
+            columns: ["medico_id"]
+            isOneToOne: false
+            referencedRelation: "medicos"
             referencedColumns: ["id"]
           },
         ]
@@ -3372,6 +3543,66 @@ export type Database = {
           },
         ]
       }
+      tipo_exames_catalog: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          clinica_id: string
+          codigo_tuss: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          laboratorio_id: string | null
+          nome: string
+          preco_custo: number | null
+          preco_venda: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          clinica_id: string
+          codigo_tuss?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          laboratorio_id?: string | null
+          nome: string
+          preco_custo?: number | null
+          preco_venda?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          clinica_id?: string
+          codigo_tuss?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          laboratorio_id?: string | null
+          nome?: string
+          preco_custo?: number | null
+          preco_venda?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tipo_exames_catalog_clinica_id_fkey"
+            columns: ["clinica_id"]
+            isOneToOne: false
+            referencedRelation: "clinicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tipo_exames_catalog_laboratorio_id_fkey"
+            columns: ["laboratorio_id"]
+            isOneToOne: false
+            referencedRelation: "laboratorios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tipos_consulta: {
         Row: {
           ativo: boolean | null
@@ -3979,6 +4210,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nps_resumo_mensal: {
+        Row: {
+          detratores: number | null
+          media: number | null
+          mes: string | null
+          neutros: number | null
+          nps_score: number | null
+          promotores: number | null
+          total: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
