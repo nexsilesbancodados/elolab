@@ -63,7 +63,7 @@ const ChatInterno = lazy(() => import("@/pages/ChatInterno"));
 const TemplatesEmail = lazy(() => import("@/pages/TemplatesEmail"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
-const LandingPage = lazy(() => import("@/pages/LandingPage"));
+ import LandingPage from "@/pages/LandingPage";
 const PainelTV = lazy(() => import("@/pages/PainelTV"));
 const PortalPaciente = lazy(() => import("@/pages/PortalPaciente"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
