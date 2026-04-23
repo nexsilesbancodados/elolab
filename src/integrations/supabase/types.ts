@@ -1760,7 +1760,7 @@ export type Database = {
         Insert: {
           agendamento_id?: string | null
           anexo_url?: string | null
-          categoria: string
+          categoria?: string
           centro_custo?: string | null
           clinica_id?: string | null
           competencia?: string | null
