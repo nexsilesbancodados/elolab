@@ -65,11 +65,8 @@ export function useSupabaseInsert<T extends Record<string, unknown>>(tableName: 
 
   return useMutation({
     mutationFn: async (data: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
-      // Auto-inject clinica_id for tenant isolation
-      const insertData = { ...data } as any;
-      if (profile?.clinica_id && !insertData.clinica_id) {
-        insertData.clinica_id = profile.clinica_id;
-      }
+       // Auto-inject clinica_id for tenant isolation if available in profile
+       const insertData = { ...data, clinica_id: data.clinica_id || profile?.clinica_id } as any;
 
       const { data: result, error } = await supabase
         .from(tableName as any)
