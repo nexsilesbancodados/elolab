@@ -119,7 +119,7 @@ export default function Laboratorio() {
     queryKey: ['exames-pendentes-lab'],
     queryFn: async () => {
       const { data } = await supabase.from('exames').select('id, tipo_exame, paciente_id, pacientes(nome)')
-        .in('status', ['solicitado', 'agendado']).order('data_solicitacao', { ascending: false }).limit(200);
+        .in('status', ['solicitado', 'agendado']).order('data_solicitacao', { ascending: false }).limit(1000);
       return data || [];
     },
   });
