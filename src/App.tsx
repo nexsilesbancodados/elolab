@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPWA } from "@/components/InstallPWA";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import LandingPage from "@/pages/LandingPage";
 
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Agenda = lazy(() => import("@/pages/Agenda"));
@@ -63,7 +64,6 @@ const ChatInterno = lazy(() => import("@/pages/ChatInterno"));
 const TemplatesEmail = lazy(() => import("@/pages/TemplatesEmail"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const AceitarConvite = lazy(() => import("@/pages/AceitarConvite"));
- import LandingPage from "@/pages/LandingPage";
 const PainelTV = lazy(() => import("@/pages/PainelTV"));
 const PortalPaciente = lazy(() => import("@/pages/PortalPaciente"));
 const NotFound = lazy(() => import("@/pages/NotFound"));

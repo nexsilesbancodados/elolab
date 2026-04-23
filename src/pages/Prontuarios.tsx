@@ -466,11 +466,13 @@ export default function Prontuarios() {
       .eq('paciente_id', selectedPacienteId)
       .order('data', { ascending: false })
       .limit(50);
+    if (isMedicoOnly && medicoId) query = query.eq('medico_id', medicoId);
     query.then(({ data }) => { setHistoricoEvolucoes(data ?? []); setLoadingHistorico(false); });
-  }, [selectedPacienteId]);
+  }, [selectedPacienteId, isMedicoOnly, medicoId]);
 
   const { data: prontuarios = [], isLoading: loadingProntuarios, refetch: refetchProntuarios } = useSupabaseQuery<Record<string, any>>('prontuarios', {
     orderBy: { column: 'data', ascending: false },
+    ...(isMedicoOnly && medicoId ? { filters: [{ column: 'medico_id', operator: 'eq', value: medicoId }] } : {}),
   });
 
   const selectedPaciente = useMemo(() => pacientes.find(p => p.id === selectedPacienteId), [pacientes, selectedPacienteId]);

@@ -352,12 +352,16 @@ export default function Exames() {
   }, [examSearch, examesSelecionados]);
 
   const { data: exames = [], isLoading: loadingExames } = useQuery({
-    queryKey: ['exames'],
+    queryKey: ['exames', isMedicoOnly, medicoId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('exames')
         .select('*, pacientes(nome), medicos(crm, especialidade, nome)')
         .order('data_solicitacao', { ascending: false });
+      if (isMedicoOnly && medicoId) {
+        query = query.eq('medico_solicitante_id', medicoId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
