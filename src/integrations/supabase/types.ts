@@ -1966,6 +1966,7 @@ export type Database = {
           nome: string | null
           rqe: string | null
           telefone: string | null
+          tipo_registro: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -1986,6 +1987,7 @@ export type Database = {
           nome?: string | null
           rqe?: string | null
           telefone?: string | null
+          tipo_registro?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -2006,6 +2008,7 @@ export type Database = {
           nome?: string | null
           rqe?: string | null
           telefone?: string | null
+          tipo_registro?: string | null
           updated_at?: string | null
           user_id?: string | null
         }

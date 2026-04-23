@@ -38,7 +38,11 @@ import { MedicoAvailabilityManager } from '@/components/medicos/MedicoAvailabili
 
 const UFS = [
   'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA',
-  'PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO',
+   'PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO',
+ ];
+ 
+ const TIPOS_REGISTRO = [
+   'CRM', 'CRP', 'CRO', 'CREFITO', 'COREN', 'CRMV', 'CRBM', 'CRN', 'CRF', 'CREF', 'CRTR', 'CRP', 'CRFA'
 ];
 
 const INTERVALOS = [10, 15, 20, 25, 30, 40, 45, 50, 60];
@@ -69,13 +73,13 @@ function formatPhone(value: string): string {
 }
 
 interface FormData {
-  nome: string; email: string; crm: string; crm_uf: string; cpf: string;
+   nome: string; email: string; crm: string; tipo_registro: string; crm_uf: string; cpf: string;
   rqe: string; cns: string; especialidade: string; telefone: string;
   intervalo_consulta: number; ativo: boolean; foto_url: string; carimbo_url: string;
 }
 
 const initialFormData: FormData = {
-  nome: '', email: '', crm: '', crm_uf: 'SP', cpf: '', rqe: '', cns: '',
+   nome: '', email: '', crm: '', tipo_registro: 'CRM', crm_uf: 'SP', cpf: '', rqe: '', cns: '',
   especialidade: '', telefone: '', intervalo_consulta: 30, ativo: true,
   foto_url: '', carimbo_url: '',
 };
@@ -242,7 +246,9 @@ function MedicoProfilePanel({ medico, onClose, onEdit }: { medico: any; onClose:
               <h2 className="text-xl font-bold text-foreground truncate">Dr(a). {medico.nome || medico.crm}</h2>
               <p className="text-sm text-muted-foreground">{medico.especialidade || 'Clínico Geral'}</p>
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge variant="outline" className="text-[11px] gap-1"><BadgeCheck className="h-3 w-3" /> CRM {medico.crm}/{medico.crm_uf}</Badge>
+                 <Badge variant="outline" className="text-[11px] gap-1">
+                   <BadgeCheck className="h-3 w-3" /> {medico.tipo_registro || 'CRM'} {medico.crm}/{medico.crm_uf}
+                 </Badge>
                 {medico.rqe && <Badge variant="outline" className="text-[11px] gap-1"><Award className="h-3 w-3" /> RQE {medico.rqe}</Badge>}
                 <Badge className={medico.ativo ? 'bg-success/10 text-success border-success/20 text-[11px]' : 'bg-muted text-muted-foreground text-[11px]'}>
                   {medico.ativo ? 'Ativo' : 'Inativo'}
@@ -474,7 +480,7 @@ export default function Medicos() {
     if (medico) {
       setEditingId(medico.id);
       setFormData({
-        nome: medico.nome || '', email: medico.email || '', crm: medico.crm,
+         nome: medico.nome || '', email: medico.email || '', crm: medico.crm, tipo_registro: medico.tipo_registro || 'CRM',
         crm_uf: medico.crm_uf || 'SP', cpf: medico.cpf || '', rqe: medico.rqe || '',
         cns: medico.cns || '', especialidade: medico.especialidade || '',
         telefone: medico.telefone || '', intervalo_consulta: medico.intervalo_consulta ?? 30,
@@ -506,10 +512,10 @@ export default function Medicos() {
   };
 
   const handleSave = async () => {
-    if (!formData.crm) { toast.error('CRM é obrigatório.'); return; }
+     if (!formData.crm) { toast.error('O número do registro profissional é obrigatório.'); return; }
     if (!formData.nome) { toast.error('Nome é obrigatório.'); return; }
-    if (formData.crm && !/^\d{4,10}$/.test(formData.crm.replace(/\D/g, ''))) {
-      toast.error('CRM deve conter entre 4 e 10 dígitos.'); return;
+     if (formData.tipo_registro === 'CRM' && formData.crm && !/^\d{4,10}$/.test(formData.crm.replace(/\D/g, ''))) {
+       toast.error('O CRM deve conter entre 4 e 10 dígitos.'); return;
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       toast.error('E-mail inválido.'); return;
@@ -529,7 +535,7 @@ export default function Medicos() {
     setIsSubmitting(true);
     try {
       const payload = {
-        nome: formData.nome || null, email: formData.email || null, crm: formData.crm,
+         nome: formData.nome || null, email: formData.email || null, crm: formData.crm, tipo_registro: formData.tipo_registro,
         crm_uf: formData.crm_uf || null, cpf: formData.cpf || null, rqe: formData.rqe || null,
         cns: formData.cns || null, especialidade: formData.especialidade || null,
         telefone: formData.telefone || null, intervalo_consulta: formData.intervalo_consulta,
@@ -711,7 +717,7 @@ export default function Medicos() {
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2.5">
                           <Badge variant="outline" className="text-[10px] gap-1 font-mono">
-                            <BadgeCheck className="h-2.5 w-2.5" /> CRM {medico.crm}/{medico.crm_uf}
+                             <BadgeCheck className="h-2.5 w-2.5" /> {medico.tipo_registro || 'CRM'} {medico.crm}/{medico.crm_uf}
                           </Badge>
                           {medico.rqe && <Badge variant="outline" className="text-[10px] font-mono">RQE {medico.rqe}</Badge>}
                         </div>
@@ -870,28 +876,35 @@ export default function Medicos() {
 
               <Separator />
 
-              {/* Registro Profissional */}
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5"><BadgeCheck className="h-4 w-4" /> Registro Profissional</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">CRM <span className="text-destructive">*</span></Label>
-                    <Input value={formData.crm} 
-                      onChange={e => setFormData(p => ({ ...p, crm: e.target.value.replace(/\D/g, '').slice(0, 10) }))} 
-                      placeholder="123456"
-                      className={!formData.crm && formData.nome ? 'border-destructive/50' : ''} />
-                    {formData.crm && (formData.crm.length < 4 || formData.crm.length > 10) && (
-                      <p className="text-[10px] text-amber-500">4 a 10 dígitos</p>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">UF do CRM <span className="text-destructive">*</span></Label>
-                    <Select value={formData.crm_uf} onValueChange={v => setFormData(p => ({ ...p, crm_uf: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{UFS.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
+               {/* Registro Profissional */}
+               <div>
+                 <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5"><BadgeCheck className="h-4 w-4" /> Registro Profissional</h4>
+                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                   <div className="space-y-1.5">
+                     <Label className="text-xs">Tipo <span className="text-destructive">*</span></Label>
+                     <Select value={formData.tipo_registro} onValueChange={v => setFormData(p => ({ ...p, tipo_registro: v }))}>
+                       <SelectTrigger><SelectValue /></SelectTrigger>
+                       <SelectContent>{TIPOS_REGISTRO.map(tipo => <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>)}</SelectContent>
+                     </Select>
+                   </div>
+                   <div className="space-y-1.5">
+                     <Label className="text-xs">Número <span className="text-destructive">*</span></Label>
+                     <Input value={formData.crm} 
+                       onChange={e => setFormData(p => ({ ...p, crm: e.target.value.replace(/\D/g, '').slice(0, 10) }))} 
+                       placeholder="123456"
+                       className={!formData.crm && formData.nome ? 'border-destructive/50' : ''} />
+                     {formData.tipo_registro === 'CRM' && formData.crm && (formData.crm.length < 4 || formData.crm.length > 10) && (
+                       <p className="text-[10px] text-amber-500">4 a 10 dígitos</p>
+                     )}
+                   </div>
+                   <div className="space-y-1.5">
+                     <Label className="text-xs">UF <span className="text-destructive">*</span></Label>
+                     <Select value={formData.crm_uf} onValueChange={v => setFormData(p => ({ ...p, crm_uf: v }))}>
+                       <SelectTrigger><SelectValue /></SelectTrigger>
+                       <SelectContent>{UFS.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}</SelectContent>
+                     </Select>
+                   </div>
+                   <div className="space-y-1.5">
                     <Label className="text-xs">RQE</Label>
                     <Input value={formData.rqe} onChange={e => setFormData(p => ({ ...p, rqe: e.target.value }))} placeholder="12345" />
                   </div>

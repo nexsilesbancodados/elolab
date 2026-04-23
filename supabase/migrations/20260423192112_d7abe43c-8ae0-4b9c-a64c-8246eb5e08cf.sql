@@ -1,0 +1,1 @@
+ALTER TABLE public.medicos ADD COLUMN IF NOT EXISTS tipo_registro TEXT DEFAULT 'CRM';
