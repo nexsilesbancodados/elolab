@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const DEFAULT_TIMEOUT_MIN = 30;
@@ -10,7 +11,6 @@ let cachedTimeoutMin: number | null = null;
 // Load from Supabase on init (called once)
 async function loadTimeoutFromSupabase(userId: string) {
   try {
-    const { supabase } = await import('@/integrations/supabase/client');
     const { data } = await supabase
       .from('configuracoes_clinica')
       .select('valor')
