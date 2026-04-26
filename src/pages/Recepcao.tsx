@@ -448,7 +448,9 @@ export default function Recepcao({ onOpenCaixa }: { onOpenCaixa?: () => void } =
          gain.gain.value = 0.3;
          osc.start();
          osc.stop(ctx.currentTime + 0.3);
-       } catch {}
+        } catch {
+          console.warn('Não foi possível reproduzir o alerta sonoro.');
+        }
 
        // Announce via TTS
        if ('speechSynthesis' in window) {
