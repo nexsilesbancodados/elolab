@@ -81,14 +81,14 @@ Deno.serve(async (req) => {
         const [year, month, day] = resultado.data_resultado.split('-')
         const dataFormatada = `${day}/${month}/${year}`
 
-        let conteudo = template.conteudo
+        const conteudo = template.conteudo
           .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
           .replace(/\{\{tipo_exame\}\}/g, tipoExame)
           .replace(/\{\{data_resultado\}\}/g, dataFormatada)
           .replace(/\{\{link_portal\}\}/g, portalLink)
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
-        let assunto = (template.assunto || 'Resultado de Exame')
+        const assunto = (template.assunto || 'Resultado de Exame')
           .replace(/\{\{tipo_exame\}\}/g, tipoExame)
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 

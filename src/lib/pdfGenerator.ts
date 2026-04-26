@@ -862,7 +862,7 @@ function calcularIdade(dataNascimento: string): string {
     const hoje = new Date();
     let anos = hoje.getFullYear() - nasc.getFullYear();
     let meses = hoje.getMonth() - nasc.getMonth();
-    let dias = hoje.getDate() - nasc.getDate();
+    const dias = hoje.getDate() - nasc.getDate();
     if (dias < 0) { meses--; }
     if (meses < 0) { anos--; meses += 12; }
     return `${anos} anos ${meses} meses`;
@@ -890,7 +890,9 @@ export async function gerarLaudoPDF(dados: LaudoData): Promise<jsPDF> {
   if (clinica.logoUrl) {
     const logoBase64 = await loadImageAsBase64(clinica.logoUrl);
     if (logoBase64) {
-      try { doc.addImage(logoBase64, 'PNG', margin, y, 28, 28); } catch {}
+      try { doc.addImage(logoBase64, 'PNG', margin, y, 28, 28); } catch {
+        console.warn('Não foi possível adicionar o logo ao laudo PDF.');
+      }
     }
   }
 
@@ -1107,7 +1109,9 @@ export async function gerarLaudoPDF(dados: LaudoData): Promise<jsPDF> {
     const qrUrl = `https://app.elolab.com.br/validar/${dados.codigoAmostra}`;
     const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 60, margin: 1 });
     doc.addImage(qrDataUrl, 'PNG', margin, y - 12, 20, 20);
-  } catch {}
+  } catch {
+    console.warn('Não foi possível gerar o QR Code do laudo PDF.');
+  }
 
   // ── RODAPÉ ──
   doc.setFontSize(7);

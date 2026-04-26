@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
         const [day, month, year] = agendamento.data.split('-').reverse()
         const dataFormatada = `${day}/${month}/${year}`
 
-        let conteudo = template.conteudo
+        const conteudo = template.conteudo
           .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
           .replace(/\{\{data\}\}/g, dataFormatada)
           .replace(/\{\{horario\}\}/g, agendamento.hora_inicio)
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
           .replace(/\{\{clinica_endereco\}\}/g, clinicaEndereco)
 
-        let assunto = (template.assunto || 'Consulta Confirmada')
+        const assunto = (template.assunto || 'Consulta Confirmada')
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
         const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {

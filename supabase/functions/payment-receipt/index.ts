@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     // === SEND EMAIL ===
     if (brevoApiKey && template) {
       try {
-        let conteudo = template.conteudo
+        const conteudo = template.conteudo
           .replace(/\{\{paciente_nome\}\}/g, paciente.nome)
           .replace(/\{\{valor\}\}/g, valorFormatado)
           .replace(/\{\{forma_pagamento\}\}/g, formaPagamentoFormatada)
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
           .replace(/\{\{clinica_cnpj\}\}/g, clinicaCnpj)
 
-        let assunto = (template.assunto || 'Recibo de Pagamento')
+        const assunto = (template.assunto || 'Recibo de Pagamento')
           .replace(/\{\{clinica_nome\}\}/g, clinicaNome)
 
         const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {
