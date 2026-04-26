@@ -13,6 +13,7 @@ interface Agendamento {
   tipo: string | null
   paciente_id: string
   medico_id: string
+  clinica_id: string
   pacientes: {
     nome: string
     email: string | null
